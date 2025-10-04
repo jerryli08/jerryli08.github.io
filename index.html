@@ -78,12 +78,14 @@
                                 </svg>
                             </div>
                         </div>
-                        
                         <!-- Icons -->
-                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path>
+                        <!-- Sun: shows in LIGHT mode (so users can switch to dark) -->
+                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 7.07l-1.42-1.42M5.47 5.47L4.05 4.05m14.14 0l-1.42 1.42M5.47 18.53l-1.42 1.42"/>
                         </svg>
-                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Moon: shows in DARK mode (so users can switch to light) -->
+                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                         </svg>
                     </button>
@@ -98,7 +100,7 @@
                 
                 <!-- Project 1: Hybrid Aerial-ground Vehicle -->
                 <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -111,7 +113,7 @@
 
                 <!-- Project 2: Electric Bike -->
                 <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/electric-bike.png" alt="Electric Bike" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -124,7 +126,7 @@
 
                 <!-- Project 3: Exercise Bike Odometer -->
                 <a href="projects/bike-odometer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/bike-odometer.png" alt="Exercise Bike Odometer" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -137,7 +139,7 @@
 
                 <!-- Project 4: 5-bar Parallel Robot Pen Plotter -->
                 <a href="projects/pen-plotter.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/pen-plotter.PNG" alt="5-bar Parallel Robot Pen Plotter" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -150,7 +152,7 @@
 
                 <!-- Project 5: Science Olympiad Robot Tour -->
                 <a href="projects/robot-tour.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/robot-tour.png" alt="Science Olympiad Robot Tour" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -163,7 +165,7 @@
 
                 <!-- Project 6: Science Olympiad Electric Vehicle -->
                 <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/electric-vehicle.png" alt="Science Olympiad Electric Vehicle" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -176,7 +178,7 @@
 
                 <!-- Project 7: Braille Printer -->
                 <a href="projects/braille-printer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/braille-printer.png" alt="Braille Printer" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -189,7 +191,7 @@
 
                 <!-- Project 8: 3D Printer Build-plate Replacing Robot -->
                 <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/build-plate-robot.JPG" alt="3D Printer Build-plate Replacing Robot" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -202,7 +204,7 @@
 
                 <!-- Project 9: 1lb Plastic Battlebot -->
                 <a href="projects/battlebot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/battlebot.png" alt="1lb Plastic Battlebot" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -215,7 +217,7 @@
 
                 <!-- Project 10: FTC -->
                 <a href="projects/ftc.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/ftc.png" alt="FTC" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
@@ -228,7 +230,7 @@
 
                 <!-- Project 11: Cardboard Simulator -->
                 <a href="projects/cardboard-simulator.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                    <div class="h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <img src="images/cardboard-simulator.PNG" alt="Cardboard Simulator" class="w-full h-full object-cover">
                     </div>
                     <div class="p-4 flex flex-col h-full main-bg">
