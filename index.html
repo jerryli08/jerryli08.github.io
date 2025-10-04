@@ -80,8 +80,17 @@
                         <!-- Icons -->
                         <!-- Sun: shows in LIGHT mode (so users can switch to dark) -->
                         <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 7.07l-1.42-1.42M5.47 5.47L4.05 4.05m14.14 0l-1.42 1.42M5.47 18.53l-1.42 1.42"/>
+                          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+                          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.222" y1="4.222" x2="5.636" y2="5.636"/>
+                            <line x1="18.364" y1="18.364" x2="19.778" y2="19.778"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.222" y1="19.778" x2="5.636" y2="18.364"/>
+                            <line x1="18.364" y1="5.636" x2="19.778" y2="4.222"/>
+                          </g>
                         </svg>
                         <!-- Moon: shows in DARK mode (so users can switch to light) -->
                         <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +105,7 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Project 1: Hybrid Aerial-ground Vehicle -->
+                <!-- Each project card -->
                 <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -109,7 +118,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 2: Electric Bike -->
                 <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -122,7 +130,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 3: Exercise Bike Odometer -->
                 <a href="projects/bike-odometer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -135,7 +142,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 4: 5-bar Parallel Robot Pen Plotter -->
                 <a href="projects/pen-plotter.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -148,7 +154,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 5: Science Olympiad Robot Tour -->
                 <a href="projects/robot-tour.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -161,7 +166,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 6: Science Olympiad Electric Vehicle -->
                 <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -174,7 +178,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 7: Braille Printer -->
                 <a href="projects/braille-printer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -187,7 +190,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 8: 3D Printer Build-plate Replacing Robot -->
                 <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -200,7 +202,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 9: 1lb Plastic Battlebot -->
                 <a href="projects/battlebot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -213,7 +214,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 10: FTC -->
                 <a href="projects/ftc.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -226,7 +226,6 @@
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
                     </div>
                 </a>
-                <!-- Project 11: Cardboard Simulator -->
                 <a href="projects/cardboard-simulator.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="relative w-full">
                         <div class="pt-[100%]"></div>
@@ -269,15 +268,15 @@
     function updateIcons() {
         const isDark = html.classList.contains('dark');
         if (isDark) {
-            sunIcon.classList.remove('hidden');
-            moonIcon.classList.add('hidden');
-            lightCheck.style.visibility = 'hidden';
-            darkCheck.style.visibility = 'visible';
-        } else {
             sunIcon.classList.add('hidden');
             moonIcon.classList.remove('hidden');
             lightCheck.style.visibility = 'visible';
             darkCheck.style.visibility = 'hidden';
+        } else {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+            lightCheck.style.visibility = 'hidden';
+            darkCheck.style.visibility = 'visible';
         }
     }
 
