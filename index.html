@@ -28,7 +28,7 @@
         }
     </style>
 </head>
-<body class="dark">
+<body>
     <div class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
         <!-- Header -->
         <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -76,7 +76,7 @@
                     </div>
                     <div class="p-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-ground Vehicle</h3>
-                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July - August 2025</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2025 - August 2025</p>
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
                     </div>
                 </a>
@@ -88,7 +88,7 @@
                     </div>
                     <div class="p-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
-                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June - August 2025</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025 - August 2025</p>
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
                     </div>
                 </a>
@@ -112,7 +112,7 @@
                     </div>
                     <div class="p-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">5-bar Parallel Robot Pen Plotter</h3>
-                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May - June 2025</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May 2025 - June 2025</p>
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
                     </div>
                 </a>
@@ -160,7 +160,7 @@
                     </div>
                     <div class="p-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Build-plate Replacing Robot</h3>
-                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February - August 2024</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February 2024 - August 2024</p>
                         <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
                     </div>
                 </a>
@@ -229,16 +229,22 @@
         }
 
         function updateIcons() {
-            if (html.classList.contains('dark')) {
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
                 sunIcon.classList.add('hidden');
                 moonIcon.classList.remove('hidden');
-                lightCheck.classList.add('hidden');
-                darkCheck.classList.remove('hidden');
+                lightCheck.classList.add('invisible');
+                lightCheck.classList.remove('visible');
+                darkCheck.classList.remove('invisible');
+                darkCheck.classList.add('visible');
             } else {
                 sunIcon.classList.remove('hidden');
                 moonIcon.classList.add('hidden');
-                lightCheck.classList.remove('hidden');
-                darkCheck.classList.add('hidden');
+                lightCheck.classList.remove('invisible');
+                lightCheck.classList.add('visible');
+                darkCheck.classList.add('invisible');
+                darkCheck.classList.remove('visible');
             }
         }
 
