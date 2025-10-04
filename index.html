@@ -1,1 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jerry Li - Project Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        .project-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Jerry Li</h1>
+                    <button id="themeToggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">Engineering Projects & Portfolio</p>
+            </div>
+        </header>
 
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                
+                <!-- Project 1: Hybrid Aerial-ground Vehicle -->
+                <a href="projects/hybrid-vehicle.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-ground Vehicle</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 2: Electric Bike -->
+                <a href="projects/electric-bike.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/electric-bike.png" alt="Electric Bike" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 3: Exercise Bike Odometer -->
+                <a href="projects/bike-odometer.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/bike-odometer.png" alt="Exercise Bike Odometer" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Exercise Bike Odometer</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 4: 5-bar Parallel Robot Pen Plotter -->
+                <a href="projects/pen-plotter.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/pen-plotter.png" alt="5-bar Parallel Robot Pen Plotter" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">5-bar Parallel Robot Pen Plotter</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 5: Science Olympiad Robot Tour -->
+                <a href="projects/robot-tour.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/robot-tour.png" alt="Science Olympiad Robot Tour" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Robot Tour</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 6: Science Olympiad Electric Vehicle -->
+                <a href="projects/electric-vehicle.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/electric-vehicle.png" alt="Science Olympiad Electric Vehicle" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Electric Vehicle</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 7: Braille Printer -->
+                <a href="projects/braille-printer.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/braille-printer.png" alt="Braille Printer" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Braille Printer</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">with Brandon Jacob Oliver</p>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 8: 3D Printer Build-plate Replacing Robot -->
+                <a href="projects/build-plate-robot.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/build-plate-robot.jpg" alt="3D Printer Build-plate Replacing Robot" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Build-plate Replacing Robot</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 9: 1lb Plastic Battlebot -->
+                <a href="projects/battlebot.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/battlebot.png" alt="1lb Plastic Battlebot" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">1lb Plastic Battlebot</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 10: FTC -->
+                <a href="projects/ftc.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/ftc.png" alt="FTC" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+                <!-- Project 11: Cardboard Simulator -->
+                <a href="projects/cardboard-simulator.html" class="project-card block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+                        <img src="images/cardboard-simulator.png" alt="Cardboard Simulator" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cardboard Simulator</h3>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-medium">Read more →</p>
+                    </div>
+                </a>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-center text-gray-600 dark:text-gray-400 text-sm">© 2025 Jerry Li. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+
+        function updateIcons() {
+            if (html.classList.contains('dark')) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            updateIcons();
+        });
+
+        updateIcons();
+    </script>
+</body>
+</html>
