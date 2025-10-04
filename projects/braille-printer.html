@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braille Printer - Jerry Li</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Figtree', 'sans-serif'] },
+                    colors: { 'mydark': '#03010d' }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Figtree', sans-serif; }
+        .theme-tooltip { opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
+        #themeToggle:hover .theme-tooltip { opacity: 1; visibility: visible; }
+        body, .main-bg { background-color: #fff; }
+        .dark body, .dark .main-bg { background-color: #03010d; }
+    </style>
+</head>
+<body class="main-bg">
+    <div class="min-h-screen transition-colors duration-200 main-bg">
+        <header class="main-bg border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Braille Printer</h1>
+                    </div>
+                    <button id="themeToggle" class="relative p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-200 dark:bg-gray-800 rounded-lg shadow-xl border border-gray-300 dark:border-gray-700 px-4 py-3 z-10 min-w-[140px]">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Light mode</span>
+                                <svg id="lightCheck" class="w-4 h-4 text-green-500 flex-shrink-0 invisible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Dark mode</span>
+                                <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+                          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.222" y1="4.222" x2="5.636" y2="5.636"/>
+                            <line x1="18.364" y1="18.364" x2="19.778" y2="19.778"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.222" y1="19.778" x2="5.636" y2="18.364"/>
+                            <line x1="18.364" y1="5.636" x2="19.778" y2="4.222"/>
+                          </g>
+                        </svg>
+                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Overview</h2>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Project page for the Braille Printer. Details about the braille printer project go here.
+                </p>
+            </section>
+            <section class="mb-12">
+                <img src="../images/braille-printer.png" alt="Braille Printer" class="w-full rounded-xl shadow-lg">
+            </section>
+        </main>
+        <footer class="main-bg mt-12 border-t border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-center text-gray-600 dark:text-gray-400 text-sm">© 2025 Jerry Li. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const lightCheck = document.getElementById('lightCheck');
+    const darkCheck = document.getElementById('darkCheck');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'dark') { html.classList.add('dark'); } else { html.classList.remove('dark'); }
+    function updateIcons() {
+        const isDark = html.classList.contains('dark');
+        if (isDark) {
+            sunIcon.classList.add('hidden'); moonIcon.classList.remove('hidden');
+            lightCheck.style.visibility = 'hidden'; darkCheck.style.visibility = 'visible';
+        } else {
+            sunIcon.classList.remove('hidden'); moonIcon.classList.add('hidden');
+            lightCheck.style.visibility = 'visible'; darkCheck.style.visibility = 'hidden';
+        }
+    }
+    themeToggle.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        const isDark = html.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateIcons();
+    });
+    updateIcons();
+</script>
+</body>
+</html>
