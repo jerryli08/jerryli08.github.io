@@ -52,26 +52,25 @@
         <header class="main-bg">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Jerry Li</h1>
-                        <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 block">← Back to Portfolio</a>
-                    </div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">5-Bar Pen Plotter</h1>
                     <button id="themeToggle" class="relative p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                         <!-- Tooltip -->
                         <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-200 dark:bg-gray-800 rounded-lg shadow-xl border border-gray-300 dark:border-gray-700 px-4 py-3 whitespace-nowrap" style="min-width: 150px;">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm text-gray-700 dark:text-gray-300" id="lightModeText">Light mode</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Light mode</span>
                                 <svg id="lightCheck" class="w-4 h-4 text-green-500 flex-shrink-0 invisible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700 dark:text-gray-300" id="darkModeText">Dark mode</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Dark mode</span>
                                 <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </div>
                         <!-- Icons -->
+                        <!-- Sun: shows in LIGHT mode (so users can switch to dark) -->
                         <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
                           <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -85,11 +84,13 @@
                             <line x1="18.364" y1="5.636" x2="19.778" y2="4.222"/>
                           </g>
                         </svg>
+                        <!-- Moon: shows in DARK mode (so users can switch to light) -->
                         <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                         </svg>
                     </button>
                 </div>
+                    <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 block">← Back to Portfolio</a>
             </div>
         </header>
 
