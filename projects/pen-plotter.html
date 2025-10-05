@@ -39,9 +39,12 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white" id="headerTitle">5-bar Pen Plotter</h1>
+                    <div>
+                        <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
+                        <h1 class="text-3xl font-bold" id="headerTitle">5-Bar Pen Plotter</h1>
+                    </div>
                     <button id="themeToggle" class="relative p-2 rounded-lg transition-colors" style="background-color: rgba(255, 255, 255, 0.1);">
                         <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 rounded-lg shadow-xl border px-4 py-3 whitespace-nowrap" id="tooltip" style="min-width: 140px; background-color: rgba(0, 0, 0, 0.8); border-color: rgba(255, 255, 255, 0.2);">
                             <div class="flex items-center justify-between mb-2">
@@ -53,15 +56,262 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm" id="darkModeText">Dark mode</span>
                                 <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
                         </div>
+                        <svg id="sunIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
         </header>
-        <!-- Page Content -->
-        <!-- ...rest of your content... -->
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Main Image -->
+            <section class="mb-12">
+                <img src="../images/pen-plotter.PNG" alt="5-bar Pen Plotter" class="w-full rounded-xl shadow-lg">
+            </section>
+            
+            <!-- Project Overview -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Overview</h2>
+                <p class="leading-relaxed mb-4" id="overviewText">
+                    I created a 5-bar pen plotter to learn how Linear Algebra is applied in a robotics context, with transformation matrices. <br>
+                    I used 3D-printed arms with 2 NEMA17 stepper motors, each controlled by Trinamic TMC2209 stepper motor driver. Programming was done in C++ with an Arduino Nano. <br>
+                    The user inputs cartesian coordinates, which are transformed using inverse kinematics to the motors' target angles.
+            </section>
+
+            <!-- CAD Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">CAD</h2>
+                
+                <!-- Fusion 360 Embed -->
+                <div class="relative w-full rounded-xl shadow-lg overflow-hidden mb-6" style="height: 500px; background-color: #1a1a1a;">
+                    <iframe 
+                        src="https://a360.co/46NPB1S" 
+                        class="w-full h-full" 
+                        allowfullscreen="true" 
+                        webkitallowfullscreen="true" 
+                        mozallowfullscreen="true" 
+                        frameborder="0">
+                    </iframe>
+                </div>
+                
+                <!-- First Row: Text Left, Image Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText1">
+                            Add your description of the CAD design process here. Explain your design decisions, constraints, iterations, etc.
+                        </p>
+                    </div>
+                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
+                </div>
+                
+                <!-- Second Row: Image Left, Text Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/hybrid-vehicle-cad-2.png" alt="CAD Detail 2" class="w-full rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText2">
+                            Add more description here. Talk about specific components, challenges, or design choices.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assembly & Testing Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle3">Assembly & Testing</h2>
+                
+                <p class="leading-relaxed mb-6" id="assemblyText">
+                    Describe your assembly process and testing methodology here. What challenges did you encounter? How did you solve them?
+                </p>
+
+                <!-- Assembly Images -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/hybrid-vehicle-assembly-1.png" alt="Assembly Detail 1" class="w-full rounded-lg shadow-md">
+                    <img src="../images/hybrid-vehicle-assembly-2.png" alt="Assembly Detail 2" class="w-full rounded-lg shadow-md">
+                </div>
+
+                <!-- Testing Video -->
+                <div class="mb-6">
+                    <video 
+                        class="w-full rounded-xl shadow-lg" 
+                        controls 
+                        autoplay 
+                        muted 
+                        loop
+                        playsinline>
+                        <source src="../video/hybrid-vehicle-testing.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p class="text-sm mt-2 text-center" id="videoCaption1">Testing video caption</p>
+                </div>
+            </section>
+
+            <!-- Conclusion Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle4">Conclusion</h2>
+                
+                <p class="leading-relaxed mb-6" id="conclusionText">
+                    Summarize your results, key learnings, and future improvements here. What worked well? What would you change?
+                </p>
+
+                <!-- Conclusion Images -->
+                <div class="mb-6">
+                    <img src="../images/hybrid-vehicle-final.png" alt="Final Result" class="w-full rounded-lg shadow-md">
+                </div>
+
+                <!-- Demo Video -->
+                <div class="mb-6">
+                    <video 
+                        class="w-full rounded-xl shadow-lg" 
+                        controls 
+                        autoplay 
+                        muted 
+                        loop
+                        playsinline>
+                        <source src="../video/hybrid-vehicle-demo.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p class="text-sm mt-2 text-center" id="videoCaption2">Demo video caption</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12" id="footerSection">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const lightCheck = document.getElementById('lightCheck');
+        const darkCheck = document.getElementById('darkCheck');
+        
+        // All text elements that need color updates
+        const textElements = {
+            body: document.body,
+            mainContainer: document.getElementById('mainContainer'),
+            headerSection: document.getElementById('headerSection'),
+            headerTitle: document.getElementById('headerTitle'),
+            footerSection: document.getElementById('footerSection'),
+            footerText: document.getElementById('footerText'),
+            tooltip: document.getElementById('tooltip'),
+            lightModeText: document.getElementById('lightModeText'),
+            darkModeText: document.getElementById('darkModeText'),
+            sectionTitle1: document.getElementById('sectionTitle1'),
+            sectionTitle2: document.getElementById('sectionTitle2'),
+            sectionTitle3: document.getElementById('sectionTitle3'),
+            sectionTitle4: document.getElementById('sectionTitle4'),
+            overviewText: document.getElementById('overviewText'),
+            cadText1: document.getElementById('cadText1'),
+            cadText2: document.getElementById('cadText2'),
+            assemblyText: document.getElementById('assemblyText'),
+            conclusionText: document.getElementById('conclusionText'),
+            videoCaption1: document.getElementById('videoCaption1'),
+            videoCaption2: document.getElementById('videoCaption2')
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        
+        function applyTheme(isDark) {
+            if (isDark) {
+                textElements.body.style.backgroundColor = '#03010d';
+                textElements.mainContainer.style.backgroundColor = '#03010d';
+                textElements.headerSection.style.backgroundColor = '#03010d';
+                textElements.footerSection.style.backgroundColor = '#03010d';
+                textElements.headerTitle.style.color = '#ffffff';
+                textElements.footerText.style.color = '#9ca3af';
+                themeToggle.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                textElements.tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                textElements.tooltip.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                textElements.lightModeText.style.color = '#d1d5db';
+                textElements.darkModeText.style.color = '#d1d5db';
+                sunIcon.style.color = '#e5e7eb';
+                moonIcon.style.color = '#e5e7eb';
+                
+                // Section titles and content
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                    if (el) el.style.color = '#ffffff';
+                });
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                    if (el) el.style.color = '#d1d5db';
+                });
+                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
+                    if (el) el.style.color = '#9ca3af';
+                });
+            } else {
+                textElements.body.style.backgroundColor = '#ffffff';
+                textElements.mainContainer.style.backgroundColor = '#ffffff';
+                textElements.headerSection.style.backgroundColor = '#ffffff';
+                textElements.footerSection.style.backgroundColor = '#ffffff';
+                textElements.headerTitle.style.color = '#000000';
+                textElements.footerText.style.color = '#6b7280';
+                themeToggle.style.backgroundColor = '#e5e7eb';
+                textElements.tooltip.style.backgroundColor = '#ffffff';
+                textElements.tooltip.style.borderColor = '#d1d5db';
+                textElements.lightModeText.style.color = '#374151';
+                textElements.darkModeText.style.color = '#374151';
+                sunIcon.style.color = '#374151';
+                moonIcon.style.color = '#374151';
+                
+                // Section titles and content
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                    if (el) el.style.color = '#111827';
+                });
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                    if (el) el.style.color = '#374151';
+                });
+                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
+                    if (el) el.style.color = '#6b7280';
+                });
+            }
+        }
+
+        function updateIcons(isDark) {
+            if (isDark) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                lightCheck.style.visibility = 'hidden';
+                darkCheck.style.visibility = 'visible';
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                lightCheck.style.visibility = 'visible';
+                darkCheck.style.visibility = 'hidden';
+            }
+        }
+
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+            applyTheme(true);
+            updateIcons(true);
+        } else {
+            html.classList.remove('dark');
+            applyTheme(false);
+            updateIcons(false);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            applyTheme(isDark);
+            updateIcons(isDark);
+        });
+    </script>
 </body>
 </html>
