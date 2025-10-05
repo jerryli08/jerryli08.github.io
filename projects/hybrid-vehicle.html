@@ -73,6 +73,10 @@
 
         <!-- Main Content -->
         <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Main Image -->
+            <section class="mb-12">
+                <img src="../images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full rounded-xl shadow-lg">
+            </section>
             
             <!-- Project Overview -->
             <section class="mb-12">
@@ -85,27 +89,12 @@
                 </p>
             </section>
 
-            <!-- Main Image -->
-            <section class="mb-12">
-                <img src="../images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full rounded-xl shadow-lg">
-            </section>
-
             <!-- CAD Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">CAD</h2>
                 
-                <p class="leading-relaxed mb-6" id="cadText">
-                    Add your description of the CAD design process here. Explain your design decisions, constraints, iterations, etc.
-                </p>
-
-                <!-- CAD Images Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
-                    <img src="../images/hybrid-vehicle-cad-2.png" alt="CAD Detail 2" class="w-full rounded-lg shadow-md">
-                </div>
-
                 <!-- Fusion 360 Embed -->
-                <div class="relative w-full rounded-xl shadow-lg overflow-hidden" style="height: 500px; background-color: #1a1a1a;">
+                <div class="relative w-full rounded-xl shadow-lg overflow-hidden mb-6" style="height: 500px; background-color: #1a1a1a;">
                     <iframe 
                         src="https://a360.co/45sUzAD" 
                         class="w-full h-full" 
@@ -114,6 +103,26 @@
                         mozallowfullscreen="true" 
                         frameborder="0">
                     </iframe>
+                </div>
+                
+                <!-- First Row: Text Left, Image Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText1">
+                            Add your description of the CAD design process here. Explain your design decisions, constraints, iterations, etc.
+                        </p>
+                    </div>
+                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
+                </div>
+                
+                <!-- Second Row: Image Left, Text Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/hybrid-vehicle-cad-2.png" alt="CAD Detail 2" class="w-full rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText2">
+                            Add more description here. Talk about specific components, challenges, or design choices.
+                        </p>
+                    </div>
                 </div>
             </section>
 
@@ -140,7 +149,7 @@
                         muted 
                         loop
                         playsinline>
-                        <source src="../images/hybrid-vehicle-testing.mp4" type="video/mp4">
+                        <source src="../video/hybrid-vehicle-testing.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                     <p class="text-sm mt-2 text-center" id="videoCaption1">Testing video caption</p>
@@ -169,7 +178,7 @@
                         muted 
                         loop
                         playsinline>
-                        <source src="../images/hybrid-vehicle-demo.mp4" type="video/mp4">
+                        <source src="../video/hybrid-vehicle-demo.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                     <p class="text-sm mt-2 text-center" id="videoCaption2">Demo video caption</p>
