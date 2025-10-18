@@ -73,19 +73,27 @@
 
         <!-- Main Content -->
         <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+            <!-- Side by Side Layout -->
             <section class="mb-12">
-                <img src="../images/jerry-portrait.jpg" alt="Jerry Li Portrait" class="w-full rounded-xl shadow-lg">
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <!-- Image on Left -->
+                    <div class="w-full md:w-1/2">
+                        <div class="overflow-hidden rounded-xl shadow-lg" style="height: 400px;">
+                            <img src="../images/jerry-portrait.jpg" alt="Jerry Li Portrait" class="w-full h-full object-cover object-center">
+                        </div>
+                    </div>
+                    
+                    <!-- Text on Right -->
+                    <div class="w-full md:w-1/2">
+                        <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Hello! I'm Jerry Li, </h2>
+                        <p class="leading-relaxed mb-4" id="overviewText">
+                            I'm a 17 year old high school senior from Clarksville, Maryland. <br>
+                            I'm passionate about innovative mechatronic systems. After high school, I plan to study mechanical engineering in college, while also pursuing entrepreneurship.
+                        </p>
+                    </div>
+                </div>
             </section>
-            
-            <!-- Project Overview -->
-            <section class="mb-12">
-                <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Hello! I'm Jerry Li, </h2>
-                <p class="leading-relaxed mb-4" id="overviewText">
-                    I'm a 17 year old high school senior from Clarksville, Maryland. <br>
-                    I'm passionate about innovative mechatronic systems. After high school, I plan to study mechanical engineering in college, while also pursuing entrepreneurship.
-                </p>
-            </section>
+        </main>
           
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
@@ -127,7 +135,7 @@
             videoCaption2: document.getElementById('videoCaption2')
         };
 
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const savedTheme = 'dark';
         
         function applyTheme(isDark) {
             if (isDark) {
@@ -197,20 +205,13 @@
             }
         }
 
-        if (savedTheme === 'dark') {
-            html.classList.add('dark');
-            applyTheme(true);
-            updateIcons(true);
-        } else {
-            html.classList.remove('dark');
-            applyTheme(false);
-            updateIcons(false);
-        }
+        html.classList.add('dark');
+        applyTheme(true);
+        updateIcons(true);
 
         themeToggle.addEventListener('click', () => {
             html.classList.toggle('dark');
             const isDark = html.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
             applyTheme(isDark);
             updateIcons(isDark);
         });
