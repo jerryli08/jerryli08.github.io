@@ -88,11 +88,10 @@
                 </p>
             </section>
 
-            <!-- CAD Section -->
+            <!-- 2024-25 Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2024-25</h2>
                 
-                <!-- First Row: Text Left, Image Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="flex items-center">
                         <p class="leading-relaxed" id="cadText1">
@@ -102,51 +101,56 @@
                     <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
             </section>
+
+            <!-- 2023-24 Section -->
             <section class="mb-12">
-                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2023-24</h2>
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle3">2023-24</h2>
                 
-                <!-- First Row: Text Left, Image Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
-                    </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
-                </div>
-                <section class="mb-12">
-                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2022-23</h2>
-                
-                <!-- First Row: Text Left, Image Right -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
+                        <p class="leading-relaxed" id="cadText2">
                             This part of the site is still under construction, please check back soon!
                         </p>
                     </div>
                     <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
             </section>
+
+            <!-- 2022-23 Section -->
             <section class="mb-12">
-                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2021-22</h2>
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle4">2022-23</h2>
                 
-                <!-- First Row: Text Left, Image Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
+                        <p class="leading-relaxed" id="assemblyText">
                             This part of the site is still under construction, please check back soon!
                         </p>
                     </div>
                     <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
             </section>
+
+            <!-- 2021-22 Section -->
             <section class="mb-12">
-                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2020-21</h2>
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle5">2021-22</h2>
                 
-                <!-- First Row: Text Left, Image Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
+                        <p class="leading-relaxed" id="conclusionText">
+                            This part of the site is still under construction, please check back soon!
+                        </p>
+                    </div>
+                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
+                </div>
+            </section>
+
+            <!-- 2020-21 Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle6">2020-21</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="videoCaption1">
                             This part of the site is still under construction, please check back soon!
                         </p>
                     </div>
@@ -186,6 +190,8 @@
             sectionTitle2: document.getElementById('sectionTitle2'),
             sectionTitle3: document.getElementById('sectionTitle3'),
             sectionTitle4: document.getElementById('sectionTitle4'),
+            sectionTitle5: document.getElementById('sectionTitle5'),
+            sectionTitle6: document.getElementById('sectionTitle6'),
             overviewText: document.getElementById('overviewText'),
             cadText1: document.getElementById('cadText1'),
             cadText2: document.getElementById('cadText2'),
@@ -214,7 +220,7 @@
                 moonIcon.style.color = '#e5e7eb';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4, textElements.sectionTitle5, textElements.sectionTitle6].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
                 [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
@@ -239,7 +245,7 @@
                 moonIcon.style.color = '#374151';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4, textElements.sectionTitle5, textElements.sectionTitle6].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
                 [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
