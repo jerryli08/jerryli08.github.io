@@ -28,12 +28,17 @@
             font-family: 'Figtree', sans-serif;
         }
         .project-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             display: flex;
             flex-direction: column;
         }
         .project-card:hover {
             transform: translateY(-4px);
+            border-color: rgb(59, 130, 246) !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2);
+        }
+        .dark .project-card:hover {
+            box-shadow: 0 0 25px rgba(96, 165, 250, 0.5), 0 0 50px rgba(96, 165, 250, 0.25);
         }
         .theme-tooltip {
             opacity: 0;
