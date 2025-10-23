@@ -73,6 +73,11 @@
 
         <!-- Main Content -->
         <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Main Image -->
+            <section class="mb-12">
+                <img src="../images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full rounded-xl shadow-lg" style="max-height: 60vh; object-fit: cover;">
+            </section>
+
             <!-- Main Content: Videos and PDF -->
             <section class="mb-12">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -81,8 +86,8 @@
                         <!-- Video 1: UAV Carrying UGV -->
                         <div>
                             <video 
+                                id="video1"
                                 class="w-full rounded-lg shadow-md" 
-                                controls 
                                 autoplay 
                                 muted 
                                 loop
@@ -96,8 +101,8 @@
                         <!-- Video 2: UGV Carrying UAV -->
                         <div>
                             <video 
+                                id="video2"
                                 class="w-full rounded-lg shadow-md" 
-                                controls 
                                 autoplay 
                                 muted 
                                 loop
@@ -111,8 +116,8 @@
                         <!-- Video 3: Separate UAV and UGV -->
                         <div>
                             <video 
+                                id="video3"
                                 class="w-full rounded-lg shadow-md" 
-                                controls 
                                 autoplay 
                                 muted 
                                 loop
@@ -259,6 +264,37 @@
         const moonIcon = document.getElementById('moonIcon');
         const lightCheck = document.getElementById('lightCheck');
         const darkCheck = document.getElementById('darkCheck');
+        
+        // Force videos to play continuously
+        const videos = [
+            document.getElementById('video1'),
+            document.getElementById('video2'),
+            document.getElementById('video3')
+        ];
+        
+        videos.forEach(video => {
+            if (video) {
+                // Ensure video plays on load
+                video.play().catch(e => console.log('Autoplay prevented:', e));
+                
+                // Prevent pausing
+                video.addEventListener('pause', function() {
+                    this.play();
+                });
+                
+                // Restart if ended (backup for loop)
+                video.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                });
+                
+                // Force play on any interaction
+                video.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.play();
+                });
+            }
+        });
         
         // All text elements that need color updates
         const textElements = {
