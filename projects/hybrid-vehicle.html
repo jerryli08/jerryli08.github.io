@@ -73,9 +73,19 @@
 
         <!-- Main Content -->
         <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+            <!-- UAV Carrying UGV Video - Full Width -->
             <section class="mb-12">
-                <img src="../images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="w-full rounded-xl shadow-lg" style="max-height: 60vh; object-fit: cover;">
+                <video 
+                    id="video1"
+                    class="w-full rounded-xl shadow-lg" 
+                    autoplay 
+                    muted 
+                    loop
+                    playsinline>
+                    <source src="../videos/hybrid-vehicle-flight.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <p class="text-sm mt-2 text-center video-caption" id="videoCaption3">UAV Carrying UGV</p>
             </section>
 
             <!-- Main Content: Videos and PDF -->
@@ -83,21 +93,6 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Left Column: Videos -->
                     <div class="space-y-6">
-                        <!-- Video 1: UAV Carrying UGV -->
-                        <div>
-                            <video 
-                                id="video1"
-                                class="w-full rounded-lg shadow-md" 
-                                autoplay 
-                                muted 
-                                loop
-                                playsinline>
-                                <source src="../videos/hybrid-vehicle-flight.mp4" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                            <p class="text-sm mt-2 text-center video-caption" id="videoCaption3">UAV Carrying UGV</p>
-                        </div>
-
                         <!-- Video 2: UGV Carrying UAV -->
                         <div>
                             <video 
