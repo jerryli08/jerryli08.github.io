@@ -384,17 +384,25 @@
         });
         
         // Align videos function
+// Align videos function
         function alignVideos() {
             const nonDriveSideContainer = document.getElementById('nonDriveSideContainer');
             const maxSpeedVideoContainer = document.getElementById('maxSpeedVideoContainer');
             const closeUpVideoContainer = document.getElementById('closeUpVideoContainer');
             
             if (nonDriveSideContainer && maxSpeedVideoContainer && closeUpVideoContainer) {
-                // Get the height of the non-drive side image container
-                const imageHeight = nonDriveSideContainer.offsetHeight;
+                // Reset margin first
+                closeUpVideoContainer.style.marginTop = '0';
                 
-                // Apply margin-top to the close-up video to align with max speed video
-                closeUpVideoContainer.style.marginTop = imageHeight + 24 + 'px'; // 24px is the gap-6 (1.5rem)
+                // Get the actual position of the max speed video container
+                const maxSpeedTop = maxSpeedVideoContainer.getBoundingClientRect().top;
+                const closeUpTop = closeUpVideoContainer.getBoundingClientRect().top;
+                
+                // Calculate the difference and apply margin to align tops
+                const offset = maxSpeedTop - closeUpTop;
+                if (offset > 0) {
+                    closeUpVideoContainer.style.marginTop = offset + 'px';
+                }
             }
         }
         
