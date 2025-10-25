@@ -109,7 +109,7 @@
                         </div>
 
                         <!-- Video 3: E-Bike Close-Up -->
-                        <div>
+                        <div id="closeUpVideoContainer">
                             <video 
                                 id="video3"
                                 class="w-full rounded-lg shadow-md" 
@@ -127,13 +127,13 @@
                     <!-- Right Column: Images and Video -->
                     <div class="space-y-6">
                         <!-- Image: E-Bike Non-Drive Side -->
-                        <div>
-                            <img src="../images/ebike-nondrive-side.png" alt="E-Bike Non-Drive Side" class="w-full rounded-lg shadow-md">
+                        <div id="nonDriveSideContainer">
+                            <img id="nonDriveSideImg" src="../images/ebike-nondrive-side.png" alt="E-Bike Non-Drive Side" class="w-full rounded-lg shadow-md">
                             <p class="text-sm mt-2 text-center video-caption" id="videoCaption6">Non-Drive Side</p>
                         </div>
 
                         <!-- Video: E-Bike Max Speed -->
-                        <div>
+                        <div id="maxSpeedVideoContainer">
                             <video 
                                 id="video4"
                                 class="w-full rounded-lg shadow-md" 
@@ -176,42 +176,43 @@
             </section>
 
             <!-- Assembly & Testing Section -->
-            <section class="mb-12">
+         <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle3">Assembly & Testing</h2>
-                
-                <p class="leading-relaxed mb-6" id="assemblyText">
-                    This part of the site is still under construction, please check back soon!
-                </p>
-
                 <!-- Assembly Images -->
-                <!-- First Row: Text Left, Image Right -->
+                <!-- First Row: Image Left, Text Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/ebike-parts.png" alt="Assortment of e-bike parts" class="w-full rounded-lg shadow-md">
                     <div class="flex items-center">
                         <p class="leading-relaxed" id="cadText1">
-                            Assortment of custom parts. Most parts were laser cut and bent from 5052 Aluminum, with some being CNCed from Carbon Fiber sheets or laser cut from Stainless Steel.
+                            Assortment of custom parts. <br>
+                            <br>
+                            Most parts were laser cut and bent from 5052 Aluminum, which was also powder coated. <br>
+                            <br>
+                            Some parts were CNCed from Carbon Fiber sheets or laser cut from Stainless Steel.
                         </p>
                     </div>
-                    <img src="../images/ebike-parts.png" alt="Assortment of e-bike parts" class="w-full rounded-lg shadow-md">
                 </div>
                 
-                <!-- Second Row: Image Left, Text Right -->
+                <!-- Second Row: Text Left, Image Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <img src="../images/ebike-build-progress.png" alt="E-bike mid-build progress" class="w-full rounded-lg shadow-md">
                     <div class="flex items-center">
                         <p class="leading-relaxed" id="cadText2">
-                            The e-bike mid-build; I had just mounted the motors and was mocking up the first stage of belt reduction.
+                            The e-bike mid-build. <br>
+                            <br>
+                            I had just mounted the motors, and was mocking up the first stage of belt reduction.
                         </p>
                     </div>
+                    <img src="../images/ebike-build-progress.png" alt="E-bike mid-build progress" class="w-full rounded-lg shadow-md">
                 </div>
                 
-                <!-- Third Row: Text Left, Image Right -->
+                <!-- Third Row: Image Left, Text Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/ebike-vesc-config.png" alt="Configuring VESC for e-bike" class="w-full rounded-lg shadow-md">
                     <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
+                        <p class="leading-relaxed" id="cadText3">
                             Configuring the throttle through VESC tool.
                         </p>
                     </div>
-                    <img src="../images/ebike-vesc-config.png" alt="Configuring VESC for e-bike" class="w-full rounded-lg shadow-md">
                 </div>
             </section>
         </main>
@@ -282,6 +283,7 @@
             overviewText: document.getElementById('overviewText'),
             cadText1: document.getElementById('cadText1'),
             cadText2: document.getElementById('cadText2'),
+            cadText3: document.getElementById('cadText3'),
             assemblyText: document.getElementById('assemblyText'),
             conclusionText: document.getElementById('conclusionText'),
             videoCaption1: document.getElementById('videoCaption1'),
@@ -315,7 +317,7 @@
                 [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.cadText3, textElements.assemblyText, textElements.conclusionText].forEach(el => {
                     if (el) el.style.color = '#d1d5db';
                 });
                 [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3, textElements.videoCaption4, textElements.videoCaption5, textElements.videoCaption6, textElements.videoCaption7].forEach(el => {
@@ -340,7 +342,7 @@
                 [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.cadText3, textElements.assemblyText, textElements.conclusionText].forEach(el => {
                     if (el) el.style.color = '#374151';
                 });
                 [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3, textElements.videoCaption4, textElements.videoCaption5, textElements.videoCaption6, textElements.videoCaption7].forEach(el => {
@@ -380,6 +382,35 @@
             applyTheme(isDark);
             updateIcons(isDark);
         });
+        
+        // Align videos function
+        function alignVideos() {
+            const nonDriveSideContainer = document.getElementById('nonDriveSideContainer');
+            const maxSpeedVideoContainer = document.getElementById('maxSpeedVideoContainer');
+            const closeUpVideoContainer = document.getElementById('closeUpVideoContainer');
+            
+            if (nonDriveSideContainer && maxSpeedVideoContainer && closeUpVideoContainer) {
+                // Get the height of the non-drive side image container
+                const imageHeight = nonDriveSideContainer.offsetHeight;
+                
+                // Apply margin-top to the close-up video to align with max speed video
+                closeUpVideoContainer.style.marginTop = imageHeight + 24 + 'px'; // 24px is the gap-6 (1.5rem)
+            }
+        }
+        
+        // Run alignment on load and resize
+        window.addEventListener('load', alignVideos);
+        window.addEventListener('resize', alignVideos);
+        
+        // Also run after image loads
+        const img = document.getElementById('nonDriveSideImg');
+        if (img) {
+            img.addEventListener('load', alignVideos);
+            // If image is already loaded (from cache)
+            if (img.complete) {
+                alignVideos();
+            }
+        }
     </script>
 </body>
 </html>
