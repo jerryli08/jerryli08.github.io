@@ -35,51 +35,39 @@
         }
         .cropped-image {
             width: 100%;
-            height: 0;
-            padding-bottom: 49%; /* 70% of original height for 70% crop */
             position: relative;
             overflow: hidden;
         }
         .cropped-image img {
-            position: absolute;
-            top: 50%;
-            left: 0;
             width: 100%;
             height: auto;
-            transform: translateY(-50%) scale(1.43); /* 100/70 to compensate for crop, centered */
-            transform-origin: center center;
+            display: block;
+            margin-top: -15%;
+            margin-bottom: -15%;
         }
         .video-crop-50 {
             position: relative;
             width: 100%;
-            height: 0;
-            padding-bottom: 50%; /* Will be adjusted based on video aspect ratio */
             overflow: hidden;
         }
         .video-crop-50 video {
-            position: absolute;
-            top: 50%;
-            left: 0;
             width: 100%;
             height: auto;
-            transform: translateY(-50%) scale(2); /* Scale to show middle 50% */
-            transform-origin: center center;
+            display: block;
+            margin-top: -25%;
+            margin-bottom: -25%;
         }
         .video-crop-70 {
             position: relative;
             width: 100%;
-            height: 0;
-            padding-bottom: 70%; /* Will be adjusted based on video aspect ratio */
             overflow: hidden;
         }
         .video-crop-70 video {
-            position: absolute;
-            top: 50%;
-            left: 0;
             width: 100%;
             height: auto;
-            transform: translateY(-50%) scale(1.43); /* Scale to show middle 70% (100/70) */
-            transform-origin: center center;
+            display: block;
+            margin-top: -15%;
+            margin-bottom: -15%;
         }
     </style>
 </head>
@@ -126,33 +114,31 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
                     <!-- Left Video: Home Test -->
                     <div>
-                        <div class="video-container rounded-xl shadow-lg overflow-hidden">
-                            <video 
-                                id="video1"
-                                autoplay 
-                                muted 
-                                loop
-                                playsinline>
-                                <source src="../videos/sciolyev-home-test.mp4" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
+                        <video 
+                            id="video1"
+                            class="w-full rounded-xl shadow-lg"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-home-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
                         <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">Home Test</p>
                     </div>
                     
                     <!-- Right Video: School Test -->
                     <div>
-                        <div class="video-container rounded-xl shadow-lg overflow-hidden">
-                            <video 
-                                id="video2"
-                                autoplay 
-                                muted 
-                                loop
-                                playsinline>
-                                <source src="../videos/sciolyev-school-test.mp4" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
+                        <video 
+                            id="video2"
+                            class="w-full rounded-xl shadow-lg"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-school-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
                         <p class="text-sm mt-2 text-center video-caption" id="videoCaption2">School Test</p>
                     </div>
                 </div>
@@ -197,16 +183,17 @@
                 
                 <!-- First Row: Video Left, Text Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <video 
-                        id="video3"
-                        class="w-full rounded-lg shadow-md" 
-                        autoplay 
-                        muted 
-                        loop
-                        playsinline>
-                        <source src="../videos/sciolyev-motor-test.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+                    <div class="video-crop-50 rounded-lg shadow-md overflow-hidden">
+                        <video 
+                            id="video3"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-motor-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
                     <div class="flex items-center">
                         <p class="leading-relaxed" id="cadText1">
                             Integrated test of BLDC motor and MT6701 Rotary Absolute Magnetic Encoder. <br> <br> Arduino Nano outputs PWM for BLDC ESC, and reads MT6701 through I2C.
@@ -221,16 +208,17 @@
                             First ground test with HDF (hardboard) CNC plates. <br> <br> Plates were too heavy and ESC was configured unoptimally in BLHeli_32 Suite, hence poor performance.
                         </p>
                     </div>
-                    <video 
-                        id="video4"
-                        class="w-full rounded-lg shadow-md" 
-                        autoplay 
-                        muted 
-                        loop
-                        playsinline>
-                        <source src="../videos/sciolyev-v1-test.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+                    <div class="video-crop-70 rounded-lg shadow-md overflow-hidden">
+                        <video 
+                            id="video4"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-v1-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
                 </div>
                 
                 <!-- Third Row: Image Left, Text Right -->
