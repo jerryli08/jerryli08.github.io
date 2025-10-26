@@ -109,10 +109,10 @@
 
         <!-- Main Content -->
         <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Top Video - Half Width Centered -->
+            <!-- Top Video - Half Width -->
             <section class="mb-12">
-                <div class="flex justify-center mb-4">
-                    <div class="w-full lg:w-1/2">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+                    <div>
                         <video 
                             id="video1"
                             class="w-full rounded-xl shadow-lg"
@@ -126,14 +126,6 @@
                         <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">Demo Video (4x Speed)</p>
                     </div>
                 </div>
-            </section>
-
-            <!-- Full Width Image - Cropped to 70% -->
-            <section class="mb-12">
-                <div class="cropped-image rounded-xl shadow-lg overflow-hidden">
-                    <img id="mainImage" src="../images/build-plate-robot.JPG" alt="3D Printer Automation Robot">
-                </div>
-                <p class="text-sm mt-2 text-center video-caption" id="videoCaption2">3D Printer Automation Robot</p>
             </section>
             
             <!-- Project Overview -->
@@ -168,9 +160,10 @@
                 
                 <!-- First Row: Video Left, Text Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="video-crop-50 rounded-lg shadow-md overflow-hidden">
+                    <div>
                         <video 
                             id="video2"
+                            class="w-full rounded-lg shadow-md"
                             autoplay 
                             muted 
                             loop
@@ -198,9 +191,10 @@
                 
                 <!-- Third Row: Video Left, Text Right -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="video-crop-70 rounded-lg shadow-md overflow-hidden">
+                    <div>
                         <video 
                             id="video3"
+                            class="w-full rounded-lg shadow-md"
                             autoplay 
                             muted 
                             loop
