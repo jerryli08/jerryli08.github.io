@@ -39,7 +39,7 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
                     <div>
                         <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
@@ -72,10 +72,43 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Video and Image Row -->
             <section class="mb-12">
-                <img src="../images/battlebot.png" alt="1 lb Plastic Battlebot" class="w-full rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 lg:grid-cols-10 gap-6">
+                    <!-- Left 70%: Video -->
+                    <div class="lg:col-span-7">
+                        <video 
+                            id="video1"
+                            class="w-full rounded-xl shadow-lg" 
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/battlebot-1.mov" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+
+                    <!-- Right 30%: Image -->
+                    <div class="lg:col-span-3">
+                        <img src="../images/battlebot-weighing.png" alt="Battlebot Weighing" class="w-full h-full object-cover rounded-xl shadow-lg">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Full Width Video -->
+            <section class="mb-12">
+                <video 
+                    id="video2"
+                    class="w-full rounded-xl shadow-lg" 
+                    autoplay 
+                    muted 
+                    loop
+                    playsinline>
+                    <source src="../videos/battlebot-2.mov" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </section>
             
             <!-- Project Overview -->
@@ -106,7 +139,7 @@
 
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
             </div>
         </footer>
@@ -119,6 +152,36 @@
         const moonIcon = document.getElementById('moonIcon');
         const lightCheck = document.getElementById('lightCheck');
         const darkCheck = document.getElementById('darkCheck');
+        
+        // Force videos to play continuously
+        const videos = [
+            document.getElementById('video1'),
+            document.getElementById('video2')
+        ];
+        
+        videos.forEach(video => {
+            if (video) {
+                // Ensure video plays on load
+                video.play().catch(e => console.log('Autoplay prevented:', e));
+                
+                // Prevent pausing
+                video.addEventListener('pause', function() {
+                    this.play();
+                });
+                
+                // Restart if ended (backup for loop)
+                video.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                });
+                
+                // Force play on any interaction
+                video.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.play();
+                });
+            }
+        });
         
         // All text elements that need color updates
         const textElements = {
@@ -133,15 +196,7 @@
             darkModeText: document.getElementById('darkModeText'),
             sectionTitle1: document.getElementById('sectionTitle1'),
             sectionTitle2: document.getElementById('sectionTitle2'),
-            sectionTitle3: document.getElementById('sectionTitle3'),
-            sectionTitle4: document.getElementById('sectionTitle4'),
-            overviewText: document.getElementById('overviewText'),
-            cadText1: document.getElementById('cadText1'),
-            cadText2: document.getElementById('cadText2'),
-            assemblyText: document.getElementById('assemblyText'),
-            conclusionText: document.getElementById('conclusionText'),
-            videoCaption1: document.getElementById('videoCaption1'),
-            videoCaption2: document.getElementById('videoCaption2')
+            overviewText: document.getElementById('overviewText')
         };
 
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -163,15 +218,10 @@
                 moonIcon.style.color = '#e5e7eb';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#d1d5db';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#9ca3af';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#d1d5db';
             } else {
                 textElements.body.style.backgroundColor = '#ffffff';
                 textElements.mainContainer.style.backgroundColor = '#ffffff';
@@ -188,15 +238,10 @@
                 moonIcon.style.color = '#374151';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#374151';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#6b7280';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#374151';
             }
         }
 
