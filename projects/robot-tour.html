@@ -36,8 +36,9 @@
         .video-crop {
             position: relative;
             width: 100%;
-            padding-bottom: 36%; /* 60% of 16:9 aspect ratio */
+            padding-bottom: 54%; /* 1.5x larger than original 36% */
             overflow: hidden;
+            border-radius: 0.75rem; /* rounded-xl */
         }
         .video-crop video {
             position: absolute;
@@ -88,7 +89,7 @@
         <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <!-- Robot Tour Video - Cropped to Middle 60% -->
             <section class="mb-12">
-                <div class="video-crop rounded-xl shadow-lg overflow-hidden">
+                <div class="video-crop shadow-lg">
                     <video 
                         id="video1"
                         class="w-full" 
@@ -106,15 +107,14 @@
             <!-- Optical Flow Sensor Description -->
             <section class="mb-12">
                 <p class="leading-relaxed mb-4" id="opticalFlowText">
-                    I used an optical flow sensor for navigation, but it wasn't accurate enough because it would drift over time. As shown in the video, the accumulated errors from the sensor caused the robot's position estimate to diverge from its actual location, making precise navigation challenging.
-                </p>
+                    I used an optical flow sensor for localization, but it wasn't accurate enough, so it drifted over time. As shown in the video, the accumulated errors from the sensor caused the robot's position estimate to diverge quite far from its actual location.
             </section>
             
             <!-- Project Overview -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Overview</h2>
                 <p class="leading-relaxed mb-4" id="overviewText">
-                    I created this robot individually for the 2024-25 Science Olympiad "Robot Tour" event.
+                    I created this robot individually for the 2024-25 Science Olympiad "Robot Tour" event. It unfortunately did not get to compete because of the aforementioned optical flow drift.
                 </p>
             </section>
 
