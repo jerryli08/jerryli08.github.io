@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,7 +40,7 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
                     <div>
                         <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
@@ -72,10 +73,32 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Top Video - Centered -->
             <section class="mb-12">
-                <img src="../images/cardboard-simulator.PNG" alt="Cardboard Racing Simulator" class="w-full rounded-xl shadow-lg">
+                <div class="flex justify-center">
+                    <div class="w-full max-w-10xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video1"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/cardboard-simulator-demo.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">Demo Video</p>
+                    </div>
+                </div>
             </section>
             
             <!-- Project Overview -->
@@ -89,7 +112,7 @@
 
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
             </div>
         </footer>
@@ -103,6 +126,39 @@
         const lightCheck = document.getElementById('lightCheck');
         const darkCheck = document.getElementById('darkCheck');
         
+        // Video loading indicator
+        const video1 = document.getElementById('video1');
+        const videoLoader = document.getElementById('videoLoader');
+        
+        if (video1 && videoLoader) {
+            // Hide loader when video can play
+            video1.addEventListener('canplay', function() {
+                videoLoader.style.display = 'none';
+            });
+            
+            // Also hide on loadeddata as backup
+            video1.addEventListener('loadeddata', function() {
+                videoLoader.style.display = 'none';
+            });
+            
+            // Force video to play continuously
+            video1.play().catch(e => console.log('Autoplay prevented:', e));
+            
+            video1.addEventListener('pause', function() {
+                this.play();
+            });
+            
+            video1.addEventListener('ended', function() {
+                this.currentTime = 0;
+                this.play();
+            });
+            
+            video1.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.play();
+            });
+        }
+        
         // All text elements that need color updates
         const textElements = {
             body: document.body,
@@ -115,16 +171,8 @@
             lightModeText: document.getElementById('lightModeText'),
             darkModeText: document.getElementById('darkModeText'),
             sectionTitle1: document.getElementById('sectionTitle1'),
-            sectionTitle2: document.getElementById('sectionTitle2'),
-            sectionTitle3: document.getElementById('sectionTitle3'),
-            sectionTitle4: document.getElementById('sectionTitle4'),
             overviewText: document.getElementById('overviewText'),
-            cadText1: document.getElementById('cadText1'),
-            cadText2: document.getElementById('cadText2'),
-            assemblyText: document.getElementById('assemblyText'),
-            conclusionText: document.getElementById('conclusionText'),
-            videoCaption1: document.getElementById('videoCaption1'),
-            videoCaption2: document.getElementById('videoCaption2')
+            videoCaption1: document.getElementById('videoCaption1')
         };
 
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -145,16 +193,9 @@
                 sunIcon.style.color = '#e5e7eb';
                 moonIcon.style.color = '#e5e7eb';
                 
-                // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
-                    if (el) el.style.color = '#ffffff';
-                });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#d1d5db';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#9ca3af';
-                });
+                if (textElements.sectionTitle1) textElements.sectionTitle1.style.color = '#ffffff';
+                if (textElements.overviewText) textElements.overviewText.style.color = '#d1d5db';
+                if (textElements.videoCaption1) textElements.videoCaption1.style.color = '#9ca3af';
             } else {
                 textElements.body.style.backgroundColor = '#ffffff';
                 textElements.mainContainer.style.backgroundColor = '#ffffff';
@@ -170,16 +211,9 @@
                 sunIcon.style.color = '#374151';
                 moonIcon.style.color = '#374151';
                 
-                // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
-                    if (el) el.style.color = '#111827';
-                });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#374151';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#6b7280';
-                });
+                if (textElements.sectionTitle1) textElements.sectionTitle1.style.color = '#111827';
+                if (textElements.overviewText) textElements.overviewText.style.color = '#374151';
+                if (textElements.videoCaption1) textElements.videoCaption1.style.color = '#6b7280';
             }
         }
 
@@ -217,3 +251,4 @@
     </script>
 </body>
 </html>
+```
