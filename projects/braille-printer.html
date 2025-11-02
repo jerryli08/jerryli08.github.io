@@ -36,17 +36,13 @@
         .video-crop {
             position: relative;
             width: 100%;
-            padding-bottom: 48%; /* 80% of original 60% height */
             border-radius: 0.75rem; /* rounded-xl */
             overflow: hidden;
         }
         .video-crop video {
-            position: absolute;
-            top: -25%; /* Crop 20% from top, show bottom 80% */
-            left: 0;
             width: 100%;
-            height: 125%; /* Scale to show 80% of video */
-            object-fit: cover;
+            height: auto;
+            display: block;
         }
     </style>
 </head>
