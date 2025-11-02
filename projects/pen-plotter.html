@@ -39,7 +39,7 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
                     <div>
                         <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
@@ -72,10 +72,38 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Videos Section -->
             <section class="mb-12">
-                <img src="../images/pen-plotter.PNG" alt="5-bar Pen Plotter" class="w-full rounded-xl shadow-lg">
+                <!-- Video 1: Jerry Li -->
+                <div class="mb-8">
+                    <video 
+                        id="video1"
+                        class="w-full rounded-xl shadow-lg" 
+                        autoplay 
+                        muted 
+                        loop
+                        playsinline>
+                        <source src="../videos/pen-plotter-jerryli.mov" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">5-bar pen plotter drawing "Jerry Li" from cartesian coordinates</p>
+                </div>
+
+                <!-- Video 2: Square -->
+                <div>
+                    <video 
+                        id="video2"
+                        class="w-full rounded-xl shadow-lg" 
+                        autoplay 
+                        muted 
+                        loop
+                        playsinline>
+                        <source src="../videos/pen-plotter-square.mov" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p class="text-sm mt-2 text-center video-caption" id="videoCaption2">Pen plotter drawing a square</p>
+                </div>
             </section>
             
             <!-- Project Overview -->
@@ -85,6 +113,7 @@
                     I created a 5-bar pen plotter to learn how Linear Algebra is applied in a robotics context, with transformation matrices. <br>
                     I used 3D-printed arms with 2 NEMA17 stepper motors, each controlled by Trinamic TMC2209 stepper motor driver. Programming was done in C++ with an Arduino Nano. <br>
                     The user inputs cartesian coordinates, which are transformed using inverse kinematics to the motors' target angles.
+                </p>
             </section>
 
             <!-- CAD Section -->
@@ -102,11 +131,12 @@
                         frameborder="0">
                     </iframe>
                 </div>
+            </section>
         </main>
 
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
             </div>
         </footer>
@@ -119,6 +149,36 @@
         const moonIcon = document.getElementById('moonIcon');
         const lightCheck = document.getElementById('lightCheck');
         const darkCheck = document.getElementById('darkCheck');
+        
+        // Force videos to play continuously
+        const videos = [
+            document.getElementById('video1'),
+            document.getElementById('video2')
+        ];
+        
+        videos.forEach(video => {
+            if (video) {
+                // Ensure video plays on load
+                video.play().catch(e => console.log('Autoplay prevented:', e));
+                
+                // Prevent pausing
+                video.addEventListener('pause', function() {
+                    this.play();
+                });
+                
+                // Restart if ended (backup for loop)
+                video.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                });
+                
+                // Force play on any interaction
+                video.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.play();
+                });
+            }
+        });
         
         // All text elements that need color updates
         const textElements = {
@@ -133,13 +193,7 @@
             darkModeText: document.getElementById('darkModeText'),
             sectionTitle1: document.getElementById('sectionTitle1'),
             sectionTitle2: document.getElementById('sectionTitle2'),
-            sectionTitle3: document.getElementById('sectionTitle3'),
-            sectionTitle4: document.getElementById('sectionTitle4'),
             overviewText: document.getElementById('overviewText'),
-            cadText1: document.getElementById('cadText1'),
-            cadText2: document.getElementById('cadText2'),
-            assemblyText: document.getElementById('assemblyText'),
-            conclusionText: document.getElementById('conclusionText'),
             videoCaption1: document.getElementById('videoCaption1'),
             videoCaption2: document.getElementById('videoCaption2')
         };
@@ -163,12 +217,10 @@
                 moonIcon.style.color = '#e5e7eb';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#d1d5db';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#d1d5db';
                 [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
                     if (el) el.style.color = '#9ca3af';
                 });
@@ -188,12 +240,10 @@
                 moonIcon.style.color = '#374151';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#374151';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#374151';
                 [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
                     if (el) el.style.color = '#6b7280';
                 });
