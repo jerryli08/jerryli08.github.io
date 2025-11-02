@@ -36,16 +36,16 @@
         .video-crop {
             position: relative;
             width: 100%;
-            padding-bottom: 54%; /* 1.5x larger than original 36% */
+            padding-bottom: 45%; /* Reduced cropping */
             border-radius: 0.75rem; /* rounded-xl */
             overflow: hidden;
         }
         .video-crop video {
             position: absolute;
-            top: -33.33%; /* Offset to show middle 60% */
+            top: -16.67%; /* Offset to show middle 80% (half of original crop) */
             left: 0;
             width: 100%;
-            height: 166.67%; /* Scale up so 60% fills container */
+            height: 133.33%; /* Scale up so 80% fills container */
             object-fit: cover;
         }
     </style>
