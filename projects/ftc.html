@@ -39,7 +39,7 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
                     <div>
                         <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
@@ -72,12 +72,7 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
-            <section class="mb-12">
-                <img src="../images/ftc.png" alt="FIRST Tech Challenge Center Stage Robot" class="w-full rounded-xl shadow-lg">
-            </section>
-            
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <!-- Project Overview -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Overview</h2>
@@ -92,76 +87,171 @@
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">2024-25</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText1">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
+                <div class="flex justify-center mb-6">
+                    <div class="w-full max-w-6xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader1" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video1"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/ftc-2025.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">2024-25 Season</p>
                     </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
+
+                <p class="leading-relaxed" id="cadText1">
+                    This part of the site is still under construction, please check back soon!
+                </p>
             </section>
 
             <!-- 2023-24 Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle3">2023-24</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="cadText2">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
+                <div class="flex justify-center mb-6">
+                    <div class="w-full max-w-6xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader2" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video2"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/ftc-2024.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption2">2023-24 Season</p>
                     </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
+
+                <p class="leading-relaxed" id="cadText2">
+                    This part of the site is still under construction, please check back soon!
+                </p>
             </section>
 
             <!-- 2022-23 Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle4">2022-23</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="assemblyText">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
+                <div class="flex justify-center mb-6">
+                    <div class="w-full max-w-6xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader3" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video3"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/ftc-2023.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption3">2022-23 Season</p>
                     </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
+
+                <p class="leading-relaxed" id="assemblyText">
+                    This part of the site is still under construction, please check back soon!
+                </p>
             </section>
 
             <!-- 2021-22 Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle5">2021-22</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="conclusionText">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
+                <div class="flex justify-center mb-6">
+                    <div class="w-full max-w-6xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader4" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video4"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/ftc-2022.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption4">2021-22 Season</p>
                     </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
+
+                <p class="leading-relaxed" id="conclusionText">
+                    This part of the site is still under construction, please check back soon!
+                </p>
             </section>
 
             <!-- 2020-21 Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle6">2020-21</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="flex items-center">
-                        <p class="leading-relaxed" id="videoCaption1">
-                            This part of the site is still under construction, please check back soon!
-                        </p>
+                <div class="flex justify-center mb-6">
+                    <div class="w-full max-w-6xl">
+                        <div class="relative">
+                            <!-- Loading Indicator -->
+                            <div id="videoLoader5" class="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-gray-900 z-10">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
+                                <p class="text-white text-lg font-medium">Loading, Please wait</p>
+                            </div>
+                            
+                            <video 
+                                id="video5"
+                                class="w-full rounded-xl shadow-lg"
+                                autoplay 
+                                muted 
+                                loop
+                                playsinline>
+                                <source src="../videos/ftc-2025.mov" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption5">2020-21 Season</p>
                     </div>
-                    <img src="../images/hybrid-vehicle-cad-1.png" alt="CAD Detail 1" class="w-full rounded-lg shadow-md">
                 </div>
+
+                <p class="leading-relaxed" id="extraText">
+                    This part of the site is still under construction, please check back soon!
+                </p>
             </section>
         </main>
 
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
             </div>
         </footer>
@@ -174,6 +264,46 @@
         const moonIcon = document.getElementById('moonIcon');
         const lightCheck = document.getElementById('lightCheck');
         const darkCheck = document.getElementById('darkCheck');
+        
+        // Video loading indicators
+        const videos = [
+            { video: document.getElementById('video1'), loader: document.getElementById('videoLoader1') },
+            { video: document.getElementById('video2'), loader: document.getElementById('videoLoader2') },
+            { video: document.getElementById('video3'), loader: document.getElementById('videoLoader3') },
+            { video: document.getElementById('video4'), loader: document.getElementById('videoLoader4') },
+            { video: document.getElementById('video5'), loader: document.getElementById('videoLoader5') }
+        ];
+        
+        videos.forEach(({ video, loader }) => {
+            if (video && loader) {
+                // Hide loader when video can play
+                video.addEventListener('canplay', function() {
+                    loader.style.display = 'none';
+                });
+                
+                // Also hide on loadeddata as backup
+                video.addEventListener('loadeddata', function() {
+                    loader.style.display = 'none';
+                });
+                
+                // Force video to play continuously
+                video.play().catch(e => console.log('Autoplay prevented:', e));
+                
+                video.addEventListener('pause', function() {
+                    this.play();
+                });
+                
+                video.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                });
+                
+                video.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.play();
+                });
+            }
+        });
         
         // All text elements that need color updates
         const textElements = {
@@ -197,8 +327,12 @@
             cadText2: document.getElementById('cadText2'),
             assemblyText: document.getElementById('assemblyText'),
             conclusionText: document.getElementById('conclusionText'),
+            extraText: document.getElementById('extraText'),
             videoCaption1: document.getElementById('videoCaption1'),
-            videoCaption2: document.getElementById('videoCaption2')
+            videoCaption2: document.getElementById('videoCaption2'),
+            videoCaption3: document.getElementById('videoCaption3'),
+            videoCaption4: document.getElementById('videoCaption4'),
+            videoCaption5: document.getElementById('videoCaption5')
         };
 
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -223,10 +357,10 @@
                 [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4, textElements.sectionTitle5, textElements.sectionTitle6].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText, textElements.extraText].forEach(el => {
                     if (el) el.style.color = '#d1d5db';
                 });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
+                [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3, textElements.videoCaption4, textElements.videoCaption5].forEach(el => {
                     if (el) el.style.color = '#9ca3af';
                 });
             } else {
@@ -248,10 +382,10 @@
                 [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4, textElements.sectionTitle5, textElements.sectionTitle6].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText, textElements.extraText].forEach(el => {
                     if (el) el.style.color = '#374151';
                 });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
+                [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3, textElements.videoCaption4, textElements.videoCaption5].forEach(el => {
                     if (el) el.style.color = '#6b7280';
                 });
             }
