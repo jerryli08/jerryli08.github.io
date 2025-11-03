@@ -39,7 +39,7 @@
     <div class="min-h-screen transition-colors duration-200" id="mainContainer">
         <!-- Header -->
         <header id="headerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex justify-between items-center">
                     <div>
                         <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
@@ -70,12 +70,20 @@
                 </div>
             </div>
         </header>
-
         <!-- Main Content -->
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Main Image -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Main Images Section - Two Column -->
             <section class="mb-12">
-                <img src="../images/mt-shirt.png" alt="Monkeytype Logo Shirt" class="w-full rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Image -->
+                    <div>
+                        <img src="../images/mt-shirt.png" alt="Monkeytype Logo Shirt" class="w-full rounded-xl shadow-lg">
+                    </div>
+                    <!-- Right Image -->
+                    <div>
+                        <img src="../images/mt-shirt-store.png" alt="Monkeytype Store" class="w-full rounded-xl shadow-lg">
+                    </div>
+                </div>
             </section>
             
             <!-- Project Overview -->
@@ -85,7 +93,6 @@
                     I designed a shirt for <a href="https://monkeytype.com/" class="text-blue-600 dark:text-blue-400 hover:underline">Monkeytype</a>, a typing test website with 13M+ visits per month. You can buy the shirt <a href="https://monkeytype.store/products/deconstructed-t-shirt-printed" class="text-blue-600 dark:text-blue-400 hover:underline">here</a>!
                 </p>
             </section>
-
             <!-- CAD Section -->
             <section class="mb-12">
                 <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">CAD</h2>
@@ -101,16 +108,15 @@
                         frameborder="0">
                     </iframe>
                 </div>
+            </section>
         </main>
-
         <!-- Footer -->
         <footer class="mt-12" id="footerSection">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p class="text-center text-sm" id="footerText">© 2025 Jerry Li. All rights reserved.</p>
             </div>
         </footer>
     </div>
-
     <script>
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
@@ -132,17 +138,8 @@
             darkModeText: document.getElementById('darkModeText'),
             sectionTitle1: document.getElementById('sectionTitle1'),
             sectionTitle2: document.getElementById('sectionTitle2'),
-            sectionTitle3: document.getElementById('sectionTitle3'),
-            sectionTitle4: document.getElementById('sectionTitle4'),
-            overviewText: document.getElementById('overviewText'),
-            cadText1: document.getElementById('cadText1'),
-            cadText2: document.getElementById('cadText2'),
-            assemblyText: document.getElementById('assemblyText'),
-            conclusionText: document.getElementById('conclusionText'),
-            videoCaption1: document.getElementById('videoCaption1'),
-            videoCaption2: document.getElementById('videoCaption2')
+            overviewText: document.getElementById('overviewText')
         };
-
         const savedTheme = localStorage.getItem('theme') || 'dark';
         
         function applyTheme(isDark) {
@@ -162,15 +159,10 @@
                 moonIcon.style.color = '#e5e7eb';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#ffffff';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#d1d5db';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#9ca3af';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#d1d5db';
             } else {
                 textElements.body.style.backgroundColor = '#ffffff';
                 textElements.mainContainer.style.backgroundColor = '#ffffff';
@@ -187,18 +179,12 @@
                 moonIcon.style.color = '#374151';
                 
                 // Section titles and content
-                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3, textElements.sectionTitle4].forEach(el => {
+                [textElements.sectionTitle1, textElements.sectionTitle2].forEach(el => {
                     if (el) el.style.color = '#111827';
                 });
-                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.assemblyText, textElements.conclusionText].forEach(el => {
-                    if (el) el.style.color = '#374151';
-                });
-                [textElements.videoCaption1, textElements.videoCaption2].forEach(el => {
-                    if (el) el.style.color = '#6b7280';
-                });
+                if (textElements.overviewText) textElements.overviewText.style.color = '#374151';
             }
         }
-
         function updateIcons(isDark) {
             if (isDark) {
                 sunIcon.classList.add('hidden');
@@ -212,7 +198,6 @@
                 darkCheck.style.visibility = 'hidden';
             }
         }
-
         if (savedTheme === 'dark') {
             html.classList.add('dark');
             applyTheme(true);
@@ -222,7 +207,6 @@
             applyTheme(false);
             updateIcons(false);
         }
-
         themeToggle.addEventListener('click', () => {
             html.classList.toggle('dark');
             const isDark = html.classList.contains('dark');
