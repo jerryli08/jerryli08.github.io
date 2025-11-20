@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/projects/hybrid-vehicle", "destination": "/projects/hybrid-vehicle.html" },
+    { "source": "/projects/electric-bike", "destination": "/projects/electric-bike.html" },
+    { "source": "/projects/bike-odometer", "destination": "/projects/bike-odometer.html" },
+    { "source": "/projects/pen-plotter", "destination": "/projects/pen-plotter.html" },
+    { "source": "/projects/mt-shirt", "destination": "/projects/mt-shirt.html" },
+    { "source": "/projects/robot-tour", "destination": "/projects/robot-tour.html" },
+    { "source": "/projects/electric-vehicle", "destination": "/projects/electric-vehicle.html" },
+    { "source": "/projects/braille-printer", "destination": "/projects/braille-printer.html" },
+    { "source": "/projects/build-plate-robot", "destination": "/projects/build-plate-robot.html" },
+    { "source": "/projects/battlebot", "destination": "/projects/battlebot.html" },
+    { "source": "/projects/ftc", "destination": "/projects/ftc.html" },
+    { "source": "/projects/cardboard-simulator", "destination": "/projects/cardboard-simulator.html" }
+  ]
+}
