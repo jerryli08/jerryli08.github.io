@@ -1,0 +1,10 @@
+images !text !filter !merge !diff
+*.png !text !filter !merge !diff
+*.jpg !text !filter !merge !diff
+*.JPG !text !filter !merge !diff
+*.PNG !text !filter !merge !diff
+*.jpeg !text !filter !merge !diff
+*.JPEG !text !filter !merge !diff
+*.mov !text !filter !merge !diff
+*.MOV !text !filter !merge !diff
+*.mp4 !text !filter !merge !diff

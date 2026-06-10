@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jerry Li - Project Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Figtree', 'sans-serif'],
+                    },
+                    colors: {
+                        'mydark': '#03010d'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Figtree', sans-serif;
+        }
+        .project-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .project-card:hover {
+            transform: translateY(-4px);
+            border-color: rgb(59, 130, 246) !important;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(59, 130, 246, 0.25), 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        }
+        /* Dark mode uses same values but with lighter blue */
+        .dark .project-card:hover {
+            box-shadow: 0 0 25px rgba(96, 165, 250, 0.5), 0 0 50px rgba(96, 165, 250, 0.25), 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        }
+        .theme-tooltip {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        #themeToggle:hover .theme-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        body,
+        .main-bg {
+            background-color: #fff;
+        }
+        .dark body,
+        .dark .main-bg {
+            background-color: #03010d;
+        }
+    </style>
+</head>
+<body class="main-bg">
+    <div class="min-h-screen transition-colors duration-200 main-bg">
+        <!-- Header -->
+        <header class="main-bg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Jerry Li</h1>
+                    <div class="flex items-center gap-6">
+                        <a href="about.html" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">About Me</a>
+                        <a href="contact.html" class="text-blue-600 dark:text-blue-400 font-medium hover:underline mr-6">Contact</a>
+                        <button id="themeToggle" class="relative p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <!-- Tooltip -->
+                        <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-200 dark:bg-gray-800 rounded-lg shadow-xl border border-gray-300 dark:border-gray-700 px-4 py-3 whitespace-nowrap" style="min-width: 150px;">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Light mode</span>
+                                <svg id="lightCheck" class="w-4 h-4 text-green-500 flex-shrink-0 invisible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Dark mode</span>
+                                <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Icons -->
+                        <!-- Sun: shows in LIGHT mode (so users can switch to dark) -->
+                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
+                          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.222" y1="4.222" x2="5.636" y2="5.636"/>
+                            <line x1="18.364" y1="18.364" x2="19.778" y2="19.778"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.222" y1="19.778" x2="5.636" y2="18.364"/>
+                            <line x1="18.364" y1="5.636" x2="19.778" y2="4.222"/>
+                          </g>
+                        </svg>
+                        <!-- Moon: shows in DARK mode (so users can switch to light) -->
+                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    </div>
+                </div>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Engineering Projects Portfolio</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Featured Projects Section -->
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Featured Projects</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Hybrid Aerial-Ground Vehicle -->
+                    <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[50%]"></div>
+                            <img src="images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-Ground Vehicle</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2025 - August 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+                    <!-- Electric Bike -->
+                    <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[50%]"></div>
+                            <img src="images/electric-bike.png" alt="Electric Bike" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025 - August 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+                    <!-- Science Olympiad Electric Vehicle -->
+                    <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[50%]"></div>
+                            <img src="images/electric-vehicle.png" alt="Science Olympiad Electric Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Electric Vehicle</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - January 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+                    <!-- 3D Printer Automation Robot -->
+                    <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[50%]"></div>
+                            <img src="images/build-plate-robot.JPG" alt="3D Printer Build-plate Replacing Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Automation Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February 2024 - August 2024</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- All Projects Section -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">All Projects</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+                    <!-- FTC Decode Robot (Sep 2025 - May 2026) -->
+                    <a href="projects/ftc-decode.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-decode.jpeg" alt="FTC Decode Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Decode Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2025 - May 2026</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FRC Rebuilt Robot (Jan 2026 - Mar 2026) -->
+                    <a href="projects/frc-rebuilt.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/frc-rebuilt.png" alt="FRC Rebuilt Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FRC Rebuilt Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">January 2026 - March 2026</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Hybrid Aerial-Ground Vehicle (Jul 2025 - Aug 2025) -->
+                    <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/hybrid-vehicle.png" alt="Hybrid Aerial-ground Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-Ground Vehicle</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2025 - August 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Electric Bike (Jun 2025 - Aug 2025) -->
+                    <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/electric-bike.png" alt="Electric Bike" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025 - August 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Exercise Bike Odometer (Jun 2025) -->
+                    <a href="projects/bike-odometer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/bike-odometer.png" alt="Exercise Bike Odometer" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Exercise Bike Odometer</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- 5-bar Pen Plotter (May 2025 - Jun 2025) -->
+                    <a href="projects/pen-plotter.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/pen-plotter.PNG" alt="5-bar Parallel Robot Pen Plotter" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">5-bar Pen Plotter</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May 2025 - June 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Monkeytype Merch (May 2025 - Jun 2025) -->
+                    <a href="projects/mt-shirt.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/mt-shirt.png" alt="Monkeytype Logo Shirt" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Monkeytype Merch</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May 2025 - June 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Science Olympiad Robot Tour (Dec 2024 - Apr 2025) -->
+                    <a href="projects/robot-tour.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/robot-tour.png" alt="Science Olympiad Robot Tour" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Robot Tour</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">December 2024 - April 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FTC Into the Deep Robot (Sep 2024 - Feb 2025) -->
+                    <a href="projects/ftc-into-the-deep.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-into-the-deep.jpg" alt="FTC Into the Deep Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Into the Deep Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - February 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Science Oly. Electric Vehicle (Sep 2024 - Jan 2025) -->
+                    <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/electric-vehicle.png" alt="Science Olympiad Electric Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Oly. Electric Vehicle</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - January 2025</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Braille Printer (Sep 2024) -->
+                    <a href="projects/braille-printer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/braille-printer.png" alt="Braille Printer" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Braille Printer</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- 1 lb Plastic Battlebot (Jul 2024) -->
+                    <a href="projects/battlebot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/battlebot.png" alt="1lb Plastic Battlebot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">1 lb Plastic Battlebot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2024</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- 3D Printer Automation Robot (Feb 2024 - Aug 2024) -->
+                    <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/build-plate-robot.JPG" alt="3D Printer Build-plate Replacing Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Automation Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February 2024 - August 2024</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FTC Centerstage Robot (Sep 2023 - Feb 2024) -->
+                    <a href="projects/ftc-centerstage.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-centerstage.png" alt="FTC Centerstage Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Centerstage Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2023 - February 2024</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FTC PowerPlay Robot (Sep 2022 - Feb 2023) -->
+                    <a href="projects/ftc-powerplay.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-powerplay.png" alt="FTC PowerPlay Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC PowerPlay Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2022 - February 2023</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FTC Freight Frenzy Robot (Sep 2021 - Jan 2022) -->
+                    <a href="projects/ftc-freight-frenzy.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-freight-frenzy.png" alt="FTC Freight Frenzy Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Freight Frenzy Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2021 - January 2022</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- FTC Ultimate Goal Robot (Sep 2020 - Jan 2021) -->
+                    <a href="projects/ftc-ultimate-goal.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/ftc-ultimate-goal.png" alt="FTC Ultimate Goal Robot" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Ultimate Goal Robot</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2020 - January 2021</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                    <!-- Cardboard Racing Simulator (Mar 2020) -->
+                    <a href="projects/cardboard-simulator.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div class="relative w-full">
+                            <div class="pt-[100%]"></div>
+                            <img src="images/cardboard-simulator.PNG" alt="Cardboard Simulator" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <div class="p-4 flex flex-col flex-1 main-bg">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cardboard Racing Simulator</h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">March 2020</p>
+                            <div class="flex-grow"></div>
+                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
+                        </div>
+                    </a>
+
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-bg mt-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-center text-gray-600 dark:text-gray-400 text-sm">© 2026 Jerry Li. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const lightCheck = document.getElementById('lightCheck');
+    const darkCheck = document.getElementById('darkCheck');
+
+    // Load saved theme preference or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'dark') {
+        html.classList.add('dark');
+    } else {
+        html.classList.remove('dark');
+    }
+
+    function updateIcons() {
+        const isDark = html.classList.contains('dark');
+        if (isDark) {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+            lightCheck.style.visibility = 'hidden';
+            darkCheck.style.visibility = 'visible';
+        } else {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+            lightCheck.style.visibility = 'visible';
+            darkCheck.style.visibility = 'hidden';
+        }
+    }
+
+    themeToggle.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        const isDark = html.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateIcons();
+    });
+
+    // Initialize on page load
+    updateIcons();
+</script>
+</body>
+</html>

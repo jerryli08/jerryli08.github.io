@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Oly. Electric Vehicle - Jerry Li</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Figtree', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Figtree', sans-serif;
+        }
+        .theme-tooltip {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        #themeToggle:hover .theme-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .cropped-image {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .cropped-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-top: -15%;
+            margin-bottom: -15%;
+        }
+        .video-crop-50 {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+        .video-crop-50 video {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-top: -25%;
+            margin-bottom: -25%;
+        }
+        .video-crop-70 {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+        .video-crop-70 video {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-top: -15%;
+            margin-bottom: -15%;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen transition-colors duration-200" id="mainContainer">
+        <!-- Header -->
+        <header id="headerSection">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <a href="../index.html" class="text-blue-600 dark:text-blue-400 hover:underline text-sm mb-2 block">← Back to Portfolio</a>
+                        <h1 class="text-3xl font-bold" id="headerTitle">Science Olympiad Electric Vehicle</h1>
+                    </div>
+                    <button id="themeToggle" class="relative p-2 rounded-lg transition-colors" style="background-color: rgba(255, 255, 255, 0.1);">
+                        <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 rounded-lg shadow-xl border px-4 py-3 whitespace-nowrap" id="tooltip" style="min-width: 140px; background-color: rgba(0, 0, 0, 0.8); border-color: rgba(255, 255, 255, 0.2);">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm" id="lightModeText">Light mode</span>
+                                <svg id="lightCheck" class="w-4 h-4 text-green-500 flex-shrink-0 invisible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm" id="darkModeText">Dark mode</span>
+                                <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <svg id="sunIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Top Two Videos Side-by-Side -->
+            <section class="mb-12">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+                    <!-- Left Video: Home Test -->
+                    <div>
+                        <video 
+                            id="video1"
+                            class="w-full rounded-xl shadow-lg"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-home-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption1">Initial Tests at Home (Real-time Speed)</p>
+                    </div>
+                    
+                    <!-- Right Video: School Test -->
+                    <div>
+                        <video 
+                            id="video2"
+                            class="w-full rounded-xl shadow-lg"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-school-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <p class="text-sm mt-2 text-center video-caption" id="videoCaption2">Testing at School</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Full Width Image - Cropped to 70% -->
+            <section class="mb-12">
+                <div class="cropped-image rounded-xl shadow-lg overflow-hidden">
+                    <img id="mainImage" src="../images/electric-vehicle.png" alt="Science Olympiad Electric Vehicle">
+                </div>
+                <p class="text-sm mt-2 text-center video-caption" id="videoCaption3">Electric Vehicle</p>
+            </section>
+            
+            <!-- Project Overview -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-4" id="sectionTitle1">Overview</h2>
+                <p class="leading-relaxed mb-4" id="overviewText">
+                    I created this electric vehicle individually for the 2024-25 Science Olympiad "Electric Vehicle" event. My partner helped with testing the vehicle. <br>
+                    <br>
+                    At the 2025 UPenn Invitational, I placed 2/72 (behind the Nationals winner!), and at the 2025 Princeton Invitational, I placed 4/57. <br>
+                    <br>
+                    At the 2025 Maryland State Championship, I placed 2/28. At the 2025 East Maryland Regional, I placed 1/48.
+                </p>
+            </section>
+
+            <!-- CAD Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle2">CAD</h2>
+                
+                <!-- Fusion 360 Embed -->
+                <div class="relative w-full rounded-xl shadow-lg overflow-hidden mb-6" style="height: 500px; background-color: #1a1a1a;">
+                    <iframe 
+                        src="https://a360.co/4o6t1bB" 
+                        class="w-full h-full" 
+                        allowfullscreen="true" 
+                        webkitallowfullscreen="true" 
+                        mozallowfullscreen="true" 
+                        frameborder="0">
+                    </iframe>
+                </div>
+            </section>
+
+            <!-- Assembly & Testing Section -->
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold mb-6" id="sectionTitle3">Assembly & Testing</h2>
+                
+                <!-- First Row: Video Left, Text Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="video-crop-50 rounded-lg shadow-md overflow-hidden">
+                        <video 
+                            id="video3"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-motor-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText1">
+                            Integrated test of BLDC motor and MT6701 Rotary Absolute Magnetic Encoder. <br>
+                            <br>
+                            Arduino Nano outputs PWM for BLDC ESC, and reads MT6701 through I2C.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Second Row: Text Left, Video Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText2">
+                            First ground test with HDF (hardboard) CNC plates, at its full speed. <br>
+                            <br>
+                            Plates were too heavy and ESC was configured suboptimally in BLHeli_32 Suite, hence poor performance.
+                        </p>
+                    </div>
+                    <div class="video-crop-70 rounded-lg shadow-md overflow-hidden">
+                        <video 
+                            id="video4"
+                            autoplay 
+                            muted 
+                            loop
+                            playsinline>
+                            <source src="../videos/sciolyev-v1-test.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+                
+                <!-- Third Row: Image Left, Text Right -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <img src="../images/sciolyev-v2-mid-build.png" alt="V2 Mid-Build" class="w-full rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <p class="leading-relaxed" id="cadText3">
+                            The electric vehicle mid-rebuild, with redesigned 1.5mm G10 fiberglass CNC plates. <br>
+                            <br>
+                            Vehicle had significantly reduced weight, and was significantly faster.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12" id="footerSection">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-center text-sm" id="footerText">© 2026 Jerry Li. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const lightCheck = document.getElementById('lightCheck');
+        const darkCheck = document.getElementById('darkCheck');
+        
+        // Force videos to play continuously
+        const videos = [
+            document.getElementById('video1'),
+            document.getElementById('video2'),
+            document.getElementById('video3'),
+            document.getElementById('video4')
+        ];
+        
+        videos.forEach(video => {
+            if (video) {
+                // Ensure video plays on load
+                video.play().catch(e => console.log('Autoplay prevented:', e));
+                
+                // Prevent pausing
+                video.addEventListener('pause', function() {
+                    this.play();
+                });
+                
+                // Restart if ended (backup for loop)
+                video.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                });
+                
+                // Force play on any interaction
+                video.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.play();
+                });
+            }
+        });
+        
+        // All text elements that need color updates
+        const textElements = {
+            body: document.body,
+            mainContainer: document.getElementById('mainContainer'),
+            headerSection: document.getElementById('headerSection'),
+            headerTitle: document.getElementById('headerTitle'),
+            footerSection: document.getElementById('footerSection'),
+            footerText: document.getElementById('footerText'),
+            tooltip: document.getElementById('tooltip'),
+            lightModeText: document.getElementById('lightModeText'),
+            darkModeText: document.getElementById('darkModeText'),
+            sectionTitle1: document.getElementById('sectionTitle1'),
+            sectionTitle2: document.getElementById('sectionTitle2'),
+            sectionTitle3: document.getElementById('sectionTitle3'),
+            overviewText: document.getElementById('overviewText'),
+            cadText1: document.getElementById('cadText1'),
+            cadText2: document.getElementById('cadText2'),
+            cadText3: document.getElementById('cadText3'),
+            videoCaption1: document.getElementById('videoCaption1'),
+            videoCaption2: document.getElementById('videoCaption2'),
+            videoCaption3: document.getElementById('videoCaption3')
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        
+        function applyTheme(isDark) {
+            if (isDark) {
+                textElements.body.style.backgroundColor = '#03010d';
+                textElements.mainContainer.style.backgroundColor = '#03010d';
+                textElements.headerSection.style.backgroundColor = '#03010d';
+                textElements.footerSection.style.backgroundColor = '#03010d';
+                textElements.headerTitle.style.color = '#ffffff';
+                textElements.footerText.style.color = '#9ca3af';
+                themeToggle.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                textElements.tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                textElements.tooltip.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                textElements.lightModeText.style.color = '#d1d5db';
+                textElements.darkModeText.style.color = '#d1d5db';
+                sunIcon.style.color = '#e5e7eb';
+                moonIcon.style.color = '#e5e7eb';
+                
+                // Section titles and content
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3].forEach(el => {
+                    if (el) el.style.color = '#ffffff';
+                });
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.cadText3].forEach(el => {
+                    if (el) el.style.color = '#d1d5db';
+                });
+                [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3].forEach(el => {
+                    if (el) el.style.color = '#9ca3af';
+                });
+            } else {
+                textElements.body.style.backgroundColor = '#ffffff';
+                textElements.mainContainer.style.backgroundColor = '#ffffff';
+                textElements.headerSection.style.backgroundColor = '#ffffff';
+                textElements.footerSection.style.backgroundColor = '#ffffff';
+                textElements.headerTitle.style.color = '#000000';
+                textElements.footerText.style.color = '#6b7280';
+                themeToggle.style.backgroundColor = '#e5e7eb';
+                textElements.tooltip.style.backgroundColor = '#ffffff';
+                textElements.tooltip.style.borderColor = '#d1d5db';
+                textElements.lightModeText.style.color = '#374151';
+                textElements.darkModeText.style.color = '#374151';
+                sunIcon.style.color = '#374151';
+                moonIcon.style.color = '#374151';
+                
+                // Section titles and content
+                [textElements.sectionTitle1, textElements.sectionTitle2, textElements.sectionTitle3].forEach(el => {
+                    if (el) el.style.color = '#111827';
+                });
+                [textElements.overviewText, textElements.cadText1, textElements.cadText2, textElements.cadText3].forEach(el => {
+                    if (el) el.style.color = '#374151';
+                });
+                [textElements.videoCaption1, textElements.videoCaption2, textElements.videoCaption3].forEach(el => {
+                    if (el) el.style.color = '#6b7280';
+                });
+            }
+        }
+
+        function updateIcons(isDark) {
+            if (isDark) {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                lightCheck.style.visibility = 'hidden';
+                darkCheck.style.visibility = 'visible';
+            } else {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                lightCheck.style.visibility = 'visible';
+                darkCheck.style.visibility = 'hidden';
+            }
+        }
+
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+            applyTheme(true);
+            updateIcons(true);
+        } else {
+            html.classList.remove('dark');
+            applyTheme(false);
+            updateIcons(false);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            applyTheme(isDark);
+            updateIcons(isDark);
+        });
+    </script>
+</body>
+</html>
