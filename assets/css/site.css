@@ -163,19 +163,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
 }
 .sc-k { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--text-2); }
-.sc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 8px; }
-.scene-card h2 { font-size: clamp(26px, 2.3vw, 36px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.03em; line-height: 0.95; }
+.sc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 8px; }
+.sc-actions { display: flex; align-items: center; gap: 8px; margin-top: -6px; }
+.scene-card h2 { font-size: clamp(24px, 1.9vw, 30px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.03em; line-height: 0.95; }
 .sc-sub { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
 .sc-p { margin-top: 10px; font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
 .sc-fact { margin-top: 10px; padding: 7px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); font-size: 13.5px; color: var(--text-2); }
 .sc-fact b { color: var(--text); font-weight: 700; font-stretch: 110%; }
-.sc-hint { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.sc-hint { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; color: var(--muted); }
 .h-touch { display: none; }
 @media (hover: none) { .h-fine { display: none; } .h-touch { display: inline; } }
-.sc-go { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 14.5px; font-weight: 650; transition: background 0.2s; }
+.sc-go { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 13.5px; font-weight: 650; transition: background 0.2s; }
+.sc-actions .nav-drive { flex: none; padding: 8px 14px; font-size: 13.5px; }
 .sc-go:hover { background: var(--accent); }
-.sc-drive { flex: none; font-size: 13px; color: var(--text-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, 0.3); transition: color 0.2s; }
-.sc-drive:hover { color: var(--text); }
 
 /* bottom right: a fanned hand of project photos and the count of what is below. Kept quiet:
    no motion unless hovered. */
@@ -387,7 +387,8 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .scene-card h2 { font-size: 25px; }
   .sc-p, .sc-fact { display: none; }
   .sc-hint { margin-top: 9px; padding-top: 8px; }
-  .sc-go { padding: 8px 15px; font-size: 14px; }
+  .sc-go, .sc-actions .nav-drive { padding: 8px 14px; font-size: 13.5px; }
+  .sc-actions { margin-top: 0; }
   .more { right: auto; left: 50%; transform: translateX(-50%); bottom: 14px; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 16px; }
   .more-fan { width: 110px; height: 54px; margin-left: 0; }
   .more-fan img { width: 60px; height: 45px; top: 4px; }
