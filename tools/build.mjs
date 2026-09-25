@@ -261,7 +261,7 @@ function drivePage() {
   <a class="chip" href="/">&larr; Back to portfolio</a>
   <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
 </div>
-<div class="dock-bar"><button type="button" class="dock-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button></div>
+<div class="dock-bar"><button type="button" class="dock-btn x-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button><button type="button" class="dock-btn f-btn" data-fly-toggle><kbd>F</kbd><span data-fly-label>Press F to fly</span></button></div>
 <div class="split-line" aria-hidden="true"></div>
 <p class="view-label vl-drone" aria-hidden="true"><b>Drone</b><span class="vl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="num" data-alt>0.0 m up</span></p>
 <p class="view-label vl-rover" aria-hidden="true"><b>Rover</b><span class="vl-keys"><kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span class="num" data-speed2>0.00 m/s</span></p>
@@ -275,9 +275,10 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
 <script type="module">
   const $ = (s) => document.querySelector(s), body = document.body, c = $('.drive-canvas');
   const quad = $('[data-tag-quad]'), ticks = $('[data-tag-ticks]'), txt = $('[data-tag-text]'), cap = $('[data-caption]');
-  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking\u2026', split: 'Press X to reattach', attaching: 'Docking\u2026' };
-  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home' };
-  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
+  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking\u2026', split: 'Press X to reattach', attaching: 'Docking\u2026', lifting: '', carried: '', landing: '' };
+  const FLY = { docked: 'Press F to fly', lifting: 'Taking off\u2026', carried: 'Press F to land', landing: 'Landing\u2026' };
+  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home', lifting: 'Lifting the rover', carried: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to fly', landing: 'Setting down' };
+  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; if (FLY[mode]) $('[data-fly-label]').textContent = FLY[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
   const onView = (f, portrait) => { document.documentElement.style.setProperty('--split', (f * 100).toFixed(3) + '%'); body.classList.toggle('is-split', f > 0.001); body.classList.toggle('split-wide', f > 0.4); body.classList.toggle('split-v', !!portrait); };
   const onCaption = (t) => { if (t) cap.textContent = t; cap.classList.toggle('on', !!t); };
   const onTag = (d) => {

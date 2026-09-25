@@ -1117,6 +1117,7 @@ export async function initWorld(canvas, opts = {}) {
     const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' };
     addEventListener('keydown', (e) => {
       if (e.code === 'KeyX' && !e.repeat && !e.metaKey && !e.ctrlKey) { toggleDock(); e.preventDefault(); return; }
+      if (e.code === 'KeyF' && !e.repeat && !e.metaKey && !e.ctrlKey) { toggleFly(); e.preventDefault(); return; }
       if (map[e.code]) { keys.add(map[e.code]); e.preventDefault(); }
     });
     addEventListener('keyup', (e) => { if (map[e.code]) keys.delete(map[e.code]); });
@@ -1128,6 +1129,7 @@ export async function initWorld(canvas, opts = {}) {
       b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
     });
     document.querySelectorAll('[data-dock-toggle]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); toggleDock(); }));
+    document.querySelectorAll('[data-fly-toggle]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); toggleFly(); }));
     canvas.addEventListener('pointerdown', (e) => { chase.drag = { x: e.clientX, o: chase.orbit }; canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener('pointermove', (e) => { if (chase.drag) chase.orbit = chase.drag.o - (e.clientX - chase.drag.x) * 0.006; });
     canvas.addEventListener('pointerup', () => { chase.drag = null; });
@@ -1144,6 +1146,55 @@ export async function initWorld(canvas, opts = {}) {
       DOCK.mode = 'attaching'; DOCK.t = 0; DOCK.phase = 'return'; DOCK.seen = 0; DOCK.lockT = 0;
       emit();
     }
+  }
+  // F while docked: the drone lifts the rover to ALT and the pair flies as one vehicle
+  // (WASD or arrows: forward/back and yaw). F again sets it down where it is.
+  const CARRY = { vx: 0, vy: 0, vz: 0, ax: 0, az: 0, w: 0 };
+  const FLYING = ['lifting', 'carried', 'landing'];
+  function toggleFly() {
+    if (DOCK.mode === 'docked') {
+      DOCK.mode = 'lifting'; DOCK.t = 0;
+      Object.assign(CARRY, { vx: 0, vy: 0, vz: 0, ax: 0, az: 0, w: 0 });
+      R.v = R.w = 0; AIR.on = true; tracksL.lift(); tracksR.lift();
+      emit();
+    } else if (DOCK.mode === 'carried' || DOCK.mode === 'lifting') { DOCK.mode = 'landing'; DOCK.t = 0; emit(); }
+  }
+  function carry(dt) {
+    const t = (DOCK.t += dt), agl = R.y - heightAt(R.x, R.z);
+    const ctl = DOCK.mode === 'carried';
+    const fwd = ctl ? (keys.has('up') || keys.has('w') ? 1 : 0) - (keys.has('down') || keys.has('s') ? 1 : 0) : 0;
+    const turn = ctl ? (keys.has('left') || keys.has('a') ? 1 : 0) - (keys.has('right') || keys.has('d') ? 1 : 0) : 0;
+    propRate = damp(propRate, 1, 5, dt);
+    const spool = DOCK.mode === 'lifting' && t < 0.6; // props spin up before it leaves the ground
+    CARRY.w = damp(CARRY.w, turn * 1.5, 5, dt); R.yaw += CARRY.w * dt;
+    const vT = fwd * 4, wx = Math.sin(R.yaw) * vT, wz = Math.cos(R.yaw) * vT;
+    let ax = (wx - CARRY.vx) * 2.4, az = (wz - CARRY.vz) * 2.4;
+    const am = Math.hypot(ax, az); if (am > 4.5) { ax *= 4.5 / am; az *= 4.5 / am; }
+    const clear = smooth(0.06, 0.3, agl); // no sideways drift until the wheels are off the ground
+    CARRY.ax = damp(CARRY.ax, ax * clear, 8, dt); CARRY.az = damp(CARRY.az, az * clear, 8, dt);
+    CARRY.vx += CARRY.ax * dt; CARRY.vz += CARRY.az * dt;
+    const vyWant = spool ? 0 : DOCK.mode === 'landing' ? -clamp(agl * 1.5, 0.1, 1.0) : clamp((ALT - agl) * 1.4, -1.0, 1.2);
+    CARRY.vy += clamp((vyWant - CARRY.vy) * 4, -4, 4) * dt;
+    R.x += CARRY.vx * dt; R.z += CARRY.vz * dt; R.y += CARRY.vy * dt;
+    const r = Math.hypot(R.x, R.z); if (r > ARENA) { R.x *= ARENA / r; R.z *= ARENA / r; }
+    const floor = heightAt(R.x, R.z);
+    if (R.y <= floor) {
+      R.y = floor; CARRY.vy = Math.max(0, CARRY.vy);
+      if (DOCK.mode === 'landing' && t > 0.2) {
+        // down: back on its wheels
+        DOCK.mode = 'docked'; AIR.on = false; R.pitch = 0; R.roll = 0; R.last = null; R.v = R.w = 0;
+        emit(); return;
+      }
+    }
+    // lean into the acceleration and against drag
+    tilt.set(CARRY.ax * 0.28 + CARRY.vx * 0.22, 9.81, CARRY.az * 0.28 + CARRY.vz * 0.22).normalize();
+    tQ.setFromUnitVectors(up, tilt); yQ.setFromAxisAngle(up, R.yaw); tQ.multiply(yQ);
+    V.rover.position.set(R.x, R.y, R.z);
+    V.rover.quaternion.slerp(tQ, 1 - Math.exp(-7 * dt));
+    downwash(V.rover.position);
+    if (DOCK.mode === 'lifting' && agl > ALT - 0.25) { DOCK.mode = 'carried'; emit(); }
+    opts.onSpeed?.(Math.hypot(CARRY.vx, CARRY.vz));
+    opts.onDrone?.({ alt: R.y - heightAt(R.x, R.z), phase: DOCK.mode });
   }
   function roverInput() {
     if (DOCK.mode === 'docked') return { th: (keys.has('up') || keys.has('w') ? 1 : 0) - (keys.has('down') || keys.has('s') ? 1 : 0), st: (keys.has('left') || keys.has('a') ? 1 : 0) - (keys.has('right') || keys.has('d') ? 1 : 0) };
@@ -1171,9 +1222,10 @@ export async function initWorld(canvas, opts = {}) {
   function chaseTarget(dt, snap, outPos, outLook) {
     chase.yaw = snap ? R.yaw : chase.yaw + wrapAngle(R.yaw - chase.yaw) * (1 - Math.exp(-2.5 * dt));
     if (!chase.drag) chase.orbit = damp(chase.orbit, 0, 0.6, dt);
-    const a = chase.yaw + Math.PI + chase.orbit, d = chase.dist * chase.zoom;
+    chase.air = damp(chase.air || 0, FLYING.includes(DOCK.mode) ? 1 : 0, 1.8, dt);
+    const a = chase.yaw + Math.PI + chase.orbit, d = chase.dist * chase.zoom * (1 + 0.8 * chase.air);
     const tx = R.x + Math.sin(a) * d, tz = R.z + Math.cos(a) * d;
-    outPos.set(tx, Math.max(R.y + chase.height * chase.zoom, heightAt(tx, tz) + 0.12), tz);
+    outPos.set(tx, Math.max(R.y + (chase.height + 0.45 * chase.air) * chase.zoom, heightAt(tx, tz) + 0.12), tz);
     outLook.set(R.x + Math.sin(R.yaw) * 0.35, R.y + 0.12, R.z + Math.cos(R.yaw) * 0.35);
   }
   const chasePos = new THREE.Vector3(), chaseLook = new THREE.Vector3();
@@ -1367,7 +1419,8 @@ export async function initWorld(canvas, opts = {}) {
     else if (DOCK.mode === 'split') flying(dt);
     else if (DOCK.mode === 'attaching') attaching(dt);
     // the rover's own camera: its chase view unless the undocking shot has taken it over
-    if (DOCK.mode === 'docked' || DOCK.mode === 'split' || DOCK.mode === 'attaching') chaseCamera(dt, false);
+    if (DOCK.mode === 'docked' || DOCK.mode === 'split' || DOCK.mode === 'attaching' || FLYING.includes(DOCK.mode)) chaseCamera(dt, false);
+    if (DOCK.mode === 'docked') propRate = damp(propRate, 0, 1.4, dt); // props wind down after a landing
     V.latch?.set(DOCK.latch);
     V.latch?.glow(DOCK.section);
     // the cut plane, in world space, follows the rover
@@ -1436,7 +1489,8 @@ export async function initWorld(canvas, opts = {}) {
       if (!detailSettled && !chaseCam.on) detailSettled = terrain.update([camFinal, LOOK], 3000) === 0;
     }
     else {
-      drive(dt); placeRover(dt, false); dockTick(dt);
+      if (FLYING.includes(DOCK.mode)) carry(dt); else { drive(dt); placeRover(dt, false); }
+      dockTick(dt);
       terrain.update(docked ? V.rover.position : [V.rover.position, V.drone.position], 20000);
     }
     if (chaseCam.on) rideCamera(clock, dt);
@@ -1447,9 +1501,9 @@ export async function initWorld(canvas, opts = {}) {
     if (phase === 'intro') propRate = 1 - smooth(T0.touch, T0.spinDown, clock);
     // shadows follow the vehicle
     const f = V.rover.position;
-    if (!docked && V.drone) {
-      // frame both the rover and the spot where the drone's shadow lands
-      const D = V.drone.position, agl = Math.max(0, D.y - heightAt(D.x, D.z));
+    if ((!docked && V.drone) || (mode === 'drive' && AIR.on)) {
+      // frame both the rover and the spot where the flying vehicle's shadow lands
+      const D = docked ? V.rover.position : V.drone.position, agl = Math.max(0, D.y - heightAt(D.x, D.z));
       const sx = D.x - (sunDir.x / sunDir.y) * agl, sz = D.z - (sunDir.z / sunDir.y) * agl;
       const cx = (sx + f.x) / 2, cz = (sz + f.z) / 2, half = Math.min(14, Math.max(2.4, Math.hypot(sx - f.x, sz - f.z) / 2 + 0.9));
       tmp.set(cx, heightAt(cx, cz), cz);
@@ -1504,7 +1558,7 @@ export async function initWorld(canvas, opts = {}) {
   if (opts.debug) {
     running = false;
     window.__worldStep = (s) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) tick(1 / 60); composer.render(1 / 60); return clock; };
-    window.__world = { camera, camD, V, R, AIR, DOCK, DR, scene, keys, toggle: () => toggleDock(), point: (x, y) => { pointer.x = x; pointer.y = y; pointer.at = clock; pointer.fresh = true; } };
+    window.__world = { camera, camD, V, R, AIR, DOCK, DR, scene, keys, toggle: () => toggleDock(), fly: () => toggleFly(), point: (x, y) => { pointer.x = x; pointer.y = y; pointer.at = clock; pointer.fresh = true; } };
   } else if (!reduced || mode === 'drive') requestAnimationFrame(loop);
   opts.onReady?.();
   return { stop() { running = false; renderer.dispose(); } };

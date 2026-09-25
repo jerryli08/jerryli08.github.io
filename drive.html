@@ -17,17 +17,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap">
-<link rel="stylesheet" href="/assets/css/site.css?v=4efbe9b4">
+<link rel="stylesheet" href="/assets/css/site.css?v=7700d325">
 <meta name="robots" content="noindex">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83"}}</script>
 </head>
 <body class="drive" data-dock="docked">
-<canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=3de68081" data-assets="{&quot;models/drone.glb&quot;:&quot;/assets/models/drone.glb?v=e3374e3c&quot;,&quot;models/rover.glb&quot;:&quot;/assets/models/rover.glb?v=8867a0d6&quot;,&quot;world/gravelly_sand_diff.webp&quot;:&quot;/assets/world/gravelly_sand_diff.webp?v=799a88b1&quot;,&quot;world/gravelly_sand_nor_gl.webp&quot;:&quot;/assets/world/gravelly_sand_nor_gl.webp?v=72a69dc5&quot;,&quot;world/gravelly_sand_rough.webp&quot;:&quot;/assets/world/gravelly_sand_rough.webp?v=f2a7c001&quot;,&quot;world/horizon.webp&quot;:&quot;/assets/world/horizon.webp?v=9302d5e5&quot;,&quot;world/red_sand_diff.webp&quot;:&quot;/assets/world/red_sand_diff.webp?v=323b1830&quot;,&quot;world/red_sand_nor_gl.webp&quot;:&quot;/assets/world/red_sand_nor_gl.webp?v=f84b6aae&quot;,&quot;world/red_sand_rough.webp&quot;:&quot;/assets/world/red_sand_rough.webp?v=e31ba3f1&quot;,&quot;world/rocks.glb&quot;:&quot;/assets/world/rocks.glb?v=96949824&quot;}"></canvas>
+<canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=a9a3a0be" data-assets="{&quot;models/drone.glb&quot;:&quot;/assets/models/drone.glb?v=e3374e3c&quot;,&quot;models/rover.glb&quot;:&quot;/assets/models/rover.glb?v=8867a0d6&quot;,&quot;world/gravelly_sand_diff.webp&quot;:&quot;/assets/world/gravelly_sand_diff.webp?v=799a88b1&quot;,&quot;world/gravelly_sand_nor_gl.webp&quot;:&quot;/assets/world/gravelly_sand_nor_gl.webp?v=72a69dc5&quot;,&quot;world/gravelly_sand_rough.webp&quot;:&quot;/assets/world/gravelly_sand_rough.webp?v=f2a7c001&quot;,&quot;world/horizon.webp&quot;:&quot;/assets/world/horizon.webp?v=9302d5e5&quot;,&quot;world/red_sand_diff.webp&quot;:&quot;/assets/world/red_sand_diff.webp?v=323b1830&quot;,&quot;world/red_sand_nor_gl.webp&quot;:&quot;/assets/world/red_sand_nor_gl.webp?v=f84b6aae&quot;,&quot;world/red_sand_rough.webp&quot;:&quot;/assets/world/red_sand_rough.webp?v=e31ba3f1&quot;,&quot;world/rocks.glb&quot;:&quot;/assets/world/rocks.glb?v=96949824&quot;}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
   <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
 </div>
-<div class="dock-bar"><button type="button" class="dock-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button></div>
+<div class="dock-bar"><button type="button" class="dock-btn x-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button><button type="button" class="dock-btn f-btn" data-fly-toggle><kbd>F</kbd><span data-fly-label>Press F to fly</span></button></div>
 <div class="split-line" aria-hidden="true"></div>
 <p class="view-label vl-drone" aria-hidden="true"><b>Drone</b><span class="vl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="num" data-alt>0.0 m up</span></p>
 <p class="view-label vl-rover" aria-hidden="true"><b>Rover</b><span class="vl-keys"><kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span class="num" data-speed2>0.00 m/s</span></p>
@@ -41,9 +41,10 @@
 <script type="module">
   const $ = (s) => document.querySelector(s), body = document.body, c = $('.drive-canvas');
   const quad = $('[data-tag-quad]'), ticks = $('[data-tag-ticks]'), txt = $('[data-tag-text]'), cap = $('[data-caption]');
-  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking…', split: 'Press X to reattach', attaching: 'Docking…' };
-  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home' };
-  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
+  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking…', split: 'Press X to reattach', attaching: 'Docking…', lifting: '', carried: '', landing: '' };
+  const FLY = { docked: 'Press F to fly', lifting: 'Taking off…', carried: 'Press F to land', landing: 'Landing…' };
+  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home', lifting: 'Lifting the rover', carried: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to fly', landing: 'Setting down' };
+  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; if (FLY[mode]) $('[data-fly-label]').textContent = FLY[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
   const onView = (f, portrait) => { document.documentElement.style.setProperty('--split', (f * 100).toFixed(3) + '%'); body.classList.toggle('is-split', f > 0.001); body.classList.toggle('split-wide', f > 0.4); body.classList.toggle('split-v', !!portrait); };
   const onCaption = (t) => { if (t) cap.textContent = t; cap.classList.toggle('on', !!t); };
   const onTag = (d) => {
