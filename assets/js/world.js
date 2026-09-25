@@ -511,12 +511,15 @@ function pivotAt(mesh, y, z) {
 function rigLatch(root) {
   root.updateMatrixWorld(true);
   const parts = [];
-  root.traverse((o) => { if (o.isMesh && /^anim_rover_\d+_(Component9|Component8|passive_latch_doors|Spur_Gear|Component43|SERVO_ARM_HORN)/.test(o.name)) parts.push(o); });
+  // match by node name: a part with several materials (the servo horn) loads as a Group of
+  // unnamed meshes, so only the Group carries the CAD name
+  const LATCH_RE = /^anim_rover_\d+_(Component9|Component8|passive_latch_doors|Spur_Gear|Component43|SERVO_ARM_HORN)/;
+  root.traverse((o) => { if (LATCH_RE.test(o.name) && !(o.parent && LATCH_RE.test(o.parent.name))) parts.push(o); });
   if (!parts.length) return null;
   const centreZ = (o) => root.worldToLocal(new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3())).z;
   const arms = LATCH_ARMS.map((a) => ({ ...a, pivot: null }));
   const mats = [];
-  for (const o of parts) { o.material = o.material.clone(); mats.push(o.material); } // own materials, so they can be lit up
+  for (const p of parts) p.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); mats.push(o.material); } }); // own materials, so they can be lit up
   const doors = [];
   let servo = null, idler = null, horn = null;
   for (const o of parts) {
@@ -531,7 +534,12 @@ function rigLatch(root) {
       const z = centreZ(o), a = [...arms].sort((p, q) => Math.abs(p.top[1] - z) - Math.abs(q.top[1] - z))[0];
       doors.push({ arm: a, pivot: pivotAt(o, a.top[0], a.top[1]) });
     } else if (/Spur_Gear/.test(o.name)) servo = pivotAt(o, ...LATCH_SERVO);
-    else if (/SERVO_ARM_HORN/.test(o.name)) horn = pivotAt(o, ...LATCH_SERVO);
+    else if (/SERVO_ARM_HORN/.test(o.name)) {
+      horn = pivotAt(o, ...LATCH_SERVO);
+      // the horn sits face to face with the gear; once the cut opens the gear, the two faces
+      // share a depth and speckle. Nudge the horn forward a hair so it reads cleanly as it turns.
+      o.traverse((m) => { if (m.isMesh) Object.assign(m.material, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }); });
+    }
     else if (/Component43/.test(o.name)) idler = pivotAt(o, ...LATCH_IDLER);
   }
   return {
@@ -1412,7 +1420,7 @@ export async function initWorld(canvas, opts = {}) {
       camD.up.set(0, 1, 0).lerp(upB, k).normalize();
       place(camD, vA.lerpVectors(dChase.pos, vC, k), vB.lerpVectors(dChase.look, vD, k), lerp(50, 44, k)); // Pi Camera Module 3: about 41 degrees vertical
     }
-    opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), phase: DOCK.phase });
+    opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), speed: Math.hypot(DR.vx, DR.vz), phase: DOCK.phase });
   }
   function dockTick(dt) {
     if (DOCK.mode === 'detaching') detaching(dt);
@@ -1435,7 +1443,7 @@ export async function initWorld(canvas, opts = {}) {
     }
     updateTag(dt);
     if (Math.abs((DOCK.lastSplit ?? -1) - DOCK.split) > 1e-4 || DOCK.lastPortrait !== portrait()) { DOCK.lastSplit = DOCK.split; DOCK.lastPortrait = portrait(); opts.onView?.(DOCK.split, DOCK.lastPortrait); }
-    if (DOCK.mode === 'split') opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), phase: 'fly' });
+    if (DOCK.mode === 'split') opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), speed: Math.hypot(DR.vx, DR.vz), phase: 'fly' });
   }
 
   // ---------------------------------------------------------------- boot

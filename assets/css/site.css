@@ -305,13 +305,22 @@ a:hover .arrow { transform: translate(2px, -2px); }
 .drive-hud { position: fixed; top: 16px; left: 16px; right: 16px; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .drive-keys { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 5; display: flex; gap: 16px; align-items: center; padding: 9px 16px; border-radius: 999px; background: rgba(10, 8, 7, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); font-size: 13px; color: var(--text-2); }
 kbd { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-right: 3px; padding: 0 5px; border-radius: 5px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.18); font: 600 12px var(--font); color: var(--text); }
-.speed { color: var(--text); font-weight: 600; min-width: 6.5em; text-align: right; }
+.speed { color: var(--text); font-weight: 600; white-space: nowrap; }
+kbd svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+kbd .ar-l { transform: rotate(-90deg); }
+kbd .ar-d { transform: rotate(180deg); }
+kbd .ar-r { transform: rotate(90deg); }
+.drive-keys .dk-help { white-space: nowrap; }
+.dk-grp { display: inline-flex; align-items: center; gap: 10px; }
+.dk-grp b { color: var(--text); font-weight: 650; }
+.dk-sep { align-self: stretch; width: 1px; margin: 2px 0; background: rgba(255, 255, 255, 0.16); }
 .drive-load { position: fixed; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 8px; background: #1a100c; transition: opacity 0.8s var(--ease); }
 .drive-load b { font-size: 26px; font-weight: 750; font-stretch: 118%; }
 .drive-load span { color: var(--text-2); font-size: 14px; }
 .drive-load.done { opacity: 0; pointer-events: none; }
 /* undock / reattach */
 .dock-bar { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; gap: 10px; }
+.dock-btn { white-space: nowrap; }
 .dock-btn {
   display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 8px; border-radius: 999px;
   background: rgba(10, 8, 7, 0.62); border: 1px solid rgba(255, 255, 255, 0.16);
@@ -343,6 +352,7 @@ body.is-split .split-line { opacity: 1; }
 }
 .view-label b { color: var(--text); font-weight: 700; }
 .view-label kbd { margin-right: 2px; }
+.vl-alt { padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, 0.16); }
 body.split-wide .view-label { opacity: 1; }
 .vl-drone { left: 16px; }
 .vl-rover { left: calc(var(--split, 50%) + 16px); }
@@ -359,9 +369,11 @@ body.split-wide .view-label { opacity: 1; }
 body.split-v .split-line { top: var(--split, 0%); bottom: auto; left: 0; right: 0; width: auto; height: 2px; margin: -1px 0 0; }
 body.split-v .vl-rover { left: 12px; top: calc(var(--split, 50%) + 12px); }
 body.split-v .vl-drone { left: 12px; top: 64px; }
+@media (max-width: 1240px) { body.split-v .vl-drone { top: 112px; } } /* clear of the X button */
 body.split-v .feed { width: 100%; bottom: auto; height: var(--split, 0%); }
 @media (max-width: 640px) {
-  [data-keys-help] { display: none; }
+  .drive-keys .dk-help, .drive-keys .dk-help + .dk-sep { display: none; }
+  .drive-keys { gap: 12px; }
   .dock-bar { flex-direction: column; align-items: center; gap: 8px; }
   body.is-split .drive-title { display: none; }
   .drive-keys { padding: 8px 14px; }
@@ -387,18 +399,21 @@ body[data-tag="locked"] .tag-overlay polygon { stroke-width: 3.5; fill: rgba(61,
 @media (hover: none) and (pointer: coarse) {
   .pad { position: fixed; z-index: 5; bottom: 16px; display: grid; justify-items: center; gap: 8px; pointer-events: none; }
   .pad > div { display: flex; gap: 8px; }
-  .pad button { pointer-events: auto; width: 56px; height: 56px; border-radius: 50%; background: rgba(10, 8, 7, 0.55); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text); font-size: 18px; backdrop-filter: blur(8px); touch-action: none; }
+  .pad button { pointer-events: auto; width: clamp(44px, 12.5vw, 56px); height: clamp(44px, 12.5vw, 56px); border-radius: 50%; background: rgba(10, 8, 7, 0.55); border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text); font-size: 18px; backdrop-filter: blur(8px); touch-action: none; }
   .pad button.on { background: var(--accent); color: #1a0b04; }
   .pad-l { font-size: 12px; font-weight: 650; color: var(--text-2); opacity: 0; }
   .pad-rover { right: 12px; }
   .pad-drone { left: 12px; display: none; }
   body[data-dock="split"] .pad-drone { display: grid; }
   body[data-dock="split"] .pad-l { opacity: 1; }
-  .drive-keys { bottom: auto; top: 64px; }
-  .drive-keys > span:first-child { display: none; }
-  .dock-bar { top: auto; bottom: 150px; flex-direction: column; align-items: center; }
+  .drive-keys { left: 12px; bottom: 16px; transform: none; } /* the corner the drone pad leaves free until the split */
+  .drive-keys .dk-help, .drive-keys .dk-help + .dk-sep { display: none; }
+  body.split-wide .drive-keys { display: none; } /* each view's own label carries its speed */
+  .view-label .vl-keys { display: none; }
+  body.split-v .vl-drone { top: 64px; }
+  .dock-bar { top: auto; bottom: 178px; flex-direction: column; align-items: center; }
   .view-label { top: 64px; }
-  .dock-caption { bottom: 210px; font-size: 14px; }
+  .dock-caption { bottom: 236px; font-size: 14px; }
 }
 
 /* ------------------------------------------------------------ project page */

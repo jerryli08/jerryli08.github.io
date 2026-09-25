@@ -248,6 +248,9 @@ ${scripts()}
 }
 
 function drivePage() {
+  // arrow keys drawn as one icon turned four ways, so all four read the same size (font arrows do not)
+  const ARROW = (d) => `<kbd class="kbd-ar" aria-label="${{ u: 'Up', l: 'Left', d: 'Down', r: 'Right' }[d]} arrow"><svg class="ar-${d}" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10.2V2.2M2.6 5.4 6 2l3.4 3.4"/></svg></kbd>`;
+  const ARROW_KEYS = ['u', 'l', 'd', 'r'].map(ARROW).join('');
   const pad = (cls, keys, label) => `<div class="pad ${cls}" aria-hidden="true"><span class="pad-l">${label}</span><button type="button" data-k="${keys[0]}">&#9650;</button><div><button type="button" data-k="${keys[1]}">&#9664;</button><button type="button" data-k="${keys[2]}">&#9660;</button><button type="button" data-k="${keys[3]}">&#9654;</button></div></div>`;
   return `${head({
     title: 'Drive the rover · Jerry Li',
@@ -259,17 +262,17 @@ function drivePage() {
 <canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}" data-assets="${worldAssets()}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
-  <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
+  <p class="chip drive-title"><span class="dot"></span><span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</span></p>
 </div>
 <div class="dock-bar"><button type="button" class="dock-btn x-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button><button type="button" class="dock-btn f-btn" data-fly-toggle><kbd>F</kbd><span data-fly-label>Press F to fly</span></button></div>
 <div class="split-line" aria-hidden="true"></div>
-<p class="view-label vl-drone" aria-hidden="true"><b>Drone</b><span class="vl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="num" data-alt>0.0 m up</span></p>
-<p class="view-label vl-rover" aria-hidden="true"><b>Rover</b><span class="vl-keys"><kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span class="num" data-speed2>0.00 m/s</span></p>
+<p class="view-label vl-drone" aria-hidden="true"><b>Drone</b><span class="vl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="num" data-v="drone">0.00 m/s</span><span class="num vl-alt" data-alt>0.0 m up</span></p>
+<p class="view-label vl-rover" aria-hidden="true"><b>Rover</b><span class="vl-keys">${ARROW_KEYS}</span><span class="num" data-speed2>0.00 m/s</span></p>
 <div class="feed" aria-hidden="true"><span class="feed-l">Belly camera</span><i></i><i></i><i></i><i></i></div>
 <svg class="tag-overlay" aria-hidden="true"><polygon data-tag-quad points=""></polygon><g data-tag-ticks></g><text data-tag-text x="0" y="0"></text></svg>
 <p class="dock-caption" data-caption role="status"></p>
 <div class="drive-load" data-drive-load><b>Loading Mars</b><span>About 6 MB. Arrow keys or WASD to drive, X to detach the drone.</span></div>
-<div class="drive-keys"><span data-keys-help><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive</span><span class="speed num" data-speed>0.00 m/s</span></div>
+<div class="drive-keys" data-keys><span class="dk-help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or ${ARROW_KEYS} to drive</span><span class="speed num" data-v="rover">0.00 m/s</span></div>
 ${pad('pad-rover', ['up', 'left', 'down', 'right'], 'Rover')}
 ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
 <script type="module">
@@ -277,8 +280,21 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
   const quad = $('[data-tag-quad]'), ticks = $('[data-tag-ticks]'), txt = $('[data-tag-text]'), cap = $('[data-caption]');
   const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking\u2026', split: 'Press X to reattach', attaching: 'Docking\u2026', lifting: '', carried: '', landing: '' };
   const FLY = { docked: 'Press F to fly', lifting: 'Taking off\u2026', carried: 'Press F to land', landing: 'Landing\u2026' };
-  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home', lifting: 'Lifting the rover', carried: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to fly', landing: 'Setting down' };
-  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; if (FLY[mode]) $('[data-fly-label]').textContent = FLY[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
+  // the keys bar: the same pieces in every mode, key boxes then a speed; split mode gets one group per vehicle
+  const K = (...k) => k.map((x) => '<kbd>' + x + '</kbd>').join(''), WASD = K('W', 'A', 'S', 'D'), ARROWS = ${JSON.stringify(ARROW_KEYS)};
+  const sp = (w) => '<span class="speed num" data-v="' + w + '">0.00 m/s</span>', help = (t) => '<span class="dk-help">' + t + '</span>';
+  const grp = (name, keys, w) => '<span class="dk-grp"><b>' + name + '</b>' + (keys ? help(keys) : '') + sp(w) + '</span>';
+  const HELP = {
+    docked: help(WASD + ' or ' + ARROWS + ' to drive') + sp('rover'),
+    split: grp('Drone', WASD, 'drone') + '<i class="dk-sep"></i>' + grp('Rover', ARROWS, 'rover'),
+    detaching: help('Undocking') + sp('rover'),
+    attaching: help('The drone is flying home') + '<i class="dk-sep"></i>' + grp('Drone', '', 'drone'),
+    lifting: help('Lifting the rover') + sp('rover'),
+    carried: help(WASD + ' or ' + ARROWS + ' to fly') + sp('rover'),
+    landing: help('Setting down') + sp('rover'),
+  };
+  let vRover = [...document.querySelectorAll('[data-v="rover"], [data-speed2]')], vDrone = [];
+  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; if (FLY[mode]) $('[data-fly-label]').textContent = FLY[mode]; $('[data-keys]').innerHTML = HELP[mode]; vRover = [...document.querySelectorAll('[data-v="rover"], [data-speed2]')]; vDrone = [...document.querySelectorAll('[data-v="drone"]')]; };
   const onView = (f, portrait) => { document.documentElement.style.setProperty('--split', (f * 100).toFixed(3) + '%'); body.classList.toggle('is-split', f > 0.001); body.classList.toggle('split-wide', f > 0.4); body.classList.toggle('split-v', !!portrait); };
   const onCaption = (t) => { if (t) cap.textContent = t; cap.classList.toggle('on', !!t); };
   const onTag = (d) => {
@@ -294,8 +310,9 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
       txt.textContent = (d.phase === 'approach' ? 'AprilTag found \u00b7 ' : d.phase === 'lock' ? 'LOCKED \u00b7 aligning \u00b7 ' : 'LOCKED \u00b7 descending \u00b7 ') + d.dist.toFixed(2) + ' m';
     } else { quad.setAttribute('points', ''); ticks.innerHTML = ''; const v = body.classList.contains('split-v'); txt.setAttribute('x', 24); txt.setAttribute('y', v ? innerHeight * 0.25 : innerHeight / 2); txt.textContent = 'Searching for the AprilTag\u2026'; }
   };
-  const onSpeed = (s) => { const t = Math.abs(s).toFixed(2) + ' m/s'; $('[data-speed]').textContent = t; $('[data-speed2]').textContent = t; };
-  const onDrone = (d) => { $('[data-alt]').textContent = d.alt.toFixed(1) + ' m up'; };
+  const ms = (s) => Math.abs(s).toFixed(2) + ' m/s';
+  const onSpeed = (s) => { const t = ms(s); for (const e of vRover) e.textContent = t; };
+  const onDrone = (d) => { $('[data-alt]').textContent = d.alt.toFixed(1) + ' m up'; const t = ms(d.speed || 0); for (const e of vDrone) e.textContent = t; };
   import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', assets: JSON.parse(c.dataset.assets || '{}'), debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
     .catch((e) => { $('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; window.__err = String(e); });
 </script>
