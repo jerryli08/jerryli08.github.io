@@ -139,9 +139,10 @@ const PIN = `<span class="pin" title="Pinned">${PIN_ICON}<span class="sr-only">P
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
 function card(x) {
   const t = thumb(x);
+  const s0 = statLine(x) || '', sub = s0 === KIND_LABEL[x.kind] ? '' : s0; // no "Concept" under a card already labelled Concept
   return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
   <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])} · ${esc(x.year || '')}</span><b>${esc(x.title)}</b><span class="card-s">${esc(statLine(x) || '')}</span></div>
+  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${x.year ? ` · ${esc(x.year)}` : ''}</span><b>${esc(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
 </a>`;
 }
 // the project the live scene is showing
@@ -352,7 +353,7 @@ ${nav()}
   ${first ? `<figure class="hero-media" style="margin:28px 0 0">${mediaEl(first, { eager: true })}</figure>${first.c ? `<figcaption>${esc(first.c)}</figcaption>` : ''}` : (x.draft ? '<div class="pending">Photos and video for this project are on the way.</div>' : '')}
   <div class="p-grid">
     <div class="prose">${(x.body || []).map((b) => `<section><h2>${esc(b.h)}</h2>${b.p.map((t) => `<p>${esc(t)}</p>`).join('')}</section>`).join('')}</div>
-    <aside class="facts"><dl>${facts.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join('')}${tags}</dl>${linkBtns}</aside>
+    ${facts.length || tags || linkBtns ? `<aside class="facts"><dl>${facts.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join('')}${tags}</dl>${linkBtns}</aside>` : ''}
   </div>
   ${rest.length ? `<h2 class="block-title">Build log</h2><div class="gallery">${rest.map((m) => `<figure><div class="m">${mediaEl(m)}</div>${m.c ? `<figcaption>${esc(m.c)}</figcaption>` : ''}</figure>`).join('')}</div>` : ''}
   ${x.cad ? `<h2 class="block-title">CAD</h2>

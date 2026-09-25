@@ -485,6 +485,18 @@ export const projects = [
     media: [],
   },
   {
+    slug: 'drone-arm',
+    kind: 'concept',
+    draft: true,
+    title: 'Drone Grabber Arm',
+    short: 'A robotic arm on a drone that grabs household objects for people living in senior homes.',
+    org: 'Concept',
+    date: '',
+    year: '',
+    body: [{ h: 'Overview', p: ['A robotic arm mounted on a drone, designed to grab household objects for residents of senior homes. I designed it in CAD and built it out, but we pivoted to a different idea before it was finished.'] }],
+    media: [],
+  },
+  {
     slug: 'ftc-field-cnc',
     kind: 'concept',
     draft: true,
