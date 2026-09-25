@@ -1,0 +1,48 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#fff}canvas{display:block;width:100vw;height:100vh}</style>
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js","three/addons/":"/assets/vendor/addons/"}}</script></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(innerWidth, innerHeight, false);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#f4f4f4');
+scene.add(new THREE.HemisphereLight('#ffffff', '#777777', 1.6));
+const dl = new THREE.DirectionalLight('#ffffff', 1.6); dl.position.set(1, 2, 1.5); scene.add(dl);
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.001, 100);
+const COLORS = { 'Component9': '#e03131', 'Component8': '#2f9e44', 'Component10': '#1971c2', 'Component4': '#f08c00', 'passive latch doors': '#c2255c', 'Spur Gear (25 teeth)': '#15aabf', 'Component43': '#fd7e14', 'Feetech 25kg Servo FT5325M': '#495057', 'SERVO ARM HORN 25T ALUMINIUM': '#868e96', 'new landing gear mount': '#7048e8', 'new landing gear mount (Mirror)': '#7048e8', 'black apriltag body': '#111111', 'Raspberry Pi Camera Module 3': '#40c057' };
+const hide = new URLSearchParams(location.search).get('hide') || '';
+const only = new URLSearchParams(location.search).get('only') || '';
+const onlyRe = only ? new RegExp(only, 'i') : null;
+const hideRe = hide ? new RegExp(hide, 'i') : null;
+const loader = new GLTFLoader();
+const [rover, drone] = await Promise.all(['/tools/dev/_cad/rover_raw.glb', '/tools/dev/_cad/drone_raw.glb'].map((u) => loader.loadAsync(u)));
+const info = {};
+function paint(root, tag, fade) {
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    let key = null, p = o;
+    while (p) { const base = (p.userData.name || '').replace(/:\d+$/, ''); if (COLORS[base]) { key = base; break; } p = p.parent; }
+    let top = o; while (top.parent && top.parent !== root && top.parent.parent !== root) top = top.parent;
+    const hidden = hideRe && (() => { let q = o; while (q) { if (hideRe.test(q.userData.name || '')) return true; q = q.parent; } return false; })();
+    const shown = !onlyRe || (() => { let q = o; while (q) { if (onlyRe.test(q.userData.name || '')) return true; q = q.parent; } return false; })();
+    if (hidden || !shown) { o.visible = false; return; }
+    o.material = new THREE.MeshStandardMaterial({ color: key ? COLORS[key] : (tag === 'drone' ? '#bbbbcc' : '#cccccc'), roughness: 0.6, metalness: 0.05, transparent: !key && fade, opacity: !key && fade ? 0.18 : 1, depthWrite: !( !key && fade) });
+  });
+}
+const fade = new URLSearchParams(location.search).has('fade');
+paint(rover.scene, 'rover', fade); paint(drone.scene, 'drone', fade);
+scene.add(rover.scene);
+const showDrone = new URLSearchParams(location.search).has('drone');
+if (showDrone) scene.add(drone.scene);
+scene.updateMatrixWorld(true);
+const box = (name, root) => { const out = []; root.traverse((o) => { if ((o.userData.name || '') === name) out.push(new THREE.Box3().setFromObject(o)); }); return out.map((b) => [b.min.toArray().map((v) => +v.toFixed(4)), b.max.toArray().map((v) => +v.toFixed(4))]); };
+for (const n of ['Component3:1', 'Component3:2', 'Component9:1', 'Component8:1', 'Component10:1', 'Component4:1', 'Component4:2', 'passive latch doors:4', 'passive latch doors:5', 'passive latch doors:6', 'passive latch doors:7', 'Spur Gear (25 teeth):1', 'Component43:1', 'Feetech 25kg Servo FT5325M:1', 'SERVO ARM HORN 25T ALUMINIUM:1', 'black apriltag body:1', 'Component8:2', 'latch mount plate:1']) info[n] = box(n, rover.scene);
+for (const n of ['new landing gear mount:1', 'new landing gear mount (Mirror):1', 'Raspberry Pi Camera Module 3:2', 'Raspberry Pi Camera Module 3:3']) info[n] = box(n, drone.scene);
+info.rover = new THREE.Box3().setFromObject(rover.scene).min.toArray().concat(new THREE.Box3().setFromObject(rover.scene).max.toArray()).map((v) => +v.toFixed(4));
+window.__info = info;
+window.__clip = (x) => { renderer.clippingPlanes = x == null ? [] : [new THREE.Plane(new THREE.Vector3(-1, 0, 0), x)]; scene.traverse((o) => { if (o.isMesh) { o.material.side = THREE.DoubleSide; } }); };
+window.__view = (px, py, pz, tx, ty, tz, fov = 30) => { scene.children.forEach((c) => { if (c.isLine) scene.remove(c); }); camera.fov = fov; camera.position.set(px, py, pz); camera.lookAt(tx, ty, tz); camera.updateProjectionMatrix(); renderer.render(scene, camera); };
+window.__ready = true;
+</script></body></html>

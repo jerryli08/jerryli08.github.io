@@ -11,7 +11,9 @@ import { MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 const [,, input, output, kind] = process.argv;
 const REMOVE = [/^GB70-/, /^ZSLM-M3/, /^M25-6-CHEN-LIU/, /^M3-14-PAN/, /^LM-M3/, /^DDJ-STDLOW-LUOSI/, /^0402_cap/];
 if (kind === 'rover') REMOVE.push(/^Propeller/);
-const KEEP = kind === 'drone' ? [/^Propeller/] : [/^Wheels v7/];
+// moving parts stay separate: props, wheels, and the docking latch (servo gear, passive gear,
+// the two geared arms on each side and the four passive doors they carry)
+const KEEP = kind === 'drone' ? [/^Propeller/] : [/^Wheels v7/, /^Component9:/, /^Component8:1$/, /^passive latch doors:/, /^Spur Gear/, /^Component43:/, /^SERVO ARM HORN/];
 
 await MeshoptEncoder.ready; await MeshoptDecoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder });

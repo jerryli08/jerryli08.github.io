@@ -1,6 +1,6 @@
-// Mars world for jerryli.design. Shared by the landing background (fixed camera, the drone
-// flies in and docks on every load, then the rover wanders) and /drive (rover only, driven
-// with the keyboard or touch, chase camera).
+// Mars world for jerryli.design. Shared by the landing background (the drone flies in and
+// docks on every load, then the rover follows the cursor) and /drive (the docked vehicle,
+// driven with the keyboard or touch; X splits the drone off into its own view and back).
 //
 // Everything visible is either Jerry's own CAD (assets/models, tessellated from his Fusion 360
 // STEP exports, shapes unchanged) or real captured data:
@@ -15,6 +15,7 @@ import { RenderPass } from '../vendor/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from '../vendor/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from '../vendor/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from '../vendor/addons/postprocessing/GTAOPass.js';
+import { Pass } from '../vendor/addons/postprocessing/Pass.js';
 
 const asset = (p) => new URL(`../${p}`, import.meta.url).href;
 const TAU = Math.PI * 2;
@@ -444,7 +445,7 @@ function pbr(mat, mesh) {
   let m;
   if (isCarbon) {
     m = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.3, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.09 });
-  } else if (/^anim_rover_/.test(mesh.name)) {
+  } else if (/^anim_rover_\d+_Wheels/.test(mesh.name)) {
     m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.82, metalness: 0 }); // rubber / TPU wheels
   } else if (hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.82) {
     m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.34, metalness: 0.9 }); // aluminium, steel
@@ -467,7 +468,7 @@ function prepCAD(root) {
   root.traverse((o) => {
     if (!o.isMesh) return;
     o.castShadow = true; o.receiveShadow = true;
-    const key = o.material.uuid + (/^anim_rover_/.test(o.name) ? 'w' : '');
+    const key = o.material.uuid + (/^anim_rover_\d+_Wheels/.test(o.name) ? 'w' : '');
     if (!cache.has(key)) cache.set(key, pbr(o.material, o));
     o.material = cache.get(key);
   });
@@ -482,12 +483,79 @@ function pivotize(mesh) {
   pivot.attach(mesh);
   return pivot;
 }
+// Docking latch on the rover, rigged from the real pin axes in the STEP (all run along the
+// CAD X axis; coordinates below are the model's own metres, y up, z = -CAD y). One servo turns
+// the 25-tooth gear, which drives the 25-tooth idler and the 7-tooth pinion on one arm; the two
+// arms on each side are geared together, so each pair swings open like a V. The four passive
+// doors are pinned to the arm tips and slide out of the drone's landing rails as the arms open.
+const LATCH_SERVO = [-0.11105, -0.0867], LATCH_IDLER = [-0.1110, -0.1367];
+const LATCH_ARMS = [ // part, sign of the opening rotation, bottom pivot, tip pin
+  { re: /Component9/, sign: 1, bot: [-0.0888, -0.0497], top: [-0.0546, -0.0337] },
+  { re: /Component8/, sign: -1, bot: [-0.0888, -0.0637], top: [-0.0546, -0.0790] },
+  { re: /Component9/, sign: 1, bot: [-0.0888, -0.1597], top: [-0.0546, -0.1437] },
+  { re: /Component8/, sign: -1, bot: [-0.0888, -0.1737], top: [-0.0546, -0.1890] },
+];
+const LATCH_OPEN = 42 * DEG; // arm swing that pulls the doors clear of the rails
+function pivotAt(mesh, y, z) {
+  const parent = mesh.parent;
+  parent.updateWorldMatrix(true, false); mesh.updateWorldMatrix(true, false);
+  const c = parent.worldToLocal(new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3()));
+  const pivot = new THREE.Group();
+  pivot.position.set(c.x, y, z); parent.add(pivot); pivot.updateWorldMatrix(true, false);
+  pivot.attach(mesh);
+  return pivot;
+}
+function rigLatch(root) {
+  root.updateMatrixWorld(true);
+  const parts = [];
+  root.traverse((o) => { if (o.isMesh && /^anim_rover_\d+_(Component9|Component8|passive_latch_doors|Spur_Gear|Component43|SERVO_ARM_HORN)/.test(o.name)) parts.push(o); });
+  if (!parts.length) return null;
+  const centreZ = (o) => root.worldToLocal(new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3())).z;
+  const arms = LATCH_ARMS.map((a) => ({ ...a, pivot: null }));
+  const mats = [];
+  for (const o of parts) { o.material = o.material.clone(); mats.push(o.material); } // own materials, so they can be lit up
+  const doors = [];
+  let servo = null, idler = null, horn = null;
+  for (const o of parts) {
+    if (/Component9|Component8/.test(o.name)) {
+      const z = centreZ(o), cands = arms.filter((a) => a.re.test(o.name) && !a.pivot);
+      const a = cands.sort((p, q) => Math.abs(p.bot[1] - z) - Math.abs(q.bot[1] - z))[0];
+      if (a) a.pivot = pivotAt(o, a.bot[0], a.bot[1]);
+    }
+  }
+  for (const o of parts) {
+    if (/passive_latch_doors/.test(o.name)) {
+      const z = centreZ(o), a = [...arms].sort((p, q) => Math.abs(p.top[1] - z) - Math.abs(q.top[1] - z))[0];
+      doors.push({ arm: a, pivot: pivotAt(o, a.top[0], a.top[1]) });
+    } else if (/Spur_Gear/.test(o.name)) servo = pivotAt(o, ...LATCH_SERVO);
+    else if (/SERVO_ARM_HORN/.test(o.name)) horn = pivotAt(o, ...LATCH_SERVO);
+    else if (/Component43/.test(o.name)) idler = pivotAt(o, ...LATCH_IDLER);
+  }
+  return {
+    // light the moving parts for the cutaway (k 0..1)
+    glow(k) { for (const m of mats) { m.emissive.set('#ff7a2e'); m.emissiveIntensity = 0.32 * k; } },
+    // a: 0 latched, 1 fully open
+    set(a) {
+      const alpha = LATCH_OPEN * a, th = alpha * 7 / 25;
+      if (servo) servo.rotation.x = th;
+      if (horn) horn.rotation.x = th;
+      if (idler) idler.rotation.x = -th;
+      for (const arm of arms) if (arm.pivot) arm.pivot.rotation.x = arm.sign * alpha;
+      for (const d of doors) {
+        const { bot, top, sign } = d.arm, ang = sign * alpha, dy = top[0] - bot[0], dz = top[1] - bot[1];
+        d.pivot.position.y = bot[0] + dy * Math.cos(ang) - dz * Math.sin(ang);
+        d.pivot.position.z = bot[1] + dy * Math.sin(ang) + dz * Math.cos(ang);
+        d.pivot.rotation.x = -sign * 0.14 * smooth(0.55, 1, a); // free of the rail, each door tips a little on its pin
+      }
+    },
+  };
+}
 function rigVehicles(droneGltf, roverGltf) {
   const roverRoot = roverGltf.scene, droneRoot = droneGltf?.scene;
   prepCAD(roverRoot); if (droneRoot) prepCAD(droneRoot);
   roverRoot.updateMatrixWorld(true); droneRoot?.updateMatrixWorld(true);
   const wheels = [], props = [];
-  roverRoot.traverse((o) => { if (o.isMesh && /^anim_rover_/.test(o.name)) wheels.push(o); });
+  roverRoot.traverse((o) => { if (o.isMesh && /^anim_rover_\d+_Wheels/.test(o.name)) wheels.push(o); });
   droneRoot?.traverse((o) => { if (o.isMesh && /^anim_drone_/.test(o.name)) props.push(o); });
   const centers = wheels.map((w) => new THREE.Box3().setFromObject(w).getCenter(new THREE.Vector3()));
   const wsize = new THREE.Box3().setFromObject(wheels[0]).getSize(new THREE.Vector3());
@@ -501,8 +569,9 @@ function rigVehicles(droneGltf, roverGltf) {
   const rover = wrap(roverRoot), drone = droneRoot ? wrap(droneRoot) : null;
   const wheelPivots = wheels.map((w, i) => { const p = pivotize(w); p.userData.left = centers[i].z > mid.z; /* CAD +Z ends up on the vehicle's left */ return p; });
   const propPivots = props.map((p, i) => { const pv = pivotize(p); pv.userData.dir = i % 2 ? 1 : -1; return pv; });
+  const latch = rigLatch(roverRoot);
   return {
-    rover, drone, wheelRadius, wheelbase, track,
+    rover, drone, roverRoot, droneRoot, wheelRadius, wheelbase, track, latch,
     setWheels(aL, aR) { for (const p of wheelPivots) p.rotation.z = p.userData.left ? aL : aR; },
     setProps(a) { for (const p of propPivots) p.rotation.y = a * p.userData.dir; },
   };
@@ -590,6 +659,31 @@ class Dust {
   }
 }
 
+// ------------------------------------------------------------------ split screen
+// Renders one or more cameras side by side into the same HDR target, so tone mapping, grain and
+// vignette stay a single pass over the whole frame. views: [{ camera, x0, x1, y0, y1, before }],
+// fractions of the frame measured from its top-left corner.
+class SplitRenderPass extends Pass {
+  constructor(scene) { super(); this.scene = scene; this.views = []; this.needsSwap = false; }
+  render(renderer, writeBuffer, readBuffer) {
+    const t = readBuffer, W = t.width, H = t.height, auto = renderer.autoClear;
+    renderer.autoClear = false;
+    t.viewport.set(0, 0, W, H); t.scissor.set(0, 0, W, H); t.scissorTest = false;
+    renderer.setRenderTarget(t); renderer.clear();
+    for (const v of this.views) {
+      const x0 = Math.round(v.x0 * W), x1 = Math.round(v.x1 * W), y0 = Math.round((1 - (v.y1 ?? 1)) * H), y1 = Math.round((1 - (v.y0 ?? 0)) * H);
+      if (x1 - x0 < 1 || y1 - y0 < 1) continue;
+      v.camera.aspect = (x1 - x0) / (y1 - y0); v.camera.updateProjectionMatrix();
+      v.before?.(v.camera);
+      t.viewport.set(x0, y0, x1 - x0, y1 - y0); t.scissor.set(x0, y0, x1 - x0, y1 - y0); t.scissorTest = true;
+      renderer.setRenderTarget(t);
+      renderer.render(this.scene, v.camera);
+    }
+    t.viewport.set(0, 0, W, H); t.scissor.set(0, 0, W, H); t.scissorTest = false;
+    renderer.autoClear = auto;
+  }
+}
+
 // ------------------------------------------------------------------ film finish
 const FinishShader = {
   uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, vignette: { value: 0.28 } },
@@ -628,7 +722,7 @@ export async function initWorld(canvas, opts = {}) {
   const band = await new Promise((res, rej) => tl.load(asset('world/horizon.webp'), res, undefined, rej));
   band.colorSpace = THREE.SRGBColorSpace; band.wrapS = THREE.RepeatWrapping; band.anisotropy = 8;
   const [droneGltf, roverGltf, rocksGltf] = await Promise.all([
-    mode === 'landing' ? gl.loadAsync(asset('models/drone.glb')) : Promise.resolve(null),
+    gl.loadAsync(asset('models/drone.glb')),
     gl.loadAsync(asset('models/rover.glb')),
     gl.loadAsync(asset('world/rocks.glb')),
   ]);
@@ -680,7 +774,9 @@ export async function initWorld(canvas, opts = {}) {
   // ---------------------------------------------------------------- post-processing
   const target = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: lowPower ? 0 : 4 });
   const composer = new EffectComposer(renderer, target);
-  composer.addPass(new RenderPass(scene, camera));
+  const split = mode === 'drive' ? new SplitRenderPass(scene) : null;
+  composer.addPass(split || new RenderPass(scene, camera));
+  if (split) renderer.shadowMap.autoUpdate = false; // drawn once per frame, not once per view
   let gtao = null;
   if (!lowPower) {
     gtao = new GTAOPass(scene, camera, 2, 2);
@@ -987,20 +1083,47 @@ export async function initWorld(canvas, opts = {}) {
     if (t >= T0.cam1) { chaseCam.on = false; camera.position.copy(camFinal); camera.lookAt(LOOK); }
   }
 
-  // ---------------------------------------------------------------- drive controls + chase camera
+  // ---------------------------------------------------------------- drive: docked by default, X splits the drone off
+  // Docked, the vehicle drives as one. X runs the undocking sequence (a cutaway close-up of the
+  // latch opening, lift-off), then the screen splits: drone on the left flown with WASD at a
+  // fixed height, rover on the right driven with the arrow keys. X again flies the drone home:
+  // its belly camera finds the AprilTag on the rover, it settles on, and the latch closes.
   const keys = new Set();
-  const chase = { yaw: 0, dist: 1.35, height: 0.5, drag: null, orbit: 0, zoom: 1 };
+  const chase = { yaw: 0, dist: 1.35, height: 0.5, drag: null, orbit: 0, zoom: 1, look: new THREE.Vector3() };
+  const camD = new THREE.PerspectiveCamera(50, 1, 0.03, 2000);
+  const DOCK = { mode: 'docked', t: 0, phase: '', latch: 0, split: 0, section: 0, seen: 0, caption: '', tagOn: false, lockT: 0, bellyK: 0 };
+  const DR = { x: 0, y: 0, z: 0, yaw: 0, vx: 0, vy: 0, vz: 0, w: 0, ax: 0, az: 0 };
+  const ALT = 3.0; // metres above the ground while flying free
+  const HOVER_Y = 0.62; // how high the drone holds over the rover while its camera locks onto the tag
+  const FINAL = 0.2;    // for the last 20 cm the left view steps back outside to watch it settle on
+  const sectionLocal = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1e4), sectionPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 1e4);
+  const TD = { cam1: 1.6, cut0: 0.9, cut1: 1.9, open0: 1.9, open1: 3.3, uncut0: 3.5, uncut1: 4.3, back0: 3.9, back1: 5.2, spin0: 4.3, spin1: 5.0, lift: 4.8, split0: 5.6, split1: 6.6 };
+  const CUT_X = 0.417, CUT_OFF = 0.62; // the cut runs through the middle of the latch arms (model x)
+  const pose0 = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3(), vD = new THREE.Vector3(), qA = new THREE.Quaternion();
+  const TAG = [[0.218, -0.084, -0.1616], [0.318, -0.084, -0.1616], [0.318, -0.084, -0.0616], [0.218, -0.084, -0.0616]].map((p) => new THREE.Vector3(...p));
+  const BELLY = new THREE.Vector3(0.279, -0.052, -0.1115); // the drone's downward Pi camera, model coordinates
+  const emit = () => opts.onMode?.({ mode: DOCK.mode, split: DOCK.split });
+  function setCaption(t) { if (t !== DOCK.caption) { DOCK.caption = t; opts.onCaption?.(t); } }
+
   if (mode === 'drive') {
-    const map = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
-    addEventListener('keydown', (e) => { if (map[e.code]) { keys.add(map[e.code]); e.preventDefault(); } });
+    renderer.localClippingEnabled = true;
+    // every CAD material can be cut open for the latch close-up; the cut is parked far away otherwise
+    for (const root of [V.rover, V.drone]) root?.traverse((o) => { if (o.isMesh) { o.material.clippingPlanes = [sectionPlane]; o.material.side = THREE.DoubleSide; } });
+    const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' };
+    addEventListener('keydown', (e) => {
+      if (e.code === 'KeyX' && !e.repeat && !e.metaKey && !e.ctrlKey) { toggleDock(); e.preventDefault(); return; }
+      if (map[e.code]) { keys.add(map[e.code]); e.preventDefault(); }
+    });
     addEventListener('keyup', (e) => { if (map[e.code]) keys.delete(map[e.code]); });
     addEventListener('blur', () => keys.clear());
-    document.querySelectorAll('[data-touch] [data-k]').forEach((b) => {
+    document.querySelectorAll('[data-k]').forEach((b) => {
       const k = b.dataset.k;
       const on = (e) => { e.preventDefault(); keys.add(k); b.classList.add('on'); };
       const off = (e) => { e.preventDefault(); keys.delete(k); b.classList.remove('on'); };
       b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
     });
+    document.querySelectorAll('[data-dock-toggle]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); toggleDock(); }));
     canvas.addEventListener('pointerdown', (e) => { chase.drag = { x: e.clientX, o: chase.orbit }; canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener('pointermove', (e) => { if (chase.drag) chase.orbit = chase.drag.o - (e.clientX - chase.drag.x) * 0.006; });
     canvas.addEventListener('pointerup', () => { chase.drag = null; });
@@ -1008,12 +1131,26 @@ export async function initWorld(canvas, opts = {}) {
     R.x = 0; R.z = 0; R.yaw = 0.4;
     chase.yaw = R.yaw;
   }
+  function toggleDock() {
+    if (DOCK.mode === 'docked') {
+      DOCK.mode = 'detaching'; DOCK.t = 0;
+      pose0.pos.copy(camera.position); pose0.look.copy(chase.look);
+      emit();
+    } else if (DOCK.mode === 'split') {
+      DOCK.mode = 'attaching'; DOCK.t = 0; DOCK.phase = 'return'; DOCK.seen = 0; DOCK.lockT = 0;
+      emit();
+    }
+  }
+  function roverInput() {
+    if (DOCK.mode === 'docked') return { th: (keys.has('up') || keys.has('w') ? 1 : 0) - (keys.has('down') || keys.has('s') ? 1 : 0), st: (keys.has('left') || keys.has('a') ? 1 : 0) - (keys.has('right') || keys.has('d') ? 1 : 0) };
+    if (DOCK.mode === 'split') return { th: (keys.has('up') ? 1 : 0) - (keys.has('down') ? 1 : 0), st: (keys.has('left') ? 1 : 0) - (keys.has('right') ? 1 : 0) };
+    return { th: 0, st: 0 }; // parked while the drone comes off or goes back on
+  }
   function drive(dt) {
-    const th = (keys.has('up') ? 1 : 0) - (keys.has('down') ? 1 : 0);
-    const st = (keys.has('left') ? 1 : 0) - (keys.has('right') ? 1 : 0); // +yaw is a left turn
+    const { th, st } = roverInput();
     const vT = th > 0 ? 1.1 : th < 0 ? -0.5 : 0;
     R.v = damp(R.v, vT, th ? 2.2 : 3.5, dt);
-    R.w = damp(R.w, st * (1.5 - Math.min(Math.abs(R.v), 1) * 0.6), 6, dt);
+    R.w = damp(R.w, st * (1.5 - Math.min(Math.abs(R.v), 1) * 0.6), 6, dt); // +yaw is a left turn
     R.yaw += R.w * dt;
     let nx = R.x + Math.sin(R.yaw) * R.v * dt, nz = R.z + Math.cos(R.yaw) * R.v * dt;
     // rocks bigger than the wheels stop the rover; slide along them
@@ -1026,15 +1163,222 @@ export async function initWorld(canvas, opts = {}) {
     R.x = nx; R.z = nz;
     opts.onSpeed?.(R.v);
   }
-  function chaseCamera(dt, snap) {
+  // where the chase camera wants to be this frame (does not move it)
+  function chaseTarget(dt, snap, outPos, outLook) {
     chase.yaw = snap ? R.yaw : chase.yaw + wrapAngle(R.yaw - chase.yaw) * (1 - Math.exp(-2.5 * dt));
     if (!chase.drag) chase.orbit = damp(chase.orbit, 0, 0.6, dt);
     const a = chase.yaw + Math.PI + chase.orbit, d = chase.dist * chase.zoom;
     const tx = R.x + Math.sin(a) * d, tz = R.z + Math.cos(a) * d;
-    const ty = Math.max(R.y + chase.height * chase.zoom, heightAt(tx, tz) + 0.12);
-    if (snap) camera.position.set(tx, ty, tz);
-    else camera.position.set(damp(camera.position.x, tx, 6, dt), damp(camera.position.y, ty, 6, dt), damp(camera.position.z, tz, 6, dt));
-    camera.lookAt(R.x + Math.sin(R.yaw) * 0.35, R.y + 0.12, R.z + Math.cos(R.yaw) * 0.35);
+    outPos.set(tx, Math.max(R.y + chase.height * chase.zoom, heightAt(tx, tz) + 0.12), tz);
+    outLook.set(R.x + Math.sin(R.yaw) * 0.35, R.y + 0.12, R.z + Math.cos(R.yaw) * 0.35);
+  }
+  const chasePos = new THREE.Vector3(), chaseLook = new THREE.Vector3();
+  function chaseCamera(dt, snap) {
+    chaseTarget(dt, snap, chasePos, chaseLook);
+    if (snap) camera.position.copy(chasePos);
+    else camera.position.set(damp(camera.position.x, chasePos.x, 6, dt), damp(camera.position.y, chasePos.y, 6, dt), damp(camera.position.z, chasePos.z, 6, dt));
+    chase.look.copy(chaseLook);
+    camera.lookAt(chase.look);
+  }
+  // model-space point on the rover -> world
+  const onRover = (p, out) => { V.roverRoot.updateMatrixWorld(true); return V.roverRoot.localToWorld(out.copy(p)); };
+  const onDrone = (p, out) => { V.droneRoot.updateMatrixWorld(true); return V.droneRoot.localToWorld(out.copy(p)); };
+  const CLOSE_LOOK = new THREE.Vector3(CUT_X, -0.094, -0.112), CLOSE_POS = new THREE.Vector3(CUT_X + 0.28, -0.038, -0.08);
+  function closeUp(t, outPos, outLook) {
+    // a slow drift while it holds on the latch, so the shot never goes dead
+    const k = smooth(TD.cam1, TD.back0, t);
+    // back off on narrow screens so both latches and the gears still fit across
+    const fit = clamp(1.45 / (canvas.clientWidth / Math.max(1, canvas.clientHeight)), 1, 3.4);
+    vA.copy(CLOSE_POS).sub(CLOSE_LOOK).multiplyScalar(fit).add(CLOSE_LOOK);
+    onRover(vA.add(vB.set(-0.02 * k, 0.008 * k, -0.035 * k)), outPos);
+    onRover(CLOSE_LOOK, outLook);
+  }
+  function watchPose(outPos, outLook) {
+    // left rear quarter, pulled back and up to watch the lift-off
+    V.rover.updateMatrixWorld(true);
+    V.rover.localToWorld(outPos.set(1.15, 0.75, -1.35));
+    V.rover.localToWorld(outLook.set(0, 0.38, 0.05));
+  }
+  function place(cam, pos, look, fov) { cam.position.copy(pos); cam.lookAt(look); if (fov && Math.abs(cam.fov - fov) > 1e-3) { cam.fov = fov; cam.updateProjectionMatrix(); } }
+  // free flight: WASD is forward/back and yaw, height is held
+  function droneFly(dt, ctl) {
+    const ground = heightAt(DR.x, DR.z);
+    let wx, wz;
+    if (ctl.goal) {
+      const dx = ctl.goal.x - DR.x, dz = ctl.goal.z - DR.z;
+      wx = dx * ctl.gain; wz = dz * ctl.gain;
+      const m = Math.hypot(wx, wz); if (m > ctl.vmax) { wx *= ctl.vmax / m; wz *= ctl.vmax / m; }
+    } else {
+      DR.w = damp(DR.w, ctl.turn * 1.7, 5, dt);
+      const f = ctl.fwd * 4.2;
+      wx = Math.sin(DR.yaw) * f; wz = Math.cos(DR.yaw) * f;
+    }
+    let ax = (wx - DR.vx) * 2.6, az = (wz - DR.vz) * 2.6;
+    const am = Math.hypot(ax, az); if (am > 5) { ax *= 5 / am; az *= 5 / am; }
+    DR.ax = damp(DR.ax, ax, 8, dt); DR.az = damp(DR.az, az, 8, dt);
+    DR.vx += DR.ax * dt; DR.vz += DR.az * dt;
+    const yT = ctl.y ?? ground + ALT;
+    const vyWant = clamp((yT - DR.y) * (ctl.vGain ?? 1.6), -(ctl.vDown ?? 1.1), 1.3);
+    DR.vy += clamp((vyWant - DR.vy) * 4, -4, 4) * dt;
+    DR.x += DR.vx * dt; DR.z += DR.vz * dt; DR.y += DR.vy * dt;
+    DR.y = Math.max(DR.y, heightAt(DR.x, DR.z) + 0.02);
+    if (ctl.yaw != null) DR.w = damp(DR.w, clamp(wrapAngle(ctl.yaw - DR.yaw) * 2.2, -1.6, 1.6), 6, dt);
+    DR.yaw += DR.w * dt;
+    const r = Math.hypot(DR.x, DR.z); if (r > ARENA) { DR.x *= ARENA / r; DR.z *= ARENA / r; }
+    // lean into the acceleration and against drag
+    tilt.set(DR.ax * 0.3 + DR.vx * 0.22, 9.81, DR.az * 0.3 + DR.vz * 0.22).normalize();
+    tQ.setFromUnitVectors(up, tilt); yQ.setFromAxisAngle(up, DR.yaw); tQ.multiply(yQ);
+    V.drone.position.set(DR.x, DR.y, DR.z);
+    V.drone.quaternion.slerp(tQ, 1 - Math.exp(-7 * dt));
+    downwash(V.drone.position);
+  }
+  const dChase = { pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false };
+  function droneChaseTarget(outPos, outLook) {
+    const fx = Math.sin(DR.yaw), fz = Math.cos(DR.yaw);
+    outPos.set(DR.x - fx * 2.5, DR.y + 1.15, DR.z - fz * 2.5);
+    outPos.y = Math.max(outPos.y, heightAt(outPos.x, outPos.z) + 0.3);
+    outLook.set(DR.x + fx * 1.4, DR.y - 0.55, DR.z + fz * 1.4);
+  }
+  const downDir = new THREE.Vector3();
+  function bellyPose(outPos, outLook) {
+    onDrone(BELLY, outPos);
+    downDir.set(0, -1, 0).applyQuaternion(V.drone.getWorldQuaternion(qA));
+    outLook.copy(outPos).add(downDir);
+    camD.up.set(0, 0, 1).applyQuaternion(qA); // the drone's nose is up in the image
+  }
+  function updateTag(dt) {
+    const show = DOCK.mode === 'attaching' && ['approach', 'lock', 'descend'].includes(DOCK.phase) && DOCK.bellyK > 0.6 && !(DOCK.phase === 'descend' && DOCK.dy < FINAL);
+    if (!show) { if (DOCK.tagOn) { DOCK.tagOn = false; opts.onTag?.(null); } DOCK.seen = 0; return; }
+    const W = canvas.clientWidth, H = canvas.clientHeight, pv = portrait(), vw = pv ? W : W * DOCK.split, vh = pv ? H * DOCK.split : H;
+    camD.updateMatrixWorld(true);
+    const pts = [];
+    let inside = true;
+    for (const c of TAG) {
+      onRover(c, vA); const d = vA.clone().project(camD);
+      if (d.z > 1 || Math.abs(d.x) > 0.96 || Math.abs(d.y) > 0.96) inside = false;
+      pts.push([(d.x * 0.5 + 0.5) * vw, (1 - (d.y * 0.5 + 0.5)) * vh]);
+    }
+    const belly = camD.position, dist = onRover(vB.set(0.268, -0.084, -0.1116), vC).distanceTo(belly);
+    const found = inside && DOCK.bellyK > 0.9 && dist < 2.2;
+    DOCK.seen = found ? DOCK.seen + dt : 0;
+    DOCK.tagOn = true;
+    opts.onTag?.({ pts, found, locked: DOCK.phase !== 'approach' && found, dist, phase: DOCK.phase });
+  }
+  function detaching(dt) {
+    const t = (DOCK.t += dt);
+    // camera: chase -> latch close-up -> pulled back to watch the lift-off
+    const s1 = easeInOut(clamp(t / TD.cam1, 0, 1)), s2 = easeInOut(clamp((t - TD.back0) / (TD.back1 - TD.back0), 0, 1));
+    closeUp(t, vA, vB); watchPose(vC, vD);
+    const pos = new THREE.Vector3().lerpVectors(pose0.pos, vA, s1).add(new THREE.Vector3(0, 0.12 * Math.sin(Math.PI * s1), 0));
+    const look = new THREE.Vector3().lerpVectors(pose0.look, vB, s1);
+    pos.lerp(vC, s2); look.lerp(vD, s2);
+    place(camera, pos, look);
+    // cut the vehicle open through the latch, open it, close the cut again
+    const cutIn = easeInOut(clamp((t - TD.cut0) / (TD.cut1 - TD.cut0), 0, 1)), cutOut = easeInOut(clamp((t - TD.uncut0) / (TD.uncut1 - TD.uncut0), 0, 1));
+    DOCK.section = cutIn * (1 - cutOut);
+    DOCK.latch = easeInOut(clamp((t - TD.open0) / (TD.open1 - TD.open0), 0, 1));
+    propRate = smooth(TD.spin0, TD.spin1, t);
+    setCaption(t > 0.8 && t < TD.uncut0 + 0.1 ? 'One servo drives the whole latch. Its gear turns an idler and the arm pinions, the four arms swing open, and the four passive doors they carry slide out of the drone’s landing rails.' : t >= TD.uncut0 + 0.1 && t < TD.split1 ? 'Unlatched. The drone lifts off.' : '');
+    if (t >= TD.lift && V.drone.parent !== scene) {
+      scene.attach(V.drone);
+      DR.x = V.drone.position.x; DR.y = V.drone.position.y; DR.z = V.drone.position.z; DR.yaw = R.yaw; DR.vx = DR.vy = DR.vz = DR.w = DR.ax = DR.az = 0;
+      docked = false;
+    }
+    if (V.drone.parent === scene) droneFly(dt, { fwd: 0, turn: 0, vGain: 1.2 });
+    // split: the drone view slides in from the left; each half eases from the shared shot to its own chase view
+    const s3 = easeInOut(clamp((t - TD.split0) / (TD.split1 - TD.split0), 0, 1));
+    if (t >= TD.split0) {
+      DOCK.split = 0.5 * s3;
+      chaseTarget(dt, false, chasePos, chaseLook);
+      camera.position.lerpVectors(pos, chasePos, s3); chase.look.lerpVectors(look, chaseLook, s3); camera.lookAt(chase.look);
+      droneChaseTarget(vA, vB);
+      camD.up.set(0, 1, 0);
+      place(camD, vC.lerpVectors(pos, vA, s3), vD.lerpVectors(look, vB, s3), lerp(camera.fov, 50, s3));
+      dChase.pos.copy(camD.position); dChase.look.copy(vD); dChase.init = true;
+    } else { chase.look.copy(look); }
+    if (t >= TD.split1) { DOCK.mode = 'split'; DOCK.split = 0.5; setCaption(''); emit(); }
+  }
+  function flying(dt) {
+    droneFly(dt, { fwd: (keys.has('w') ? 1 : 0) - (keys.has('s') ? 1 : 0), turn: (keys.has('a') ? 1 : 0) - (keys.has('d') ? 1 : 0) });
+    droneChaseTarget(vA, vB);
+    dChase.pos.set(damp(dChase.pos.x, vA.x, 5, dt), damp(dChase.pos.y, vA.y, 5, dt), damp(dChase.pos.z, vA.z, 5, dt));
+    dChase.look.set(damp(dChase.look.x, vB.x, 7, dt), damp(dChase.look.y, vB.y, 7, dt), damp(dChase.look.z, vB.z, 7, dt));
+    camD.up.set(0, 1, 0);
+    place(camD, dChase.pos, dChase.look, 50);
+  }
+  function attaching(dt) {
+    const t = (DOCK.t += dt);
+    V.rover.updateMatrixWorld(true);
+    const dockPos = V.rover.getWorldPosition(vC), top = R.y;
+    const hd = Math.hypot(dockPos.x - DR.x, dockPos.z - DR.z);
+    const yawErr = Math.abs(wrapAngle(R.yaw - DR.yaw));
+    if (DOCK.phase === 'return') {
+      const sp = Math.hypot(DR.vx, DR.vz);
+      droneFly(dt, { goal: dockPos, gain: 1.1, vmax: 3.4, yaw: sp > 0.6 && hd > 1.5 ? Math.atan2(DR.vx, DR.vz) : R.yaw });
+      if (hd < 0.3 && sp < 0.35) { DOCK.phase = 'approach'; DOCK.pt = 0; }
+    } else if (DOCK.phase === 'approach') {
+      DOCK.pt += dt;
+      droneFly(dt, { goal: dockPos, gain: 1.6, vmax: 0.8, yaw: R.yaw, y: top + HOVER_Y, vGain: 1.3, vDown: 1.0 });
+      const settled = hd < 0.025 && Math.abs(DR.y - (top + HOVER_Y)) < 0.04 && yawErr < 0.03;
+      if ((settled && DOCK.seen > 0.6) || DOCK.pt > 7) { DOCK.phase = 'lock'; DOCK.lockT = 0; }
+    } else if (DOCK.phase === 'lock') {
+      DOCK.lockT += dt;
+      droneFly(dt, { goal: dockPos, gain: 1.6, vmax: 0.5, yaw: R.yaw, y: top + HOVER_Y });
+      if (DOCK.lockT > 0.8) { DOCK.phase = 'descend'; DOCK.dy = DR.y - top; }
+    } else if (DOCK.phase === 'descend') {
+      // straight down onto the latch; the last few centimetres ease into the exact docked pose
+      DOCK.dy = Math.max(0, DOCK.dy - dt * (0.12 + 0.3 * smooth(0.02, 0.5, DOCK.dy)));
+      DR.x = damp(DR.x, dockPos.x, 6, dt); DR.z = damp(DR.z, dockPos.z, 6, dt);
+      DR.yaw += wrapAngle(R.yaw - DR.yaw) * (1 - Math.exp(-6 * dt));
+      DR.y = top + DOCK.dy; DR.vx = DR.vz = DR.vy = 0;
+      V.drone.position.set(DR.x, DR.y, DR.z);
+      V.rover.getWorldQuaternion(qA);
+      V.drone.quaternion.slerp(qA, 1 - Math.exp(-8 * dt));
+      downwash(V.drone.position);
+      if (DOCK.dy <= 0.0005) { attach(); DOCK.phase = 'close'; DOCK.ct = 0; }
+    } else if (DOCK.phase === 'close') {
+      DOCK.ct += dt;
+      DOCK.latch = 1 - easeInOut(clamp(DOCK.ct / 1.1, 0, 1)); // passive: the servo just closes it
+      DOCK.split = 0.5 * (1 - easeInOut(clamp((DOCK.ct - 0.5) / 0.9, 0, 1)));
+      if (DOCK.ct > 1.45) { DOCK.mode = 'docked'; DOCK.split = 0; DOCK.latch = 0; emit(); }
+    }
+    propRate = DOCK.phase === 'close' ? damp(propRate, 0, 2.2, dt) : 1;
+    // left view: chase -> the belly camera for the approach -> back outside for touchdown
+    {
+      droneChaseTarget(vA, vB);
+      dChase.pos.set(damp(dChase.pos.x, vA.x, 5, dt), damp(dChase.pos.y, vA.y, 5, dt), damp(dChase.pos.z, vA.z, 5, dt));
+      dChase.look.set(damp(dChase.look.x, vB.x, 7, dt), damp(dChase.look.y, vB.y, 7, dt), damp(dChase.look.z, vB.z, 7, dt));
+      const want = DOCK.phase === 'approach' || DOCK.phase === 'lock' || (DOCK.phase === 'descend' && DOCK.dy >= FINAL) ? 1 : 0;
+      DOCK.bellyK = clamp((DOCK.bellyK || 0) + (want ? dt / 1.1 : -dt / 0.6), 0, 1);
+      const k = easeInOut(DOCK.bellyK);
+      bellyPose(vC, vD);
+      const upB = camD.up.clone();
+      camD.up.set(0, 1, 0).lerp(upB, k).normalize();
+      place(camD, vA.lerpVectors(dChase.pos, vC, k), vB.lerpVectors(dChase.look, vD, k), lerp(50, 44, k)); // Pi Camera Module 3: about 41 degrees vertical
+    }
+    opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), phase: DOCK.phase });
+  }
+  function dockTick(dt) {
+    if (DOCK.mode === 'detaching') detaching(dt);
+    else if (DOCK.mode === 'split') flying(dt);
+    else if (DOCK.mode === 'attaching') attaching(dt);
+    // the rover's own camera: its chase view unless the undocking shot has taken it over
+    if (DOCK.mode === 'docked' || DOCK.mode === 'split' || DOCK.mode === 'attaching') chaseCamera(dt, false);
+    V.latch?.set(DOCK.latch);
+    V.latch?.glow(DOCK.section);
+    // the cut plane, in world space, follows the rover
+    V.roverRoot.updateMatrixWorld(true);
+    sectionLocal.constant = DOCK.section > 0.001 ? lerp(CUT_OFF, CUT_X, DOCK.section) : 1e4;
+    sectionPlane.copy(sectionLocal).applyMatrix4(V.roverRoot.matrixWorld);
+    // AO reads depth without the cut and needs one camera: fade it out for the cut and the split
+    if (gtao) {
+      const want = DOCK.section > 0.001 || DOCK.split > 0.001 || DOCK.mode === 'detaching' && DOCK.t > TD.cut0 - 0.4 || DOCK.mode === 'attaching' ? 0 : 0.9;
+      gtao.blendIntensity = damp(gtao.blendIntensity, want, 6, dt);
+      gtao.enabled = gtao.blendIntensity > 0.02 && !(degraded >= 1);
+    }
+    updateTag(dt);
+    if (Math.abs((DOCK.lastSplit ?? -1) - DOCK.split) > 1e-4 || DOCK.lastPortrait !== portrait()) { DOCK.lastSplit = DOCK.split; DOCK.lastPortrait = portrait(); opts.onView?.(DOCK.split, DOCK.lastPortrait); }
+    if (DOCK.mode === 'split') opts.onDrone?.({ alt: DR.y - heightAt(DR.x, DR.z), phase: 'fly' });
   }
 
   // ---------------------------------------------------------------- boot
@@ -1071,7 +1415,7 @@ export async function initWorld(canvas, opts = {}) {
       for (let i = 0; i <= 8; i++) detail.push(flightPos((i / 8) * T0.hoverAt, new THREE.Vector3()));
     }
     detail.push(camFinal.clone(), LOOK.clone());
-  } else { placeRover(0, true); chaseCamera(0, true); detail.push(V.rover.position.clone()); }
+  } else { placeRover(0, true); attach(); V.setProps(0); chaseCamera(0, true); detail.push(V.rover.position.clone()); }
   terrain.update(detail);
   let detailSettled = mode !== 'landing' || docked;
 
@@ -1087,7 +1431,10 @@ export async function initWorld(canvas, opts = {}) {
       // once the camera has settled, drop the extra terrain detail laid along the flight path
       if (!detailSettled && !chaseCam.on) detailSettled = terrain.update([camFinal, LOOK], 3000) === 0;
     }
-    else { drive(dt); placeRover(dt, false); chaseCamera(dt, false); terrain.update(V.rover.position, 20000); }
+    else {
+      drive(dt); placeRover(dt, false); dockTick(dt);
+      terrain.update(docked ? V.rover.position : [V.rover.position, V.drone.position], 20000);
+    }
     if (chaseCam.on) rideCamera(clock, dt);
     spinWheelsTracksDust(dt);
     tracksL.update(clock, mode === 'drive' ? 120 : 45); tracksR.update(clock, mode === 'drive' ? 120 : 45);
@@ -1100,7 +1447,7 @@ export async function initWorld(canvas, opts = {}) {
       // frame both the rover and the spot where the drone's shadow lands
       const D = V.drone.position, agl = Math.max(0, D.y - heightAt(D.x, D.z));
       const sx = D.x - (sunDir.x / sunDir.y) * agl, sz = D.z - (sunDir.z / sunDir.y) * agl;
-      const cx = (sx + f.x) / 2, cz = (sz + f.z) / 2, half = Math.max(2.4, Math.hypot(sx - f.x, sz - f.z) / 2 + 0.9);
+      const cx = (sx + f.x) / 2, cz = (sz + f.z) / 2, half = Math.min(14, Math.max(2.4, Math.hypot(sx - f.x, sz - f.z) / 2 + 0.9));
       tmp.set(cx, heightAt(cx, cz), cz);
       sun.position.copy(tmp).addScaledVector(sunDir, 12); sun.target.position.copy(tmp);
       Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half });
@@ -1110,11 +1457,22 @@ export async function initWorld(canvas, opts = {}) {
       if (sun.shadow.camera.right !== h) { Object.assign(sun.shadow.camera, { left: -h, right: h, top: h, bottom: -h }); sun.shadow.camera.updateProjectionMatrix(); }
       sun.position.copy(shadowBox.c).addScaledVector(sunDir, 14); sun.target.position.copy(shadowBox.c);
     } else {
+      if (sun.shadow.camera.right !== 2.4) { Object.assign(sun.shadow.camera, { left: -2.4, right: 2.4, top: 2.4, bottom: -2.4 }); sun.shadow.camera.updateProjectionMatrix(); }
       sun.position.copy(f).addScaledVector(sunDir, 12); sun.target.position.copy(f);
     }
     sky.position.copy(camera.position); horizon.position.copy(camera.position);
     finish.uniforms.time.value = clock;
+    if (split) {
+      const f2 = DOCK.split;
+      // side by side on a landscape screen, stacked (drone on top) on a portrait one
+      split.views = f2 <= 0.0005 ? [{ camera, x0: 0, x1: 1, before: skyAt }]
+        : portrait() ? [{ camera: camD, x0: 0, x1: 1, y0: 0, y1: f2, before: skyAt }, { camera, x0: 0, x1: 1, y0: f2, y1: 1, before: skyAt }]
+        : [{ camera: camD, x0: 0, x1: f2, before: skyAt }, { camera, x0: f2, x1: 1, before: skyAt }];
+      renderer.shadowMap.needsUpdate = true;
+    }
   }
+  function skyAt(cam) { sky.position.copy(cam.position); horizon.position.copy(cam.position); }
+  function portrait() { return canvas.clientHeight > canvas.clientWidth * 1.05; }
 
   // ---------------------------------------------------------------- loop with adaptive quality
   let running = true, visible = true, last = performance.now(), frames = 0, slowTime = 0, degraded = 0;
@@ -1142,7 +1500,7 @@ export async function initWorld(canvas, opts = {}) {
   if (opts.debug) {
     running = false;
     window.__worldStep = (s) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) tick(1 / 60); composer.render(1 / 60); return clock; };
-    window.__world = { camera, V, R, AIR, scene, point: (x, y) => { pointer.x = x; pointer.y = y; pointer.at = clock; pointer.fresh = true; } };
+    window.__world = { camera, camD, V, R, AIR, DOCK, DR, scene, keys, toggle: () => toggleDock(), point: (x, y) => { pointer.x = x; pointer.y = y; pointer.at = clock; pointer.fresh = true; } };
   } else if (!reduced || mode === 'drive') requestAnimationFrame(loop);
   opts.onReady?.();
   return { stop() { running = false; renderer.dispose(); } };

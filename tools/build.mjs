@@ -242,27 +242,55 @@ ${scripts()}
 }
 
 function drivePage() {
+  const pad = (cls, keys, label) => `<div class="pad ${cls}" aria-hidden="true"><span class="pad-l">${label}</span><button type="button" data-k="${keys[0]}">&#9650;</button><div><button type="button" data-k="${keys[1]}">&#9664;</button><button type="button" data-k="${keys[2]}">&#9660;</button><button type="button" data-k="${keys[3]}">&#9654;</button></div></div>`;
   return `${head({
     title: 'Drive the rover · Jerry Li',
-    description: 'Drive the ground vehicle from my hybrid UAV-UGV research across Mars, rendered in real time from my Fusion 360 CAD.',
+    description: 'Drive the Drone on Wheels vehicle across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.',
     path: '/drive',
     extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>\n`,
   })}
-<body class="drive">
+<body class="drive" data-dock="docked">
 <canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
-  <p class="chip drive-title"><span class="dot"></span>Ground vehicle from <a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
+  <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
 </div>
-<div class="drive-load" data-drive-load><b>Loading Mars</b><span>About 4 MB. Arrow keys or WASD to drive.</span></div>
-<div class="drive-keys"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive</span><span class="speed num" data-speed>0.00 m/s</span></div>
-<div class="touch-pad" data-touch aria-hidden="true">
-  <button type="button" data-k="left">&#9664;</button><div><button type="button" data-k="up">&#9650;</button><button type="button" data-k="down">&#9660;</button></div><button type="button" data-k="right">&#9654;</button>
-</div>
+<div class="dock-bar"><button type="button" class="dock-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button></div>
+<div class="split-line" aria-hidden="true"></div>
+<p class="view-label vl-drone" aria-hidden="true"><b>Drone</b><span class="vl-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="num" data-alt>0.0 m up</span></p>
+<p class="view-label vl-rover" aria-hidden="true"><b>Rover</b><span class="vl-keys"><kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span class="num" data-speed2>0.00 m/s</span></p>
+<div class="feed" aria-hidden="true"><span class="feed-l">Belly camera</span><i></i><i></i><i></i><i></i></div>
+<svg class="tag-overlay" aria-hidden="true"><polygon data-tag-quad points=""></polygon><g data-tag-ticks></g><text data-tag-text x="0" y="0"></text></svg>
+<p class="dock-caption" data-caption role="status"></p>
+<div class="drive-load" data-drive-load><b>Loading Mars</b><span>About 6 MB. Arrow keys or WASD to drive, X to detach the drone.</span></div>
+<div class="drive-keys"><span data-keys-help><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive</span><span class="speed num" data-speed>0.00 m/s</span></div>
+${pad('pad-rover', ['up', 'left', 'down', 'right'], 'Rover')}
+${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
 <script type="module">
-  const c = document.querySelector('.drive-canvas');
-  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', onReady: () => document.querySelector('[data-drive-load]').classList.add('done'), onSpeed: (s) => { document.querySelector('[data-speed]').textContent = Math.abs(s).toFixed(2) + ' m/s'; } }))
-    .catch((e) => { document.querySelector('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; });
+  const $ = (s) => document.querySelector(s), body = document.body, c = $('.drive-canvas');
+  const quad = $('[data-tag-quad]'), ticks = $('[data-tag-ticks]'), txt = $('[data-tag-text]'), cap = $('[data-caption]');
+  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking\u2026', split: 'Press X to reattach', attaching: 'Docking\u2026' };
+  const HELP = { docked: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive', split: 'Drone <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> &nbsp; Rover arrow keys', detaching: 'Undocking', attaching: 'The drone is flying home' };
+  const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; $('[data-keys-help]').innerHTML = HELP[mode]; };
+  const onView = (f, portrait) => { document.documentElement.style.setProperty('--split', (f * 100).toFixed(3) + '%'); body.classList.toggle('is-split', f > 0.001); body.classList.toggle('split-wide', f > 0.4); body.classList.toggle('split-v', !!portrait); };
+  const onCaption = (t) => { if (t) cap.textContent = t; cap.classList.toggle('on', !!t); };
+  const onTag = (d) => {
+    body.classList.toggle('feed-on', !!d);
+    if (!d) { quad.setAttribute('points', ''); ticks.innerHTML = ''; txt.textContent = ''; return; }
+    const cx = d.pts.reduce((a, p) => a + p[0], 0) / 4, cy = d.pts.reduce((a, p) => a + p[1], 0) / 4;
+    body.dataset.tag = d.found ? (d.locked ? 'locked' : 'found') : 'search';
+    if (d.found) {
+      quad.setAttribute('points', d.pts.map((p) => p.join(',')).join(' '));
+      ticks.innerHTML = d.pts.map((p) => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4"></circle>').join('') + '<line x1="' + (cx - 9) + '" y1="' + cy + '" x2="' + (cx + 9) + '" y2="' + cy + '"></line><line x1="' + cx + '" y1="' + (cy - 9) + '" x2="' + cx + '" y2="' + (cy + 9) + '"></line>';
+      const top = Math.min(...d.pts.map((p) => p[1])), left = Math.min(...d.pts.map((p) => p[0]));
+      txt.setAttribute('x', left); txt.setAttribute('y', top - 12);
+      txt.textContent = (d.phase === 'approach' ? 'AprilTag found \u00b7 ' : d.phase === 'lock' ? 'LOCKED \u00b7 aligning \u00b7 ' : 'LOCKED \u00b7 descending \u00b7 ') + d.dist.toFixed(2) + ' m';
+    } else { quad.setAttribute('points', ''); ticks.innerHTML = ''; const v = body.classList.contains('split-v'); txt.setAttribute('x', 24); txt.setAttribute('y', v ? innerHeight * 0.25 : innerHeight / 2); txt.textContent = 'Searching for the AprilTag\u2026'; }
+  };
+  const onSpeed = (s) => { const t = Math.abs(s).toFixed(2) + ' m/s'; $('[data-speed]').textContent = t; $('[data-speed2]').textContent = t; };
+  const onDrone = (d) => { $('[data-alt]').textContent = d.alt.toFixed(1) + ' m up'; };
+  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
+    .catch((e) => { $('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; window.__err = String(e); });
 </script>
 </body>
 </html>
