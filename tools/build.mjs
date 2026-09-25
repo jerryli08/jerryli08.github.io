@@ -116,7 +116,7 @@ function row(x, i) {
     ? [x.place ? `<span class="hi">${esc(x.place)}</span>` : '', `<span>${esc(x.event)}</span>`].filter(Boolean).join('')
     : [stat ? `<span><span class="hi">${esc(stat.v)}</span> ${esc(stat.l)}</span>` : '', x.org ? `<span>${esc(x.org)}</span>` : ''].filter(Boolean).join('');
   return `<a class="row" href="${url(x)}"${data}>
-  <div class="row-thumb">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}<span class="row-cta">Click to <i>learn more</i></span></div>
+  <div class="row-thumb">${t ? `<img src="${v(t)}" alt="" ${x.kind === 'main' && i < 5 ? 'fetchpriority="low"' : 'loading="lazy"'} decoding="async">` : '<div class="placeholder">Media coming</div>'}<span class="row-cta">Click to <i>learn more</i></span></div>
   <div>
     <div class="row-top"><span class="row-n">${String(i + 1).padStart(2, '0')}</span><h3>${esc(x.title)}</h3>${isHack ? `<span class="hours">${esc(x.hours)}</span>` : `<span class="row-yr">${esc(x.year)}</span>`}</div>
     <p class="row-sum">${esc(x.short)}${x.draft ? ' <span class="draft-tag">Draft</span>' : ''}</p>

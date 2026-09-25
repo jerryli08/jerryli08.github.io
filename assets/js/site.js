@@ -138,13 +138,18 @@
       el.addEventListener('pointerleave', () => clearTimeout(hoverTimer));
       el.addEventListener('focus', () => show(el));
     }
-    // warm the cache for the first few previews once the page is idle
-    const warm = () => items.slice(0, 6).forEach((el) => {
-      if (!el.dataset.preview) return;
-      const l = document.createElement('link');
-      l.rel = 'prefetch'; l.href = el.dataset.preview; l.as = 'video';
-      document.head.appendChild(l);
-    });
-    ('requestIdleCallback' in window) ? requestIdleCallback(warm, { timeout: 3000 }) : setTimeout(warm, 2000);
+    // After everything else has loaded, quietly prefetch the first few poster frames
+    // (small JPEGs) so the first hovers paint instantly. Videos only load on hover.
+    let warmed = false;
+    const warm = () => {
+      if (warmed || slow) return; warmed = true;
+      items.slice(0, 6).forEach((el) => {
+        if (!el.dataset.poster) return;
+        const l = document.createElement('link');
+        l.rel = 'prefetch'; l.href = el.dataset.poster;
+        document.head.appendChild(l);
+      });
+    };
+    addEventListener('load', () => setTimeout(warm, 5000), { once: true });
   }
 })();
