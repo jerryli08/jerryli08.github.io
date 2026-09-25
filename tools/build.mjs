@@ -127,7 +127,8 @@ function span(x) {
   return pts.length ? [Math.min(...pts), Math.max(...pts)] : [-Infinity, -Infinity];
 }
 const newestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return eb - ea || sb - sa; };
-const PIN = '<span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span>';
+const PIN_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg>';
+const PIN = `<span class="pin" title="Pinned">${PIN_ICON}<span class="sr-only">Pinned</span></span>`;
 // every project in the grid: same size, picture on top, words underneath
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
 function card(x) {
@@ -140,7 +141,7 @@ function card(x) {
 // the project the live scene is showing
 function heroCard(x) {
   return `<aside class="scene-card" aria-labelledby="scene-card-h">
-  <p class="sc-k"><span class="dot"></span>Live 3D of this project, from my Fusion 360 CAD</p>
+  <p class="sc-k"><span class="sc-feat">${PIN_ICON}Featured project</span><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD</span></p>
   <div class="sc-head">
     <div><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)} · ${esc(x.year)}</p></div>
     <div class="sc-actions"><a class="nav-drive sc-drive" href="/drive">Drive the rover</a><a class="sc-go" href="${url(x)}">See more ${arrow}</a></div>
