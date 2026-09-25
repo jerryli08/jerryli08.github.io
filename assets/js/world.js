@@ -489,8 +489,8 @@ function pivotize(mesh) {
 // Docking latch on the rover, rigged from the real pin axes in the STEP (all run along the
 // CAD X axis; coordinates below are the model's own metres, y up, z = -CAD y). One servo turns
 // the 25-tooth gear, which drives the 25-tooth idler and the 7-tooth pinion on one arm; the two
-// arms on each side are geared together, so each pair swings open like a V. The four passive
-// doors are pinned to the arm tips and slide out of the drone's landing rails as the arms open.
+// arms on each side are geared together, so each pair swings open like a V. The four doors are
+// fixed rigidly to the arm tips and swing out of the drone's landing rails with the arms.
 const LATCH_SERVO = [-0.11105, -0.0867], LATCH_IDLER = [-0.1110, -0.1367];
 const LATCH_ARMS = [ // part, sign of the opening rotation, bottom pivot, tip pin
   { re: /Component9/, sign: 1, bot: [-0.0888, -0.0497], top: [-0.0546, -0.0337] },
@@ -548,7 +548,7 @@ function rigLatch(root) {
         const { bot, top, sign } = d.arm, ang = sign * alpha, dy = top[0] - bot[0], dz = top[1] - bot[1];
         d.pivot.position.y = bot[0] + dy * Math.cos(ang) - dz * Math.sin(ang);
         d.pivot.position.z = bot[1] + dy * Math.sin(ang) + dz * Math.cos(ang);
-        d.pivot.rotation.x = -sign * 0.14 * smooth(0.55, 1, a); // free of the rail, each door tips a little on its pin
+        d.pivot.rotation.x = ang; // rigid with its arm: it swings with the arm tip, it does not stay level
       }
     },
   };
@@ -1282,7 +1282,7 @@ export async function initWorld(canvas, opts = {}) {
     DOCK.section = cutIn * (1 - cutOut);
     DOCK.latch = easeInOut(clamp((t - TD.open0) / (TD.open1 - TD.open0), 0, 1));
     propRate = smooth(TD.spin0, TD.spin1, t);
-    setCaption(t > 0.8 && t < TD.uncut0 + 0.1 ? 'One servo drives the whole latch. Its gear turns an idler and the arm pinions, the four arms swing open, and the four passive doors they carry slide out of the drone’s landing rails.' : t >= TD.uncut0 + 0.1 && t < TD.split1 ? 'Unlatched. The drone lifts off.' : '');
+    setCaption(t > 0.8 && t < TD.uncut0 + 0.1 ? 'One servo drives the whole latch. Its gear turns an idler and the arm pinions, and the four arms swing open, carrying their doors out of the drone\u2019s landing rails.' : t >= TD.uncut0 + 0.1 && t < TD.split1 ? 'Unlatched. The drone lifts off.' : '');
     if (t >= TD.lift && V.drone.parent !== scene) {
       scene.attach(V.drone);
       DR.x = V.drone.position.x; DR.y = V.drone.position.y; DR.z = V.drone.position.z; DR.yaw = R.yaw; DR.vx = DR.vy = DR.vz = DR.w = DR.ax = DR.az = 0;
