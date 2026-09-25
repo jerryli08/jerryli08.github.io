@@ -126,12 +126,13 @@ function card(x) {
 function heroCard(x) {
   return `<aside class="scene-card" aria-labelledby="scene-card-h">
   <p class="sc-k"><span class="dot"></span>Live 3D of this project, from my Fusion 360 CAD</p>
-  <h2 id="scene-card-h">${esc(x.title)}</h2>
-  <p class="sc-sub">${esc(x.org)} · ${esc(x.year)}</p>
+  <div class="sc-head">
+    <div><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)} · ${esc(x.year)}</p></div>
+    <a class="sc-go" href="${url(x)}">See more ${arrow}</a>
+  </div>
   <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
   <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
-  <p class="sc-hint"><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
-  <div class="sc-actions"><a class="sc-go" href="${url(x)}">See more ${arrow}</a><a class="sc-drive" href="/drive">Drive it yourself</a></div>
+  <p class="sc-hint"><span><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></span><a class="sc-drive" href="/drive">Drive it yourself</a></p>
 </aside>`;
 }
 

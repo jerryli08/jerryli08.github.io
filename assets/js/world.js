@@ -770,7 +770,7 @@ export async function initWorld(canvas, opts = {}) {
     if (!AIR.on && dist > FLY_DIST) takeoff();
   }
   function pickWander() {
-    const A = frame.wide ? [0.52, 0.94, 0.52, 0.86] : [0.12, 0.88, 0.3, 0.44]; // clear of the text and the project card
+    const A = frame.wide ? [0.52, 0.94, 0.47, 0.86] : [0.12, 0.88, 0.3, 0.44]; // clear of the text and the project card
     const hopper = rnd() < 0.25; // now and then it flies instead of driving
     for (let i = 0; i < 24; i++) {
       const g = groundAt(lerp(A[0], A[1], rnd()), lerp(A[2], A[3], rnd()), hit);
@@ -916,7 +916,7 @@ export async function initWorld(canvas, opts = {}) {
     if (mode === 'landing') {
       const wide = w >= 960;
       frame.wide = wide;
-      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.68 : 0.36;
+      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.65 : 0.36;
       const F = wide ? 30 : 44; // visible vertical field of view
       const W2 = frame.fx >= 0.5 ? 2 * frame.fx * w : 2 * (1 - frame.fx) * w;
       const H2 = frame.fy >= 0.5 ? 2 * frame.fy * h : 2 * (1 - frame.fy) * h;

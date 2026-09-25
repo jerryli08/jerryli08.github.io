@@ -17,18 +17,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap">
-<link rel="stylesheet" href="/assets/css/site.css?v=eddb979d">
+<link rel="stylesheet" href="/assets/css/site.css?v=040d314d">
 <meta name="robots" content="noindex">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83"}}</script>
-<link rel="preload" as="image" href="/assets/img/hero-still.webp?v=0dc93ff6" media="(min-width: 960px)" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/img/hero-still.webp?v=c9bd01a6" media="(min-width: 960px)" fetchpriority="high">
 <link rel="preload" as="image" href="/assets/img/hero-still-m.webp?v=9de95548" media="(max-width: 959px)" fetchpriority="high">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Jerry Li","url":"https://www.jerryli.design","email":"mailto:jerry@jerryli.design","sameAs":["https://www.linkedin.com/in/jerry-li-md/","https://github.com/jerryli08"],"alumniOf":"University of Illinois Urbana-Champaign","jobTitle":"Mechanical Engineering Student"}</script>
 </head>
 <body class="home">
 <a class="sr-only" href="#work">Skip to projects</a>
 <div class="bg" data-stage aria-hidden="true">
-  <picture><source media="(max-width: 959px)" srcset="/assets/img/hero-still-m.webp?v=9de95548"><img class="bg-still" src="/assets/img/hero-still.webp?v=0dc93ff6" alt="" width="1920" height="1080"></picture>
-  <canvas class="bg-canvas" data-world="landing" data-hero="/assets/js/world.js?v=96dcac58"></canvas>
+  <picture><source media="(max-width: 959px)" srcset="/assets/img/hero-still-m.webp?v=9de95548"><img class="bg-still" src="/assets/img/hero-still.webp?v=c9bd01a6" alt="" width="1920" height="1080"></picture>
+  <canvas class="bg-canvas" data-world="landing" data-hero="/assets/js/world.js?v=44ca16cd"></canvas>
 </div>
 <div class="veil" aria-hidden="true"></div>
 <div class="veil-dim" data-dim aria-hidden="true"></div>
@@ -74,12 +74,13 @@
     </div>
     <aside class="scene-card" aria-labelledby="scene-card-h">
   <p class="sc-k"><span class="dot"></span>Live 3D of this project, from my Fusion 360 CAD</p>
-  <h2 id="scene-card-h">Drone on Wheels</h2>
-  <p class="sc-sub">MIT Lincoln Laboratory · 2025</p>
+  <div class="sc-head">
+    <div><h2 id="scene-card-h">Drone on Wheels</h2><p class="sc-sub">MIT Lincoln Laboratory · 2025</p></div>
+    <a class="sc-go" href="/projects/hybrid-vehicle">See more <span class="arrow" aria-hidden="true">&#8599;</span></a>
+  </div>
   <p class="sc-p">A drone and a ground rover that dock together, so each one can carry the other. I came up with it, led the 7-person team, and designed and built all of the hardware.</p>
   <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
-  <p class="sc-hint"><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
-  <div class="sc-actions"><a class="sc-go" href="/projects/hybrid-vehicle">See more <span class="arrow" aria-hidden="true">&#8599;</span></a><a class="sc-drive" href="/drive">Drive it yourself</a></div>
+  <p class="sc-hint"><span><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></span><a class="sc-drive" href="/drive">Drive it yourself</a></p>
 </aside>
   </section>
   <section class="work" id="work" aria-labelledby="work-h">
