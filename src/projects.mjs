@@ -33,11 +33,11 @@ export const projects = [
     stats: [
       { v: 'First author', l: 'Poster at IEEE MIT URTC 2025' },
       { v: '10 DOF', l: 'Latch linkage driven by one servo' },
-      { v: '7', l: 'Teammates I recruited' },
+      { v: '7', l: 'Person team' },
     ],
     body: [
       { h: 'Overview', p: [
-        'I came up with this project, recruited a team of seven, and designed and fabricated all of the hardware. It is a cooperative multi-agent system: an aerial vehicle (UAV) with custom landing gear, and a ground vehicle (UGV) with actuated latches that lock onto that gear.',
+        'I came up with this project, recruited the team, and designed and fabricated all of the hardware. It is a cooperative multi-agent system: an aerial vehicle (UAV) with custom landing gear, and a ground vehicle (UGV) with actuated latches that lock onto that gear.',
         'Docked, each vehicle can carry the other. The UGV carries the UAV to save its battery, and the UAV lifts the UGV over terrain it cannot drive across or up to an aerial viewpoint. The target applications are search and rescue and data collection.',
       ]},
       { h: 'The latch', p: [
@@ -138,7 +138,7 @@ export const projects = [
         'A linear slide carries an electromagnet onto the printer\'s magnetic build plate and pulls it out, with a belt-driven stepper handling the retraction. A belt-driven turntable then swaps the full plate for an empty one. Two TMC2209 stepper drivers on a custom perfboard run everything from an Arduino Uno.',
       ]},
       { h: 'The hard part', p: [
-        'Getting the electromagnet to latch onto the plate. The stock plate would not hold reliably, so I made custom steel build plates, which made pickup 100% reliable.',
+        'Getting the electromagnet to latch onto the plate reliably. I solved it by switching to custom-made steel build plates, which made pickup 100% reliable.',
       ]},
     ],
     media: [
@@ -172,7 +172,7 @@ export const projects = [
     ],
     body: [
       { h: 'Overview', p: [
-        'I designed and built this car by myself for the 2024-25 Science Olympiad Electric Vehicle event, which scores a car on how quickly it covers a set distance and how close to the target it stops. It is a 30 by 60 cm all-wheel-drive car, and its best runs covered 8.3 m in 2.97 s, stopping 1.1 cm (0.13%) from the target.',
+        'I designed and built this car by myself for the 2024-25 Science Olympiad Electric Vehicle event, which scores a car on how quickly it covers a set distance and how close to the target it stops. It is a 30 by 60 cm all-wheel-drive car that covered 8.3 m in 2.97 s and stopped 1.1 cm (0.13%) from the target.',
       ]},
       { h: 'Iteration', p: [
         'Version one used CNC-cut HDF plates. They were heavy, and too stiff: I knew the chassis needed to flex over floor bumps. For version two I used Fusion 360 FEA to design a lattice into 1.5 mm G10 fiberglass plates that gives the chassis torsional flexibility, so the car passively absorbs bumps in the floor.',
@@ -209,13 +209,13 @@ export const projects = [
     tools: ['Fusion 360', 'Sheet metal design', '5052 aluminum', 'Carbon fiber', 'VESC'],
     stats: [
       { v: '5.3 kW', l: 'Mid-drive' },
-      { v: '2-stage', l: 'Belt reduction' },
+      { v: '5052', l: 'Bent, powder-coated aluminum parts' },
       { v: 'Solo', l: 'Design and build' },
     ],
     body: [
       { h: 'Overview', p: [
         'I converted a standard bicycle into a 5.3 kW mid-drive electric bike. I designed all of the custom parts. Most are laser cut and bent from 5052 aluminum and powder coated, with a few CNC-cut from carbon fiber sheet or laser cut from stainless steel.',
-        'Two stages of belt reduction bring the drive down to the crank, and the cranks freewheel so the pedals stay still under power. The throttle is configured in VESC Tool.',
+        'Belt reductions bring the drive down to the crank, and the cranks freewheel so the pedals stay still under power. The throttle is configured in VESC Tool.',
       ]},
     ],
     media: [
