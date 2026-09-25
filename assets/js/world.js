@@ -524,16 +524,23 @@ class Tracks {
   }
   push(x, z, dx, dz, t) {
     const l = Math.hypot(dx, dz) || 1;
-    this.pts.push([x, z, -dz / l, dx / l, t, heightAt(x, z) + 0.0025]);
+    this.pts.push([x, z, -dz / l, dx / l, t, heightAt(x, z) + 0.0025, this.gap ? 0 : 1]);
+    this.gap = false;
     if (this.pts.length > this.n) this.pts.shift();
+  }
+  // the vehicle left the ground: end the strip here so it does not stretch to the landing spot
+  lift() {
+    const p = this.pts[this.pts.length - 1];
+    if (p) { this.pts.push([...p.slice(0, 6), 0]); if (this.pts.length > this.n) this.pts.shift(); }
+    this.gap = true;
   }
   update(now, life) {
     const P = this.pts, len = P.length, hw = this.w / 2;
     for (let i = 0; i < len; i++) {
-      const [px, pz, sx, sz, t, y] = P[i], o = i * 6, c = i * 8;
+      const [px, pz, sx, sz, t, y, vis] = P[i], o = i * 6, c = i * 8;
       this.pos[o] = px + sx * hw; this.pos[o + 1] = y; this.pos[o + 2] = pz + sz * hw;
       this.pos[o + 3] = px - sx * hw; this.pos[o + 4] = y; this.pos[o + 5] = pz - sz * hw;
-      const a = 0.33 * (1 - smooth(life * 0.5, life, now - t)) * smooth(0, 4, len - 1 - i < 2 ? 0 : 4) ;
+      const a = 0.33 * vis * (1 - smooth(life * 0.5, life, now - t)) * (len - 1 - i < 2 ? 0 : 1);
       for (let s = 0; s < 2; s++) { this.col[c + s * 4] = 0.11; this.col[c + s * 4 + 1] = 0.05; this.col[c + s * 4 + 2] = 0.03; this.col[c + s * 4 + 3] = a; }
     }
     this.geo.attributes.position.needsUpdate = true; this.geo.attributes.color.needsUpdate = true;
@@ -650,27 +657,18 @@ export async function initWorld(canvas, opts = {}) {
   scene.add(terrain.group);
 
   // ---------------------------------------------------------------- layout of the landing shot
-  // Fixed camera. The rover wanders inside an ellipse ZONE; nothing big is placed where it
-  // would block the view of it.
-  const ZONE = { x: 0, z: 0, ax: 0.5, az: 0.85 };
-  const CAM = new THREE.Vector3(0.5, 0, 2.6);
-  CAM.y = heightAt(CAM.x, CAM.z) + 0.46;
-  const LOOK = new THREE.Vector3(ZONE.x, heightAt(ZONE.x, ZONE.z) + 0.1, ZONE.z);
-  const keepOutLanding = (x, z, r) => {
-    const ex = (x - ZONE.x) / (ZONE.ax + 0.45 + r), ez = (z - ZONE.z) / (ZONE.az + 0.45 + r);
-    if (ex * ex + ez * ez < 1) return true;
-    // the corridor between camera and zone
-    const t = clamp(((x - CAM.x) * (ZONE.x - CAM.x) + (z - CAM.z) * (ZONE.z - CAM.z)) / ((ZONE.x - CAM.x) ** 2 + (ZONE.z - CAM.z) ** 2), 0, 1);
-    const px = CAM.x + t * (ZONE.x - CAM.x), pz = CAM.z + t * (ZONE.z - CAM.z);
-    if (Math.hypot(x - px, z - pz) < 0.3 + r + t * 0.35 && r > 0.045) return true;
-    return Math.hypot(x - CAM.x, z - CAM.z) < 0.35 + r && r > 0.02;
-  };
+  // The vehicle docks at START. After the fly-in the camera holds a high bird's-eye view over
+  // LOOK; CAMDIR sets which way that view faces and where the drone comes in from.
+  const START = { x: 0.12, z: 0.05 };
+  const LOOK = new THREE.Vector3(0, heightAt(0, 0) + 0.1, 0);
+  const CAMDIR = new THREE.Vector3(0.5, 0, 2.6).normalize();
+  const keepOutLanding = (x, z, r) => Math.hypot(x - START.x, z - START.z) < 0.75 + r && r > 0.02; // a clear pad to land on
   const ARENA = 50;
   const keepOutDrive = (x, z, r) => Math.hypot(x, z) < 1.2 + r && r > 0.012;
-  const rocks = scatterRocks(rocksGltf, { lowPower, center: mode === 'landing' ? { x: CAM.x * 0.5, z: CAM.z * 0.3 } : { x: 0, z: 0 }, extent: mode === 'landing' ? 30 : ARENA, keepOut: mode === 'landing' ? keepOutLanding : keepOutDrive });
+  const rocks = scatterRocks(rocksGltf, { lowPower, center: mode === 'landing' ? { x: 0.25, z: 0.8 } : { x: 0, z: 0 }, extent: mode === 'landing' ? 30 : ARENA, keepOut: mode === 'landing' ? keepOutLanding : keepOutDrive });
   scene.add(rocks.group);
 
-  const tracksL = new Tracks(mode === 'drive' ? 2400 : 900, 0.034), tracksR = new Tracks(mode === 'drive' ? 2400 : 900, 0.034);
+  const tracksL = new Tracks(2400, 0.034), tracksR = new Tracks(2400, 0.034);
   scene.add(tracksL.mesh, tracksR.mesh);
   const dust = new Dust(lowPower ? 120 : 260);
   scene.add(dust.points);
@@ -697,7 +695,8 @@ export async function initWorld(canvas, opts = {}) {
   composer.addPass(finish);
 
   // ---------------------------------------------------------------- vehicle state
-  const R = { x: 0, z: 0, yaw: 0, v: 0, w: 0, pitch: 0, roll: 0, y: 0, wL: 0, wR: 0, target: null, pause: 0, last: null };
+  const R = { x: 0, z: 0, yaw: 0, v: 0, w: 0, pitch: 0, roll: 0, y: 0, wL: 0, wR: 0, goal: null, pause: 0, last: null, best: 0, bestAt: 0 };
+  const AIR = { on: false, spin: 0, vx: 0, vy: 0, vz: 0 }; // the drone carrying the rover
   function placeRover(dt, snap) {
     const fx = Math.sin(R.yaw), fz = Math.cos(R.yaw), rx = fz, rz = -fx, L = V.wheelbase / 2, W = V.track / 2;
     const h = (a, b) => heightAt(R.x + fx * a + rx * b, R.z + fz * a + rz * b);
@@ -714,6 +713,7 @@ export async function initWorld(canvas, opts = {}) {
     R.wL += ((R.v - R.w * half) / V.wheelRadius) * dt; R.wR += ((R.v + R.w * half) / V.wheelRadius) * dt;
     V.setWheels(R.wL, R.wR);
     const fx = Math.sin(R.yaw), fz = Math.cos(R.yaw), rx = fz, rz = -fx, W = V.track / 2;
+    if (AIR.on) return;
     if (!R.last) R.last = { x: R.x, z: R.z };
     const dx = R.x - R.last.x, dz = R.z - R.last.z;
     if (Math.hypot(dx, dz) > 0.02) {
@@ -728,45 +728,132 @@ export async function initWorld(canvas, opts = {}) {
     }
   }
 
-  // ---------------------------------------------------------------- landing: fly-in + wander
+  // ---------------------------------------------------------------- landing: fly-in, then follow the cursor
   // Seconds from the moment the 3D goes live. The drone cruises in, hovers, settles onto the
-  // rover; the camera rides with it and then eases back into the fixed shot.
-  const T0 = { hoverAt: 5.4, descend: 6.0, touch: 7.2, spinDown: 8.7, resume: 9.3, cam0: 6.8, cam1: 9.9 };
+  // rover; the camera rides with it and then pulls out to a bird's-eye view.
+  const T0 = { hoverAt: 2.6, descend: 2.85, touch: 3.5, spinDown: 4.5, resume: 3.9, cam0: 3.0, cam1: 5.0 };
   const HOVER = 0.34;
-  let phase = mode === 'landing' ? (reduced ? 'wander' : 'intro') : 'drive';
+  let phase = mode === 'landing' ? (reduced ? 'live' : 'intro') : 'drive';
   let docked = mode !== 'landing' || reduced;
   let propAngle = 0, propRate = docked ? 0 : 1;
   const up = new THREE.Vector3(0, 1, 0);
-  const P = new THREE.Vector3(), prevP = new THREE.Vector3(), curV = new THREE.Vector3(), velS = new THREE.Vector3(), accS = new THREE.Vector3(), tmp = new THREE.Vector3(), tilt = new THREE.Vector3();
+  const P = new THREE.Vector3(), prevP = new THREE.Vector3(), curV = new THREE.Vector3(), velS = new THREE.Vector3(), accS = new THREE.Vector3(), tmp = new THREE.Vector3(), tilt = new THREE.Vector3(), hit = new THREE.Vector3();
   const tQ = new THREE.Quaternion(), yQ = new THREE.Quaternion(), dockQ = new THREE.Quaternion(), dockP = new THREE.Vector3(), hoverP = new THREE.Vector3();
   const path = { a: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3(), yaw0: 0 };
   let seed = (Date.now() % 100000) + 7;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
-  function inZone(x, z, pad = 0) { const ex = (x - ZONE.x) / (ZONE.ax - pad), ez = (z - ZONE.z) / (ZONE.az - pad); return ex * ex + ez * ez <= 1; }
-  function pickTarget() {
-    for (let i = 0; i < 40; i++) {
-      const a = rnd() * TAU, r = Math.sqrt(rnd());
-      const tx = ZONE.x + Math.cos(a) * r * (ZONE.ax - 0.12), tz = ZONE.z + Math.sin(a) * r * (ZONE.az - 0.12);
-      if (Math.hypot(tx - R.x, tz - R.z) > 0.55) { R.target = { x: tx, z: tz }; return; }
-    }
-    R.target = { x: ZONE.x, z: ZONE.z };
+  // The rover drives to wherever the cursor points on the ground (a tap does the same on touch
+  // screens). If the spot is too far to drive, the drone lifts the rover, flies it over and
+  // lands. With no cursor around for a while it picks its own spots in view.
+  const FLY_DIST = 1.8, DRIVE_V = 0.85, WANDER_V = 0.3;
+  const pointer = { x: 0, y: 0, at: -1e9, fresh: false };
+  function setPointer(e) {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    pointer.x = (e.clientX - r.left) / r.width; pointer.y = (e.clientY - r.top) / r.height;
+    pointer.at = clock; pointer.fresh = true;
   }
-  function wander(dt) {
-    if (R.pause > 0) { R.pause -= dt; R.v = damp(R.v, 0, 4, dt); R.w = damp(R.w, 0, 4, dt); }
+  if (mode === 'landing' && !reduced) {
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') setPointer(e); }, { passive: true });
+    addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse' && !e.target.closest?.('a,button,input,label,summary')) setPointer(e); }, { passive: true });
+  }
+  function setGoal(x, z, src) {
+    // never aim into a rock
+    for (const o of rocks.obstacles) {
+      const dx = x - o.x, dz = z - o.z, d = Math.hypot(dx, dz), min = o.r + 0.18;
+      if (d < min) { const k = d > 1e-4 ? min / d : 0; x = o.x + (d > 1e-4 ? dx * k : min); z = o.z + dz * k; }
+    }
+    const dist = Math.hypot(x - R.x, z - R.z);
+    if (dist < 0.08 && !AIR.on) return;
+    R.goal = { x, z, src }; R.pause = 0; R.best = dist; R.bestAt = clock;
+    if (!AIR.on && dist > FLY_DIST) takeoff();
+  }
+  function pickWander() {
+    const A = frame.wide ? [0.5, 0.94, 0.24, 0.88] : [0.12, 0.88, 0.1, 0.42];
+    const hopper = rnd() < 0.25; // now and then it flies instead of driving
+    for (let i = 0; i < 24; i++) {
+      const g = groundAt(lerp(A[0], A[1], rnd()), lerp(A[2], A[3], rnd()), hit);
+      if (!g) continue;
+      const d = Math.hypot(g.x - R.x, g.z - R.z);
+      if (hopper ? d > FLY_DIST + 0.3 : d > 0.5 && d < FLY_DIST - 0.2) { setGoal(g.x, g.z, 'wander'); return; }
+    }
+    R.pause = 1;
+  }
+  function takeoff() { AIR.on = true; AIR.spin = 0.45; AIR.vx = AIR.vy = AIR.vz = 0; R.v = R.w = 0; tracksL.lift(); tracksR.lift(); }
+  function land() {
+    AIR.on = false; R.pitch = 0; R.roll = 0; R.last = null; R.v = R.w = 0;
+    R.goal = null; R.pause = 0.5;
+  }
+  function downwash(p) {
+    const agl = p.y - heightAt(p.x, p.z);
+    if (agl < 0.9 && Math.random() < (0.9 - agl) * 2.5) {
+      const a = rnd() * TAU, r = 0.12 + rnd() * 0.25;
+      dust.emit(p.x + Math.cos(a) * r, heightAt(p.x, p.z) + 0.01, p.z + Math.sin(a) * r, Math.cos(a) * 0.35, Math.sin(a) * 0.35);
+    }
+  }
+  function driveTo(dt) {
+    if (R.pause > 0 || !R.goal) { R.pause -= dt; R.v = damp(R.v, 0, 4, dt); R.w = damp(R.w, 0, 4, dt); }
     else {
-      if (!R.target) pickTarget();
-      const dx = R.target.x - R.x, dz = R.target.z - R.z, dist = Math.hypot(dx, dz);
-      if (dist < 0.12) { R.target = null; if (rnd() < 0.45) R.pause = 1.5 + rnd() * 3; }
+      const dx = R.goal.x - R.x, dz = R.goal.z - R.z, dist = Math.hypot(dx, dz);
+      const vmax = R.goal.src === 'wander' ? WANDER_V : DRIVE_V;
+      if (dist < 0.1) { const w = R.goal.src === 'wander'; R.goal = null; R.pause = w ? 1.2 + rnd() * 3 : 0; }
       else {
         const err = wrapAngle(Math.atan2(dx, dz) - R.yaw);
-        R.w = damp(R.w, clamp(err * 1.6, -0.9, 0.9), 3, dt);
-        // turn in place first when the target is behind, like a skid-steer rover would
-        R.v = damp(R.v, 0.17 * clamp(1 - Math.abs(err) / 1.2, 0, 1) * smooth(0.05, 0.35, dist), 2, dt);
+        R.w = damp(R.w, clamp(err * 2.2, -1.6, 1.6), 5, dt);
+        // skid-steer: turn in place first when the goal is off to the side or behind
+        R.v = damp(R.v, vmax * clamp(1 - Math.abs(err) / 1.1, 0, 1) * smooth(0.05, 0.5, dist), 3, dt);
+        // wedged against a rock: hop over instead
+        if (dist < R.best - 0.05) { R.best = dist; R.bestAt = clock; }
+        else if (clock - R.bestAt > 2.5 && dist > 0.25) takeoff();
       }
     }
-    R.yaw += R.w * dt; R.x += Math.sin(R.yaw) * R.v * dt; R.z += Math.cos(R.yaw) * R.v * dt;
-    if (!inZone(R.x, R.z)) { const a = Math.atan2((R.z - ZONE.z) / ZONE.az, (R.x - ZONE.x) / ZONE.ax); R.x = ZONE.x + Math.cos(a) * ZONE.ax; R.z = ZONE.z + Math.sin(a) * ZONE.az; R.target = null; }
+    R.yaw += R.w * dt;
+    let nx = R.x + Math.sin(R.yaw) * R.v * dt, nz = R.z + Math.cos(R.yaw) * R.v * dt;
+    for (const o of rocks.obstacles) {
+      const dx = nx - o.x, dz = nz - o.z, d = Math.hypot(dx, dz), min = o.r + 0.16;
+      if (d < min && d > 1e-4) { nx = o.x + (dx / d) * min; nz = o.z + (dz / d) * min; R.v *= 0.9; }
+    }
+    R.x = nx; R.z = nz;
+  }
+  function flyTo(dt) {
+    if (AIR.spin > 0) { AIR.spin -= dt; return; } // props spin up before it lifts
+    const g = R.goal || R, dx = g.x - R.x, dz = g.z - R.z, dist = Math.hypot(dx, dz);
+    const agl = R.y - heightAt(R.x, R.z);
+    // horizontal: head for the goal once clear of the ground, speed and acceleration capped
+    const liftK = smooth(0.1, 0.4, agl);
+    let wx = dx * 2.2, wz = dz * 2.2;
+    const wm = Math.hypot(wx, wz); if (wm > 3) { wx *= 3 / wm; wz *= 3 / wm; }
+    let ax = (wx * liftK - AIR.vx) * 4, az = (wz * liftK - AIR.vz) * 4;
+    const am = Math.hypot(ax, az); if (am > 6) { ax *= 6 / am; az *= 6 / am; }
+    AIR.vx += ax * dt; AIR.vz += az * dt;
+    // vertical: climb to a cruise height that grows with the hop, then settle down gently
+    const landing = dist < 0.3 && Math.hypot(AIR.vx, AIR.vz) < 0.4;
+    const cruise = clamp(0.5 + dist * 0.3, 0.7, 1.5);
+    const vyWant = landing ? -clamp(agl * 2.2, 0.12, 1.0) : clamp((cruise - agl) * 2.5, -1.0, 1.4);
+    AIR.vy += clamp((vyWant - AIR.vy) * 6, -8, 8) * dt;
+    R.x += AIR.vx * dt; R.z += AIR.vz * dt; R.y += AIR.vy * dt;
+    const floor = heightAt(R.x, R.z);
+    if (R.y <= floor) { R.y = floor; if (landing) { land(); return; } AIR.vy = Math.max(0, AIR.vy); }
+    const sp = Math.hypot(AIR.vx, AIR.vz);
+    if (sp > 0.3) R.yaw += clamp(wrapAngle(Math.atan2(AIR.vx, AIR.vz) - R.yaw) * 3, -2.4, 2.4) * dt;
+    // lean into the acceleration and against drag, like any quad
+    tilt.set(ax * 0.25 + AIR.vx * 0.3, 9.81, az * 0.25 + AIR.vz * 0.3).normalize();
+    tQ.setFromUnitVectors(up, tilt); yQ.setFromAxisAngle(up, R.yaw); tQ.multiply(yQ);
+    V.rover.position.set(R.x, R.y, R.z);
+    V.rover.quaternion.slerp(tQ, 1 - Math.exp(-8 * dt));
+    downwash(V.rover.position);
+  }
+  function live(dt) {
+    if (pointer.fresh) {
+      pointer.fresh = false;
+      const g = groundAt(clamp(pointer.x, 0.04, 0.96), clamp(pointer.y, 0.12, 0.94), hit);
+      if (g) setGoal(g.x, g.z, 'user');
+    }
+    if (!R.goal && !AIR.on && R.pause <= 0 && clock - pointer.at > 8) pickWander();
+    if (AIR.on) flyTo(dt);
+    else { driveTo(dt); placeRover(dt, false); }
+    propRate = damp(propRate, AIR.on ? 1 : 0, AIR.on ? 6 : 1.2, dt);
   }
   function bez(a, b, c, d, t, out) { const u = 1 - t; return out.set(0, 0, 0).addScaledVector(a, u * u * u).addScaledVector(b, 3 * u * u * t).addScaledVector(c, 3 * u * t * t).addScaledVector(d, t * t * t); }
   function attach() {
@@ -799,29 +886,27 @@ export async function initWorld(canvas, opts = {}) {
     prevP.copy(P);
     // a quad leans into its acceleration and, while cruising, forward against drag
     const settle = t < T0.descend ? 1 : 1 - smooth(T0.descend, T0.descend + 0.5, t);
-    tilt.copy(accS).multiplyScalar(0.4).addScaledVector(velS, 1.1).setY(0).multiplyScalar(settle).add(tmp.set(0, 9.81, 0)).normalize();
+    tilt.copy(accS).multiplyScalar(0.4).addScaledVector(velS, 0.8).setY(0).multiplyScalar(settle).add(tmp.set(0, 9.81, 0)).normalize();
     tQ.setFromUnitVectors(up, tilt);
     const yaw = path.yaw0 + wrapAngle(R.yaw - path.yaw0) * smooth(T0.hoverAt * 0.35, T0.hoverAt, t);
     yQ.setFromAxisAngle(up, yaw); tQ.multiply(yQ);
     if (t >= T0.descend) tQ.slerp(dockQ, smooth(T0.descend, T0.descend + 0.6, t));
     V.drone.quaternion.slerp(tQ, 1 - Math.exp(-10 * dt));
     if (t >= T0.descend + 0.6) V.drone.quaternion.copy(dockQ);
-    // rotor downwash kicks up dust as the drone comes down over the ground
-    const agl = P.y - heightAt(P.x, P.z);
-    if (agl < 0.9 && Math.random() < (0.9 - agl) * 2.5) {
-      const a = rnd() * TAU, r = 0.12 + rnd() * 0.25;
-      dust.emit(P.x + Math.cos(a) * r, heightAt(P.x, P.z) + 0.01, P.z + Math.sin(a) * r, Math.cos(a) * 0.35, Math.sin(a) * 0.35);
-    }
+    downwash(P); // rotor downwash kicks up dust as the drone comes down over the ground
   }
 
   // ---------------------------------------------------------------- camera
   // The projection is shifted so the subject sits right of centre, clear of the page text.
   const frame = { fx: 0.5, fy: 0.5, wide: true };
-  const camFinal = new THREE.Vector3(), fin = { az: 0, el: 0, dist: 1 };
+  const camFinal = new THREE.Vector3(), fin = { az: 0, el: 0, dist: 1 }, finalCam = new THREE.PerspectiveCamera();
+  const shadowBox = { c: new THREE.Vector3(), half: 5 };
   const chaseCam = { on: false, look: new THREE.Vector3(), vel: new THREE.Vector3(), L: new THREE.Vector3(), c: new THREE.Vector3(), prev: new THREE.Vector3(), tv: new THREE.Vector3(), aim: new THREE.Vector3() };
-  // ride-along: elevation drops from high above to low, the camera swings around the drone,
-  // and the distance never closes in below ~2.4 m
-  const RIDE = { el0: 58 * DEG, el1: 16 * DEG, az0: -0.9, az1: 0.2, d0: 3.4, d1: 2.4 };
+  // ride-along: starts high above the drone, eases down to a still-high 40 degrees for the
+  // landing while swinging around it, and never closes in below ~2.6 m
+  const RIDE = { el0: 58 * DEG, el1: 40 * DEG, az0: -0.9, az1: 0.25, d0: 3.4, d1: 2.7 };
+  // final bird's-eye view over LOOK
+  const BIRD = { wide: { el: 50 * DEG, dist: 8.5 }, narrow: { el: 55 * DEG, dist: 7 } };
   function layoutCamera() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h) return;
@@ -839,14 +924,36 @@ export async function initWorld(canvas, opts = {}) {
       camera.fov = 2 * Math.atan(Math.tan((F * DEG) / 2) * (H2 / h)) / DEG;
       camera.aspect = W2 / H2;
       camera.setViewOffset(W2, H2, ox, oy, w, h);
-      const back = wide ? 1 : 1.5;
-      camFinal.set(LOOK.x + (CAM.x - LOOK.x) * back, 0, LOOK.z + (CAM.z - LOOK.z) * back);
-      camFinal.y = heightAt(camFinal.x, camFinal.z) + (wide ? 0.46 : 0.4);
-      const o = new THREE.Vector3().subVectors(camFinal, LOOK);
-      fin.dist = o.length(); fin.az = Math.atan2(o.x, o.z); fin.el = Math.asin(o.y / fin.dist);
-      if (!chaseCam.on) { camera.position.copy(camFinal); camera.lookAt(LOOK); }
+      const B = wide ? BIRD.wide : BIRD.narrow;
+      fin.az = Math.atan2(CAMDIR.x, CAMDIR.z); fin.el = B.el; fin.dist = B.dist;
+      camFinal.set(LOOK.x + Math.sin(fin.az) * Math.cos(fin.el) * fin.dist, LOOK.y + Math.sin(fin.el) * fin.dist, LOOK.z + Math.cos(fin.az) * Math.cos(fin.el) * fin.dist);
     }
     camera.updateProjectionMatrix();
+    if (mode === 'landing') {
+      // a copy of the final view, for turning screen points into ground points
+      finalCam.copy(camera); finalCam.position.copy(camFinal); finalCam.lookAt(LOOK); finalCam.updateMatrixWorld(true);
+      if (!chaseCam.on) { camera.position.copy(camFinal); camera.lookAt(LOOK); }
+      // one fixed shadow box over everything in view, so rock shadows never pop as the rover moves
+      const pts = [[0, 0.08], [1, 0.08], [0, 1], [1, 1]].map(([x, y]) => groundAt(x, y, new THREE.Vector3())).filter(Boolean);
+      if (pts.length) {
+        shadowBox.c.set(0, 0, 0); pts.forEach((q) => shadowBox.c.add(q)); shadowBox.c.multiplyScalar(1 / pts.length);
+        shadowBox.half = Math.min(9, Math.max(...pts.map((q) => Math.hypot(q.x - shadowBox.c.x, q.z - shadowBox.c.z))) + 1);
+        shadowBox.c.y = heightAt(shadowBox.c.x, shadowBox.c.z);
+      }
+    }
+  }
+  // Where a point on screen (0..1 across and down) lands on the ground, seen from the final view.
+  const ray = { o: new THREE.Vector3(), d: new THREE.Vector3() };
+  function groundAt(sx, sy, out) {
+    ray.o.copy(finalCam.position);
+    ray.d.set(sx * 2 - 1, 1 - sy * 2, 0.5).unproject(finalCam).sub(ray.o).normalize();
+    if (ray.d.y > -0.02) return null;
+    const y = (t) => ray.o.y + ray.d.y * t - heightAt(ray.o.x + ray.d.x * t, ray.o.z + ray.d.z * t);
+    let t0 = 0, t1 = 0;
+    for (let t = 0.4; t < 160; t += 0.4) { if (y(t) < 0) { t1 = t; break; } t0 = t; }
+    if (!t1) return null;
+    for (let i = 0; i < 16; i++) { const m = (t0 + t1) / 2; if (y(m) < 0) t1 = m; else t0 = m; }
+    return out.copy(ray.d).multiplyScalar(t1).add(ray.o);
   }
   new ResizeObserver(layoutCamera).observe(canvas);
   layoutCamera();
@@ -860,7 +967,7 @@ export async function initWorld(canvas, opts = {}) {
     const D = droneFocus(chaseCam.aim);
     const near = smooth(2.5, 0.6, D.distanceTo(hoverP));
     D.y = lerp(D.y, dockP.y + 0.12, 0.4 * near); // only drop the aim; sliding it sideways pushes the drone off frame
-    const w0 = 3.2;
+    const w0 = 4.5;
     if (dt > 0) {
       chaseCam.tv.subVectors(D, chaseCam.prev).divideScalar(dt);
       const ax = tmp.subVectors(D, chaseCam.look).multiplyScalar(w0 * w0).addScaledVector(chaseCam.vel, -2 * w0).addScaledVector(chaseCam.tv, 2 * w0);
@@ -933,25 +1040,24 @@ export async function initWorld(canvas, opts = {}) {
   // ---------------------------------------------------------------- boot
   const detail = [];
   if (mode === 'landing') {
-    R.x = ZONE.x + 0.12; R.z = ZONE.z + 0.05; R.yaw = 2.35;
+    R.x = START.x; R.z = START.z; R.yaw = 2.35;
     placeRover(0, true);
     V.drone.updateMatrixWorld(true);
     new THREE.Box3().setFromObject(V.drone).getCenter(droneCentre); V.drone.worldToLocal(droneCentre);
-    if (docked) { attach(); V.setProps(0); R.pause = 0.5; }
+    if (docked) { attach(); V.setProps(0); R.pause = 0.5; phase = 'live'; }
     else {
       // come in high from behind the final camera position, cruising toward the rover
       dockPoints();
-      const back = new THREE.Vector3(CAM.x - LOOK.x, 0, CAM.z - LOOK.z).normalize();
-      const side = new THREE.Vector3(-back.z, 0, back.x); // screen right in the final shot
-      path.a.copy(LOOK).addScaledVector(back, 10.5).addScaledVector(side, -2.4).add(tmp.set(0, 3.6, 0));
-      path.b.copy(path.a).addScaledVector(back, -3.8).addScaledVector(side, 0.6).add(tmp.set(0, -0.5, 0));
-      path.c.copy(hoverP).addScaledVector(back, 2.1).addScaledVector(side, 0.9).add(tmp.set(0, 0.75, 0));
+      const back = CAMDIR, side = new THREE.Vector3(-back.z, 0, back.x); // screen right in the final shot
+      path.a.copy(LOOK).addScaledVector(back, 8.5).addScaledVector(side, -2.0).add(tmp.set(0, 3.2, 0));
+      path.b.copy(path.a).addScaledVector(back, -3.2).addScaledVector(side, 0.5).add(tmp.set(0, -0.4, 0));
+      path.c.copy(hoverP).addScaledVector(back, 1.8).addScaledVector(side, 0.8).add(tmp.set(0, 0.6, 0));
       path.yaw0 = Math.atan2(path.b.x - path.a.x, path.b.z - path.a.z);
       flightPos(0, P); flightPos(1 / 60, tmp);
       velS.subVectors(tmp, P).multiplyScalar(60); prevP.copy(P).addScaledVector(velS, -1 / 60);
       V.drone.position.copy(P);
       V.drone.quaternion.setFromAxisAngle(up, path.yaw0);
-      tilt.copy(velS).multiplyScalar(1.1).setY(0).add(tmp.set(0, 9.81, 0)).normalize();
+      tilt.copy(velS).multiplyScalar(0.8).setY(0).add(tmp.set(0, 9.81, 0)).normalize();
       V.drone.quaternion.premultiply(tQ.setFromUnitVectors(up, tilt));
       chaseCam.on = true;
       droneFocus(chaseCam.look); chaseCam.prev.copy(chaseCam.look); chaseCam.vel.copy(velS);
@@ -963,18 +1069,15 @@ export async function initWorld(canvas, opts = {}) {
   terrain.update(detail);
   let detailSettled = mode !== 'landing' || docked;
 
-  let shadowWide = false;
   function tick(dt) {
     clock += dt;
     if (phase === 'intro') {
       placeRover(dt, false);
       if (!docked) fly(clock, dt);
       if (clock >= T0.touch && !docked) attach();
-      propRate = 1 - smooth(T0.touch, T0.spinDown, clock);
-      if (clock >= T0.resume) { phase = 'wander'; R.pause = 0.6; }
-    } else if (phase === 'wander') {
-      if (!reduced) wander(dt);
-      placeRover(dt, false);
+      if (clock >= T0.resume) { phase = 'live'; R.pause = 0.3; if (pointer.at > -1e9) pointer.fresh = true; }
+    } else if (phase === 'live') {
+      if (!reduced) live(dt); else placeRover(dt, false);
       // once the camera has settled, drop the extra terrain detail laid along the flight path
       if (!detailSettled && !chaseCam.on) detailSettled = terrain.update([camFinal, LOOK], 3000) === 0;
     }
@@ -984,6 +1087,7 @@ export async function initWorld(canvas, opts = {}) {
     tracksL.update(clock, mode === 'drive' ? 120 : 45); tracksR.update(clock, mode === 'drive' ? 120 : 45);
     dust.update(dt);
     propAngle += dt * 44 * propRate; V.setProps(propAngle);
+    if (phase === 'intro') propRate = 1 - smooth(T0.touch, T0.spinDown, clock);
     // shadows follow the vehicle
     const f = V.rover.position;
     if (!docked && V.drone) {
@@ -994,9 +1098,12 @@ export async function initWorld(canvas, opts = {}) {
       tmp.set(cx, heightAt(cx, cz), cz);
       sun.position.copy(tmp).addScaledVector(sunDir, 12); sun.target.position.copy(tmp);
       Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half });
-      sun.shadow.camera.updateProjectionMatrix(); shadowWide = true;
+      sun.shadow.camera.updateProjectionMatrix();
+    } else if (mode === 'landing') {
+      const h = shadowBox.half;
+      if (sun.shadow.camera.right !== h) { Object.assign(sun.shadow.camera, { left: -h, right: h, top: h, bottom: -h }); sun.shadow.camera.updateProjectionMatrix(); }
+      sun.position.copy(shadowBox.c).addScaledVector(sunDir, 14); sun.target.position.copy(shadowBox.c);
     } else {
-      if (shadowWide) { Object.assign(sun.shadow.camera, { left: -2.4, right: 2.4, top: 2.4, bottom: -2.4 }); sun.shadow.camera.updateProjectionMatrix(); shadowWide = false; }
       sun.position.copy(f).addScaledVector(sunDir, 12); sun.target.position.copy(f);
     }
     sky.position.copy(camera.position); horizon.position.copy(camera.position);
@@ -1029,7 +1136,7 @@ export async function initWorld(canvas, opts = {}) {
   if (opts.debug) {
     running = false;
     window.__worldStep = (s) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) tick(1 / 60); composer.render(1 / 60); return clock; };
-    window.__world = { camera, V, R, scene };
+    window.__world = { camera, V, R, AIR, scene, point: (x, y) => { pointer.x = x; pointer.y = y; pointer.at = clock; pointer.fresh = true; } };
   } else if (!reduced || mode === 'drive') requestAnimationFrame(loop);
   opts.onReady?.();
   return { stop() { running = false; renderer.dispose(); } };
