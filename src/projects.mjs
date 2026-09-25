@@ -19,7 +19,7 @@ export const site = {
 export const projects = [
   // ------------------------------------------------------------------ MAIN
   {
-    slug: 'hybrid-vehicle',
+    slug: 'hybrid-vehicle', featured: 1, size: 'lg',
     kind: 'main',
     title: 'Drone on Wheels',
     subtitle: 'Hybrid aerial-ground vehicle',
@@ -57,7 +57,7 @@ export const projects = [
     cad: 'https://a360.co/45sUzAD',
   },
   {
-    slug: 'ftc-decode',
+    slug: 'ftc-decode', size: 'lg',
     kind: 'main',
     title: 'FTC DECODE Robot',
     subtitle: 'Team 26115 Alphabots',
@@ -86,7 +86,7 @@ export const projects = [
     ],
   },
   {
-    slug: 'frc-rebuilt',
+    slug: 'frc-rebuilt', size: 'wide',
     kind: 'main',
     title: 'FRC REBUILT Robot',
     subtitle: 'Team 2856 Planetary Drive',
@@ -114,7 +114,7 @@ export const projects = [
     cad: 'https://a360.co/4lvYOTs',
   },
   {
-    slug: 'build-plate-robot',
+    slug: 'build-plate-robot', featured: 4, size: 'wide',
     kind: 'main',
     title: 'Replac3d',
     subtitle: 'Automatic 3D printer build plate changer',
@@ -154,7 +154,7 @@ export const projects = [
     cad: 'https://a360.co/47cTdf9',
   },
   {
-    slug: 'electric-vehicle',
+    slug: 'electric-vehicle', featured: 3, size: 'wide',
     kind: 'main',
     title: 'Science Olympiad Electric Vehicle',
     subtitle: '2024-25 Electric Vehicle event',
@@ -196,7 +196,7 @@ export const projects = [
     cad: 'https://a360.co/4o6t1bB',
   },
   {
-    slug: 'electric-bike',
+    slug: 'electric-bike', featured: 2, size: 'wide',
     kind: 'main',
     title: 'Electric Bike',
     subtitle: '5.3 kW mid-drive conversion',
@@ -370,7 +370,7 @@ export const projects = [
 
   // ------------------------------------------------------------------ HACKATHONS
   {
-    slug: 'morph',
+    slug: 'morph', size: 'wide',
     kind: 'hackathon',
     draft: true,
     title: 'Morph',
@@ -399,7 +399,7 @@ export const projects = [
     media: [],
   },
   {
-    slug: 'golden-retriever',
+    slug: 'golden-retriever', size: 'wide',
     kind: 'hackathon',
     draft: true,
     title: 'Golden Retriever',

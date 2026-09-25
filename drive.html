@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drive the rover · Jerry Li</title>
+<meta name="description" content="Drive the ground vehicle from my hybrid UAV-UGV research across Mars, rendered in real time from my Fusion 360 CAD.">
+<link rel="canonical" href="https://www.jerryli.design/drive">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Drive the rover · Jerry Li">
+<meta property="og:description" content="Drive the ground vehicle from my hybrid UAV-UGV research across Mars, rendered in real time from my Fusion 360 CAD.">
+<meta property="og:url" content="https://www.jerryli.design/drive">
+<meta property="og:image" content="https://www.jerryli.design/assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b0a09">
+<link rel="icon" href="/assets/favicon.svg?v=31fbbd10" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css?v=88199647">
+<meta name="robots" content="noindex">
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83"}}</script>
+</head>
+<body class="drive">
+<canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=e40bc27d"></canvas>
+<div class="drive-hud">
+  <a class="chip" href="/">&larr; Back to portfolio</a>
+  <p class="chip drive-title"><span class="dot"></span>Ground vehicle from <a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
+</div>
+<div class="drive-load" data-drive-load><b>Loading Mars</b><span>About 4 MB. Arrow keys or WASD to drive.</span></div>
+<div class="drive-keys"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive</span><span class="speed num" data-speed>0.00 m/s</span></div>
+<div class="touch-pad" data-touch aria-hidden="true">
+  <button type="button" data-k="left">&#9664;</button><div><button type="button" data-k="up">&#9650;</button><button type="button" data-k="down">&#9660;</button></div><button type="button" data-k="right">&#9654;</button>
+</div>
+<script type="module">
+  const c = document.querySelector('.drive-canvas');
+  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', onReady: () => document.querySelector('[data-drive-load]').classList.add('done'), onSpeed: (s) => { document.querySelector('[data-speed]').textContent = Math.abs(s).toFixed(2) + ' m/s'; } }))
+    .catch((e) => { document.querySelector('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; });
+</script>
+</body>
+</html>

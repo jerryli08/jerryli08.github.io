@@ -43,10 +43,25 @@ for (const n of animated) {
   let k = 0;
   n.traverse((c) => { if (c !== n && c.getMesh()) c.setName(`${base}__${k++}`); });
 }
+// Carbon fiber tubes get their own material so they can be shaded as glossy carbon.
+const CARBON = [/^CARBON-FIBER-TUBE/, /^HMX5V-GUAN-DINGWEI/, /^GUAN-CHENG/];
+let carbonMat = null, carbonN = 0;
+for (const n of root.listNodes()) {
+  if (!CARBON.some((r) => r.test(n.getName()))) continue;
+  n.traverse((c) => {
+    const m = c.getMesh(); if (!m) return;
+    for (const prim of m.listPrimitives()) {
+      if (!carbonMat) carbonMat = prim.getMaterial().clone().setName('carbon').setRoughnessFactor(0.21).setExtras({ carbon: true });
+      prim.setMaterial(carbonMat); carbonN++;
+    }
+  });
+}
+if (carbonN) console.log(`${kind}: ${carbonN} carbon fiber primitives`);
 // Everything else loses its name so join() can merge it by material.
 const isAnim = (n) => { for (let p = n; p; p = p.getParentNode()) if (p.getName().startsWith('anim_')) return true; return false; };
 for (const n of root.listNodes()) if (!isAnim(n)) n.setName('');
 for (const m of root.listMeshes()) m.setName('');
+for (const m of root.listMaterials()) if (m.getName() !== 'carbon') m.setName('');
 await doc.transform(dedup(), weld(), flatten(), join({ keepNamed: true }), prune());
 // flatten() re-parents named children too; re-group anim nodes' descendants is not needed since
 // CAF wheel/prop nodes are leaves or small groups. Report.

@@ -95,10 +95,9 @@ function nav({ home = false } = {}) {
   return `<nav class="nav" aria-label="Main">
   <a class="wordmark" href="/">Jerry Li</a>
   <div class="nav-links">
-    <a href="${pre}#work">Projects</a>
-    <a href="${pre}#hackathons">Hackathons</a>
-    <a href="${pre}#archive">Archive</a>
-    <a class="keep" href="${pre}#about">About</a>
+    <a href="${pre}#work">Work</a>
+    <a href="${pre}#about">About</a>
+    <a class="nav-drive keep" href="/drive">Drive the rover</a>
     <a class="nav-cta" href="mailto:${site.email}">Contact</a>
   </div>
 </nav>`;
@@ -107,47 +106,39 @@ const footer = () => `<footer class="footer"><span>&copy; ${new Date().getFullYe
 const scripts = (extra = '') => `<script src="${v('/assets/js/site.js')}" defer></script>${extra}`;
 
 // ---------------------------------------------------------------- landing
-function row(x, i) {
+function cardData(x) {
   const t = thumb(x), pv = preview(x), po = poster(x) || t;
-  const data = po ? ` data-preview="${pv ? v(pv) : ''}" data-poster="${v(po)}" data-title="${esc(x.title)}" data-kicker="${esc(kicker(x))}"` : '';
-  const stat = x.stats?.[0];
-  const isHack = x.kind === 'hackathon';
-  const meta = isHack
-    ? [x.place ? `<span class="hi">${esc(x.place)}</span>` : '', `<span>${esc(x.event)}</span>`].filter(Boolean).join('')
-    : [stat ? `<span><span class="hi">${esc(stat.v)}</span> ${esc(stat.l)}</span>` : '', x.org ? `<span>${esc(x.org)}</span>` : ''].filter(Boolean).join('');
-  return `<a class="row" href="${url(x)}"${data}>
-  <div class="row-thumb">${t ? `<img src="${v(t)}" alt="" ${x.kind === 'main' && i < 5 ? 'fetchpriority="low"' : 'loading="lazy"'} decoding="async">` : '<div class="placeholder">Media coming</div>'}<span class="row-cta">Click to <i>learn more</i></span></div>
-  <div>
-    <div class="row-top"><span class="row-n">${String(i + 1).padStart(2, '0')}</span><h3>${esc(x.title)}</h3>${isHack ? `<span class="hours">${esc(x.hours)}</span>` : `<span class="row-yr">${esc(x.year)}</span>`}</div>
-    <p class="row-sum">${esc(x.short)}${x.draft ? ' <span class="draft-tag">Draft</span>' : ''}</p>
-    <p class="row-meta">${meta}</p>
-  </div>
+  return po ? ` data-preview="${pv ? v(pv) : ''}" data-poster="${v(po)}" data-title="${esc(x.title)}" data-kicker="${esc(kicker(x))}"` : '';
+}
+const statLine = (x) => (x.kind === 'hackathon' ? (x.place || x.event) : (x.stats?.[0] ? `${x.stats[0].v} ${x.stats[0].l}` : x.org));
+// featured cards on the first screen (hover opens the preview panel over the scene)
+function fcard(x) {
+  const t = thumb(x);
+  return `<a class="fcard" href="${url(x)}"${cardData(x)} data-peek-item>
+  <div class="fcard-img">${t ? `<img src="${v(t)}" alt="" fetchpriority="high" decoding="async">` : ''}<span class="card-cta">Click to <i>learn more</i></span></div>
+  <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta"><span class="yr">${esc(x.year)}</span><span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
+// tiles in the full-width grid (hover plays the clip inside the tile)
+const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
 function tile(x) {
-  const t = thumb(x), po = poster(x) || t;
-  const data = po ? ` data-preview="" data-poster="${v(po)}" data-title="${esc(x.title)}" data-kicker="${esc(kicker(x))}"` : '';
-  return `<a class="tile" href="${url(x)}"${data}>
-  <div class="row-thumb">${t ? `<img src="${v(t)}" alt="" loading="lazy">` : '<div class="placeholder">Media coming</div>'}</div>
-  <h3>${esc(x.title)}${x.draft ? ' <span class="draft-tag">Draft</span>' : ''}</h3><p>${esc(x.short)}</p>
+  const t = thumb(x);
+  const size = x.kind === 'archive' ? '' : x.size === 'lg' ? ' t-lg' : x.size === 'wide' ? ' t-wide' : '';
+  return `<a class="tile${size}" href="${url(x)}" data-kind="${x.kind}"${cardData(x)}>
+  ${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}
+  <span class="tile-shade"></span>
+  ${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}
+  <span class="tile-cta">Click to learn more</span>
+  <span class="tile-text"><span class="tile-k">${esc(KIND_LABEL[x.kind])} · ${esc(x.year || '')}</span><b>${esc(x.title)}</b><span class="tile-s">${esc(statLine(x) || '')}</span></span>
 </a>`;
-}
-function arow(x) {
-  const t = thumb(x), pv = preview(x), po = poster(x) || t;
-  const data = po ? ` data-preview="${pv ? v(pv) : ''}" data-poster="${v(po)}" data-title="${esc(x.title)}" data-kicker="${esc(kicker(x))}"` : '';
-  return `<a class="arow" href="${url(x)}"${data}><span class="yr">${esc(x.year)}</span><span><b>${esc(x.title)}</b><span class="s">${esc(x.short)}</span></span><span class="go">View ${arrow}</span></a>`;
-}
-function section(id, title, items, render, note = '') {
-  if (!items.length) return '';
-  return `<section class="section" id="${id}" aria-labelledby="${id}-h">
-  <div class="section-head"><h2 id="${id}-h">${title}<span class="count num">${items.length}</span></h2>${note ? `<p class="section-note">${note}</p>` : ''}</div>
-  ${render(items)}
-</section>`;
 }
 
 function landing() {
-  const main = list('main'), hacks = list('hackathon'), concepts = list('concept'), objects = list('object'), archive = list('archive');
-  const hero = projects.find((x) => x.slug === 'hybrid-vehicle');
+  const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
+  const order = ['main', 'hackathon', 'concept', 'object', 'archive'];
+  const everything = order.flatMap((k) => list(k));
+  const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
+  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object], ['archive', 'Archive', counts.archive]].filter(([, , n]) => n);
   const stageStill = '/assets/img/hero-still.webp';
   const ld = { '@context': 'https://schema.org', '@type': 'Person', name: site.name, url: site.url, email: `mailto:${site.email}`, sameAs: [site.linkedin, site.github], alumniOf: 'University of Illinois Urbana-Champaign', jobTitle: 'Mechanical Engineering Student' };
   return `${head({
@@ -155,67 +146,94 @@ function landing() {
     description: site.description,
     path: '/',
     extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>
-<link rel="preload" as="image" href="${v(stageStill)}" fetchpriority="high">
+<link rel="preload" as="image" href="${v(stageStill)}" media="(min-width: 960px)" fetchpriority="high">
+<link rel="preload" as="image" href="${v('/assets/img/hero-still-m.webp')}" media="(max-width: 959px)" fetchpriority="high">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
 `,
   })}
 <body class="home">
 <a class="sr-only" href="#work">Skip to projects</a>
-${nav({ home: true })}
-<div class="split">
-  <div class="index index-top">
-    <header class="intro">
-      <p class="label">Mechanical Engineering · University of Illinois Urbana-Champaign</p>
-      <h1 class="name">Jerry Li</h1>
-      <p class="lede">${esc(about.lede)}</p>
-      <ul class="proof">
-        <li><b>First author</b><span>Research poster, IEEE MIT URTC 2025</span></li>
-        <li><b>1st place</b><span>Sustain Award, FIRST World Championship</span></li>
-        <li><b>2nd of 250+</b><span>Teams at the Corgi hackathon</span></li>
-      </ul>
-      <p class="links-inline"><a href="mailto:${site.email}">Email ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
-    </header>
-  </div>
-  <aside class="viewer" data-viewer data-stage-status="Real-time 3D from my &lt;span class=&quot;long&quot;&gt;Fusion 360 &lt;/span&gt;CAD" aria-label="Project preview">
-    <div class="viewer-frame">
-      <div class="stage" data-stage>
-        <img class="stage-still" src="${v(stageStill)}" alt="My hybrid drone and rover, docked together, rendered from the CAD on a Mars landscape" width="1200" height="1500">
-        <canvas class="stage-canvas" aria-hidden="true" data-models="${v('/assets/models/drone.glb')}|${v('/assets/models/rover.glb')}" data-hero="${v('/assets/js/hero.js')}"></canvas>
-      </div>
-      <div class="slot"><div class="slot-bg"></div></div>
-      <div class="slot"><div class="slot-bg"></div></div>
-      <div class="shade"></div>
-      <div class="hud-top">
-        <span class="chip"><span class="dot"></span><span data-status>Real-time 3D from my <span class="long">Fusion 360 </span>CAD</span></span>
-        <button class="chip back-btn" type="button" data-back hidden>Back to the 3D scene</button>
-      </div>
-      <div class="hud">
-        <div><p class="hud-k" data-hud-k>${esc(kicker(hero))}</p><p class="hud-t" data-hud-t>${esc(hero.title)}</p></div>
-        <a class="hud-go" data-hud-go href="${url(hero)}">View project ${arrow}</a>
-      </div>
-    </div>
-  </aside>
-  <div class="index index-rest">
-    ${section('work', 'Projects', main, (xs) => `<div class="rows">${xs.map(row).join('\n')}</div>`)}
-    ${section('hackathons', 'Hackathons', hacks, (xs) => `<div class="rows">${xs.map(row).join('\n')}</div>`, 'Built in hours, not months.')}
-    ${section('concepts', 'Concepts', concepts, (xs) => `<div class="tiles">${xs.map(tile).join('\n')}</div>`)}
-    ${section('models', '3D models', objects, (xs) => `<div class="tiles">${xs.map(tile).join('\n')}</div>`)}
-    ${section('archive', 'Archive', archive, (xs) => `<div class="rows">${xs.map(arow).join('\n')}</div>`, 'Older and smaller builds.')}
-    <section class="section" id="about" aria-labelledby="about-h">
-      <div class="section-head"><h2 id="about-h">About</h2></div>
-      <div class="about-grid">
-        <div>${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
-        <div class="portrait"><img src="${v('/assets/media/jerry-portrait.webp')}" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
-      </div>
-      <div class="contact-card">
-        <h3>Building something? I'd like to hear about it.</h3>
-        <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}">LinkedIn ${arrow}</a><a href="${site.github}">GitHub ${arrow}</a></p>
-      </div>
-    </section>
-    ${footer()}
-  </div>
+<div class="bg" data-stage aria-hidden="true">
+  <picture><source media="(max-width: 959px)" srcset="${v('/assets/img/hero-still-m.webp')}"><img class="bg-still" src="${v(stageStill)}" alt="" width="1920" height="1080"></picture>
+  <canvas class="bg-canvas" data-world="landing" data-hero="${v('/assets/js/world.js')}"></canvas>
 </div>
+<div class="veil" aria-hidden="true"></div>
+<div class="veil-dim" data-dim aria-hidden="true"></div>
+${nav({ home: true })}
+<main class="content">
+  <section class="hero" aria-label="Introduction">
+    <div class="hero-left">
+      <header class="hello">
+        <h1 class="name">Jerry Li</h1>
+        <p class="lede">Mechanical engineering at UIUC. I design and build robots, drones and electric vehicles, from the first CAD sketch to the last wire.</p>
+        <ul class="chips">
+          <li><b>First author</b>MIT Lincoln Laboratory research</li>
+          <li><b>1st place</b>FIRST World Championship award</li>
+          <li><b>2nd of 250+</b>Corgi hackathon teams</li>
+        </ul>
+      </header>
+      <div class="featured">${featured.map(fcard).join('\n')}</div>
+    </div>
+    <a class="scroll-cue" href="#work">All ${everything.length} projects <span aria-hidden="true">&darr;</span></a>
+  </section>
+  <section class="work" id="work" aria-labelledby="work-h">
+    <div class="work-head">
+      <h2 id="work-h">All work</h2>
+      <div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div>
+    </div>
+    <div class="bento">${everything.map(tile).join('\n')}</div>
+  </section>
+  <section class="section about" id="about" aria-labelledby="about-h">
+    <div class="section-head"><h2 id="about-h">About</h2></div>
+    <div class="about-grid">
+      <div>${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
+      <div class="portrait"><img src="${v('/assets/media/jerry-portrait.webp')}" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
+    </div>
+    <div class="contact-card">
+      <h3>Building something? I'd like to hear about it.</h3>
+      <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
+    </div>
+  </section>
+  ${footer()}
+</main>
+<aside class="peek" data-peek aria-label="Project preview" hidden>
+  <div class="peek-media"><div class="slot"><div class="slot-bg"></div></div><div class="slot"><div class="slot-bg"></div></div></div>
+  <div class="peek-bar">
+    <div class="peek-text"><p class="peek-k" data-peek-k></p><p class="peek-t" data-peek-t></p></div>
+    <a class="peek-go" data-peek-go href="/">View project ${arrow}</a>
+  </div>
+  <button class="peek-x" type="button" data-peek-x aria-label="Close preview">&times;</button>
+</aside>
+<p class="scene-tag" data-scene-tag><span class="dot"></span>Real-time 3D from my Fusion 360 CAD <a href="/drive">Drive the rover ${arrow}</a></p>
 ${scripts()}
+</body>
+</html>
+`;
+}
+
+function drivePage() {
+  return `${head({
+    title: 'Drive the rover · Jerry Li',
+    description: 'Drive the ground vehicle from my hybrid UAV-UGV research across Mars, rendered in real time from my Fusion 360 CAD.',
+    path: '/drive',
+    extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>\n`,
+  })}
+<body class="drive">
+<canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}"></canvas>
+<div class="drive-hud">
+  <a class="chip" href="/">&larr; Back to portfolio</a>
+  <p class="chip drive-title"><span class="dot"></span>Ground vehicle from <a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
+</div>
+<div class="drive-load" data-drive-load><b>Loading Mars</b><span>About 4 MB. Arrow keys or WASD to drive.</span></div>
+<div class="drive-keys"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to drive</span><span class="speed num" data-speed>0.00 m/s</span></div>
+<div class="touch-pad" data-touch aria-hidden="true">
+  <button type="button" data-k="left">&#9664;</button><div><button type="button" data-k="up">&#9650;</button><button type="button" data-k="down">&#9660;</button></div><button type="button" data-k="right">&#9654;</button>
+</div>
+<script type="module">
+  const c = document.querySelector('.drive-canvas');
+  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', onReady: () => document.querySelector('[data-drive-load]').classList.add('done'), onSpeed: (s) => { document.querySelector('[data-speed]').textContent = Math.abs(s).toFixed(2) + ' m/s'; } }))
+    .catch((e) => { document.querySelector('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; });
+</script>
 </body>
 </html>
 `;
@@ -243,7 +261,7 @@ function projectPage(x, next) {
 ${nav()}
 <main class="page">
   <header class="p-head">
-    <p class="p-kicker"><a href="/#${x.kind === 'hackathon' ? 'hackathons' : x.kind === 'archive' ? 'archive' : 'work'}">&larr; All projects</a>${x.event || x.org ? `<span>${esc(x.event || x.org)}</span>` : ''}${x.date ? `<span>${esc(x.date)}</span>` : ''}${x.draft ? '<span class="draft-tag">Draft, waiting on media</span>' : ''}</p>
+    <p class="p-kicker"><a href="/#work">&larr; All projects</a>${x.event || x.org ? `<span>${esc(x.event || x.org)}</span>` : ''}${x.date ? `<span>${esc(x.date)}</span>` : ''}${x.draft ? '<span class="draft-tag">Draft, waiting on media</span>' : ''}</p>
     <h1 class="p-title">${esc(x.title)}</h1>
     ${x.subtitle ? `<p class="p-sub">${esc(x.subtitle)}</p>` : ''}
     <p class="p-lede">${esc(x.short)}</p>
@@ -287,7 +305,8 @@ all.forEach((x, i) => writeFileSync(p('projects', `${x.slug}.html`), projectPage
 writeFileSync(p('about.html'), redirectPage('/#about', 'About Jerry Li'));
 writeFileSync(p('contact.html'), redirectPage('/#about', 'Contact Jerry Li'));
 writeFileSync(p('404.html'), notFound());
-const urls = ['/', ...all.filter((x) => !x.draft).map(url)];
+writeFileSync(p('drive.html'), drivePage());
+const urls = ['/', '/drive', ...all.filter((x) => !x.draft).map(url)];
 writeFileSync(p('sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${site.url}${u}</loc></url>`).join('\n')}\n</urlset>\n`);
 writeFileSync(p('robots.txt'), PREVIEW ? 'User-agent: *\nDisallow: /\n' : `User-agent: *\nAllow: /\nSitemap: ${site.url}/sitemap.xml\n`);
 console.log(`built ${all.length} project pages${PREVIEW ? ' (preview, drafts shown)' : ''}`);
