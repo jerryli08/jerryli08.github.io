@@ -40,9 +40,7 @@ const visible = (x) => PREVIEW || !x.draft;
 const list = (kind) => projects.filter((x) => x.kind === kind && visible(x));
 const url = (x) => `/projects/${x.slug}`;
 const thumb = (x) => (has(`/assets/thumbs/${x.slug}.webp`) ? `/assets/thumbs/${x.slug}.webp` : null);
-const preview = (x) => (has(`/assets/previews/${x.slug}.mp4`) ? `/assets/previews/${x.slug}.mp4` : null);
 const poster = (x) => (has(`/assets/posters/${x.slug}.jpg`) ? `/assets/posters/${x.slug}.jpg` : null);
-const kicker = (x) => [x.event || x.org, x.year].filter(Boolean).join(' · ');
 const arrow = '<span class="arrow" aria-hidden="true">&#8599;</span>';
 
 function mediaSrc(m) {
@@ -106,25 +104,23 @@ const footer = () => `<footer class="footer"><span>&copy; ${new Date().getFullYe
 const scripts = (extra = '') => `<script src="${v('/assets/js/site.js')}" defer></script>${extra}`;
 
 // ---------------------------------------------------------------- landing
-function cardData(x) {
-  const t = thumb(x), pv = preview(x), po = poster(x) || t;
-  return po ? ` data-preview="${pv ? v(pv) : ''}" data-poster="${v(po)}" data-title="${esc(x.title)}" data-kicker="${esc(kicker(x))}"` : '';
-}
 const statLine = (x) => (x.kind === 'hackathon' ? (x.place || x.event) : (x.stats?.[0] ? `${x.stats[0].v} ${x.stats[0].l}` : x.org));
-// featured cards on the first screen (hover opens the preview panel over the scene)
+// featured cards on the first screen
 function fcard(x) {
   const t = thumb(x);
-  return `<a class="fcard" href="${url(x)}"${cardData(x)} data-peek-item>
-  <div class="fcard-img">${t ? `<img src="${v(t)}" alt="" fetchpriority="high" decoding="async">` : ''}<span class="card-cta">Click to <i>learn more</i></span></div>
+  return `<a class="fcard" href="${url(x)}">
+  <div class="fcard-img">${t ? `<img src="${v(t)}" alt="" fetchpriority="high" decoding="async">` : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta"><span class="yr">${esc(x.year)}</span><span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
-// tiles in the full-width grid (hover plays the clip inside the tile)
+// tiles in the full-width grid
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
-function tile(x) {
+function tile(x, i, all) {
   const t = thumb(x);
-  const size = x.kind === 'archive' ? '' : x.size === 'lg' ? ' t-lg' : x.size === 'wide' ? ' t-wide' : '';
-  return `<a class="tile${size}" href="${url(x)}" data-kind="${x.kind}"${cardData(x)}>
+  // at most two big tiles: the first sits left, the second right, so the grid reads as a checkerboard
+  const big = x.kind === 'main' && x.size === 'lg', nth = big ? all.filter((y) => y.kind === 'main' && y.size === 'lg').indexOf(x) : -1;
+  const size = nth === 0 ? ' t-lg' : nth === 1 ? ' t-lg t-lg-r' : '';
+  return `<a class="tile${size}" href="${url(x)}" data-kind="${x.kind}">
   ${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}
   <span class="tile-shade"></span>
   ${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}
@@ -135,10 +131,16 @@ function tile(x) {
 
 function landing() {
   const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
-  const order = ['main', 'hackathon', 'concept', 'object', 'archive'];
-  const everything = order.flatMap((k) => list(k));
+  const order = ['main', 'hackathon', 'concept', 'object'];
+  // main projects: the first big tile leads, the second comes after the four tiles that fill in beside it
+  const mains = list('main'), lgs = mains.filter((x) => x.size === 'lg').slice(0, 2), rest = mains.filter((x) => !lgs.includes(x));
+  if (lgs[1]) rest.splice(Math.min(4, rest.length), 0, lgs[1]);
+  if (lgs[0]) rest.unshift(lgs[0]);
+  const everything = [...rest, ...order.slice(1).flatMap((k) => list(k))], archive = list('archive');
   const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
-  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object], ['archive', 'Archive', counts.archive]].filter(([, , n]) => n);
+  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object]].filter(([, , n]) => n);
+  // "20+ more projects": everything not already on the first screen, rounded down to a 5
+  const more = everything.length + archive.length - featured.length, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
   const stageStill = '/assets/img/hero-still.webp';
   const ld = { '@context': 'https://schema.org', '@type': 'Person', name: site.name, url: site.url, email: `mailto:${site.email}`, sameAs: [site.linkedin, site.github], alumniOf: 'University of Illinois Urbana-Champaign', jobTitle: 'Mechanical Engineering Student' };
   return `${head({
@@ -169,20 +171,23 @@ ${nav({ home: true })}
         <ul class="chips">
           <li><b>First author</b>MIT Lincoln Laboratory research</li>
           <li><b>1st place</b>FIRST World Championship award</li>
-          <li><b>2nd of 250+</b>Corgi hackathon teams</li>
+          <li><b>5+</b>hackathons</li>
         </ul>
       </header>
       <div class="featured">${featured.map(fcard).join('\n')}</div>
     </div>
-    <a class="scroll-cue" href="#work">All ${everything.length} projects <span aria-hidden="true">&darr;</span></a>
   </section>
   <section class="work" id="work" aria-labelledby="work-h">
     <div class="work-head">
       <h2 id="work-h">All work</h2>
       <div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div>
     </div>
-    <div class="bento">${everything.map(tile).join('\n')}</div>
+    <div class="bento">${everything.map((x, i, a) => tile(x, i, a)).join('\n')}</div>
   </section>
+  ${archive.length ? `<section class="archive" id="archive" aria-labelledby="archive-h">
+    <div class="archive-head"><h2 id="archive-h">Archive</h2><p>Earlier robots and side builds.</p></div>
+    <div class="bento bento-sm">${archive.map((x, i, a) => tile(x, i, a)).join('\n')}</div>
+  </section>` : ''}
   <section class="section about" id="about" aria-labelledby="about-h">
     <div class="section-head"><h2 id="about-h">About</h2></div>
     <div class="about-grid">
@@ -196,15 +201,8 @@ ${nav({ home: true })}
   </section>
   ${footer()}
 </main>
-<aside class="peek" data-peek aria-label="Project preview" hidden>
-  <div class="peek-media"><div class="slot"><div class="slot-bg"></div></div><div class="slot"><div class="slot-bg"></div></div></div>
-  <div class="peek-bar">
-    <div class="peek-text"><p class="peek-k" data-peek-k></p><p class="peek-t" data-peek-t></p></div>
-    <a class="peek-go" data-peek-go href="/">View project ${arrow}</a>
-  </div>
-  <button class="peek-x" type="button" data-peek-x aria-label="Close preview">&times;</button>
-</aside>
-<p class="scene-tag" data-scene-tag><span class="dot"></span>Real-time 3D from my Fusion 360 CAD <a href="/drive">Drive the rover ${arrow}</a></p>
+<a class="more-cue" href="#work" data-more><span>Check out <b class="grad">${moreLabel} more projects</b> below</span><span class="more-arrow" aria-hidden="true">&darr;</span></a>
+<p class="scene-tag" data-scene-tag><span class="dot"></span>Real-time 3D from my Fusion 360 CAD</p>
 ${scripts()}
 </body>
 </html>
