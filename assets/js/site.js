@@ -37,7 +37,7 @@
   const webgl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
   if (canvas && !slow && webgl && !/[?&]no3d/.test(location.search)) {
     const start = () => import(canvas.dataset.hero)
-      .then((m) => m.initWorld(canvas, { mode: 'landing', onReady: () => stage.classList.add('live') }))
+      .then((m) => m.initWorld(canvas, { mode: 'landing', assets: JSON.parse(canvas.dataset.assets || '{}'), onReady: () => stage.classList.add('live') }))
       .catch((e) => { console.warn('3D background unavailable', e); });
     const idle = () => (('requestIdleCallback' in window) ? requestIdleCallback(start, { timeout: 2000 }) : setTimeout(start, 200));
     document.readyState === 'complete' ? idle() : addEventListener('load', idle, { once: true });

@@ -17,7 +17,10 @@ import { OutputPass } from '../vendor/addons/postprocessing/OutputPass.js';
 import { GTAOPass } from '../vendor/addons/postprocessing/GTAOPass.js';
 import { Pass } from '../vendor/addons/postprocessing/Pass.js';
 
-const asset = (p) => new URL(`../${p}`, import.meta.url).href;
+// The page passes content-hashed URLs (assets are cached for a month, so a changed model
+// must get a new URL); without them, fall back to the plain path.
+let ASSETS = {};
+const asset = (p) => (ASSETS[p] ? new URL(ASSETS[p], location.href).href : new URL(`../${p}`, import.meta.url).href);
 const TAU = Math.PI * 2;
 const DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -700,6 +703,7 @@ const FinishShader = {
 
 // ================================================================== main
 export async function initWorld(canvas, opts = {}) {
+  ASSETS = opts.assets || {};
   const mode = opts.mode === 'drive' ? 'drive' : 'landing';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const lowPower = matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4;

@@ -17,12 +17,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap">
-<link rel="stylesheet" href="/assets/css/site.css?v=7bed822f">
+<link rel="stylesheet" href="/assets/css/site.css?v=4efbe9b4">
 <meta name="robots" content="noindex">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83"}}</script>
 </head>
 <body class="drive" data-dock="docked">
-<canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=8846ea1c"></canvas>
+<canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=9e90bb91" data-assets="{&quot;models/drone.glb&quot;:&quot;/assets/models/drone.glb?v=e3374e3c&quot;,&quot;models/rover.glb&quot;:&quot;/assets/models/rover.glb?v=8867a0d6&quot;,&quot;world/gravelly_sand_diff.webp&quot;:&quot;/assets/world/gravelly_sand_diff.webp?v=799a88b1&quot;,&quot;world/gravelly_sand_nor_gl.webp&quot;:&quot;/assets/world/gravelly_sand_nor_gl.webp?v=72a69dc5&quot;,&quot;world/gravelly_sand_rough.webp&quot;:&quot;/assets/world/gravelly_sand_rough.webp?v=f2a7c001&quot;,&quot;world/horizon.webp&quot;:&quot;/assets/world/horizon.webp?v=9302d5e5&quot;,&quot;world/red_sand_diff.webp&quot;:&quot;/assets/world/red_sand_diff.webp?v=323b1830&quot;,&quot;world/red_sand_nor_gl.webp&quot;:&quot;/assets/world/red_sand_nor_gl.webp?v=f84b6aae&quot;,&quot;world/red_sand_rough.webp&quot;:&quot;/assets/world/red_sand_rough.webp?v=e31ba3f1&quot;,&quot;world/rocks.glb&quot;:&quot;/assets/world/rocks.glb?v=96949824&quot;}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
   <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
@@ -61,7 +61,7 @@
   };
   const onSpeed = (s) => { const t = Math.abs(s).toFixed(2) + ' m/s'; $('[data-speed]').textContent = t; $('[data-speed2]').textContent = t; };
   const onDrone = (d) => { $('[data-alt]').textContent = d.alt.toFixed(1) + ' m up'; };
-  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
+  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', assets: JSON.parse(c.dataset.assets || '{}'), debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
     .catch((e) => { $('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; window.__err = String(e); });
 </script>
 </body>

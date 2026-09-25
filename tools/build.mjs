@@ -2,7 +2,7 @@
 // so GitHub Pages and Vercel both serve it with no build step on their side.
 //   node tools/build.mjs            production (drafts hidden)
 //   PREVIEW=1 node tools/build.mjs  preview (drafts shown with a label)
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
@@ -23,6 +23,12 @@ function v(url) { // cache-busting query from file contents
   return `${url}?v=${hashCache.get(f)}`;
 }
 const has = (url) => existsSync(p(url.replace(/^\//, '')));
+// hashed URLs for everything world.js loads, handed to it through the canvas
+function worldAssets() {
+  const out = {};
+  for (const dir of ['models', 'world']) for (const f of readdirSync(p(`assets/${dir}`))) out[`${dir}/${f}`] = v(`/assets/${dir}/${f}`);
+  return esc(JSON.stringify(out));
+}
 const dimCache = new Map();
 function dims(url) {
   const f = p(url.replace(/^\//, ''));
@@ -182,7 +188,7 @@ function landing() {
 <a class="sr-only" href="#work">Skip to projects</a>
 <div class="bg" data-stage aria-hidden="true">
   <picture><source media="(max-width: 959px)" srcset="${v('/assets/img/hero-still-m.webp')}"><img class="bg-still" src="${v(stageStill)}" alt="" width="1920" height="1080"></picture>
-  <canvas class="bg-canvas" data-world="landing" data-hero="${v('/assets/js/world.js')}"></canvas>
+  <canvas class="bg-canvas" data-world="landing" data-hero="${v('/assets/js/world.js')}" data-assets="${worldAssets()}"></canvas>
 </div>
 <div class="veil" aria-hidden="true"></div>
 <div class="veil-dim" data-dim aria-hidden="true"></div>
@@ -250,7 +256,7 @@ function drivePage() {
     extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>\n`,
   })}
 <body class="drive" data-dock="docked">
-<canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}"></canvas>
+<canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}" data-assets="${worldAssets()}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
   <p class="chip drive-title"><span class="dot"></span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</p>
@@ -289,7 +295,7 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
   };
   const onSpeed = (s) => { const t = Math.abs(s).toFixed(2) + ' m/s'; $('[data-speed]').textContent = t; $('[data-speed2]').textContent = t; };
   const onDrone = (d) => { $('[data-alt]').textContent = d.alt.toFixed(1) + ' m up'; };
-  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
+  import(c.dataset.hero).then((m) => m.initWorld(c, { mode: 'drive', assets: JSON.parse(c.dataset.assets || '{}'), debug: /[?&]__step/.test(location.search), onReady: () => { $('[data-drive-load]').classList.add('done'); window.__ready = true; }, onSpeed, onMode, onView, onCaption, onTag, onDrone }))
     .catch((e) => { $('[data-drive-load]').innerHTML = '<b>3D could not start</b><span>' + (e && e.message ? e.message : 'WebGL is unavailable') + '</span>'; window.__err = String(e); });
 </script>
 </body>
