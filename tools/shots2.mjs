@@ -14,7 +14,7 @@ await page.evaluate(() => scrollTo(0, innerHeight * 0.55)); await page.waitForTi
 await page.screenshot({ path: `${S}/L2.png` });
 await page.evaluate(() => document.querySelector('#work').scrollIntoView()); await page.waitForTimeout(900);
 await page.screenshot({ path: `${S}/L3.png` });
-if (W >= 960) { await page.locator('.tile').nth(2).hover(); await page.waitForTimeout(600); await page.screenshot({ path: `${S}/L4.png` }); }
+if (W >= 960) { await page.locator('.work .card').nth(2).hover(); await page.waitForTimeout(600); await page.screenshot({ path: `${S}/L4.png` }); }
 await page.evaluate(() => { const a = document.querySelector('#archive'); if (a) scrollTo({ top: a.getBoundingClientRect().top + scrollY - 140, behavior: 'instant' }); }); await page.waitForTimeout(900);
 await page.screenshot({ path: `${S}/L5.png` });
 await browser.close();

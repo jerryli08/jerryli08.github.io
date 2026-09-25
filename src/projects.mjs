@@ -19,7 +19,7 @@ export const site = {
 export const projects = [
   // ------------------------------------------------------------------ MAIN
   {
-    slug: 'hybrid-vehicle', featured: 1, size: 'lg',
+    slug: 'hybrid-vehicle', hero: true, size: 'lg', // the live 3D scene on the landing page
     kind: 'main',
     title: 'Drone on Wheels',
     subtitle: 'Hybrid aerial-ground vehicle',
@@ -57,7 +57,7 @@ export const projects = [
     cad: 'https://a360.co/45sUzAD',
   },
   {
-    slug: 'ftc-decode', size: 'lg',
+    slug: 'ftc-decode', featured: 1, size: 'lg',
     kind: 'main',
     title: 'FTC DECODE Robot',
     subtitle: 'Team 26115 Alphabots',

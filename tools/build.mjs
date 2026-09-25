@@ -105,7 +105,7 @@ const scripts = (extra = '') => `<script src="${v('/assets/js/site.js')}" defer>
 
 // ---------------------------------------------------------------- landing
 const statLine = (x) => (x.kind === 'hackathon' ? (x.place || x.event) : (x.stats?.[0] ? `${x.stats[0].v} ${x.stats[0].l}` : x.org));
-// featured cards on the first screen
+// featured cards on the first screen, staggered in two columns
 function fcard(x) {
   const t = thumb(x);
   return `<a class="fcard" href="${url(x)}">
@@ -113,34 +113,39 @@ function fcard(x) {
   <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta"><span class="yr">${esc(x.year)}</span><span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
-// tiles in the full-width grid
+// every project in the grid: same size, picture on top, words underneath
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
-function tile(x, i, all) {
+function card(x) {
   const t = thumb(x);
-  // at most two big tiles: the first sits left, the second right, so the grid reads as a checkerboard
-  const big = x.kind === 'main' && x.size === 'lg', nth = big ? all.filter((y) => y.kind === 'main' && y.size === 'lg').indexOf(x) : -1;
-  const size = nth === 0 ? ' t-lg' : nth === 1 ? ' t-lg t-lg-r' : '';
-  return `<a class="tile${size}" href="${url(x)}" data-kind="${x.kind}">
-  ${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}
-  <span class="tile-shade"></span>
-  ${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}
-  <span class="tile-cta">Click to learn more</span>
-  <span class="tile-text"><span class="tile-k">${esc(KIND_LABEL[x.kind])} · ${esc(x.year || '')}</span><b>${esc(x.title)}</b><span class="tile-s">${esc(statLine(x) || '')}</span></span>
+  return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
+  <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])} · ${esc(x.year || '')}</span><b>${esc(x.title)}</b><span class="card-s">${esc(statLine(x) || '')}</span></div>
 </a>`;
+}
+// the project the live scene is showing
+function heroCard(x) {
+  return `<aside class="scene-card" aria-labelledby="scene-card-h">
+  <p class="sc-k"><span class="dot"></span>Live 3D of this project, from my Fusion 360 CAD</p>
+  <h2 id="scene-card-h">${esc(x.title)}</h2>
+  <p class="sc-sub">${esc(x.org)} · ${esc(x.year)}</p>
+  <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
+  <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
+  <p class="sc-hint"><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
+  <div class="sc-actions"><a class="sc-go" href="${url(x)}">See more ${arrow}</a><a class="sc-drive" href="/drive">Drive it yourself</a></div>
+</aside>`;
 }
 
 function landing() {
   const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
+  const heroProject = projects.find((x) => x.hero);
   const order = ['main', 'hackathon', 'concept', 'object'];
-  // main projects: the first big tile leads, the second comes after the four tiles that fill in beside it
-  const mains = list('main'), lgs = mains.filter((x) => x.size === 'lg').slice(0, 2), rest = mains.filter((x) => !lgs.includes(x));
-  if (lgs[1]) rest.splice(Math.min(4, rest.length), 0, lgs[1]);
-  if (lgs[0]) rest.unshift(lgs[0]);
-  const everything = [...rest, ...order.slice(1).flatMap((k) => list(k))], archive = list('archive');
+  const everything = order.flatMap((k) => list(k)), archive = list('archive');
   const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
   const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object]].filter(([, , n]) => n);
   // "20+ more projects": everything not already on the first screen, rounded down to a 5
-  const more = everything.length + archive.length - featured.length, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
+  const more = everything.length + archive.length - featured.length - 1, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
+  // a fanned hand of little thumbnails from the projects below, so "more" reads at a glance
+  const fan = [...everything, ...archive].filter((x) => !x.featured && !x.hero && has(`/assets/thumbs/mini/${x.slug}.webp`)).slice(0, 5);
   const stageStill = '/assets/img/hero-still.webp';
   const ld = { '@context': 'https://schema.org', '@type': 'Person', name: site.name, url: site.url, email: `mailto:${site.email}`, sameAs: [site.linkedin, site.github], alumniOf: 'University of Illinois Urbana-Champaign', jobTitle: 'Mechanical Engineering Student' };
   return `${head({
@@ -174,19 +179,23 @@ ${nav({ home: true })}
           <li><b>5+</b>hackathons</li>
         </ul>
       </header>
-      <div class="featured">${featured.map(fcard).join('\n')}</div>
+      <div class="featured">
+        <div class="f-col">${featured.filter((_, i) => i % 2 === 0).map(fcard).join('\n')}</div>
+        <div class="f-col f-col-b">${featured.filter((_, i) => i % 2 === 1).map(fcard).join('\n')}</div>
+      </div>
     </div>
+    ${heroProject ? heroCard(heroProject) : ''}
   </section>
   <section class="work" id="work" aria-labelledby="work-h">
     <div class="work-head">
       <h2 id="work-h">All work</h2>
       <div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div>
     </div>
-    <div class="bento">${everything.map((x, i, a) => tile(x, i, a)).join('\n')}</div>
+    <div class="grid">${everything.map(card).join('\n')}</div>
   </section>
   ${archive.length ? `<section class="archive" id="archive" aria-labelledby="archive-h">
     <div class="archive-head"><h2 id="archive-h">Archive</h2><p>Earlier robots and side builds.</p></div>
-    <div class="bento bento-sm">${archive.map((x, i, a) => tile(x, i, a)).join('\n')}</div>
+    <div class="grid grid-archive">${archive.map(card).join('\n')}</div>
   </section>` : ''}
   <section class="section about" id="about" aria-labelledby="about-h">
     <div class="section-head"><h2 id="about-h">About</h2></div>
@@ -201,8 +210,11 @@ ${nav({ home: true })}
   </section>
   ${footer()}
 </main>
-<a class="more-cue" href="#work" data-more><span>Check out <b class="grad">${moreLabel} more projects</b> below</span><span class="more-arrow" aria-hidden="true">&darr;</span></a>
-<p class="scene-tag" data-scene-tag><span class="dot"></span>Real-time 3D from my Fusion 360 CAD</p>
+<a class="more" href="#work" data-more aria-label="Scroll to ${moreLabel} more projects">
+  <span class="more-fan" aria-hidden="true">${fan.map((x) => `<img src="${v(`/assets/thumbs/mini/${x.slug}.webp`)}" alt="" width="96" height="72">`).join('')}</span>
+  <span class="more-txt"><b class="more-n">${moreLabel}</b><span class="more-l">more projects<br>below</span></span>
+  <span class="more-arrow" aria-hidden="true">&darr;</span>
+</a>
 ${scripts()}
 </body>
 </html>

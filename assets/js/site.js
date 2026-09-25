@@ -45,7 +45,6 @@
 
   // ---------------------------------------------------------- scroll: darken the scene behind the work
   const dim = document.querySelector('[data-dim]');
-  const tag = document.querySelector('[data-scene-tag]');
   const more = document.querySelector('[data-more]');
   const nav = document.querySelector('.home .nav');
   let ticking = false;
@@ -54,7 +53,6 @@
     const t = clamp01(scrollY / (innerHeight * 0.8));
     if (dim) dim.style.opacity = (t * 0.9).toFixed(3);
     nav?.classList.toggle('scrolled', scrollY > innerHeight * 0.35);
-    if (tag) tag.style.opacity = String(1 - clamp01((t - 0.2) / 0.4));
     if (more) { const o = 1 - clamp01((t - 0.04) / 0.2); more.style.opacity = String(o); more.classList.toggle('gone', o < 0.05); }
   };
   function clamp01(x) { return Math.min(1, Math.max(0, x)); }

@@ -731,7 +731,7 @@ export async function initWorld(canvas, opts = {}) {
   // ---------------------------------------------------------------- landing: fly-in, then follow the cursor
   // Seconds from the moment the 3D goes live. The drone cruises in, hovers, settles onto the
   // rover; the camera rides with it and then pulls out to a bird's-eye view.
-  const T0 = { hoverAt: 2.6, descend: 2.85, touch: 3.5, spinDown: 4.5, resume: 3.9, cam0: 3.0, cam1: 5.0 };
+  const T0 = { hoverAt: 2.17, descend: 2.48, touch: 3.29, spinDown: 4.4, resume: 3.75, cam0: 2.75, cam1: 4.75 };
   const HOVER = 0.34;
   let phase = mode === 'landing' ? (reduced ? 'live' : 'intro') : 'drive';
   let docked = mode !== 'landing' || reduced;
@@ -770,7 +770,7 @@ export async function initWorld(canvas, opts = {}) {
     if (!AIR.on && dist > FLY_DIST) takeoff();
   }
   function pickWander() {
-    const A = frame.wide ? [0.5, 0.94, 0.24, 0.88] : [0.12, 0.88, 0.1, 0.42];
+    const A = frame.wide ? [0.52, 0.94, 0.52, 0.86] : [0.12, 0.88, 0.3, 0.44]; // clear of the text and the project card
     const hopper = rnd() < 0.25; // now and then it flies instead of driving
     for (let i = 0; i < 24; i++) {
       const g = groundAt(lerp(A[0], A[1], rnd()), lerp(A[2], A[3], rnd()), hit);
@@ -780,7 +780,7 @@ export async function initWorld(canvas, opts = {}) {
     }
     R.pause = 1;
   }
-  function takeoff() { AIR.on = true; AIR.spin = 0.45; AIR.vx = AIR.vy = AIR.vz = 0; R.v = R.w = 0; tracksL.lift(); tracksR.lift(); }
+  function takeoff() { AIR.on = true; AIR.spin = 0.56; AIR.vx = AIR.vy = AIR.vz = 0; R.v = R.w = 0; tracksL.lift(); tracksR.lift(); }
   function land() {
     AIR.on = false; R.pitch = 0; R.roll = 0; R.last = null; R.v = R.w = 0;
     R.goal = null; R.pause = 0.5;
@@ -822,26 +822,26 @@ export async function initWorld(canvas, opts = {}) {
     const agl = R.y - heightAt(R.x, R.z);
     // horizontal: head for the goal once clear of the ground, speed and acceleration capped
     const liftK = smooth(0.1, 0.4, agl);
-    let wx = dx * 2.2, wz = dz * 2.2;
-    const wm = Math.hypot(wx, wz); if (wm > 3) { wx *= 3 / wm; wz *= 3 / wm; }
-    let ax = (wx * liftK - AIR.vx) * 4, az = (wz * liftK - AIR.vz) * 4;
-    const am = Math.hypot(ax, az); if (am > 6) { ax *= 6 / am; az *= 6 / am; }
+    let wx = dx * 1.76, wz = dz * 1.76;
+    const wm = Math.hypot(wx, wz); if (wm > 2.4) { wx *= 2.4 / wm; wz *= 2.4 / wm; }
+    let ax = (wx * liftK - AIR.vx) * 3.2, az = (wz * liftK - AIR.vz) * 3.2;
+    const am = Math.hypot(ax, az); if (am > 3.84) { ax *= 3.84 / am; az *= 3.84 / am; }
     AIR.vx += ax * dt; AIR.vz += az * dt;
     // vertical: climb to a cruise height that grows with the hop, then settle down gently
-    const landing = dist < 0.3 && Math.hypot(AIR.vx, AIR.vz) < 0.4;
+    const landing = dist < 0.3 && Math.hypot(AIR.vx, AIR.vz) < 0.32;
     const cruise = clamp(0.5 + dist * 0.3, 0.7, 1.5);
-    const vyWant = landing ? -clamp(agl * 2.2, 0.12, 1.0) : clamp((cruise - agl) * 2.5, -1.0, 1.4);
-    AIR.vy += clamp((vyWant - AIR.vy) * 6, -8, 8) * dt;
+    const vyWant = landing ? -clamp(agl * 1.76, 0.1, 0.8) : clamp((cruise - agl) * 2.0, -0.8, 1.12);
+    AIR.vy += clamp((vyWant - AIR.vy) * 4.8, -5.1, 5.1) * dt;
     R.x += AIR.vx * dt; R.z += AIR.vz * dt; R.y += AIR.vy * dt;
     const floor = heightAt(R.x, R.z);
     if (R.y <= floor) { R.y = floor; if (landing) { land(); return; } AIR.vy = Math.max(0, AIR.vy); }
     const sp = Math.hypot(AIR.vx, AIR.vz);
-    if (sp > 0.3) R.yaw += clamp(wrapAngle(Math.atan2(AIR.vx, AIR.vz) - R.yaw) * 3, -2.4, 2.4) * dt;
+    if (sp > 0.25) R.yaw += clamp(wrapAngle(Math.atan2(AIR.vx, AIR.vz) - R.yaw) * 2.4, -1.9, 1.9) * dt;
     // lean into the acceleration and against drag, like any quad
     tilt.set(ax * 0.25 + AIR.vx * 0.3, 9.81, az * 0.25 + AIR.vz * 0.3).normalize();
     tQ.setFromUnitVectors(up, tilt); yQ.setFromAxisAngle(up, R.yaw); tQ.multiply(yQ);
     V.rover.position.set(R.x, R.y, R.z);
-    V.rover.quaternion.slerp(tQ, 1 - Math.exp(-8 * dt));
+    V.rover.quaternion.slerp(tQ, 1 - Math.exp(-6.4 * dt));
     downwash(V.rover.position);
   }
   function live(dt) {
@@ -885,14 +885,14 @@ export async function initWorld(canvas, opts = {}) {
     }
     prevP.copy(P);
     // a quad leans into its acceleration and, while cruising, forward against drag
-    const settle = t < T0.descend ? 1 : 1 - smooth(T0.descend, T0.descend + 0.5, t);
+    const settle = t < T0.descend ? 1 : 1 - smooth(T0.descend, T0.descend + 0.62, t);
     tilt.copy(accS).multiplyScalar(0.4).addScaledVector(velS, 0.8).setY(0).multiplyScalar(settle).add(tmp.set(0, 9.81, 0)).normalize();
     tQ.setFromUnitVectors(up, tilt);
     const yaw = path.yaw0 + wrapAngle(R.yaw - path.yaw0) * smooth(T0.hoverAt * 0.35, T0.hoverAt, t);
     yQ.setFromAxisAngle(up, yaw); tQ.multiply(yQ);
-    if (t >= T0.descend) tQ.slerp(dockQ, smooth(T0.descend, T0.descend + 0.6, t));
-    V.drone.quaternion.slerp(tQ, 1 - Math.exp(-10 * dt));
-    if (t >= T0.descend + 0.6) V.drone.quaternion.copy(dockQ);
+    if (t >= T0.descend) tQ.slerp(dockQ, smooth(T0.descend, T0.descend + 0.75, t));
+    V.drone.quaternion.slerp(tQ, 1 - Math.exp(-8 * dt));
+    if (t >= T0.descend + 0.75) V.drone.quaternion.copy(dockQ);
     downwash(P); // rotor downwash kicks up dust as the drone comes down over the ground
   }
 
@@ -904,7 +904,7 @@ export async function initWorld(canvas, opts = {}) {
   const chaseCam = { on: false, look: new THREE.Vector3(), vel: new THREE.Vector3(), L: new THREE.Vector3(), c: new THREE.Vector3(), prev: new THREE.Vector3(), tv: new THREE.Vector3(), aim: new THREE.Vector3() };
   // ride-along: starts high above the drone, eases down to a still-high 40 degrees for the
   // landing while swinging around it, and never closes in below ~2.6 m
-  const RIDE = { el0: 58 * DEG, el1: 40 * DEG, az0: -0.9, az1: 0.25, d0: 3.4, d1: 2.7 };
+  const RIDE = { el0: 58 * DEG, el1: 40 * DEG, az0: -0.9, az1: 0.25, d0: 4.0, d1: 2.7 };
   // final bird's-eye view over LOOK
   const BIRD = { wide: { el: 50 * DEG, dist: 8.5 }, narrow: { el: 55 * DEG, dist: 7 } };
   function layoutCamera() {
@@ -916,7 +916,7 @@ export async function initWorld(canvas, opts = {}) {
     if (mode === 'landing') {
       const wide = w >= 960;
       frame.wide = wide;
-      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.6 : 0.3;
+      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.68 : 0.36;
       const F = wide ? 30 : 44; // visible vertical field of view
       const W2 = frame.fx >= 0.5 ? 2 * frame.fx * w : 2 * (1 - frame.fx) * w;
       const H2 = frame.fy >= 0.5 ? 2 * frame.fy * h : 2 * (1 - frame.fy) * h;
@@ -966,7 +966,7 @@ export async function initWorld(canvas, opts = {}) {
     // velocity: no lag while cruising, a little drift when the drone speeds up or brakes.
     const D = droneFocus(chaseCam.aim);
     const near = smooth(2.5, 0.6, D.distanceTo(hoverP));
-    D.y = lerp(D.y, dockP.y + 0.12, 0.4 * near); // only drop the aim; sliding it sideways pushes the drone off frame
+    D.y = lerp(D.y, dockP.y + 0.12, 0.2 * near); // only drop the aim; sliding it sideways pushes the drone off frame
     const w0 = 4.5;
     if (dt > 0) {
       chaseCam.tv.subVectors(D, chaseCam.prev).divideScalar(dt);
@@ -1052,6 +1052,12 @@ export async function initWorld(canvas, opts = {}) {
       path.a.copy(LOOK).addScaledVector(back, 8.5).addScaledVector(side, -2.0).add(tmp.set(0, 3.2, 0));
       path.b.copy(path.a).addScaledVector(back, -3.2).addScaledVector(side, 0.5).add(tmp.set(0, -0.4, 0));
       path.c.copy(hoverP).addScaledVector(back, 1.8).addScaledVector(side, 0.8).add(tmp.set(0, 0.6, 0));
+      // the approach is two thirds of that: shrink the curve toward the hover point
+      const K = 2 / 3;
+      path.b.sub(path.a).multiplyScalar(K);
+      path.a.sub(hoverP).multiplyScalar(K).add(hoverP);
+      path.b.add(path.a);
+      path.c.sub(hoverP).multiplyScalar(K).add(hoverP);
       path.yaw0 = Math.atan2(path.b.x - path.a.x, path.b.z - path.a.z);
       flightPos(0, P); flightPos(1 / 60, tmp);
       velS.subVectors(tmp, P).multiplyScalar(60); prevP.copy(P).addScaledVector(velS, -1 / 60);
