@@ -1,488 +1,255 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jerry Li - Project Portfolio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Figtree', 'sans-serif'],
-                    },
-                    colors: {
-                        'mydark': '#03010d'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        * {
-            font-family: 'Figtree', sans-serif;
-        }
-        .project-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .project-card:hover {
-            transform: translateY(-4px);
-            border-color: rgb(59, 130, 246) !important;
-            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(59, 130, 246, 0.25), 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
-        }
-        /* Dark mode uses same values but with lighter blue */
-        .dark .project-card:hover {
-            box-shadow: 0 0 25px rgba(96, 165, 250, 0.5), 0 0 50px rgba(96, 165, 250, 0.25), 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
-        }
-        .theme-tooltip {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease, visibility 0.2s ease;
-        }
-        #themeToggle:hover .theme-tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-        body,
-        .main-bg {
-            background-color: #fff;
-        }
-        .dark body,
-        .dark .main-bg {
-            background-color: #03010d;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jerry Li · Mechanical Engineering Portfolio</title>
+<meta name="description" content="Jerry Li is a mechanical engineering student at the University of Illinois Urbana-Champaign who designs and builds robots, drones and electric vehicles.">
+<link rel="canonical" href="https://www.jerryli.design/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jerry Li · Mechanical Engineering Portfolio">
+<meta property="og:description" content="Jerry Li is a mechanical engineering student at the University of Illinois Urbana-Champaign who designs and builds robots, drones and electric vehicles.">
+<meta property="og:url" content="https://www.jerryli.design/">
+<meta property="og:image" content="https://www.jerryli.design/assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b0a09">
+<link rel="icon" href="/assets/favicon.svg?v=31fbbd10" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap">
+<link rel="stylesheet" href="/assets/css/site.css?v=cd4cce50">
+<meta name="robots" content="noindex">
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83"}}</script>
+<link rel="preload" as="image" href="/assets/img/hero-still.webp?v=76f5c004" fetchpriority="high">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Jerry Li","url":"https://www.jerryli.design","email":"mailto:jerry@jerryli.design","sameAs":["https://www.linkedin.com/in/jerry-li-md/","https://github.com/jerryli08"],"alumniOf":"University of Illinois Urbana-Champaign","jobTitle":"Mechanical Engineering Student"}</script>
 </head>
-<body class="main-bg">
-    <div class="min-h-screen transition-colors duration-200 main-bg">
-        <!-- Header -->
-        <header class="main-bg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Jerry Li</h1>
-                    <div class="flex items-center gap-6">
-                        <a href="about.html" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">About Me</a>
-                        <a href="contact.html" class="text-blue-600 dark:text-blue-400 font-medium hover:underline mr-6">Contact</a>
-                        <button id="themeToggle" class="relative p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                        <!-- Tooltip -->
-                        <div class="theme-tooltip absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-200 dark:bg-gray-800 rounded-lg shadow-xl border border-gray-300 dark:border-gray-700 px-4 py-3 whitespace-nowrap" style="min-width: 150px;">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm text-gray-700 dark:text-gray-300">Light mode</span>
-                                <svg id="lightCheck" class="w-4 h-4 text-green-500 flex-shrink-0 invisible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700 dark:text-gray-300">Dark mode</span>
-                                <svg id="darkCheck" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <!-- Icons -->
-                        <!-- Sun: shows in LIGHT mode (so users can switch to dark) -->
-                        <svg id="sunIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
-                          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                            <line x1="12" y1="1" x2="12" y2="3"/>
-                            <line x1="12" y1="21" x2="12" y2="23"/>
-                            <line x1="4.222" y1="4.222" x2="5.636" y2="5.636"/>
-                            <line x1="18.364" y1="18.364" x2="19.778" y2="19.778"/>
-                            <line x1="1" y1="12" x2="3" y2="12"/>
-                            <line x1="21" y1="12" x2="23" y2="12"/>
-                            <line x1="4.222" y1="19.778" x2="5.636" y2="18.364"/>
-                            <line x1="18.364" y1="5.636" x2="19.778" y2="4.222"/>
-                          </g>
-                        </svg>
-                        <!-- Moon: shows in DARK mode (so users can switch to light) -->
-                        <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                        </svg>
-                    </button>
-                    </div>
-                </div>
-                <p class="mt-2 text-gray-600 dark:text-gray-400">Engineering Projects Portfolio</p>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <!-- Featured Projects Section -->
-            <section class="mb-16">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Featured Projects</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Hybrid Aerial-Ground Vehicle -->
-                    <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[50%]"></div>
-                            <img src="images/hybrid-vehicle.jpg" alt="Hybrid Aerial-ground Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-Ground Vehicle</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2025 - August 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-                    <!-- Electric Bike -->
-                    <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[50%]"></div>
-                            <img src="images/electric-bike.jpg" alt="Electric Bike" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025 - August 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-                    <!-- Science Olympiad Electric Vehicle -->
-                    <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[50%]"></div>
-                            <img src="images/electric-vehicle.jpg" alt="Science Olympiad Electric Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Electric Vehicle</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - January 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-                    <!-- 3D Printer Automation Robot -->
-                    <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[50%]"></div>
-                            <img src="images/build-plate-robot.JPG" alt="3D Printer Build-plate Replacing Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Automation Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February 2024 - August 2024</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-                </div>
-            </section>
-
-            <!-- All Projects Section -->
-            <section>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">All Projects</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-
-                    <!-- FTC Decode Robot (Sep 2025 - May 2026) -->
-                    <a href="projects/ftc-decode.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-decode.jpeg" alt="FTC Decode Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Decode Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2025 - May 2026</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FRC Rebuilt Robot (Jan 2026 - Mar 2026) -->
-                    <a href="projects/frc-rebuilt.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/frc-rebuilt.jpg" alt="FRC Rebuilt Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FRC Rebuilt Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">January 2026 - March 2026</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Hybrid Aerial-Ground Vehicle (Jul 2025 - Aug 2025) -->
-                    <a href="projects/hybrid-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/hybrid-vehicle.jpg" alt="Hybrid Aerial-ground Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hybrid Aerial-Ground Vehicle</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2025 - August 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Electric Bike (Jun 2025 - Aug 2025) -->
-                    <a href="projects/electric-bike.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/electric-bike.jpg" alt="Electric Bike" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Electric Bike</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025 - August 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Exercise Bike Odometer (Jun 2025) -->
-                    <a href="projects/bike-odometer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/bike-odometer.jpg" alt="Exercise Bike Odometer" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Exercise Bike Odometer</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">June 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- 5-bar Pen Plotter (May 2025 - Jun 2025) -->
-                    <a href="projects/pen-plotter.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/pen-plotter.jpg" alt="5-bar Parallel Robot Pen Plotter" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">5-bar Pen Plotter</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May 2025 - June 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Monkeytype Merch (May 2025 - Jun 2025) -->
-                    <a href="projects/mt-shirt.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/mt-shirt.jpg" alt="Monkeytype Logo Shirt" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Monkeytype Merch</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">May 2025 - June 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Science Olympiad Robot Tour (Dec 2024 - Apr 2025) -->
-                    <a href="projects/robot-tour.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/robot-tour.jpg" alt="Science Olympiad Robot Tour" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Olympiad Robot Tour</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">December 2024 - April 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FTC Into the Deep Robot (Sep 2024 - Feb 2025) -->
-                    <a href="projects/ftc-into-the-deep.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-into-the-deep.jpg" alt="FTC Into the Deep Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Into the Deep Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - February 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Science Oly. Electric Vehicle (Sep 2024 - Jan 2025) -->
-                    <a href="projects/electric-vehicle.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/electric-vehicle.jpg" alt="Science Olympiad Electric Vehicle" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Science Oly. Electric Vehicle</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024 - January 2025</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Braille Printer (Sep 2024) -->
-                    <a href="projects/braille-printer.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/braille-printer.jpg" alt="Braille Printer" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Braille Printer</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2024</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- 1 lb Plastic Battlebot (Jul 2024) -->
-                    <a href="projects/battlebot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/battlebot.jpg" alt="1lb Plastic Battlebot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">1 lb Plastic Battlebot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">July 2024</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- 3D Printer Automation Robot (Feb 2024 - Aug 2024) -->
-                    <a href="projects/build-plate-robot.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/build-plate-robot.JPG" alt="3D Printer Build-plate Replacing Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">3D Printer Automation Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">February 2024 - August 2024</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FTC Centerstage Robot (Sep 2023 - Feb 2024) -->
-                    <a href="projects/ftc-centerstage.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-centerstage.jpg" alt="FTC Centerstage Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Centerstage Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2023 - February 2024</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FTC PowerPlay Robot (Sep 2022 - Feb 2023) -->
-                    <a href="projects/ftc-powerplay.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-powerplay.jpg" alt="FTC PowerPlay Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC PowerPlay Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2022 - February 2023</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FTC Freight Frenzy Robot (Sep 2021 - Jan 2022) -->
-                    <a href="projects/ftc-freight-frenzy.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-freight-frenzy.jpg" alt="FTC Freight Frenzy Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Freight Frenzy Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2021 - January 2022</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- FTC Ultimate Goal Robot (Sep 2020 - Jan 2021) -->
-                    <a href="projects/ftc-ultimate-goal.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/ftc-ultimate-goal.jpg" alt="FTC Ultimate Goal Robot" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">FTC Ultimate Goal Robot</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">September 2020 - January 2021</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                    <!-- Cardboard Racing Simulator (Mar 2020) -->
-                    <a href="projects/cardboard-simulator.html" class="project-card bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div class="relative w-full">
-                            <div class="pt-[100%]"></div>
-                            <img src="images/cardboard-simulator.jpg" alt="Cardboard Simulator" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 flex flex-col flex-1 main-bg">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cardboard Racing Simulator</h3>
-                            <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">March 2020</p>
-                            <div class="flex-grow"></div>
-                            <p class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto">Read more →</p>
-                        </div>
-                    </a>
-
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="main-bg mt-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <p class="text-center text-gray-600 dark:text-gray-400 text-sm">© 2026 Jerry Li. All rights reserved.</p>
-            </div>
-        </footer>
+<body class="home">
+<a class="sr-only" href="#work">Skip to projects</a>
+<nav class="nav" aria-label="Main">
+  <a class="wordmark" href="/">Jerry Li</a>
+  <div class="nav-links">
+    <a href="#work">Projects</a>
+    <a href="#hackathons">Hackathons</a>
+    <a href="#archive">Archive</a>
+    <a class="keep" href="#about">About</a>
+    <a class="nav-cta" href="mailto:jerry@jerryli.design">Contact</a>
+  </div>
+</nav>
+<div class="split">
+  <div class="index index-top">
+    <header class="intro">
+      <p class="label">Mechanical Engineering · University of Illinois Urbana-Champaign</p>
+      <h1 class="name">Jerry Li</h1>
+      <p class="lede">I design and build robots, drones and electric vehicles, from the first CAD sketch to the last wire.</p>
+      <ul class="proof">
+        <li><b>First author</b><span>Research poster, IEEE MIT URTC 2025</span></li>
+        <li><b>1st place</b><span>Sustain Award, FIRST World Championship</span></li>
+        <li><b>2nd of 250+</b><span>Teams at the Corgi hackathon</span></li>
+      </ul>
+      <p class="links-inline"><a href="mailto:jerry@jerryli.design">Email <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://www.linkedin.com/in/jerry-li-md/" rel="me">LinkedIn <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://github.com/jerryli08" rel="me">GitHub <span class="arrow" aria-hidden="true">&#8599;</span></a></p>
+    </header>
+  </div>
+  <aside class="viewer" data-viewer data-stage-status="Real-time 3D from my &lt;span class=&quot;long&quot;&gt;Fusion 360 &lt;/span&gt;CAD" aria-label="Project preview">
+    <div class="viewer-frame">
+      <div class="stage" data-stage>
+        <img class="stage-still" src="/assets/img/hero-still.webp?v=76f5c004" alt="My hybrid drone and rover, docked together, rendered from the CAD on a Mars landscape" width="1200" height="1500">
+        <canvas class="stage-canvas" aria-hidden="true" data-models="/assets/models/drone.glb?v=4f206af9|/assets/models/rover.glb?v=fb6f670f" data-hero="/assets/js/hero.js?v=6361e0ed"></canvas>
+      </div>
+      <div class="slot"><div class="slot-bg"></div></div>
+      <div class="slot"><div class="slot-bg"></div></div>
+      <div class="shade"></div>
+      <div class="hud-top">
+        <span class="chip"><span class="dot"></span><span data-status>Real-time 3D from my <span class="long">Fusion 360 </span>CAD</span></span>
+        <button class="chip back-btn" type="button" data-back hidden>Back to the 3D scene</button>
+      </div>
+      <div class="hud">
+        <div><p class="hud-k" data-hud-k>MIT Lincoln Laboratory · 2025</p><p class="hud-t" data-hud-t>Drone on Wheels</p></div>
+        <a class="hud-go" data-hud-go href="/projects/hybrid-vehicle">View project <span class="arrow" aria-hidden="true">&#8599;</span></a>
+      </div>
     </div>
-
-<script>
-    const themeToggle = document.getElementById('themeToggle');
-    const html = document.documentElement;
-    const sunIcon = document.getElementById('sunIcon');
-    const moonIcon = document.getElementById('moonIcon');
-    const lightCheck = document.getElementById('lightCheck');
-    const darkCheck = document.getElementById('darkCheck');
-
-    // Load saved theme preference or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'dark') {
-        html.classList.add('dark');
-    } else {
-        html.classList.remove('dark');
-    }
-
-    function updateIcons() {
-        const isDark = html.classList.contains('dark');
-        if (isDark) {
-            sunIcon.classList.add('hidden');
-            moonIcon.classList.remove('hidden');
-            lightCheck.style.visibility = 'hidden';
-            darkCheck.style.visibility = 'visible';
-        } else {
-            sunIcon.classList.remove('hidden');
-            moonIcon.classList.add('hidden');
-            lightCheck.style.visibility = 'visible';
-            darkCheck.style.visibility = 'hidden';
-        }
-    }
-
-    themeToggle.addEventListener('click', () => {
-        html.classList.toggle('dark');
-        const isDark = html.classList.contains('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        updateIcons();
-    });
-
-    // Initialize on page load
-    updateIcons();
-</script>
+  </aside>
+  <div class="index index-rest">
+    <section class="section" id="work" aria-labelledby="work-h">
+  <div class="section-head"><h2 id="work-h">Projects<span class="count num">12</span></h2></div>
+  <div class="rows"><a class="row" href="/projects/hybrid-vehicle" data-preview="/assets/previews/hybrid-vehicle.mp4?v=86da8b1e" data-poster="/assets/posters/hybrid-vehicle.jpg?v=6dedc9ac" data-title="Drone on Wheels" data-kicker="MIT Lincoln Laboratory · 2025">
+  <div class="row-thumb"><img src="/assets/thumbs/hybrid-vehicle.webp?v=77828474" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">01</span><h3>Drone on Wheels</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">A drone and a ground rover that dock together, so each one can carry the other.</p>
+    <p class="row-meta"><span><span class="hi">First author</span> Poster at IEEE MIT URTC 2025</span><span>MIT Lincoln Laboratory</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/ftc-decode" data-preview="/assets/previews/ftc-decode.mp4?v=cffca054" data-poster="/assets/posters/ftc-decode.jpg?v=d6a52553" data-title="FTC DECODE Robot" data-kicker="FIRST Tech Challenge · 2026">
+  <div class="row-thumb"><img src="/assets/thumbs/ftc-decode.webp?v=926b3ff2" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">02</span><h3>FTC DECODE Robot</h3><span class="row-yr">2026</span></div>
+    <p class="row-sum">Captain of the team that won a 1st place award at the FIRST World Championship.</p>
+    <p class="row-meta"><span><span class="hi">1st place</span> Sustain Award, FIRST World Championship</span><span>FIRST Tech Challenge</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/frc-rebuilt" data-preview="" data-poster="/assets/posters/frc-rebuilt.jpg?v=19b096bf" data-title="FRC REBUILT Robot" data-kicker="FIRST Robotics Competition · 2026">
+  <div class="row-thumb"><img src="/assets/thumbs/frc-rebuilt.webp?v=cdab96b2" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">03</span><h3>FRC REBUILT Robot</h3><span class="row-yr">2026</span></div>
+    <p class="row-sum">Designed solo in my first FRC season. It played in the playoffs at the Smoky Mountains Regional.</p>
+    <p class="row-meta"><span><span class="hi">Solo</span> Robot design</span><span>FIRST Robotics Competition</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/build-plate-robot" data-preview="/assets/previews/build-plate-robot.mp4?v=2ca92139" data-poster="/assets/posters/build-plate-robot.jpg?v=4bda9f64" data-title="Replac3d" data-kicker="Personal project · 2024">
+  <div class="row-thumb"><img src="/assets/thumbs/build-plate-robot.webp?v=ed65815d" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">04</span><h3>Replac3d</h3><span class="row-yr">2024</span></div>
+    <p class="row-sum">A robot that swaps finished build plates for fresh ones so a 3D printer can run around the clock.</p>
+    <p class="row-meta"><span><span class="hi">Top 12</span> of 2,042 projects, Hack Club Arcade</span><span>Personal project</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/electric-vehicle" data-preview="/assets/previews/electric-vehicle.mp4?v=cf73f609" data-poster="/assets/posters/electric-vehicle.jpg?v=a8ab3ecd" data-title="Science Olympiad Electric Vehicle" data-kicker="Science Olympiad · 2025">
+  <div class="row-thumb"><img src="/assets/thumbs/electric-vehicle.webp?v=b389115e" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">05</span><h3>Science Olympiad Electric Vehicle</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">A precision-stopping race car that took 1st at regionals and 2nd of 72 at the UPenn Invitational.</p>
+    <p class="row-meta"><span><span class="hi">1st of 48</span> East Maryland Regional</span><span>Science Olympiad</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/electric-bike" data-preview="/assets/previews/electric-bike.mp4?v=b8c48be1" data-poster="/assets/posters/electric-bike.jpg?v=222cd626" data-title="Electric Bike" data-kicker="Personal project · 2025">
+  <div class="row-thumb"><img src="/assets/thumbs/electric-bike.webp?v=f8c0dd3b" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">06</span><h3>Electric Bike</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">A standard bicycle converted into a 5.3 kW mid-drive e-bike, with every custom part designed by me.</p>
+    <p class="row-meta"><span><span class="hi">5.3 kW</span> Mid-drive</span><span>Personal project</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/ftc-into-the-deep" data-preview="/assets/previews/ftc-into-the-deep.mp4?v=bf75e73a" data-poster="/assets/posters/ftc-into-the-deep.jpg?v=d88fec5c" data-title="FTC INTO THE DEEP Robot" data-kicker="FIRST Tech Challenge · 2025">
+  <div class="row-thumb"><img src="/assets/thumbs/ftc-into-the-deep.webp?v=1ad51a73" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">07</span><h3>FTC INTO THE DEEP Robot</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">Our most successful S.T.A.T.I.C. season: 1st place Think Award at regionals and division semifinalists.</p>
+    <p class="row-meta"><span><span class="hi">1st place</span> Think Award, FIRST Chesapeake Regionals</span><span>FIRST Tech Challenge</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/autonomous-drone-racing">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">08</span><h3>Autonomous Drone Racing</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">Won the capstone autonomous drone race against four other teams. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span><span class="hi">1st place</span> Capstone autonomous drone race</span><span>MIT Department of Aeronautics and Astronautics</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/pen-plotter" data-preview="/assets/previews/pen-plotter.mp4?v=53dc744c" data-poster="/assets/posters/pen-plotter.jpg?v=f5eb166c" data-title="5-Bar Pen Plotter" data-kicker="Personal project · 2025">
+  <div class="row-thumb"><img src="/assets/thumbs/pen-plotter.webp?v=39898eff" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">09</span><h3>5-Bar Pen Plotter</h3><span class="row-yr">2025</span></div>
+    <p class="row-sum">A 5-bar parallel robot that draws from Cartesian coordinates, built to learn the linear algebra behind robot arms.</p>
+    <p class="row-meta"><span><span class="hi">2</span> NEMA 17 steppers</span><span>Personal project</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/steam-carnival-robot">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">10</span><h3>STEAM Carnival Pitching Robot</h3><span class="row-yr">2024</span></div>
+    <p class="row-sum">An FTC robot with a telescoping pitching arm, built in 4 days for the HoCo STEAM Carnival. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span><span class="hi">4 days</span> Design to working robot</span><span>Howard County Library System</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/battlebot" data-preview="/assets/previews/battlebot.mp4?v=6202d3e8" data-poster="/assets/posters/battlebot.jpg?v=684dfafc" data-title="1 lb Combat Robot" data-kicker="MACRO · 2024">
+  <div class="row-thumb"><img src="/assets/thumbs/battlebot.webp?v=49d61b2c" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">11</span><h3>1 lb Combat Robot</h3><span class="row-yr">2024</span></div>
+    <p class="row-sum">A 1 lb antweight combat robot designed and built in 4 days for MACRO's Ides of July event.</p>
+    <p class="row-meta"><span><span class="hi">4 days</span> Design to competition</span><span>MACRO</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/powerplay-offseason">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">12</span><h3>PowerPlay Off-Season Robot</h3><span class="row-yr">2023</span></div>
+    <p class="row-sum">The off-season robot I built after PowerPlay, and the first robot I ever designed in CAD. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span>FIRST Tech Challenge</span></p>
+  </div>
+</a></div>
+</section>
+    <section class="section" id="hackathons" aria-labelledby="hackathons-h">
+  <div class="section-head"><h2 id="hackathons-h">Hackathons<span class="count num">4</span></h2><p class="section-note">Built in hours, not months.</p></div>
+  <div class="rows"><a class="row" href="/projects/morph">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">01</span><h3>Morph</h3><span class="hours">32 h</span></div>
+    <p class="row-sum">A 17-DOF robot that folds itself into 150+ shapes from a text message. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span class="hi">Top 30 of 1,000+</span><span>Hack the North 2026</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/golden-retriever">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">02</span><h3>Golden Retriever</h3><span class="hours">10.5 h</span></div>
+    <p class="row-sum">Text it what you need and it drives over, grabs it with a learned grasp, and brings it back. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span class="hi">2nd of 250+ teams</span><span>Corgi Hackathon, San Francisco</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/linqbot">
+  <div class="row-thumb"><div class="placeholder">Media coming</div><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">03</span><h3>LinqBot</h3><span class="hours">6.5 h</span></div>
+    <p class="row-sum">An SO-101 arm you can run autonomously, drive with your hand through AR glasses, or text. <span class="draft-tag">Draft</span></p>
+    <p class="row-meta"><span>YC Startup School Hackathon</span></p>
+  </div>
+</a>
+<a class="row" href="/projects/braille-printer" data-preview="/assets/previews/braille-printer.mp4?v=a54f4279" data-poster="/assets/posters/braille-printer.jpg?v=b6ef0ea9" data-title="Braille Printer" data-kicker="PennApps XXV · 2024">
+  <div class="row-thumb"><img src="/assets/thumbs/braille-printer.webp?v=5ea99ca5" alt="" loading="lazy" decoding="async"><span class="row-cta">Click to <i>learn more</i></span></div>
+  <div>
+    <div class="row-top"><span class="row-n">04</span><h3>Braille Printer</h3><span class="hours">36 h</span></div>
+    <p class="row-sum">A low-cost braille printer prototype built on a 2020 extrusion gantry.</p>
+    <p class="row-meta"><span>PennApps XXV</span></p>
+  </div>
+</a></div>
+</section>
+    <section class="section" id="concepts" aria-labelledby="concepts-h">
+  <div class="section-head"><h2 id="concepts-h">Concepts<span class="count num">2</span></h2></div>
+  <div class="tiles"><a class="tile" href="/projects/manure-drone">
+  <div class="row-thumb"><div class="placeholder">Media coming</div></div>
+  <h3>Manure-Collecting Drone <span class="draft-tag">Draft</span></h3><p>A drone concept that vacuums up cow manure to cut methane emissions in cattle-farming regions.</p>
+</a>
+<a class="tile" href="/projects/ftc-field-cnc">
+  <div class="row-thumb"><div class="placeholder">Media coming</div></div>
+  <h3>Upcycled CNC Router <span class="draft-tag">Draft</span></h3><p>A CNC router framed from the aluminum extrusion of past seasons' FTC fields.</p>
+</a></div>
+</section>
+    <section class="section" id="models" aria-labelledby="models-h">
+  <div class="section-head"><h2 id="models-h">3D models<span class="count num">2</span></h2></div>
+  <div class="tiles"><a class="tile" href="/projects/voronoi-face">
+  <div class="row-thumb"><div class="placeholder">Media coming</div></div>
+  <h3>Voronoi Face <span class="draft-tag">Draft</span></h3><p>A face sculpted as a Voronoi lattice.</p>
+</a>
+<a class="tile" href="/projects/hex-napkin-holder">
+  <div class="row-thumb"><div class="placeholder">Media coming</div></div>
+  <h3>Hexagonal Napkin Holder <span class="draft-tag">Draft</span></h3><p>A 3D-printed hexagonal napkin holder.</p>
+</a></div>
+</section>
+    <section class="section" id="archive" aria-labelledby="archive-h">
+  <div class="section-head"><h2 id="archive-h">Archive<span class="count num">8</span></h2><p class="section-note">Older and smaller builds.</p></div>
+  <div class="rows"><a class="arow" href="/projects/ftc-centerstage" data-preview="/assets/previews/ftc-centerstage.mp4?v=7f69fa27" data-poster="/assets/posters/ftc-centerstage.jpg?v=6866c3a4" data-title="FTC CENTERSTAGE Robot" data-kicker="S.T.A.T.I.C., FTC 18996 · 2024"><span class="yr">2024</span><span><b>FTC CENTERSTAGE Robot</b><span class="s">Our first season with CAD. I was overly ambitious and the robot was only ready for the last event.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/ftc-powerplay" data-preview="/assets/previews/ftc-powerplay.mp4?v=4e63f36b" data-poster="/assets/posters/ftc-powerplay.jpg?v=54f92c5c" data-title="FTC POWERPLAY Robot" data-kicker="S.T.A.T.I.C., FTC 18996 · 2023"><span class="yr">2023</span><span><b>FTC POWERPLAY Robot</b><span class="s">My first season as captain, and the team's first time advancing to regionals.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/robot-tour" data-preview="/assets/previews/robot-tour.mp4?v=bc981087" data-poster="/assets/posters/robot-tour.jpg?v=e09b60cc" data-title="Science Olympiad Robot Tour" data-kicker="Science Olympiad · 2025"><span class="yr">2025</span><span><b>Science Olympiad Robot Tour</b><span class="s">A navigation robot on an optical flow sensor, and a lesson in accumulated drift.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/mt-shirt" data-preview="" data-poster="/assets/posters/mt-shirt.jpg?v=376849c4" data-title="Monkeytype Shirt" data-kicker="Monkeytype · 2025"><span class="yr">2025</span><span><b>Monkeytype Shirt</b><span class="s">A shirt I designed for Monkeytype, sold on their official store.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/bike-odometer" data-preview="/assets/previews/bike-odometer.mp4?v=bcf09edb" data-poster="/assets/posters/bike-odometer.jpg?v=38e40634" data-title="Exercise Bike Odometer" data-kicker="Personal project · 2025"><span class="yr">2025</span><span><b>Exercise Bike Odometer</b><span class="s">An odometer for my family's stationary bike, built in a 12-hour, one-day challenge.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/ftc-freight-frenzy" data-preview="/assets/previews/ftc-freight-frenzy.mp4?v=73e72e64" data-poster="/assets/posters/ftc-freight-frenzy.jpg?v=e409faa7" data-title="FTC FREIGHT FRENZY Robot" data-kicker="S.T.A.T.I.C., FTC 18996 · 2022"><span class="yr">2022</span><span><b>FTC FREIGHT FRENZY Robot</b><span class="s">The 2021-22 robot. It was not finished in time to compete.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/ftc-ultimate-goal" data-preview="/assets/previews/ftc-ultimate-goal.mp4?v=dfc2eb2c" data-poster="/assets/posters/ftc-ultimate-goal.jpg?v=d9fc73a7" data-title="FTC ULTIMATE GOAL Robot" data-kicker="S.T.A.T.I.C., FTC 18996 · 2021"><span class="yr">2021</span><span><b>FTC ULTIMATE GOAL Robot</b><span class="s">My first FTC season. I was the team's only programmer.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a>
+<a class="arow" href="/projects/cardboard-simulator" data-preview="/assets/previews/cardboard-simulator.mp4?v=ed970df2" data-poster="/assets/posters/cardboard-simulator.jpg?v=8231fe03" data-title="Cardboard Racing Simulator" data-kicker="Personal project · 2020"><span class="yr">2020</span><span><b>Cardboard Racing Simulator</b><span class="s">A racing sim made from cardboard, duct tape and conductive tape when I was 11.</span></span><span class="go">View <span class="arrow" aria-hidden="true">&#8599;</span></span></a></div>
+</section>
+    <section class="section" id="about" aria-labelledby="about-h">
+      <div class="section-head"><h2 id="about-h">About</h2></div>
+      <div class="about-grid">
+        <div><p>I study mechanical engineering at the University of Illinois Urbana-Champaign, with a minor in electrical and computer engineering.</p><p>I have been building robots since 2020: four years as an FTC team captain, a season designing an FRC robot solo, and research at MIT Lincoln Laboratory on a drone that docks onto a ground rover. I am most interested in assistive technology, AI-driven robotics and electric vehicles, and I plan to pursue entrepreneurship.</p><p>At Illinois I am on Illini Electric Motorsports. On chassis I am leading the redesign of a lap-belt attachment from aluminum to composite, simulated in Ansys ACP. On circuit design I am building a data-acquisition sensor board in Altium.</p></div>
+        <div class="portrait"><img src="/assets/media/jerry-portrait.webp?v=8e2af2cc" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
+      </div>
+      <div class="contact-card">
+        <h3>Building something? I'd like to hear about it.</h3>
+        <p class="links-inline"><a href="mailto:jerry@jerryli.design">jerry@jerryli.design <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://www.linkedin.com/in/jerry-li-md/">LinkedIn <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://github.com/jerryli08">GitHub <span class="arrow" aria-hidden="true">&#8599;</span></a></p>
+      </div>
+    </section>
+    <footer class="footer"><span>&copy; 2026 Jerry Li</span><span><a href="mailto:jerry@jerryli.design">jerry@jerryli.design</a></span></footer>
+  </div>
+</div>
+<script src="/assets/js/site.js?v=bba50d70" defer></script>
 </body>
 </html>

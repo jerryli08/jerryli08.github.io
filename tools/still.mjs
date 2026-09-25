@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const [,, out, secs='2.5'] = process.argv;
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1200, height: 1500 }, deviceScaleFactor: 1 });
+page.on('console', m => { if (m.type()==='error') console.log(m.text()); });
+await page.goto('http://localhost:8765/tools/dev/_still.html');
+await page.waitForFunction(() => window.__heroStep, null, { timeout: 180000 });
+await page.evaluate((s) => window.__heroStep(s), +secs);
+await page.locator('canvas').screenshot({ path: out });
+await browser.close();

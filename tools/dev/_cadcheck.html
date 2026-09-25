@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#222}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from '/assets/vendor/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from '/assets/vendor/addons/libs/meshopt_decoder.module.js';
+const r = new THREE.WebGLRenderer({antialias:true}); r.setSize(1400,900); document.body.appendChild(r.domElement);
+r.toneMapping = THREE.ACESFilmicToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
+const s = new THREE.Scene(); s.background = new THREE.Color('#9aa0a6');
+s.add(new THREE.HemisphereLight('#ffffff','#555555',1.6)); const d = new THREE.DirectionalLight('#fff',2.2); d.position.set(1,2,1.5); s.add(d);
+const cam = new THREE.PerspectiveCamera(30,1400/900,0.01,10);
+const L = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const [a,b] = await Promise.all([L.loadAsync('/assets/models/drone.glb'), L.loadAsync('/assets/models/rover.glb')]);
+s.add(a.scene, b.scene);
+window.shot = (az, el, dist, sep) => {
+  b.scene.position.set(0,0,0); a.scene.position.set(0, sep||0, 0);
+  const c = new THREE.Vector3(0.418, -0.07 + (sep||0)/2, -0.1115);
+  cam.position.set(c.x + Math.sin(az)*Math.cos(el)*dist, c.y + Math.sin(el)*dist, c.z + Math.cos(az)*Math.cos(el)*dist); cam.lookAt(c); r.render(s,cam); return true; };
+window.ready = true;
+</script></body></html>
