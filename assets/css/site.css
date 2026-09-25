@@ -177,53 +177,54 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .sc-drive { flex: none; font-size: 13px; color: var(--text-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, 0.3); transition: color 0.2s; }
 .sc-drive:hover { color: var(--text); }
 
-/* bottom right: a fanned hand of project photos and the count of what is below */
+/* bottom right: a fanned hand of project photos and the count of what is below. Kept quiet:
+   no motion unless hovered. */
 .more {
   position: fixed; z-index: 4; right: var(--gutter); bottom: 22px;
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 14px 12px 16px; border-radius: 18px;
-  background: rgba(12, 10, 9, 0.68); border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex; align-items: center; gap: 18px;
+  padding: 16px 20px 16px 22px; border-radius: 20px;
+  background: rgba(12, 10, 9, 0.66); border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 24px 50px -22px rgba(0, 0, 0, 0.8);
-  transition: border-color 0.25s, transform 0.3s var(--ease), opacity 0.2s linear;
+  transition: border-color 0.25s, opacity 0.2s linear;
 }
 .more.gone { pointer-events: none; }
-.more:hover { border-color: rgba(230, 233, 237, 0.45); transform: translateY(-2px); }
-.more-fan { position: relative; flex: none; width: 150px; height: 62px; margin-left: 6px; }
+.more:hover { border-color: rgba(230, 233, 237, 0.4); }
+.more-fan { position: relative; flex: none; width: 206px; height: 84px; margin-left: 4px; }
 .more-fan img {
-  position: absolute; top: 4px; width: 72px; height: 54px; object-fit: cover; border-radius: 7px;
-  border: 2px solid rgba(238, 233, 227, 0.92); box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.85);
+  position: absolute; top: 6px; width: 96px; height: 72px; object-fit: cover; border-radius: 8px;
+  border: 2px solid rgba(238, 233, 227, 0.9); box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.8);
   transform-origin: 50% 130%; transition: transform 0.45s var(--ease);
 }
-.more-fan img:nth-child(1) { left: 0; transform: rotate(-14deg); }
-.more-fan img:nth-child(2) { left: 19px; transform: rotate(-7deg); }
-.more-fan img:nth-child(3) { left: 38px; transform: rotate(0deg); }
-.more-fan img:nth-child(4) { left: 57px; transform: rotate(7deg); }
-.more-fan img:nth-child(5) { left: 76px; transform: rotate(14deg); }
-.more:hover .more-fan img:nth-child(1) { transform: translateX(-10px) rotate(-22deg); }
-.more:hover .more-fan img:nth-child(2) { transform: translateX(-5px) rotate(-11deg); }
-.more:hover .more-fan img:nth-child(3) { transform: translateY(-3px); }
-.more:hover .more-fan img:nth-child(4) { transform: translateX(5px) rotate(11deg); }
-.more:hover .more-fan img:nth-child(5) { transform: translateX(10px) rotate(22deg); }
-.more-txt { display: flex; align-items: center; gap: 10px; }
+.more-fan img:nth-child(1) { left: 0; transform: rotate(-12deg); }
+.more-fan img:nth-child(2) { left: 27px; transform: rotate(-6deg); }
+.more-fan img:nth-child(3) { left: 54px; transform: rotate(0deg); }
+.more-fan img:nth-child(4) { left: 81px; transform: rotate(6deg); }
+.more-fan img:nth-child(5) { left: 108px; transform: rotate(12deg); }
+.more:hover .more-fan img:nth-child(1) { transform: translateX(-8px) rotate(-17deg); }
+.more:hover .more-fan img:nth-child(2) { transform: translateX(-4px) rotate(-8deg); }
+.more:hover .more-fan img:nth-child(4) { transform: translateX(4px) rotate(8deg); }
+.more:hover .more-fan img:nth-child(5) { transform: translateX(8px) rotate(17deg); }
+.more-txt { display: flex; align-items: center; gap: 12px; }
 .more-n {
-  font-size: 42px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.035em; line-height: 1;
+  font-size: 58px; font-weight: 800; font-stretch: 118%; letter-spacing: -0.04em; line-height: 1;
   background: linear-gradient(100deg, #ffffff 0%, #e6e9ed 38%, #b4bac2 72%, #eef0f3 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.more-l { font-size: 14px; line-height: 1.2; font-weight: 550; color: var(--text-2); }
+.more-l { font-size: 16px; line-height: 1.25; font-weight: 550; color: var(--text-2); }
 .more-arrow {
-  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none;
-  background: linear-gradient(135deg, #ffffff, #b9bfc7); color: #111316; font-size: 15px; font-weight: 800;
-  animation: nudge 2.2s var(--ease) infinite;
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.28); color: var(--text); font-size: 16px;
+  transition: background 0.2s, color 0.2s;
 }
-@keyframes nudge { 0%, 60%, 100% { transform: none; } 30% { transform: translateY(3px); } }
-@media (prefers-reduced-motion: reduce) { .more-arrow { animation: none; } .more-fan img { transition: none; } }
+.more:hover .more-arrow { background: var(--text); color: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .more-fan img { transition: none; } }
 
 /* everything: one even grid, picture on top and words below, easy to scan */
 .work { padding: 64px var(--gutter) 24px; scroll-margin-top: 56px; }
 .work-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin-bottom: 22px; }
 .work-head h2 { font-size: clamp(26px, 2.6vw, 38px); font-weight: 800; font-stretch: 120%; letter-spacing: -0.025em; }
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; }
+.filter-label { font-size: 13.5px; color: var(--muted); white-space: nowrap; }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; }
 .filters button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 13.5px; color: var(--text-2); transition: background 0.2s, color 0.2s, border-color 0.2s; }
 .filters button .num { font-size: 12px; color: var(--muted); }
@@ -248,6 +249,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .card:hover b { color: var(--accent); }
 .badge { position: absolute; z-index: 2; top: 10px; left: 10px; padding: 2px 9px; border-radius: 999px; background: rgba(10, 8, 7, 0.72); border: 1px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; backdrop-filter: blur(6px); }
 .badge.draft { left: auto; right: 10px; border-color: #e8c547; color: #e8c547; }
+.pin {
+  position: absolute; z-index: 2; top: 9px; right: 9px; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; color: #f4c542;
+  background: rgba(10, 8, 7, 0.72); border: 1px solid rgba(244, 197, 66, 0.5);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
 
 /* archive: set apart below the main grid, photos muted until hovered */
 .archive { margin: 80px var(--gutter) 0; padding: 48px 0 24px; border-top: 1px solid var(--line-strong); scroll-margin-top: 56px; }
@@ -381,13 +388,12 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .sc-p, .sc-fact { display: none; }
   .sc-hint { margin-top: 9px; padding-top: 8px; }
   .sc-go { padding: 8px 15px; font-size: 14px; }
-  .more { right: auto; left: 50%; transform: translateX(-50%); bottom: 14px; gap: 10px; padding: 9px 12px; }
-  .more:hover { transform: translateX(-50%); }
-  .more-fan { width: 104px; height: 50px; }
-  .more-fan img { width: 56px; height: 42px; }
+  .more { right: auto; left: 50%; transform: translateX(-50%); bottom: 14px; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 16px; }
+  .more-fan { width: 110px; height: 54px; margin-left: 0; }
+  .more-fan img { width: 60px; height: 45px; top: 4px; }
   .more-fan img:nth-child(n + 4) { display: none; }
-  .more-fan img:nth-child(2) { left: 22px; } .more-fan img:nth-child(3) { left: 44px; }
-  .more-n { font-size: 32px; }
+  .more-fan img:nth-child(2) { left: 24px; } .more-fan img:nth-child(3) { left: 48px; }
+  .more-n { font-size: 36px; }
   .more-l { font-size: 13px; white-space: nowrap; }
 }
 @media (max-width: 640px) {
@@ -398,7 +404,8 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .fcard-body p:not(.meta) { display: none; }
   .grid { gap: 20px 10px; }
   .card-body b { font-size: 14.5px; }
-  .more-arrow { width: 28px; height: 28px; }
+  .more-arrow { width: 30px; height: 30px; }
+  .filter-row { justify-content: flex-start; }
   .card-cta { display: none; }
   .archive { margin-top: 48px; padding-top: 32px; }
   .about-grid { grid-template-columns: 1fr; }

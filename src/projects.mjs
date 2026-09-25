@@ -19,7 +19,7 @@ export const site = {
 export const projects = [
   // ------------------------------------------------------------------ MAIN
   {
-    slug: 'hybrid-vehicle', hero: true, size: 'lg', // the live 3D scene on the landing page
+    slug: 'hybrid-vehicle', pinned: true, hero: true, size: 'lg', // the live 3D scene on the landing page
     kind: 'main',
     title: 'Drone on Wheels',
     subtitle: 'Hybrid aerial-ground vehicle',
@@ -114,7 +114,7 @@ export const projects = [
     cad: 'https://a360.co/4lvYOTs',
   },
   {
-    slug: 'build-plate-robot', featured: 4, size: 'wide',
+    slug: 'build-plate-robot', pinned: true, featured: 4, size: 'wide',
     kind: 'main',
     title: 'Replac3d',
     subtitle: 'Automatic 3D printer build plate changer',
@@ -154,7 +154,7 @@ export const projects = [
     cad: 'https://a360.co/47cTdf9',
   },
   {
-    slug: 'electric-vehicle', featured: 3, size: 'wide',
+    slug: 'electric-vehicle', pinned: true, featured: 3, size: 'wide',
     kind: 'main',
     title: 'Science Olympiad Electric Vehicle',
     subtitle: '2024-25 Electric Vehicle event',
@@ -196,7 +196,7 @@ export const projects = [
     cad: 'https://a360.co/4o6t1bB',
   },
   {
-    slug: 'electric-bike', featured: 2, size: 'wide',
+    slug: 'electric-bike', pinned: true, featured: 2, size: 'wide',
     kind: 'main',
     title: 'Electric Bike',
     subtitle: '5.3 kW mid-drive conversion',

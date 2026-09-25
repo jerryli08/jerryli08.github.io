@@ -113,12 +113,27 @@ function fcard(x) {
   <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta"><span class="yr">${esc(x.year)}</span><span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
+// newest first, by when the project ended ("Sep 2025 to May 2026" ends May 2026)
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12, spring: 5, summer: 8, fall: 11, winter: 1 };
+function span(x) {
+  const toks = String(x.date || '').toLowerCase().match(/[a-z]+|\d{4}/g) || [];
+  const pts = [];
+  let pending = [];
+  for (const t of toks) {
+    if (/^\d{4}$/.test(t)) { const y = +t; if (!pending.length) pts.push(y * 12 + 6); pending.forEach((m) => pts.push(y * 12 + m)); pending = []; }
+    else if (MONTHS[t.slice(0, 3)] || MONTHS[t]) pending.push(MONTHS[t] || MONTHS[t.slice(0, 3)]);
+  }
+  if (!pts.length && x.year) pts.push(+x.year * 12 + 6);
+  return pts.length ? [Math.min(...pts), Math.max(...pts)] : [-Infinity, -Infinity];
+}
+const newestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return eb - ea || sb - sa; };
+const PIN = '<span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span>';
 // every project in the grid: same size, picture on top, words underneath
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
 function card(x) {
   const t = thumb(x);
   return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
-  <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])} · ${esc(x.year || '')}</span><b>${esc(x.title)}</b><span class="card-s">${esc(statLine(x) || '')}</span></div>
 </a>`;
 }
@@ -140,7 +155,10 @@ function landing() {
   const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
   const heroProject = projects.find((x) => x.hero);
   const order = ['main', 'hackathon', 'concept', 'object'];
-  const everything = order.flatMap((k) => list(k)), archive = list('archive');
+  // pinned projects first, then everything else; each group newest first
+  const all = order.flatMap((k) => list(k));
+  const everything = [...all.filter((x) => x.pinned).sort(newestFirst), ...all.filter((x) => !x.pinned).sort(newestFirst)];
+  const archive = list('archive').sort(newestFirst);
   const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
   const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object]].filter(([, , n]) => n);
   // "20+ more projects": everything not already on the first screen, rounded down to a 5
@@ -190,7 +208,7 @@ ${nav({ home: true })}
   <section class="work" id="work" aria-labelledby="work-h">
     <div class="work-head">
       <h2 id="work-h">All work</h2>
-      <div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div>
+      <div class="filter-row"><span class="filter-label">Filter by project type here: <span aria-hidden="true">&#x27A1;&#xFE0F;</span></span><div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div></div>
     </div>
     <div class="grid">${everything.map(card).join('\n')}</div>
   </section>
