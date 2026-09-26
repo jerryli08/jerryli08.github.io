@@ -24,10 +24,12 @@ def probe(path):
     e = r.stderr
     hdr = bool(re.search(r'arib-std-b67|smpte2084', e))
     has_audio = bool(re.search(r'Stream #.*Audio:', e))
-    return hdr, has_audio
+    m = re.search(r'Stream #.*Video:.*?([\d.]+) fps', e)
+    fps = float(m.group(1)) if m else 30.0
+    return hdr, has_audio, fps
 
 
-def vf_chain(hdr, w, crop=None, speed=1.0, portrait_ok=True):
+def vf_chain(hdr, w, crop=None, speed=1.0, src_fps=30.0):
     parts = []
     if hdr:
         parts.append(TONEMAP)
@@ -38,18 +40,20 @@ def vf_chain(hdr, w, crop=None, speed=1.0, portrait_ok=True):
     parts.append(f"scale='if(gt(iw,ih),min({w},iw),-2)':'if(gt(iw,ih),-2,min({w},ih))':flags=lanczos")
     if speed != 1.0:
         parts.append(f'setpts=PTS/{speed}')
-    parts.append("fps='min(30,source_fps)'" if speed == 1.0 else 'fps=30')
+    # cap at 30 fps (ffmpeg 4.4 has no source_fps in the fps filter, so decide here)
+    if speed != 1.0 or src_fps > 31:
+        parts.append('fps=30')
     parts.append('format=yuv420p')
     return ','.join(parts)
 
 
 def clip(src, dst, it):
-    hdr, has_audio = probe(src)
+    hdr, has_audio, fps = probe(src)
     start, end = float(it.get('start', 0)), it.get('end')
     args = [FF, '-v', 'error', '-y', '-ss', f'{start:.2f}']
     if end is not None:
         args += ['-t', f'{float(end) - start:.2f}']
-    args += ['-i', src, '-vf', vf_chain(hdr, it.get('w', 1280), it.get('crop'), it.get('speed', 1.0))]
+    args += ['-i', src, '-vf', vf_chain(hdr, it.get('w', 1280), it.get('crop'), it.get('speed', 1.0), fps)]
     if it.get('audio') and has_audio and it.get('speed', 1.0) == 1.0:
         args += ['-c:a', 'aac', '-b:a', '96k']
     else:
@@ -63,10 +67,10 @@ def clip(src, dst, it):
 
 
 def still(src, dst_base, it):
-    hdr, _ = probe(src)
+    hdr, _, _ = probe(src)
     tmp = dst_base + '.tmp.png'
     subprocess.run([FF, '-v', 'error', '-y', '-ss', f'{float(it["at"]):.2f}', '-i', src, '-frames:v', '1',
-                    '-vf', vf_chain(hdr, it.get('w', 1600), it.get('crop')).replace(",fps='min(30,source_fps)'", ''), tmp],
+                    '-vf', vf_chain(hdr, it.get('w', 1600), it.get('crop'), 1.0, 0), tmp],
                    check=True, capture_output=True)
     webp_pair(tmp, dst_base, it.get('w', 1600), None)
     os.remove(tmp)
@@ -116,8 +120,10 @@ def main():
             else:
                 webp_pair(src, dst[:-5], it.get('w', 1600), it.get('crop'))
             done += 1
+        except subprocess.CalledProcessError as e:
+            print('fail', it['out'], (e.stderr or b'')[-300:].decode(errors='replace') if isinstance(e.stderr, bytes) else str(e.stderr)[-300:], flush=True)
         except Exception as e:
-            print('fail', it['out'], str(e)[:200], flush=True)
+            print('fail', it['out'], str(e)[:300], flush=True)
     print(json.dumps({'slug': picks['slug'], 'done': done, 'left': todo}))
 
 
