@@ -39,6 +39,11 @@ export default {
       { h: 'A subheading' },
       { table: { head: ['Shape', 'Renders as'], rows: [['string', 'paragraph'], ['{ ul: [...] }', 'bulleted list'], ['{ table }', 'scrollable table']], caption: 'Tables scroll sideways on a phone instead of widening the page.' } },
       { note: 'A note: small, muted text for sources and caveats.' },
+      { h: 'Problems, fixes and next time' },
+      'Jerry wants every problem marked red, its fix green, and what he would do better next time blue:',
+      { problem: 'The first gears were too small and skipped under load.', title: 'Gears skipped' },
+      { fix: ['Bigger teeth. That added backlash, which I accepted because skipping could not be fixed any other way.', 'A second paragraph is fine too.'] },
+      { next: 'Add flanges so the gears cannot walk off each other.' },
     ] },
     { type: 'media', h: 'Media: grid', layout: 'grid', items: [
       { v: '/assets/media/replac3d-demo-4x.mp4', c: 'A full cycle at 4x speed', tall: true },

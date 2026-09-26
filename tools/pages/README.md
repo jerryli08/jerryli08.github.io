@@ -99,7 +99,16 @@ builds the broken section shows a yellow box, in production it is left out.
 { quote: 'Words someone said', by: 'Who' }
 { note: 'Small muted text: sources, caveats' }
 { pre: 'Preformatted text, such as a formula or code' }
+{ problem: 'What went wrong', title: 'Optional short title' }   // red "Problem" block
+{ fix: 'How it was solved' }                                 // green "Fix" block
+{ next: 'What I would do better next time' }                 // blue "Next time" block
 ```
+
+**Jerry's rule for every page:** whenever the text describes a problem, mark it with a red
+`{ problem }` block, its solution with a green `{ fix }` block right after it, and anything he would
+do better next time with a blue `{ next }` block. Each takes a string or an array of paragraphs,
+and an optional `title` (and `label` to override the pill text). They work anywhere `p` does:
+prose, iterations, split rows, scrolly steps and callouts.
 
 **Copy uses only facts Jerry has stated.** No invented numbers, dates, placements or reasons.
 Numbers a demo computes from the CAD (a wheel radius, a gear ratio from tooth counts) are fine; say so.

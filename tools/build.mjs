@@ -27,7 +27,7 @@ const has = (url) => existsSync(p(url.replace(/^\//, '')));
 // hashed URLs for everything world.js loads, handed to it through the canvas
 function worldAssets() {
   const out = {};
-  for (const dir of ['models', 'world']) for (const f of readdirSync(p(`assets/${dir}`))) out[`${dir}/${f}`] = v(`/assets/${dir}/${f}`);
+  for (const dir of ['models', 'world']) for (const f of readdirSync(p(`assets/${dir}`), { withFileTypes: true })) if (f.isFile()) out[`${dir}/${f.name}`] = v(`/assets/${dir}/${f.name}`);
   return esc(JSON.stringify(out));
 }
 const dimCache = new Map();

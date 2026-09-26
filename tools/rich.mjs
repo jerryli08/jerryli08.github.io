@@ -82,6 +82,12 @@ export function createRich(env) {
         if (b.quote) return `<blockquote><p>${md(b.quote)}</p>${b.by ? `<cite>${md(b.by)}</cite>` : ''}</blockquote>`;
         if (b.note) return `<p class="rx-note-p">${md(b.note)}</p>`;
         if (b.pre) return `<pre><code>${esc(b.pre)}</code></pre>`;
+        // engineering story markers: a problem (red), its fix (green), what I'd do next time (blue)
+        for (const [key, label] of [['problem', 'Problem'], ['fix', 'Fix'], ['next', 'Next time']]) {
+          if (b[key] == null) continue;
+          const body = arr(b[key]).map((x) => `<p>${md(x)}</p>`).join('');
+          return `<div class="rx-flag rx-flag-${key}"><p class="rx-flag-label"><span>${esc(b.label || label)}</span>${b.title ? ` <strong>${md(b.title)}</strong>` : ''}</p>${body}</div>`;
+        }
       }
       warn(`unknown paragraph ${JSON.stringify(b).slice(0, 60)}`);
       return '';
