@@ -2,12 +2,13 @@
 // so GitHub Pages and Vercel both serve it with no build step on their side.
 //   node tools/build.mjs            production (drafts hidden)
 //   PREVIEW=1 node tools/build.mjs  preview (drafts shown with a label)
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync, unlinkSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { site, projects, about } from '../src/projects.mjs';
+import { loadPageModules, createRich } from './rich.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PREVIEW = process.env.PREVIEW === '1';
@@ -330,9 +331,8 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
 }
 
 // ---------------------------------------------------------------- project page
-function projectPage(x, next) {
-  const media = (x.media || []);
-  const [first, ...rest] = media;
+// pieces shared by the simple page and the rich page (src/pages/<slug>.mjs)
+function pageFacts(x) {
   const facts = [
     x.event && ['Event', x.event],
     x.place && ['Result', x.place],
@@ -344,33 +344,73 @@ function projectPage(x, next) {
   const tags = x.tools?.length ? `<div><dt>Built with</dt><dd class="tags">${x.tools.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</dd></div>` : '';
   const links = [...(x.links || [])];
   const linkBtns = links.length ? `<div class="btn-row">${links.map((l) => `<a class="btn" href="${esc(l.href)}"${/^https?:/.test(l.href) ? ' rel="noopener"' : ''}>${esc(l.label)} ${arrow}</a>`).join('')}</div>` : '';
+  return facts.length || tags || linkBtns ? `<aside class="facts">${facts.length || tags ? `<dl>${facts.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join('')}${tags}</dl>` : ''}${linkBtns}</aside>` : '';
+}
+function pageHeader(x, stats = x.stats, md = esc) {
+  return `<header class="p-head">
+    <p class="p-kicker"><a href="/#work">&larr; All projects</a>${x.event || x.org ? `<span>${esc(x.event || x.org)}</span>` : ''}${x.date ? `<span>${esc(x.date)}</span>` : ''}${x.draft ? '<span class="draft-tag">Draft, waiting on media</span>' : ''}</p>
+    <h1 class="p-title">${esc(x.title)}</h1>
+    ${x.subtitle ? `<p class="p-sub">${esc(x.subtitle)}</p>` : ''}
+    <p class="p-lede">${esc(x.short)}</p>
+    ${stats?.length ? `<div class="stats">${stats.map((s) => `<div class="stat"><b>${md(s.v)}</b><span>${md(s.l)}</span></div>`).join('')}</div>` : ''}
+  </header>`;
+}
+const cadBlock = (x) => (x.cad ? `<h2 class="block-title">CAD</h2>
+  <div class="cad" data-cad="${esc(x.cad)}">
+    <div class="cad-load"><b>Interactive CAD model</b><span>Rotate and inspect the full design in Autodesk Viewer.</span><button class="hud-go" type="button">Load the 3D model ${arrow}</button></div>
+  </div>` : '');
+const nextLink = (next) => (next ? `<a class="next" href="${url(next)}"><span><span class="label">Next project</span><b>${esc(next.title)}</b></span><span class="big-arrow" aria-hidden="true">&rarr;</span></a>` : '');
+
+function projectPage(x, next) {
+  const media = (x.media || []);
+  const [first, ...rest] = media;
   const heroImg = poster(x) || thumb(x);
   const desc = `${x.title}: ${x.short}`;
   return `${head({ title: `${x.title} · Jerry Li`, description: desc, path: url(x), image: heroImg ? heroImg : undefined })}
 <body class="project">
 ${nav()}
 <main class="page">
-  <header class="p-head">
-    <p class="p-kicker"><a href="/#work">&larr; All projects</a>${x.event || x.org ? `<span>${esc(x.event || x.org)}</span>` : ''}${x.date ? `<span>${esc(x.date)}</span>` : ''}${x.draft ? '<span class="draft-tag">Draft, waiting on media</span>' : ''}</p>
-    <h1 class="p-title">${esc(x.title)}</h1>
-    ${x.subtitle ? `<p class="p-sub">${esc(x.subtitle)}</p>` : ''}
-    <p class="p-lede">${esc(x.short)}</p>
-    ${x.stats?.length ? `<div class="stats">${x.stats.map((s) => `<div class="stat"><b>${esc(s.v)}</b><span>${esc(s.l)}</span></div>`).join('')}</div>` : ''}
-  </header>
+  ${pageHeader(x)}
   ${first ? `<figure class="hero-media" style="margin:28px 0 0">${mediaEl(first, { eager: true })}</figure>${first.c ? `<figcaption>${esc(first.c)}</figcaption>` : ''}` : (x.draft ? '<div class="pending">Photos and video for this project are on the way.</div>' : '')}
   <div class="p-grid">
     <div class="prose">${(x.body || []).map((b) => `<section><h2>${esc(b.h)}</h2>${b.p.map((t) => `<p>${esc(t)}</p>`).join('')}</section>`).join('')}</div>
-    ${facts.length || tags || linkBtns ? `<aside class="facts">${facts.length || tags ? `<dl>${facts.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join('')}${tags}</dl>` : ''}${linkBtns}</aside>` : ''}
+    ${pageFacts(x)}
   </div>
   ${rest.length ? `<h2 class="block-title">Build log</h2><div class="gallery">${rest.map((m) => `<figure><div class="m">${mediaEl(m)}</div>${m.c ? `<figcaption>${esc(m.c)}</figcaption>` : ''}</figure>`).join('')}</div>` : ''}
-  ${x.cad ? `<h2 class="block-title">CAD</h2>
-  <div class="cad" data-cad="${esc(x.cad)}">
-    <div class="cad-load"><b>Interactive CAD model</b><span>Rotate and inspect the full design in Autodesk Viewer.</span><button class="hud-go" type="button">Load the 3D model ${arrow}</button></div>
-  </div>` : ''}
-  ${next ? `<a class="next" href="${url(next)}"><span><span class="label">Next project</span><b>${esc(next.title)}</b></span><span class="big-arrow" aria-hidden="true">&rarr;</span></a>` : ''}
+  ${cadBlock(x)}
+  ${nextLink(next)}
   ${footer()}
 </main>
 ${scripts()}
+</body>
+</html>
+`;
+}
+
+// Rich layout, from src/pages/<slug>.mjs: header, hero, summary beside the facts, the page's
+// sections, then the same CAD block, next link and footer as the simple page.
+const rich = createRich({ ROOT, PREVIEW, esc, v, has, dims, mediaSrc });
+function richPage(x, next, page) {
+  const r = rich.render(x, page);
+  for (const w of r.warnings) console.log(`  ! ${x.slug}: ${w}`);
+  const heroImg = poster(x) || thumb(x);
+  const facts = pageFacts(x);
+  const intro = r.summary || facts ? `<div class="rx-w"><div class="p-grid rx-intro${r.summary ? '' : ' rx-intro-facts'}">${r.summary || ''}${facts}</div></div>` : '';
+  return `${head({ title: `${x.title} · Jerry Li`, description: `${x.title}: ${x.short}`, path: url(x), image: heroImg || undefined, extra: r.head })}
+<body class="project rich">
+${nav()}
+<main class="rx" data-slug="${esc(x.slug)}" data-assets="${r.assets}">
+  <div class="rx-w">${pageHeader(x, r.stats || x.stats, rich.md)}</div>
+  ${r.hero}
+  ${intro}
+  ${r.sections}
+  <div class="rx-w rx-end">
+  ${cadBlock(x)}
+  ${nextLink(next)}
+  ${footer()}
+  </div>
+</main>
+${scripts(`\n<script type="module" src="${v('/assets/js/project.js')}"></script>`)}
 </body>
 </html>
 `;
@@ -391,7 +431,30 @@ const order = ['main', 'hackathon', 'concept', 'object', 'archive'];
 const all = order.flatMap((k) => list(k));
 mkdirSync(p('projects'), { recursive: true });
 writeFileSync(p('index.html'), landing());
-all.forEach((x, i) => writeFileSync(p('projects', `${x.slug}.html`), projectPage(x, all[(i + 1) % all.length])));
+// optional rich pages; any failure falls back to the simple page
+const pages = await loadPageModules(ROOT);
+function renderProject(x, next) {
+  const mod = pages.get(x.slug);
+  if (mod) {
+    try { return richPage(x, next, mod.page); } catch (e) { console.warn(`  ! ${mod.file} failed to render, ${x.slug} keeps its simple page: ${e.stack || e.message}`); }
+  }
+  return projectPage(x, next);
+}
+all.forEach((x, i) => writeFileSync(p('projects', `${x.slug}.html`), renderProject(x, all[(i + 1) % all.length])));
+for (const [slug, mod] of pages) {
+  if (slug.startsWith('_')) continue;
+  if (!projects.some((x) => x.slug === slug)) console.warn(`  ! ${mod.file}: no project with slug "${slug}" in src/projects.mjs`);
+}
+// pages whose name starts with _ (framework examples, scratch pages) exist in preview builds only,
+// linked from nowhere; production builds delete them
+for (const f of readdirSync(p('projects')).filter((n) => n.startsWith('_') && n.endsWith('.html'))) if (!PREVIEW) unlinkSync(p('projects', f));
+if (PREVIEW) {
+  for (const [slug, mod] of pages) {
+    if (!slug.startsWith('_')) continue;
+    const x = { slug, kind: 'main', title: slug, short: '', ...(mod.page.meta || {}), draft: false };
+    try { writeFileSync(p('projects', `${slug}.html`), richPage(x, all[0], mod.page)); } catch (e) { console.warn(`  ! ${mod.file} failed to render: ${e.stack || e.message}`); }
+  }
+}
 writeFileSync(p('about.html'), redirectPage('/#about', 'About Jerry Li'));
 writeFileSync(p('contact.html'), redirectPage('/#about', 'Contact Jerry Li'));
 writeFileSync(p('404.html'), notFound());
