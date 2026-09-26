@@ -22,7 +22,7 @@ KINDS = {
     'code': {'.py', '.ino', '.cpp', '.c', '.h', '.hpp', '.java', '.kt', '.js', '.ts', '.json', '.yaml', '.yml', '.m', '.ipynb'},
 }
 SKIP_NAMES = {'.DS_Store', 'Thumbs.db', 'desktop.ini', '.localized'}
-SKIP_DIRS = {'.git', '__pycache__', 'node_modules', '.Trashes', '.Spotlight-V100', '.fseventsd', '$RECYCLE.BIN', 'System Volume Information'}
+SKIP_DIRS = {'_portfolio_ingest', '.git', '__pycache__', 'node_modules', '.Trashes', '.Spotlight-V100', '.fseventsd', '$RECYCLE.BIN', 'System Volume Information'}
 
 
 def kind_of(ext):

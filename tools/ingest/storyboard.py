@@ -19,6 +19,7 @@ import argparse, json, os, re, shutil, subprocess, sys, time
 from PIL import Image, ImageDraw, ImageFont
 
 FRAME_W, COLS, ROWS = 300, 6, 6
+KEYFRAMES = True  # set by --all-frames
 
 
 def find_ffmpeg():
@@ -101,7 +102,7 @@ def fmt(t):
     return f'{t // 3600}:{t % 3600 // 60:02d}:{t % 60:02d}' if t >= 3600 else f'{t // 60}:{t % 60:02d}'
 
 
-def run_ffmpeg(path, work, every, audio, threads=0):
+def run_ffmpeg(path, work, every, audio, threads=0, keyframes=True):
     # ffmpeg runs inside the work folder with bare file names, so no path ever needs
     # escaping inside the filter graph (spaces, colons and quotes in folder names are common)
     frames_dir = os.path.join(work, 'frames')
@@ -119,7 +120,11 @@ def run_ffmpeg(path, work, every, audio, threads=0):
                f"[la]asetnsamples=n=16000:p=0,astats=metadata=1:reset=1,"
                f"ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file='{loud_f}'[al]")
         maps += ['-map', '[wa]', '-c:a', 'pcm_s16le', 'audio.wav', '-map', '[al]', '-f', 'null', '-']
-    cmd = [FF, '-hide_banner', '-v', 'error', '-y', '-threads', str(threads), '-i', os.path.abspath(path), '-filter_complex', fc] + maps
+    # keyframes mode decodes only the complete frames phones store every second or two: 10 to 30x
+    # faster than decoding everything, and still covers the video end to end. Segments that get
+    # picked are cut later from a full decode.
+    fast = ['-skip_frame:v', 'nokey', '-skip_loop_filter:v', 'all'] if keyframes else []
+    cmd = [FF, '-hide_banner', '-v', 'error', '-y', '-threads', str(threads)] + fast + ['-i', os.path.abspath(path), '-filter_complex', fc] + maps
     r = subprocess.run(cmd, capture_output=True, text=True, errors='replace', cwd=work)
     if r.returncode != 0:
         raise RuntimeError(r.stderr.strip()[-400:])
@@ -187,10 +192,13 @@ def main():
     ap.add_argument('--every', type=float, default=2.0, help='seconds between regular frames')
     ap.add_argument('--limit', type=int, default=0, help='stop after N videos (testing)')
     ap.add_argument('--jobs', type=int, default=0, help='videos at once (default: half the CPU cores)')
+    ap.add_argument('--all-frames', action='store_true', help='decode every frame (slow; default reads keyframes only)')
     a = ap.parse_args()
     inv = json.load(open(os.path.join(a.out, 'inventory.json')))
     vids = [f for f in inv['files'] if f['kind'] == 'video' and (not a.project or f['project'] in a.project)]
     vids.sort(key=lambda f: (f['project'], f['path']))
+    global KEYFRAMES
+    KEYFRAMES = not a.all_frames
     todo = vids[:a.limit] if a.limit else vids
     jobs = a.jobs or max(1, (os.cpu_count() or 2) // 2)
     print(f'{len(todo)} videos, {jobs} at a time')
@@ -219,17 +227,24 @@ def one(f, folder, out, every, threads):
     if not info['duration']:
         print('skip (unreadable):', f['path'], flush=True); return
     t_start = time.time()
+    dur = info['duration']
+    mode = 'keyframes' if KEYFRAMES else 'all frames'
     try:
-        frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads)
+        frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads, KEYFRAMES)
+        # re-exported videos can carry a keyframe only every 5 to 10 s: too sparse to count as
+        # watching, so those get a full decode instead
+        if KEYFRAMES and dur > 6 and len(frames) < dur / 3:
+            shutil.rmtree(os.path.join(work, 'frames'), ignore_errors=True)
+            frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads, False)
+            mode = 'all frames (sparse keyframes)'
     except Exception as e:
         print('fail:', f['path'], e, flush=True); return
-    dur = info['duration']
     motion = per_second(parse_meta(mf, 'lavfi.signalstats.YDIF'), dur, lambda b: sum(b) / len(b))
     loud = per_second([(t, v) for t, v in parse_meta(lf, 'lavfi.astats.Overall.RMS_level') if v > -120], dur, max)
     mpk, lpk = peaks(motion), peaks(loud)
     sheets = draw_sheets(frames, motion, loud, mpk, lpk, dur, f['path'], os.path.join(work, 'board'))
     shutil.rmtree(os.path.join(work, 'frames'), ignore_errors=True)  # the sheets hold them now
-    meta = {'path': f['path'], 'project': f['project'], 'duration': dur, 'created': info['created'],
+    meta = {'path': f['path'], 'project': f['project'], 'duration': dur, 'created': info['created'], 'mode': mode,
             'frames': [t for t, _ in frames], 'motion': motion, 'loudness_db': loud,
             'motion_peaks': [{'t': s, 'z': round(z, 1)} for s, z in mpk],
             'loud_peaks': [{'t': s, 'z': round(z, 1)} for s, z in lpk],
@@ -238,7 +253,7 @@ def one(f, folder, out, every, threads):
     # written last and atomically: its presence means this video is finished
     json.dump(meta, open(meta_path + '.tmp', 'w'))
     os.replace(meta_path + '.tmp', meta_path)
-    print(f'{f["path"]}: {fmt(dur)}, {len(frames)} frames, {len(sheets)} sheet(s), '
+    print(f'{f["path"]}: {fmt(dur)}, {mode}, {len(frames)} frames, {len(sheets)} sheet(s), '
           f'{len(mpk)} motion + {len(lpk)} sound peaks, {time.time() - t_start:.0f} s', flush=True)
 
 
