@@ -212,16 +212,23 @@ def main():
                 pass
 
 
-def one(f, folder, out, every, threads):
-    """Storyboard one video; safe to run in parallel with others."""
+def board_dir(f, out):
     slug_p = re.sub(r'[^A-Za-z0-9]+', '-', f['project']).strip('-')[:50] or 'top'
     inner = f['path'][len(f['project']) + 1:] if f['path'].startswith(f['project'] + '/') else f['path']
     slug_v = re.sub(r'[^A-Za-z0-9]+', '-', os.path.splitext(inner)[0]).strip('-')[:80] or 'video'
-    work = os.path.join(out, 'boards', slug_p, slug_v)
+    return os.path.join(out, 'boards', slug_p, slug_v), os.path.join(slug_p, slug_v)
+
+
+def one(f, folder, out, every, threads, tmp_root=None, max_full_decode=240):
+    """Storyboard one video; safe to run in parallel with others. Frames, meters and audio are
+    written under tmp_root (deletable scratch space); only sheets and board.json go to out."""
+    work, rel = board_dir(f, out)
     meta_path = os.path.join(work, 'board.json')
     if os.path.exists(meta_path):
         return
     os.makedirs(work, exist_ok=True)
+    tmpw = os.path.join(tmp_root, rel) if tmp_root else work
+    os.makedirs(tmpw, exist_ok=True)
     src = os.path.join(folder, f['path'])
     info = probe(src)
     if not info['duration']:
@@ -230,12 +237,12 @@ def one(f, folder, out, every, threads):
     dur = info['duration']
     mode = 'keyframes' if KEYFRAMES else 'all frames'
     try:
-        frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads, KEYFRAMES)
+        frames, mf, lf = run_ffmpeg(src, tmpw, every, info['audio'], threads, KEYFRAMES)
         # re-exported videos can carry a keyframe only every 5 to 10 s: too sparse to count as
-        # watching, so those get a full decode instead
-        if KEYFRAMES and dur > 6 and len(frames) < dur / 3:
-            shutil.rmtree(os.path.join(work, 'frames'), ignore_errors=True)
-            frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads, False)
+        # watching, so those get a full decode instead (unless very long)
+        if KEYFRAMES and dur > 6 and len(frames) < dur / 3 and dur <= max_full_decode:
+            shutil.rmtree(os.path.join(tmpw, 'frames'), ignore_errors=True)
+            frames, mf, lf = run_ffmpeg(src, tmpw, every, info['audio'], threads, False)
             mode = 'all frames (sparse keyframes)'
     except Exception as e:
         print('fail:', f['path'], e, flush=True); return
@@ -243,13 +250,13 @@ def one(f, folder, out, every, threads):
     loud = per_second([(t, v) for t, v in parse_meta(lf, 'lavfi.astats.Overall.RMS_level') if v > -120], dur, max)
     mpk, lpk = peaks(motion), peaks(loud)
     sheets = draw_sheets(frames, motion, loud, mpk, lpk, dur, f['path'], os.path.join(work, 'board'))
-    shutil.rmtree(os.path.join(work, 'frames'), ignore_errors=True)  # the sheets hold them now
+    shutil.rmtree(os.path.join(tmpw, 'frames'), ignore_errors=True)  # the sheets hold them now
     meta = {'path': f['path'], 'project': f['project'], 'duration': dur, 'created': info['created'], 'mode': mode,
             'frames': [t for t, _ in frames], 'motion': motion, 'loudness_db': loud,
             'motion_peaks': [{'t': s, 'z': round(z, 1)} for s, z in mpk],
             'loud_peaks': [{'t': s, 'z': round(z, 1)} for s, z in lpk],
             'sheets': [os.path.relpath(s, out).replace(os.sep, '/') for s in sheets],
-            'audio_wav': os.path.relpath(os.path.join(work, 'audio.wav'), out).replace(os.sep, '/') if info['audio'] else None}
+            'audio_wav': os.path.abspath(os.path.join(tmpw, 'audio.wav')) if info['audio'] and os.path.exists(os.path.join(tmpw, 'audio.wav')) else None}
     # written last and atomically: its presence means this video is finished
     json.dump(meta, open(meta_path + '.tmp', 'w'))
     os.replace(meta_path + '.tmp', meta_path)

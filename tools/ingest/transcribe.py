@@ -10,7 +10,7 @@ Already-transcribed videos are skipped, so the run can be stopped and restarted.
 usage: python3 transcribe.py <out-dir> [--model base.en] [--project NAME]
 Needs: pip install faster-whisper   (the model downloads once, about 150 MB for base.en)
 """
-import argparse, glob, json, os, sys, time
+import argparse, glob, json, os, sys, time, wave
 
 
 def fmt(t):
@@ -67,6 +67,53 @@ def transcribe_pass(model, a):
         print(f'{meta["path"]}: {len(out)} segments, {words} words, {time.time() - t0:.0f} s', flush=True)
         n += 1
     return n
+
+
+def transcribe_one(model, board_json, budget_end=None, piece=60):
+    """Transcribe one board's audio in piece-second chunks, saving each chunk as it finishes so a
+    run cut short resumes where it stopped. Returns True when the whole video is done."""
+    meta = json.load(open(board_json))
+    folder = os.path.dirname(board_json)
+    tj = os.path.join(folder, 'transcript.json')
+    if os.path.exists(tj):
+        return True
+    wav = meta.get('audio_wav')
+    if wav and not os.path.isabs(wav):
+        wav = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(folder))), wav)
+    if not wav or not os.path.exists(wav):
+        json.dump({'path': meta['path'], 'segments': [], 'note': 'no audio'}, open(tj, 'w'))
+        return True
+    parts_f = wav + '.parts.json'
+    parts = json.load(open(parts_f)) if os.path.exists(parts_f) else {}
+    with wave.open(wav) as w:
+        rate, n = w.getframerate(), w.getnframes()
+    total = n / rate
+    import numpy as np
+    i = 0
+    while i * piece < total:
+        key = str(i)
+        if key not in parts:
+            if budget_end and time.time() > budget_end:
+                return False
+            with wave.open(wav) as w:
+                w.setpos(int(i * piece * rate))
+                raw = w.readframes(int(piece * rate))
+            audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+            segs, _ = model.transcribe(audio, vad_filter=True, beam_size=5, condition_on_previous_text=False, language='en')
+            parts[key] = [{'start': round(s.start + i * piece, 1), 'end': round(s.end + i * piece, 1), 'text': s.text.strip(),
+                           'no_speech': round(s.no_speech_prob, 2)} for s in segs]
+            json.dump(parts, open(parts_f, 'w'))
+        i += 1
+    out = [s for k in sorted(parts, key=int) for s in parts[k] if s['text'] and s['no_speech'] < 0.8]
+    json.dump({'path': meta['path'], 'segments': out}, open(tj, 'w'))
+    with open(os.path.join(folder, 'transcript.txt'), 'w') as fh:
+        fh.write('\n'.join(f'[{fmt(s["start"])}] {s["text"]}' for s in out) + ('\n' if out else ''))
+    for f in (wav, parts_f):
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+    return True
 
 
 if __name__ == '__main__':
