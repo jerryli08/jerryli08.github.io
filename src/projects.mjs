@@ -57,7 +57,7 @@ export const projects = [
     cad: 'https://a360.co/45sUzAD',
   },
   {
-    slug: 'ftc-decode', featured: 1, size: 'lg',
+    slug: 'ftc-decode', featured: 2,
     kind: 'main',
     title: 'FTC DECODE Robot',
     subtitle: 'Team 26115 Alphabots',
@@ -86,7 +86,7 @@ export const projects = [
     ],
   },
   {
-    slug: 'frc-rebuilt', size: 'wide',
+    slug: 'frc-rebuilt', pinned: true, featured: 1,
     kind: 'main',
     title: 'FRC REBUILT Robot',
     subtitle: 'Team 2856 Planetary Drive',
@@ -114,7 +114,7 @@ export const projects = [
     cad: 'https://a360.co/4lvYOTs',
   },
   {
-    slug: 'build-plate-robot', pinned: true, featured: 4, size: 'wide',
+    slug: 'build-plate-robot', pinned: true, featured: 4,
     kind: 'main',
     title: 'Replac3d',
     subtitle: 'Automatic 3D printer build plate changer',
@@ -154,7 +154,7 @@ export const projects = [
     cad: 'https://a360.co/47cTdf9',
   },
   {
-    slug: 'electric-vehicle', pinned: true, featured: 3, size: 'wide',
+    slug: 'electric-vehicle', size: 'wide',
     kind: 'main',
     title: 'Science Olympiad Electric Vehicle',
     subtitle: '2024-25 Electric Vehicle event',
@@ -223,7 +223,7 @@ export const projects = [
     media: [],
   },
   {
-    slug: 'electric-bike', pinned: true, featured: 2, size: 'wide',
+    slug: 'electric-bike', pinned: true, featured: 3,
     kind: 'main',
     title: 'Electric Bike',
     subtitle: '5.3 kW mid-drive conversion',
@@ -540,6 +540,36 @@ export const projects = [
     media: [],
   },
   {
+    slug: 'vtol-tailsitter',
+    kind: 'concept',
+    draft: true,
+    title: 'VTOL Tailsitter',
+    subtitle: 'Designed in SolidWorks',
+    short: 'A tailsitter VTOL aircraft I designed to learn SolidWorks, based on an MIT tailsitter.',
+    org: 'Concept',
+    date: '',
+    year: '',
+    body: [{ h: 'Overview', p: ['I designed this tailsitter to learn SolidWorks. It is based on a tailsitter aircraft from MIT.'] }],
+    links: [{ label: 'The MIT tailsitter', href: 'https://news.mit.edu/2023/planning-algorithm-tailsitter-aircraft-0823' }],
+    media: [],
+  },
+  {
+    slug: 'cryptic-extendo',
+    kind: 'concept',
+    draft: true,
+    title: 'Horizontal Extension Intake for Cryptic',
+    subtitle: 'FTC CENTERSTAGE, 2023-24',
+    short: 'A horizontal extension intake I designed for team Cryptic after they advanced to Worlds.',
+    org: 'FIRST Tech Challenge',
+    date: '2024',
+    year: '2024',
+    body: [{ h: 'Overview', p: [
+      'After my FTC season ended and Cryptic advanced to the World Championship, I proposed a horizontal extension intake for them, since it was a clear edge that year, and designed it.',
+      'They did not use it: they chose to improve other parts of their robot, mainly its reliability.',
+    ] }],
+    media: [],
+  },
+  {
     slug: 'ftc-field-cnc',
     kind: 'concept',
     draft: true,
@@ -559,7 +589,7 @@ export const projects = [
   // ------------------------------------------------------------------ ARCHIVE
   {
     slug: 'ftc-centerstage',
-    kind: 'archive',
+    kind: 'main',
     title: 'FTC CENTERSTAGE Robot',
     short: 'Our first season with CAD. I was overly ambitious and the robot was only ready for the last event.',
     org: 'S.T.A.T.I.C., FTC 18996',
@@ -581,7 +611,7 @@ export const projects = [
   },
   {
     slug: 'robot-tour',
-    kind: 'archive',
+    kind: 'main',
     title: 'Science Olympiad Robot Tour',
     short: 'A navigation robot on an optical flow sensor, and a lesson in accumulated drift.',
     org: 'Science Olympiad',
@@ -596,7 +626,7 @@ export const projects = [
   },
   {
     slug: 'mt-shirt',
-    kind: 'archive',
+    kind: 'main',
     title: 'Monkeytype Shirt',
     short: 'A shirt I designed for Monkeytype, sold on their official store.',
     org: 'Monkeytype',
@@ -612,7 +642,7 @@ export const projects = [
   },
   {
     slug: 'bike-odometer',
-    kind: 'archive',
+    kind: 'main',
     title: 'Exercise Bike Odometer',
     short: 'An odometer for my family\'s stationary bike, built in a 12-hour, one-day challenge.',
     org: 'Personal project',
@@ -643,6 +673,19 @@ export const projects = [
     year: '2021',
     body: [{ h: 'Overview', p: ['2020-21 was my first year in FTC, and I was the only programmer on the team.'] }],
     media: [{ v: 'videos/ftc-2021.mp4', c: 'The 2020-21 robot' }],
+  },
+  {
+    slug: 'cty-2023',
+    kind: 'archive',
+    draft: true,
+    title: 'Breadboard Game Console',
+    subtitle: 'CTY, summer 2023',
+    short: 'A breadboard circuit with an LCD that ran several games, played with push buttons.',
+    org: 'CTY',
+    date: 'Summer 2023',
+    year: '2023',
+    body: [{ h: 'Overview', p: ['On a breadboard we built a circuit with an LCD display and programmed it to run several different games, with buttons to jump and play.'] }],
+    media: [],
   },
   {
     slug: 'cardboard-simulator',

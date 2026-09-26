@@ -162,17 +162,25 @@ function heroCard(x) {
 function landing() {
   const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
   const heroProject = projects.find((x) => x.hero);
-  const order = ['main', 'hackathon', 'concept', 'object'];
-  // pinned projects first, then everything else; each group newest first
+  // All work is what was built; concepts (designed, never built out), the archive (before 2023)
+  // and small prints each get their own section below it
+  const order = ['main', 'hackathon'];
   const all = order.flatMap((k) => list(k));
+  // pinned projects first, then everything else; each group newest first
   const everything = [...all.filter((x) => x.pinned).sort(newestFirst), ...all.filter((x) => !x.pinned).sort(newestFirst)];
+  const concepts = list('concept').sort(newestFirst);
   const archive = list('archive').sort(newestFirst);
+  const objects = list('object').sort(newestFirst);
   const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
-  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon], ['concept', 'Concepts', counts.concept], ['object', '3D models', counts.object]].filter(([, , n]) => n);
+  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon]].filter(([, , n]) => n);
   // "20+ more projects": everything not already on the first screen, rounded down to a 5
-  const more = everything.length + archive.length - featured.length - 1, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
+  const more = everything.length + concepts.length + archive.length + objects.length - featured.length - 1, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
   // a fanned hand of little thumbnails from the projects below, so "more" reads at a glance
-  const fan = [...everything, ...archive].filter((x) => !x.featured && !x.hero && has(`/assets/thumbs/mini/${x.slug}.webp`)).slice(0, 5);
+  const fan = [...everything, ...concepts, ...archive].filter((x) => !x.featured && !x.hero && has(`/assets/thumbs/mini/${x.slug}.webp`)).slice(0, 5);
+  const shelf = (id, title, sub, items, cls = '') => items.length ? `<section class="archive ${cls}" id="${id}" aria-labelledby="${id}-h">
+    <div class="archive-head"><h2 id="${id}-h">${title}</h2><p>${sub}</p></div>
+    <div class="grid grid-archive">${items.map(card).join('\n')}</div>
+  </section>` : '';
   const stageStill = '/assets/img/hero-still.webp';
   const ld = { '@context': 'https://schema.org', '@type': 'Person', name: site.name, url: site.url, email: `mailto:${site.email}`, sameAs: [site.linkedin, site.github], alumniOf: 'University of Illinois Urbana-Champaign', jobTitle: 'Mechanical Engineering Student' };
   return `${head({
@@ -220,10 +228,9 @@ ${nav({ home: true })}
     </div>
     <div class="grid">${everything.map(card).join('\n')}</div>
   </section>
-  ${archive.length ? `<section class="archive" id="archive" aria-labelledby="archive-h">
-    <div class="archive-head"><h2 id="archive-h">Archive</h2><p>Earlier robots and side builds.</p></div>
-    <div class="grid grid-archive">${archive.map(card).join('\n')}</div>
-  </section>` : ''}
+  ${shelf('concepts', 'Concepts', 'Designed in CAD, never built out.', concepts, 'shelf-concepts')}
+  ${shelf('archive', 'Archive', 'Before 2023: early robots and side builds.', archive)}
+  ${shelf('prints', 'Prints and small models', 'Quick CAD and 3D printing experiments.', objects, 'shelf-prints')}
   <section class="section about" id="about" aria-labelledby="about-h">
     <div class="section-head"><h2 id="about-h">About</h2></div>
     <div class="about-grid">
