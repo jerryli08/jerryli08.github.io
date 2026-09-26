@@ -24,12 +24,24 @@ def main():
     ap.add_argument('--model', default='base.en', help='tiny.en is faster, small.en is more accurate')
     ap.add_argument('--project', action='append')
     ap.add_argument('--keep-audio', action='store_true')
+    ap.add_argument('--follow', help='keep going until this file exists (run.py sets it when storyboards finish)')
     a = ap.parse_args()
     try:
         from faster_whisper import WhisperModel
     except ImportError:
         sys.exit('pip install faster-whisper')
-    model = WhisperModel(a.model, device='cpu', compute_type='int8')
+    model = WhisperModel(a.model, device='cpu', compute_type='int8', cpu_threads=max(2, (os.cpu_count() or 4) // 3))
+    while True:
+        stop = bool(a.follow and os.path.exists(a.follow))  # checked before the pass, so the last pass sees every board
+        n = transcribe_pass(model, a)
+        if not a.follow or (stop and n == 0):
+            break
+        if n == 0:
+            time.sleep(20)
+
+
+def transcribe_pass(model, a):
+    n = 0
     boards = sorted(glob.glob(os.path.join(a.out, 'boards', '*', '*', 'board.json')))
     for bj in boards:
         meta = json.load(open(bj))
@@ -52,7 +64,9 @@ def main():
         if not a.keep_audio:
             os.remove(wav)
         words = sum(len(s['text'].split()) for s in out)
-        print(f'{meta["path"]}: {len(out)} segments, {words} words, {time.time() - t0:.0f} s')
+        print(f'{meta["path"]}: {len(out)} segments, {words} words, {time.time() - t0:.0f} s', flush=True)
+        n += 1
+    return n
 
 
 if __name__ == '__main__':

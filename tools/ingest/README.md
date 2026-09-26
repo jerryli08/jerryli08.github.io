@@ -1,6 +1,8 @@
 # Ingest: first pass over Jerry's project folder
 
-Runs on the computer that holds the folder. It only reads the originals and writes everything
+Runs on the computer that holds the folder, as fast as the machine allows: photos, storyboards and transcripts
+run at the same time, storyboards process several videos at once (half the CPU cores by default,
+`--jobs N` to change), and each video is transcribed as soon as its audio is extracted. It only reads the originals and writes everything
 under an output folder. Start it in the background; every step can be re-run and skips what is done.
 
     nohup python3 tools/ingest/run.py "<project folder>" "<out folder>" > /dev/null 2>&1 &

@@ -101,7 +101,7 @@ def fmt(t):
     return f'{t // 3600}:{t % 3600 // 60:02d}:{t % 60:02d}' if t >= 3600 else f'{t // 60}:{t % 60:02d}'
 
 
-def run_ffmpeg(path, work, every, audio):
+def run_ffmpeg(path, work, every, audio, threads=0):
     # ffmpeg runs inside the work folder with bare file names, so no path ever needs
     # escaping inside the filter graph (spaces, colons and quotes in folder names are common)
     frames_dir = os.path.join(work, 'frames')
@@ -119,7 +119,7 @@ def run_ffmpeg(path, work, every, audio):
                f"[la]asetnsamples=n=16000:p=0,astats=metadata=1:reset=1,"
                f"ametadata=mode=print:key=lavfi.astats.Overall.RMS_level:file='{loud_f}'[al]")
         maps += ['-map', '[wa]', '-c:a', 'pcm_s16le', 'audio.wav', '-map', '[al]', '-f', 'null', '-']
-    cmd = [FF, '-hide_banner', '-v', 'error', '-y', '-threads', '0', '-i', os.path.abspath(path), '-filter_complex', fc] + maps
+    cmd = [FF, '-hide_banner', '-v', 'error', '-y', '-threads', str(threads), '-i', os.path.abspath(path), '-filter_complex', fc] + maps
     r = subprocess.run(cmd, capture_output=True, text=True, errors='replace', cwd=work)
     if r.returncode != 0:
         raise RuntimeError(r.stderr.strip()[-400:])
@@ -186,48 +186,60 @@ def main():
     ap.add_argument('--project', action='append')
     ap.add_argument('--every', type=float, default=2.0, help='seconds between regular frames')
     ap.add_argument('--limit', type=int, default=0, help='stop after N videos (testing)')
+    ap.add_argument('--jobs', type=int, default=0, help='videos at once (default: half the CPU cores)')
     a = ap.parse_args()
     inv = json.load(open(os.path.join(a.out, 'inventory.json')))
     vids = [f for f in inv['files'] if f['kind'] == 'video' and (not a.project or f['project'] in a.project)]
     vids.sort(key=lambda f: (f['project'], f['path']))
-    done = 0
-    for f in vids:
-        if a.limit and done >= a.limit:
-            break
-        slug_p = re.sub(r'[^A-Za-z0-9]+', '-', f['project']).strip('-')[:50] or 'top'
-        inner = f['path'][len(f['project']) + 1:] if f['path'].startswith(f['project'] + '/') else f['path']
-        slug_v = re.sub(r'[^A-Za-z0-9]+', '-', os.path.splitext(inner)[0]).strip('-')[:80] or 'video'
-        work = os.path.join(a.out, 'boards', slug_p, slug_v)
-        meta_path = os.path.join(work, 'board.json')
-        if os.path.exists(meta_path):
-            continue
-        os.makedirs(work, exist_ok=True)
-        src = os.path.join(a.folder, f['path'])
-        info = probe(src)
-        if not info['duration']:
-            print('skip (unreadable):', f['path']); continue
-        t_start = time.time()
-        try:
-            frames, mf, lf = run_ffmpeg(src, work, a.every, info['audio'])
-        except Exception as e:
-            print('fail:', f['path'], e); continue
-        dur = info['duration']
-        motion = per_second(parse_meta(mf, 'lavfi.signalstats.YDIF'), dur, lambda b: sum(b) / len(b))
-        loud = per_second([(t, v) for t, v in parse_meta(lf, 'lavfi.astats.Overall.RMS_level') if v > -120], dur, max)
-        mpk, lpk = peaks(motion), peaks(loud)
-        sheets = draw_sheets(frames, motion, loud, mpk, lpk, dur, f['path'], os.path.join(work, 'board'))
-        for fr in (os.path.join(work, 'frames'),):
-            shutil.rmtree(fr, ignore_errors=True)  # the sheets hold them now
-        meta = {'path': f['path'], 'project': f['project'], 'duration': dur, 'created': info['created'],
-                'frames': [t for t, _ in frames], 'motion': motion, 'loudness_db': loud,
-                'motion_peaks': [{'t': s, 'z': round(z, 1)} for s, z in mpk],
-                'loud_peaks': [{'t': s, 'z': round(z, 1)} for s, z in lpk],
-                'sheets': [os.path.relpath(s, a.out).replace(os.sep, '/') for s in sheets],
-                'audio_wav': os.path.relpath(os.path.join(work, 'audio.wav'), a.out).replace(os.sep, '/') if info['audio'] else None}
-        json.dump(meta, open(meta_path, 'w'))
-        done += 1
-        print(f'{f["path"]}: {fmt(dur)}, {len(frames)} frames, {len(sheets)} sheet(s), '
-              f'{len(mpk)} motion + {len(lpk)} sound peaks, {time.time() - t_start:.0f} s')
+    todo = vids[:a.limit] if a.limit else vids
+    jobs = a.jobs or max(1, (os.cpu_count() or 2) // 2)
+    print(f'{len(todo)} videos, {jobs} at a time')
+    if jobs == 1:
+        for f in todo:
+            one(f, a.folder, a.out, a.every, 0)
+    else:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(jobs) as ex:
+            for _ in ex.map(one, todo, [a.folder] * len(todo), [a.out] * len(todo), [a.every] * len(todo), [2] * len(todo)):
+                pass
+
+
+def one(f, folder, out, every, threads):
+    """Storyboard one video; safe to run in parallel with others."""
+    slug_p = re.sub(r'[^A-Za-z0-9]+', '-', f['project']).strip('-')[:50] or 'top'
+    inner = f['path'][len(f['project']) + 1:] if f['path'].startswith(f['project'] + '/') else f['path']
+    slug_v = re.sub(r'[^A-Za-z0-9]+', '-', os.path.splitext(inner)[0]).strip('-')[:80] or 'video'
+    work = os.path.join(out, 'boards', slug_p, slug_v)
+    meta_path = os.path.join(work, 'board.json')
+    if os.path.exists(meta_path):
+        return
+    os.makedirs(work, exist_ok=True)
+    src = os.path.join(folder, f['path'])
+    info = probe(src)
+    if not info['duration']:
+        print('skip (unreadable):', f['path'], flush=True); return
+    t_start = time.time()
+    try:
+        frames, mf, lf = run_ffmpeg(src, work, every, info['audio'], threads)
+    except Exception as e:
+        print('fail:', f['path'], e, flush=True); return
+    dur = info['duration']
+    motion = per_second(parse_meta(mf, 'lavfi.signalstats.YDIF'), dur, lambda b: sum(b) / len(b))
+    loud = per_second([(t, v) for t, v in parse_meta(lf, 'lavfi.astats.Overall.RMS_level') if v > -120], dur, max)
+    mpk, lpk = peaks(motion), peaks(loud)
+    sheets = draw_sheets(frames, motion, loud, mpk, lpk, dur, f['path'], os.path.join(work, 'board'))
+    shutil.rmtree(os.path.join(work, 'frames'), ignore_errors=True)  # the sheets hold them now
+    meta = {'path': f['path'], 'project': f['project'], 'duration': dur, 'created': info['created'],
+            'frames': [t for t, _ in frames], 'motion': motion, 'loudness_db': loud,
+            'motion_peaks': [{'t': s, 'z': round(z, 1)} for s, z in mpk],
+            'loud_peaks': [{'t': s, 'z': round(z, 1)} for s, z in lpk],
+            'sheets': [os.path.relpath(s, out).replace(os.sep, '/') for s in sheets],
+            'audio_wav': os.path.relpath(os.path.join(work, 'audio.wav'), out).replace(os.sep, '/') if info['audio'] else None}
+    # written last and atomically: its presence means this video is finished
+    json.dump(meta, open(meta_path + '.tmp', 'w'))
+    os.replace(meta_path + '.tmp', meta_path)
+    print(f'{f["path"]}: {fmt(dur)}, {len(frames)} frames, {len(sheets)} sheet(s), '
+          f'{len(mpk)} motion + {len(lpk)} sound peaks, {time.time() - t_start:.0f} s', flush=True)
 
 
 if __name__ == '__main__':

@@ -46,20 +46,37 @@ def main():
         if r.returncode:
             r = subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--user'] + missing, stdout=log, stderr=log)
         save('setup', 'done' if r.returncode == 0 else 'failed', packages=missing)
-    steps = [
-        ('inventory', [os.path.join(HERE, 'inventory.py'), folder, out]),
-        ('photos', [os.path.join(HERE, 'photos.py'), folder, out] + extra),
-        ('storyboard', [os.path.join(HERE, 'storyboard.py'), folder, out] + extra),
-        ('transcribe', [os.path.join(HERE, 'transcribe.py'), out] + extra),
-    ]
-    for name, cmd in steps:
-        if name == 'inventory' and os.path.exists(os.path.join(out, 'inventory.json')):
-            save(name, 'done', note='kept existing inventory'); continue
-        save(name, 'running')
-        t0 = time.time()
-        log.write(f'\n=== {name} {time.strftime("%H:%M:%S")} ===\n')
-        r = subprocess.run([sys.executable] + cmd, stdout=log, stderr=log)
-        save(name, 'done' if r.returncode == 0 else f'failed ({r.returncode})', minutes=round((time.time() - t0) / 60, 1))
+    inv = os.path.join(out, 'inventory.json')
+    if not os.path.exists(inv):
+        save('inventory', 'running')
+        subprocess.run([sys.executable, os.path.join(HERE, 'inventory.py'), folder, out], stdout=log, stderr=log)
+    save('inventory', 'done')
+    # photos, storyboards and transcripts run at once: transcribe follows the storyboards and
+    # picks up each video's audio as soon as it exists, instead of waiting for all of them
+    flag = os.path.join(out, '.storyboards-done')
+    if os.path.exists(flag):
+        os.remove(flag)
+    procs = {
+        'photos': subprocess.Popen([sys.executable, os.path.join(HERE, 'photos.py'), folder, out] + extra, stdout=log, stderr=log),
+        'storyboard': subprocess.Popen([sys.executable, os.path.join(HERE, 'storyboard.py'), folder, out] + extra, stdout=log, stderr=log),
+        'transcribe': subprocess.Popen([sys.executable, os.path.join(HERE, 'transcribe.py'), out, '--follow', flag] + extra, stdout=log, stderr=log),
+    }
+    t0 = time.time()
+    for k in procs:
+        save(k, 'running')
+    while procs:
+        for k, p in list(procs.items()):
+            rc = p.poll()
+            if rc is None:
+                continue
+            save(k, 'done' if rc == 0 else f'failed ({rc})', minutes=round((time.time() - t0) / 60, 1))
+            if k == 'storyboard':
+                open(flag, 'w').close()
+            del procs[k]
+        boards = sum(1 for _ in os.scandir(os.path.join(out, 'boards'))) if os.path.isdir(os.path.join(out, 'boards')) else 0
+        prog['boards_projects'] = boards
+        json.dump(prog, open(prog_path, 'w'), indent=1)
+        time.sleep(5)
     prog['finished'] = time.strftime('%Y-%m-%d %H:%M:%S')
     json.dump(prog, open(prog_path, 'w'), indent=1)
 
