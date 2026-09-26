@@ -12,7 +12,7 @@ look washed out. Existing outputs are skipped; --budget stops cleanly between it
 
 usage: python3 cut.py <folder> <out> <picks.json> [--budget 150]
 """
-import argparse, json, os, re, shutil, subprocess, sys, time
+import argparse, json, os, re, shutil, subprocess, sys, tempfile, time
 
 FF = shutil.which('ffmpeg')
 TONEMAP = ('zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,'
@@ -68,12 +68,16 @@ def clip(src, dst, it):
 
 def still(src, dst_base, it):
     hdr, _, _ = probe(src)
-    tmp = dst_base + '.tmp.png'
+    # temp frame outside the media folder: deleting files there may not be permitted
+    tmp = os.path.join(tempfile.gettempdir(), 'cut-' + os.path.basename(dst_base) + '.png')
     subprocess.run([FF, '-v', 'error', '-y', '-ss', f'{float(it["at"]):.2f}', '-i', src, '-frames:v', '1',
                     '-vf', vf_chain(hdr, it.get('w', 1600), it.get('crop'), 1.0, 0), tmp],
                    check=True, capture_output=True)
     webp_pair(tmp, dst_base, it.get('w', 1600), None)
-    os.remove(tmp)
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass
 
 
 def webp_pair(src, dst_base, w, crop):
