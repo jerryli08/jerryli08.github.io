@@ -216,7 +216,7 @@ ${nav({ home: true })}
   <section class="work" id="work" aria-labelledby="work-h">
     <div class="work-head">
       <h2 id="work-h">All work</h2>
-      <div class="filter-row"><span class="filter-label">Filter by project type here: <span aria-hidden="true">&#x27A1;&#xFE0F;</span></span><div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div></div>
+      <div class="filter-row"><span class="filter-label">Filter by project type here: <span aria-hidden="true">&rarr;</span></span><div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div></div>
     </div>
     <div class="grid">${everything.map(card).join('\n')}</div>
   </section>

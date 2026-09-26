@@ -60,7 +60,7 @@
   onScroll();
 
   // ---------------------------------------------------------- filters
-  const tiles = [...document.querySelectorAll('.work .tile')];
+  const tiles = [...document.querySelectorAll('.work .grid .card')];
   document.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('[data-filter]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
     const k = b.dataset.filter;
