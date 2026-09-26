@@ -113,7 +113,7 @@ def run_ffmpeg(path, work, every, audio, threads=0, keyframes=True):
           f"[a]select='isnan(prev_selected_t)+gte(t-prev_selected_t\\,{every})+gt(scene\\,0.32)',"
           f"metadata=mode=print:file='{shown_f}'[vf];"
           f"[b]scale=160:-2,signalstats,metadata=mode=print:key=lavfi.signalstats.YDIF:file='{motion_f}'[vm]")
-    maps = ['-map', '[vf]', '-fps_mode', 'vfr', '-q:v', '5', 'frames/f%05d.jpg',
+    maps = ['-map', '[vf]', '-vsync', 'vfr', '-q:v', '5', 'frames/f%05d.jpg',
             '-map', '[vm]', '-f', 'null', '-']
     if audio:
         fc += (f";[0:a]aresample=16000,aformat=channel_layouts=mono,asplit=2[wa][la];"
