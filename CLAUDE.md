@@ -24,3 +24,5 @@ When the site is rebuilt from his full media and CAD folder, every project gets 
 3. An extremely in-depth technical write-up of the engineering decisions, built from the build-process media.
 
 Jerry will supply a per-project minimum list of engineering decisions to cover; every item on it must be covered. If a project has no CAD, tell Jerry rather than modelling it.
+
+Media review: run `tools/ingest/run.py` on his folder (see `tools/ingest/README.md`) and watch every video through its storyboard and transcript. Good moments can sit anywhere in a long clip, so never judge a video by a few frames. Albums mix projects: capture date and what is in frame decide the project, not the folder.
