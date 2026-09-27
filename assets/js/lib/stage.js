@@ -1,22 +1,34 @@
 // Shared 3D stage for rich project pages (see tools/pages/README.md).
 //
 //   import { createStage, cad } from '/assets/js/lib/stage.js';
-//   const stage = createStage(el, { controls: true });
+//   const stage = createStage(el, { controls: false });
 //   const rover = await stage.load('/assets/models/rover.glb');
 //   stage.frame(rover);
 //
-// The look follows the landing scene: Jerry's CAD with the same material pass (aluminium,
-// PCB, carbon and printed plastics read from the STEP colours), ACES tone mapping, sRGB output,
-// a studio environment (RoomEnvironment) instead of Mars, one soft key light and a faint
-// shadow on an invisible ground. It renders only while on screen and only when something
-// changed, caps the pixel ratio at 1.75 and frees every GPU buffer on dispose().
+// The look is a product render of Jerry's CAD, kept light:
+//  - a real studio HDRI for reflections and soft light (@pmndrs/assets "studio", CC0; 256 x 128,
+//    RGBE, 79 KB: assets/models/studio-env.bin, made by tools/pages/mkenv.mjs), prefiltered with PMREM
+//  - a key light that casts soft shadows, plus a fill and a rim light that ride with the camera
+//  - a contact shadow under the model (baked, re-baked only when the scene changes and settles)
+//  - materials read from the STEP colours (aluminium, steel, carbon fibre, printed plastic, rubber,
+//    PCB), with fine surface detail: brushed metal, a twill weave, faint layer lines. CAD meshes have
+//    no UVs, so box-projected UVs are generated at load. Shapes and colours are never changed.
+//  - neutral tone mapping (Khronos PBR Neutral), which keeps the CAD colours true
+//  - section cuts with clean hatched caps tinted by each part's colour
+// Performance: it renders only while on screen and only when something changed (a scroll-driven
+// stage renders when its progress changes; nothing runs on its own). Shadows re-render only when
+// parts move, not when the camera does. The pixel ratio drops while frames are slow and comes back
+// when things settle; once the picture stops changing it draws one refined frame (full pixel ratio,
+// contact shadow, and ambient occlusion on desktop when asked) and then nothing until the next change.
 import * as THREE from 'three';
 import { GLTFLoader } from '../../vendor/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../../vendor/addons/libs/meshopt_decoder.module.js';
 import { OrbitControls } from '../../vendor/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from '../../vendor/addons/environments/RoomEnvironment.js';
 
 const DEG = Math.PI / 180;
+// frame counters for tools/pages/perf.mjs: live frames and their draw calls (shadow passes
+// included), refined frames, shadow map updates and contact-shadow bakes, over every stage
+const STATS = (globalThis.__rxStats ||= { live: 0, liveCalls: 0, refined: 0, refinedCalls: 0, shadows: 0, bakes: 0 });
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const v3 = (a) => (a && a.isVector3 ? a.clone() : Array.isArray(a) ? new THREE.Vector3(a[0], a[1], a[2]) : new THREE.Vector3(a?.x || 0, a?.y || 0, a?.z || 0));
@@ -56,23 +68,181 @@ function fetchBuffer(url) {
   return fetches.get(url);
 }
 
-// The same material pass as world.js pbr(): STEP exports carry only a colour, so the colour
-// decides the finish. Materials that already have textures are left alone.
-const RUBBER = /wheel|tire|tyre|tread/i;
-function nameChain(o) { let s = ''; for (let p = o; p; p = p.parent) s += `${p.name} `; return s; }
-function cadMaterial(mat, rubber) {
+// ------------------------------------------------------------------ studio environment
+// assets/models/studio-env.bin: 'RXE2', width, height (u32 LE), 4 reserved bytes, then the RGBE
+// bytes as four planes (R, G, B, E) with a left-neighbour delta per row; the file is gzip'd.
+// Decoded once per page into a half-float equirect texture that every stage prefilters itself.
+const ENV_URL = '/assets/models/studio-env.bin';
+let envPromise = null;
+function studioTexture() {
+  envPromise ||= (async () => {
+    if (typeof DecompressionStream === 'undefined') throw new Error('no DecompressionStream');
+    const r = await fetch(assetUrl(ENV_URL));
+    if (!r.ok) throw new Error(`${r.status} loading ${ENV_URL}`);
+    let u8 = new Uint8Array(await r.arrayBuffer());
+    if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    const dv = new DataView(u8.buffer, u8.byteOffset);
+    if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'RXE2') throw new Error('bad studio-env.bin');
+    const W = dv.getUint32(4, true), H = dv.getUint32(8, true), N = W * H;
+    const planes = u8.subarray(16);
+    for (let ch = 0; ch < 4; ch++) for (let y = 0; y < H; y++) { // undo the row deltas
+      let prev = 0; const o = ch * N + y * W;
+      for (let x = 0; x < W; x++) { prev = (prev + planes[o + x]) & 255; planes[o + x] = prev; }
+    }
+    const half = new Uint16Array(N * 4), toHalf = THREE.DataUtils.toHalfFloat;
+    for (let i = 0; i < N; i++) {
+      const e = planes[3 * N + i];
+      const f = e ? Math.pow(2, e - 136) : 0; // (mantissa + 0.5) / 256 * 2^(e - 128)
+      half[i * 4] = toHalf((planes[i] + 0.5) * f); half[i * 4 + 1] = toHalf((planes[N + i] + 0.5) * f); half[i * 4 + 2] = toHalf((planes[2 * N + i] + 0.5) * f); half[i * 4 + 3] = toHalf(1);
+    }
+    const tex = new THREE.DataTexture(half, W, H, THREE.RGBAFormat, THREE.HalfFloatType);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.LinearSRGBColorSpace;
+    tex.magFilter = tex.minFilter = THREE.LinearFilter;
+    tex.flipY = true; // rows are stored top to bottom
+    tex.needsUpdate = true;
+    tex.userData.rxShared = true;
+    return tex;
+  })();
+  return envPromise;
+}
+
+// ------------------------------------------------------------------ surface detail
+// Small procedural textures, made once per page and shared by every stage (never disposed per stage).
+// They only add fine detail (bump, roughness, a weave): colours stay the CAD colours.
+const TEX = {};
+function canvasTex(key, size, draw, srgb = false) {
+  if (TEX[key]) return TEX[key];
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.anisotropy = 4;
+  t.userData.rxShared = true;
+  return (TEX[key] = t);
+}
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+// brushed metal: fine streaks along u. Value is height (bump) and a roughness factor (0.72..1).
+const brushed = () => canvasTex('brushed', 256, (g, n) => {
+  const img = g.createImageData(n, n);
+  const row = new Float32Array(n);
+  for (let y = 0; y < n; y++) {
+    const base = rnd();
+    let run = rnd();
+    for (let x = 0; x < n; x++) { run += (rnd() - 0.5) * 0.08; row[x] = run; }
+    for (let x = 0; x < n; x++) {
+      const v = clamp(0.5 * base + 0.35 * (row[x] - Math.floor(row[x])) + 0.15 * rnd(), 0, 1);
+      const k = (y * n + x) * 4, b = Math.round(185 + 70 * v);
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = b; img.data[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+});
+// carbon fibre, 2x2 twill: tows alternate direction on a diagonal staircase. Height map with fibre
+// grooves along each tow, used as a bump map; the clearcoat stays smooth on top of it.
+const twill = () => canvasTex('twill', 256, (g, n) => {
+  const img = g.createImageData(n, n), cells = 8, cs = n / cells;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const cx = Math.floor(x / cs), cy = Math.floor(y / cs);
+    const alongX = ((cx + cy) & 3) < 2; // 2 over, 2 under, shifted by one each row: the twill diagonal
+    const u = (alongX ? x : y) % cs / cs, w = (alongX ? y : x) % cs / cs;
+    const bulge = Math.sin(Math.PI * w); // each tow is a flattened cylinder across its width
+    const fibres = 0.5 + 0.5 * Math.sin((alongX ? y : x) * 2.3 + Math.sin(u * 9) * 0.6);
+    const v = clamp(0.62 * bulge + 0.18 * fibres + 0.2 * (alongX ? 1 : 0.55), 0, 1);
+    const k = (y * n + x) * 4, b = Math.round(40 + 215 * v);
+    img.data[k] = img.data[k + 1] = img.data[k + 2] = b; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+});
+// printed layers: horizontal ridges (v runs up the part), 32 layers per tile with slight variation
+const layers = () => canvasTex('layers', 128, (g, n) => {
+  const img = g.createImageData(n, n), L = 32, lh = n / L, jit = Array.from({ length: L }, () => rnd());
+  for (let y = 0; y < n; y++) {
+    const i = Math.floor(y / lh), f = (y % lh) / lh;
+    const ridge = Math.sin(Math.PI * f);
+    for (let x = 0; x < n; x++) {
+      const v = clamp(0.75 * ridge + 0.15 * jit[i] + 0.1 * Math.sin((x / n) * Math.PI * 2 * 3 + jit[i] * 6), 0, 1);
+      const k = (y * n + x) * 4, b = Math.round(60 + 195 * v);
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = b; img.data[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+});
+// rubber and matte finishes: fine isotropic grain
+const grain = () => canvasTex('grain', 128, (g, n) => {
+  const img = g.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { const b = Math.round(170 + 85 * rnd()); img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255; }
+  g.putImageData(img, 0, 0);
+});
+
+// UVs for textures on CAD meshes (which come without any): box projection in the mesh's own frame,
+// so the detail sticks to a moving part. mode 'layers' keeps v = height so layer lines stay
+// horizontal and vanish on flat tops. tile: metres per texture repeat.
+const uvDone = new WeakSet();
+function projectUVs(mesh, mode, tile) {
+  const geo = mesh.geometry;
+  if (!geo || uvDone.has(geo) || geo.attributes.uv || !geo.attributes.position || !geo.attributes.normal) return;
+  uvDone.add(geo);
+  mesh.updateWorldMatrix(true, false);
+  const e = mesh.matrixWorld.elements; // per-axis scale (quantized meshes carry it in the node)
+  const sx = Math.hypot(e[0], e[1], e[2]) / tile, sy = Math.hypot(e[4], e[5], e[6]) / tile, sz = Math.hypot(e[8], e[9], e[10]) / tile;
+  const pos = geo.attributes.position, nor = geo.attributes.normal, n = pos.count, uv = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) {
+    const x = pos.getX(i) * sx, y = pos.getY(i) * sy, z = pos.getZ(i) * sz;
+    const ax = Math.abs(nor.getX(i)), ay = Math.abs(nor.getY(i)), az = Math.abs(nor.getZ(i));
+    if (mode === 'layers') { uv[i * 2] = ax > az ? z : x; uv[i * 2 + 1] = y; }
+    else if (ax >= ay && ax >= az) { uv[i * 2] = z; uv[i * 2 + 1] = y; }
+    else if (ay >= az) { uv[i * 2] = x; uv[i * 2 + 1] = z; }
+    else { uv[i * 2] = x; uv[i * 2 + 1] = y; }
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+
+// The material pass: STEP exports carry only a colour, so the colour decides the finish (as on the
+// landing scene). Materials that already have textures are left alone. userData.rxUv says which UV
+// projection and tile the finish wants.
+const RUBBER = /wheel|tire|tyre|tread|o.?ring|grommet|belt(?![\w\s-]*(pulley|sprocket|clamp|idler|tension))/i;
+const CARBON = /carbon|\bcf[_\s-]|cf_|_cf\b/i;
+// the part's own name and its parent's (a multi-material part is a group of meshes); not the whole
+// assembly chain, or every part of a "wheel module" would turn to rubber
+function nameChain(o) { return `${o.name} ${o.parent?.userData?.rxModel ? '' : o.parent?.name || ''}`; }
+function cadMaterial(mat, kind) {
   if (!mat || !mat.color || mat.map || mat.normalMap || mat.roughnessMap || mat.metalnessMap) return mat;
   const c = mat.color.clone(), hsl = {};
   c.getHSL(hsl, THREE.SRGBColorSpace);
+  // CAD black is a colour name, not a physical albedo: real black plastic, anodizing and powder
+  // coat reflect about 2-4 %. Lifting pure black to that keeps it black but lets it show its shape.
+  if (hsl.l < 0.1) { const f = 0.022; c.r = Math.max(c.r, f); c.g = Math.max(c.g, f); c.b = Math.max(c.b, f); }
   let m;
-  if (mat.name === 'carbon' || mat.userData?.carbon) m = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.3, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.09 });
-  else if (rubber) m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.82, metalness: 0 }); // rubber / TPU wheels
-  else if (hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.82) m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.34, metalness: 0.9 }); // aluminium, steel
-  else if (hsl.h > 0.08 && hsl.h < 0.16 && hsl.s > 0.5 && hsl.l > 0.45) m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.25, metalness: 1 }); // gold contacts
-  else if (hsl.h > 0.25 && hsl.h < 0.5 && hsl.s > 0.3) m = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.38, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.2 }); // PCB soldermask
-  else if (hsl.l < 0.12) m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, metalness: 0 }); // black printed parts, nylon
-  else if ((hsl.h < 0.04 || hsl.h > 0.96) && hsl.s > 0.6) m = new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.42, metalness: 0, clearcoat: 0.12, clearcoatRoughness: 0.5, sheen: 0.25, sheenRoughness: 0.6, sheenColor: c }); // red PLA
-  else m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.45, metalness: 0 }); // other plastics
+  const P = (o) => new THREE.MeshPhysicalMaterial({ color: c, ...o });
+  const S = (o) => new THREE.MeshStandardMaterial({ color: c, ...o });
+  if (mat.name === 'carbon' || mat.userData?.carbon || (kind === 'carbon' && hsl.l < 0.25)) {
+    m = P({ roughness: 0.42, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, bumpMap: twill(), bumpScale: 0.6, roughnessMap: twill() });
+    m.userData.rxUv = ['box', 0.012];
+  } else if (kind === 'rubber') {
+    m = S({ roughness: 0.86, metalness: 0, bumpMap: grain(), bumpScale: 0.25 });
+    m.userData.rxUv = ['box', 0.006];
+  } else if (hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.82) { // aluminium, steel
+    m = S({ roughness: hsl.l > 0.55 ? 0.3 : 0.38, metalness: 1, roughnessMap: brushed(), bumpMap: brushed(), bumpScale: 0.22 });
+    m.userData.rxUv = ['box', 0.05];
+  } else if (hsl.h > 0.08 && hsl.h < 0.16 && hsl.s > 0.5 && hsl.l > 0.45) {
+    m = S({ roughness: 0.25, metalness: 1 }); // gold contacts
+  } else if (hsl.h > 0.25 && hsl.h < 0.5 && hsl.s > 0.3) {
+    m = P({ roughness: 0.4, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.2, bumpMap: grain(), bumpScale: 0.25 }); // PCB soldermask
+    m.userData.rxUv = ['box', 0.004];
+  } else if (hsl.l < 0.12) { // black printed parts, nylon, powder coat
+    m = S({ roughness: 0.58, metalness: 0, bumpMap: layers(), bumpScale: 0.5, roughnessMap: grain() });
+    m.userData.rxUv = ['layers', 0.0064];
+  } else if ((hsl.h < 0.04 || hsl.h > 0.96) && hsl.s > 0.6) { // red PLA
+    m = P({ roughness: 0.46, metalness: 0, clearcoat: 0.12, clearcoatRoughness: 0.5, bumpMap: layers(), bumpScale: 0.5 });
+    m.userData.rxUv = ['layers', 0.0064];
+  } else { // other plastics
+    m = S({ roughness: 0.48, metalness: 0, bumpMap: layers(), bumpScale: 0.45 });
+    m.userData.rxUv = ['layers', 0.0064];
+  }
   m.name = mat.name; m.side = mat.side;
   if (mat.transparent) { m.transparent = true; m.opacity = mat.opacity; }
   return m;
@@ -80,7 +250,7 @@ function cadMaterial(mat, rubber) {
 
 function disposeMaterial(m) {
   if (!m) return;
-  for (const k of Object.keys(m)) { const t = m[k]; if (t && t.isTexture) t.dispose(); }
+  for (const k of Object.keys(m)) { const t = m[k]; if (t && t.isTexture && !t.userData?.rxShared) t.dispose(); }
   m.dispose();
 }
 function disposeTree(root) {
@@ -92,18 +262,113 @@ function disposeTree(root) {
   });
 }
 
+// ------------------------------------------------------------------ contact shadow
+// A soft dark footprint right under the model (the way a product sits on a sweep): a depth pass
+// from below, blurred twice, on a plane at ground level. Baked, not live.
+const blurVS = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+const blurFS = `uniform sampler2D tDiffuse; uniform vec2 dir; varying vec2 vUv;
+void main() { vec4 s = vec4(0.0); float w[5]; w[0] = 0.227; w[1] = 0.1945; w[2] = 0.1216; w[3] = 0.054; w[4] = 0.0162;
+  s += texture2D(tDiffuse, vUv) * w[0];
+  for (int i = 1; i < 5; i++) { s += texture2D(tDiffuse, vUv + dir * float(i)) * w[i]; s += texture2D(tDiffuse, vUv - dir * float(i)) * w[i]; }
+  gl_FragColor = s; }`;
+function contactShadow(renderer, scene, parent) {
+  const RES = 256;
+  const opt = { type: THREE.HalfFloatType };
+  const rtA = new THREE.WebGLRenderTarget(RES, RES, opt), rtB = new THREE.WebGLRenderTarget(RES, RES, opt);
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const depth = new THREE.MeshDepthMaterial({ side: THREE.DoubleSide });
+  depth.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );', 'gl_FragColor = vec4( vec3( 0.0 ), pow( 1.0 - fragCoordZ, 1.6 ) );');
+  };
+  const blur = new THREE.ShaderMaterial({ uniforms: { tDiffuse: { value: null }, dir: { value: new THREE.Vector2() } }, vertexShader: blurVS, fragmentShader: blurFS, depthTest: false, depthWrite: false });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), blur);
+  quad.frustumCulled = false;
+  const quadScene = new THREE.Scene(); quadScene.add(quad);
+  const mat = new THREE.MeshBasicMaterial({ map: rtA.texture, transparent: true, opacity: 0.62, depthWrite: false, toneMapped: false, color: 0x000000 });
+  mat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', 'diffuseColor.a *= texture2D( map, vMapUv ).a;'); };
+  mat.customProgramCacheKey = () => 'rxcontact';
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+  plane.name = 'contact shadow'; plane.renderOrder = -1; plane.visible = false;
+  parent.add(plane); // a child of the ground: hiding the ground hides this too
+  let size = 1;
+  return {
+    plane,
+    /** fit to the models' bounds (box, centre, radius) */
+    fit(box, r) {
+      const w = (box.max.x - box.min.x) + r * 0.5, d = (box.max.z - box.min.z) + r * 0.5;
+      size = Math.max(w, d);
+      plane.scale.set(-size / parent.scale.x, size / parent.scale.y, 1); // the camera below sees the footprint mirrored in x
+      plane.position.set(((box.min.x + box.max.x) / 2 - parent.position.x) / parent.scale.x, -((box.min.z + box.max.z) / 2 - parent.position.z) / parent.scale.y, 0.0005);
+      const h = Math.max(0.02, (box.max.y - box.min.y) * 0.5);
+      Object.assign(cam, { left: -size / 2, right: size / 2, top: size / 2, bottom: -size / 2, near: 0, far: h });
+      cam.position.set((box.min.x + box.max.x) / 2, box.min.y - 0.0005, (box.min.z + box.max.z) / 2);
+      cam.up.set(0, 0, -1); // image rows along -z, matching the ground plane's orientation
+      cam.lookAt(cam.position.x, cam.position.y + 1, cam.position.z);
+      cam.updateProjectionMatrix();
+    },
+    bake(roots) {
+      const prevOverride = scene.overrideMaterial, prevBg = scene.background, prevTarget = renderer.getRenderTarget();
+      const prevClear = renderer.getClearColor(new THREE.Color()), prevAlpha = renderer.getClearAlpha(), prevAuto = renderer.shadowMap.autoUpdate;
+      const hidden = [];
+      scene.traverse((o) => { if (o.visible && (o.isLight ? false : !roots.some((r) => r === o || isIn(o, r)) && o.isMesh)) { hidden.push(o); o.visible = false; } });
+      scene.overrideMaterial = depth; scene.background = null;
+      renderer.shadowMap.autoUpdate = false;
+      renderer.setClearColor(0x000000, 0);
+      renderer.setRenderTarget(rtA); renderer.clear(); renderer.render(scene, cam);
+      scene.overrideMaterial = prevOverride; scene.background = prevBg;
+      for (const o of hidden) o.visible = true;
+      for (let i = 0; i < 2; i++) { // blur A -> B -> A, twice
+        blur.uniforms.tDiffuse.value = rtA.texture; blur.uniforms.dir.value.set((1.6 + i) / RES, 0); renderer.setRenderTarget(rtB); renderer.render(quadScene, cam);
+        blur.uniforms.tDiffuse.value = rtB.texture; blur.uniforms.dir.value.set(0, (1.6 + i) / RES); renderer.setRenderTarget(rtA); renderer.render(quadScene, cam);
+      }
+      renderer.setRenderTarget(prevTarget);
+      renderer.setClearColor(prevClear, prevAlpha);
+      renderer.shadowMap.autoUpdate = prevAuto;
+      plane.visible = true;
+    },
+    dispose() { rtA.dispose(); rtB.dispose(); depth.dispose(); blur.dispose(); mat.dispose(); quad.geometry.dispose(); plane.geometry.dispose(); },
+  };
+}
+function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
+
+// The environment every stage reflects: the real studio HDRI, dimmed, as the room, with large soft
+// light panels added the way a product photographer would: a big key softbox up front left (where
+// the key light sits), two tall strips behind for rim highlights, a broad dim panel overhead and a
+// low bounce card. Wide sources give every surface a soft gradient instead of a hard mirror image,
+// so black parts read as black with their shape, and metals as metal. World axes: +y up; the
+// default camera looks from +x +z.
+function studioRoom(hdri) {
+  const s = new THREE.Scene();
+  if (hdri) { s.background = hdri; s.backgroundIntensity = 0.3; s.backgroundRotation.set(0, 2.2, 0); }
+  else s.background = new THREE.Color(0.012, 0.011, 0.01);
+  const geo = new THREE.PlaneGeometry(1, 1);
+  const panel = (w, h, pos, k, tint = [1, 1, 1]) => {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color(tint[0] * k, tint[1] * k, tint[2] * k), side: THREE.DoubleSide }));
+    m.scale.set(w, h, 1); m.position.set(...pos); m.lookAt(0, 0, 0); s.add(m);
+  };
+  panel(7, 5, [-5, 8, 5.5], 5.5, [1, 0.96, 0.9]); // key softbox, warm
+  panel(1.6, 9, [7, 3, -5], 7); // rim strip, back right
+  panel(1.6, 9, [-7.5, 2.5, -4.5], 4.5, [0.9, 0.95, 1]); // rim strip, back left, cool
+  panel(14, 14, [0, 10, 0], 0.7); // overhead
+  panel(10, 3, [3, -3.5, 8], 0.5, [1, 0.95, 0.9]); // low bounce card in front
+  s.dispose = () => { geo.dispose(); s.traverse((o) => o.material?.dispose()); };
+  return s;
+}
+
 // ------------------------------------------------------------------ stage
 /**
  * createStage(el, opts) mounts a WebGL canvas that fills `el` (give el a size in CSS).
  * opts:
  *   controls    true (default): drag to orbit, pinch or ctrl/cmd + wheel to zoom. false for scroll-driven stages.
  *   background  'transparent' (default; the page's panel shows through) or any CSS colour.
- *   shadow      true (default): faint shadow on an invisible ground under the models.
+ *   shadow      true (default): soft key-light shadow and a contact shadow under the models.
  *   hint        text of the "drag to rotate" chip, or false. Default depends on touch.
  *   fov         vertical field of view in degrees (default 32).
  *   exposure    tone mapping exposure (default 1).
- *   ao          true: ambient occlusion pass (GTAO, as on the landing scene). Heavier; off by default and on touch.
- *   pixelRatio  cap on devicePixelRatio (default 1.75).
+ *   envIntensity  strength of the studio environment (default 1).
+ *   ao          true: ambient occlusion in the refined frame drawn once things settle (desktop only).
+ *   pixelRatio  cap on devicePixelRatio (default 1.75); the stage lowers it while frames are slow.
+ *   detail      surface detail textures (default: on, except on touch devices).
  */
 export function createStage(el, opts = {}) {
   if (!el) throw new Error('createStage: no element');
@@ -119,46 +384,66 @@ export function createStage(el, opts = {}) {
   } catch (e) {
     throw new Error(`WebGL unavailable: ${e.message || e}`);
   }
-  const dprCap = opts.pixelRatio || 1.75;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = opts.exposure ?? 1;
+  const dprMax = Math.min(window.devicePixelRatio || 1, opts.pixelRatio || 1.75);
+  const dprMin = Math.min(dprMax, touch ? 1 : 0.8);
+  let dprLive = dprMax, dprNow = dprMax;
+  renderer.setPixelRatio(dprNow);
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  // neutral tone mapping passes mid-tones through almost untouched; this lifts them to about the
+  // brightness the pages were tuned for, and pages' own exposure values still scale it
+  renderer.toneMappingExposure = 1.15 * (opts.exposure ?? 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = opts.shadow !== false;
-  renderer.shadowMap.type = THREE.PCFShadowMap; // PCF honours shadow.radius, which keeps the ground shadow soft
+  renderer.shadowMap.type = THREE.PCFShadowMap; // PCF honours shadow.radius, which keeps the shadow soft
+  renderer.shadowMap.autoUpdate = false; // shadows re-render only when the scene changes (see render())
   if (transparent) renderer.setClearColor(0x000000, 0);
   else renderer.setClearColor(new THREE.Color(opts.background), 1);
   if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; // the canvas fills el
   el.appendChild(canvas);
 
   const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  pmrem.dispose();
-  scene.environment = envTex;
-  scene.environmentIntensity = opts.envIntensity ?? 0.85;
+  let envTex = null;
+  const setEnv = (t) => { envTex?.dispose(); envTex = t; scene.environment = t; invalidate(); };
+  scene.environmentIntensity = opts.envIntensity ?? 1;
+  const envReady = studioTexture().catch((e) => { console.warn('stage: studio HDRI unavailable', e?.message || e); return null; }).then((tex) => {
+    if (disposed) return;
+    const pm = new THREE.PMREMGenerator(renderer);
+    const room = studioRoom(tex);
+    setEnv(pm.fromScene(room, 0.02).texture);
+    room.dispose();
+    pm.dispose();
+  });
 
   const camera = new THREE.PerspectiveCamera(opts.fov || 32, 1, 0.01, 100);
   camera.position.set(1.2, 0.7, 1.4);
   const target = new THREE.Vector3();
   camera.lookAt(target);
+  scene.add(camera);
 
-  // soft key light from the upper front left; it also casts the ground shadow
-  const key = new THREE.DirectionalLight('#fff3e6', 1.7);
+  // key: warm, from the upper front left, fixed in the scene; it casts the shadows
+  const key = new THREE.DirectionalLight('#fff1e3', 1.5);
   key.castShadow = opts.shadow !== false;
   key.shadow.mapSize.set(touch ? 1024 : 2048, touch ? 1024 : 2048);
-  key.shadow.radius = 4;
+  key.shadow.radius = 5;
   const keyDir = new THREE.Vector3(-0.45, 1, 0.55).normalize();
   scene.add(key, key.target);
+  // fill and rim ride with the camera, so every angle the scroll turns to stays lit and the
+  // silhouette separates from the dark page (they cast no shadows, so they cost almost nothing)
+  const fill = new THREE.DirectionalLight('#dfe8ff', 0.35);
+  fill.position.set(1, -0.2, 0.6); fill.target.position.set(0, 0, -1);
+  const rim = new THREE.DirectionalLight('#ffffff', 1.1);
+  rim.position.set(-0.3, 0.8, -1); rim.target.position.set(0, 0, 0);
+  camera.add(fill, fill.target, rim, rim.target);
 
   const root = new THREE.Group(); // loaded models live here; section planes cut only these
   root.name = 'models';
   scene.add(root);
 
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.28, depthWrite: false }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.3, depthWrite: false }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; ground.visible = false; ground.name = 'ground';
   ground.renderOrder = -1;
   scene.add(ground);
+  const contact = opts.shadow !== false ? contactShadow(renderer, scene, ground) : null;
 
   // ---------------------------------------------------------------- controls
   let controls = null;
@@ -176,7 +461,7 @@ export function createStage(el, opts = {}) {
     // Touch: vertical swipes keep scrolling the page, sideways swipes turn the model, two fingers zoom.
     if (touch) canvas.style.touchAction = 'pan-y';
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_ROTATE };
-    controls.addEventListener('change', () => invalidate());
+    controls.addEventListener('change', () => invalidate(false));
     controls.addEventListener('start', () => { hintEl?.classList.add('gone'); wake(); });
   } else {
     canvas.style.pointerEvents = 'none';
@@ -189,7 +474,7 @@ export function createStage(el, opts = {}) {
     el.appendChild(hintEl);
   }
 
-  // ---------------------------------------------------------------- optional AO (landing-scene look)
+  // ---------------------------------------------------------------- optional AO, refined frame only
   let composer = null;
   if (opts.ao && !touch) {
     Promise.all([
@@ -203,7 +488,7 @@ export function createStage(el, opts = {}) {
       const c = new EffectComposer(renderer, rt);
       c.addPass(new RenderPass(scene, camera));
       const gtao = new GTAOPass(scene, camera, 2, 2);
-      gtao.output = GTAOPass.OUTPUT.Default; gtao.blendIntensity = 0.8;
+      gtao.output = GTAOPass.OUTPUT.Default; gtao.blendIntensity = 0.75;
       c.addPass(gtao);
       c.addPass(new OutputPass());
       composer = c;
@@ -213,11 +498,14 @@ export function createStage(el, opts = {}) {
   }
   function aoRadius() {
     const g = composer?.passes.find((p) => p.gtaoMaterial);
-    if (g) g.updateGtaoMaterial({ radius: Math.max(0.005, bounds.r * 0.12), distanceExponent: 2, thickness: 1.5, scale: 1, samples: 12, distanceFallOff: 1, screenSpaceRadius: false });
+    if (g) g.updateGtaoMaterial({ radius: Math.max(0.004, bounds.r * 0.08), distanceExponent: 2, thickness: 1.5, scale: 1, samples: 12, distanceFallOff: 1, screenSpaceRadius: false });
   }
 
-  // ---------------------------------------------------------------- render loop (on demand)
-  let raf = 0, dirty = true, visible = false, disposed = false, last = 0, elapsed = 0;
+  // ---------------------------------------------------------------- rendering, on demand only
+  // dirty: the picture must be redrawn. sceneDirty: something other than the camera changed, so the
+  // shadow map (and later the contact shadow) must be redrawn too. refined: the settled frame is up.
+  let raf = 0, dirty = true, sceneDirty = true, contactDirty = true, refined = false, visible = false, disposed = false;
+  let last = 0, elapsed = 0, lastDraw = 0, slowEma = 16, slowN = 0, fastN = 0, idleT = 0;
   const frameFns = new Set();
   const tweens = new Set();
   function wake() {
@@ -225,9 +513,70 @@ export function createStage(el, opts = {}) {
     last = performance.now();
     raf = requestAnimationFrame(tick);
   }
-  function invalidate() { dirty = true; wake(); }
-  function render() {
-    if (composer) composer.render(); else renderer.render(scene, camera);
+  /** Ask for a redraw. scene = false when only the camera moved (the shadows stay as they are). */
+  function invalidate(scene = true) {
+    dirty = true; refined = false;
+    if (scene) { sceneDirty = true; contactDirty = true; }
+    wake();
+  }
+  function setDpr(d) {
+    if (Math.abs(d - dprNow) < 0.01) return;
+    dprNow = d;
+    renderer.setPixelRatio(d);
+    const w = el.clientWidth, h = el.clientHeight;
+    if (w && h) { renderer.setSize(w, h, false); composer?.setPixelRatio?.(d); composer?.setSize(w, h); }
+    cap.hatch.value = 7 * d;
+  }
+  let lastShadow = -1e9;
+  function draw(hq) {
+    // while parts keep moving, the shadow map refreshes about ten times a second (a lag nobody sees
+    // on soft shadows); the settled frame always gets an exact one
+    const now = performance.now();
+    if (sceneDirty && (hq || now - lastShadow > 90)) { renderer.shadowMap.needsUpdate = true; sceneDirty = false; lastShadow = now; }
+    if (renderer.shadowMap.needsUpdate && renderer.shadowMap.enabled) STATS.shadows++;
+    if (hq && composer) composer.render(); else renderer.render(scene, camera);
+    if (hq) { STATS.refined++; STATS.refinedCalls += renderer.info.render.calls; } else { STATS.live++; STATS.liveCalls += renderer.info.render.calls; }
+    dirty = false;
+  }
+  // an ordinary frame: at the live pixel ratio, adapting it to how fast frames come
+  function drawLive(now) {
+    if (dprNow !== dprLive) setDpr(dprLive);
+    draw(false);
+    const gap = now - lastDraw;
+    lastDraw = now;
+    if (gap < 70) { // consecutive frames: is the stage keeping up?
+      slowEma = slowEma * 0.8 + gap * 0.2;
+      if (slowEma > 26) { fastN = 0; if (++slowN > 5 && dprLive > dprMin) { dprLive = Math.max(dprMin, dprLive * 0.8); slowN = 0; } }
+      else if (slowEma < 18) { slowN = 0; if (++fastN > 90 && dprLive < dprMax) { dprLive = Math.min(dprMax, dprLive * 1.15); fastN = 0; } }
+    }
+    clearTimeout(idleT);
+    idleT = setTimeout(settle, 260);
+  }
+  // once nothing has changed for a moment: one refined frame, then nothing. Skipped when it would
+  // not change anything (full pixel ratio already, no AO, shadows exact, contact shadow current).
+  let contactSig = '';
+  const sigBox = new THREE.Box3();
+  function footprint() { // where the models are and which of them show: the contact shadow depends on it
+    sigBox.makeEmpty();
+    let n = 0;
+    root.traverseVisible((o) => { if (o.isMesh) { n++; sigBox.expandByObject(o); } });
+    const r = (v) => Math.round(v * 2000);
+    return `${n}|${r(sigBox.min.x)},${r(sigBox.min.y)},${r(sigBox.min.z)}|${r(sigBox.max.x)},${r(sigBox.max.y)},${r(sigBox.max.z)}`;
+  }
+  function settle() {
+    idleT = 0;
+    if (disposed || !visible || document.hidden || raf) return;
+    let bake = false;
+    if (contact && contactDirty && ground.visible && root.children.length) {
+      const sig = footprint();
+      bake = sig !== contactSig;
+      contactSig = sig; contactDirty = false;
+    }
+    if (!bake && !sceneDirty && !composer && dprNow === dprMax) { refined = true; return; }
+    if (bake) { contact.bake([root]); STATS.bakes++; }
+    setDpr(dprMax);
+    draw(true);
+    refined = true;
   }
   function tick(now) {
     raf = 0;
@@ -236,6 +585,7 @@ export function createStage(el, opts = {}) {
     last = now; elapsed += dt;
     let busy = false;
     for (const tw of tweens) { busy = true; tw(dt); }
+    if (frameFns.size) sceneDirty = contactDirty = true; // callbacks move parts: shadows follow
     for (const fn of frameFns) {
       busy = true;
       try { fn(dt, elapsed); } catch (e) { console.error('stage onFrame callback failed; removed', e); frameFns.delete(fn); }
@@ -244,29 +594,41 @@ export function createStage(el, opts = {}) {
       if (controls.update(dt)) { dirty = true; busy = true; }
       if (controls.autoRotate && !reduced) busy = true;
     }
-    if (dirty || busy) { dirty = false; render(); }
+    if (dirty || busy) drawLive(now);
     if (busy) raf = requestAnimationFrame(tick);
   }
+  // Draw now if anything changed: the page runtime calls this right after it hands a scroll-driven
+  // module its progress, so the canvas and any HTML labels move in the same frame.
+  function flush() {
+    if (!dirty || disposed || !visible || document.hidden) return;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    tick(performance.now());
+  }
+  canvas.rxFlush = flush;
   const io = new IntersectionObserver((es) => {
     visible = es[es.length - 1].isIntersecting;
-    if (visible) invalidate(); else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    if (visible) invalidate(false); else if (raf) { cancelAnimationFrame(raf); raf = 0; }
   }, { rootMargin: '120px 0px' });
   io.observe(el);
-  const onVis = () => { if (!document.hidden) invalidate(); };
+  const onVis = () => { if (!document.hidden) invalidate(false); };
   document.addEventListener('visibilitychange', onVis);
 
   function resize() {
     const w = el.clientWidth, h = el.clientHeight;
     if (!w || !h) return;
+    // live frames get a budget of about 2.4 million pixels (a full-screen stage on a 2x screen
+    // would be 7); the refined frame at rest is drawn at the full pixel ratio
+    dprLive = Math.min(dprLive, Math.max(dprMin, Math.min(dprMax, Math.sqrt(2.4e6 / (w * h)))));
+    if (dprNow !== dprLive && !refined) setDpr(dprLive);
     renderer.setSize(w, h, false);
-    composer?.setSize(w, h);
     composer?.setPixelRatio?.(renderer.getPixelRatio());
+    composer?.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     if (shift.x || shift.y) applyShift();
     // keep the framed model fitting the new shape, seen from wherever the camera is now
     if (lastFrame) frame(lastFrame.obj, { ...lastFrame.opts, dir: camera.position.clone().sub(target), duration: 0 });
-    invalidate();
+    invalidate(false);
   }
   const ro = new ResizeObserver(resize);
   ro.observe(el);
@@ -299,31 +661,48 @@ export function createStage(el, opts = {}) {
     key.shadow.bias = -0.0004; key.shadow.normalBias = r * 0.006;
     camera.near = r / 200; camera.far = r * 120; camera.updateProjectionMatrix();
     if (controls) { controls.minDistance = r * 0.35; controls.maxDistance = r * 14; }
+    contact?.fit(s.box, r);
+    contactDirty = true;
     aoRadius();
+    invalidate();
   }
 
   // ---------------------------------------------------------------- section planes with caps
-  // Cut faces show the parts' inside (their back faces). Those are painted a flat hatched cap
-  // colour, so the cut reads like a solid CAD section rather than a hollow shell.
+  // Cut faces show the parts' inside (their back faces). Those are painted as a flat cap: a light
+  // tint of the part's own colour with thin antialiased hatch lines, alternating direction from part
+  // to part like a drawing, so the cut reads as solid material and neighbouring parts stay apart.
   const clipPlanes = [];
-  // cream hatch: reads as "cut" against both dark parts and the red and orange prints
-  const cap = { a: { value: new THREE.Color('#ebe4d9') }, b: { value: new THREE.Color('#cbc1b4') }, hatch: { value: 8 } };
+  const cap = { a: { value: new THREE.Color('#ebe4d9') }, b: { value: new THREE.Color('#b9ae9f') }, hatch: { value: 7 } };
   const capped = new WeakSet();
+  let capN = 0;
   function prepClip(m) {
     if (!m || capped.has(m) || !clipPlanes.length) return;
     capped.add(m);
+    const dirSign = (capN++ & 1) ? 1 : -1;
     const prev = m.onBeforeCompile, prevKey = m.customProgramCacheKey;
     m.onBeforeCompile = (sh, r) => {
       prev?.call(m, sh, r);
       sh.uniforms.rxCapA = cap.a; sh.uniforms.rxCapB = cap.b; sh.uniforms.rxHatch = cap.hatch;
       sh.fragmentShader = `uniform vec3 rxCapA; uniform vec3 rxCapB; uniform float rxHatch;\n${sh.fragmentShader.replace('#include <tonemapping_fragment>', `#include <tonemapping_fragment>
-        if (!gl_FrontFacing) gl_FragColor.rgb = mod(gl_FragCoord.x + gl_FragCoord.y, rxHatch) < rxHatch * 0.5 ? rxCapA : rxCapB;`)}`;
+        if (!gl_FrontFacing) {
+          float h = mod(gl_FragCoord.x ${dirSign > 0 ? '+' : '-'} gl_FragCoord.y, rxHatch) - rxHatch * 0.5;
+          float line = 1.0 - smoothstep(0.55, 1.35, abs(h));
+          vec3 base = mix(rxCapA, diffuseColor.rgb, 0.28);
+          gl_FragColor.rgb = mix(base, rxCapB * mix(vec3(1.0), diffuseColor.rgb, 0.4), line * 0.85) + totalEmissiveRadiance * 0.6;
+          gl_FragColor.a = 1.0;
+        }`)}`;
     };
-    m.customProgramCacheKey = () => `${prevKey ? prevKey.call(m) : ''}|rxcap`;
+    m.customProgramCacheKey = () => `${prevKey ? prevKey.call(m) : ''}|rxcap${dirSign}`;
     m.side = THREE.DoubleSide;
     m.clippingPlanes = clipPlanes;
     m.clipShadows = true;
     m.needsUpdate = true;
+  }
+  /** A copy of a material that keeps the section-cut caps working (use it instead of material.clone()). */
+  function cloneMaterial(m) {
+    const c = m.clone();
+    if (capped.has(m)) { c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; c.clippingPlanes = clipPlanes; capped.add(c); }
+    return c;
   }
   function prepAllClip() {
     root.traverse((o) => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(prepClip); });
@@ -343,21 +722,21 @@ export function createStage(el, opts = {}) {
       plane,
       get constant() { return plane.constant; },
       /** move the cut: keeps points where dot(normal, p) + constant >= 0 */
-      set(c) { plane.constant = c; invalidate(); },
+      set(c) { if (c !== plane.constant) { plane.constant = c; invalidate(); } },
       setNormal(n) { plane.normal.copy(v3(n).normalize()); invalidate(); },
       enable,
       get enabled() { return on; },
       remove() { enable(false); },
     };
   }
-  cap.hatch.value = 8 * renderer.getPixelRatio();
+  cap.hatch.value = 7 * renderer.getPixelRatio();
 
   // ---------------------------------------------------------------- camera
   function setView(view) {
     if (view.pos) camera.position.copy(v3(view.pos));
     if (view.target) target.copy(v3(view.target));
     camera.lookAt(target);
-    invalidate();
+    invalidate(false);
   }
   // Move the picture on the canvas without moving the camera, e.g. up out of the way of text
   // cards that cover the bottom of a phone screen. Fractions of the canvas; +y moves it up.
@@ -367,7 +746,10 @@ export function createStage(el, opts = {}) {
     if (w && h && (shift.x || shift.y)) camera.setViewOffset(w, h, -shift.x * w, shift.y * h, w, h);
     else { camera.clearViewOffset(); }
   }
-  function setShift(fx = 0, fy = 0) { shift.x = fx; shift.y = fy; applyShift(); invalidate(); }
+  function setShift(fx = 0, fy = 0) {
+    if (fx === shift.x && fy === shift.y) return;
+    shift.x = fx; shift.y = fy; applyShift(); invalidate(false);
+  }
   function tweenCamera(view, seconds = 0.9) {
     const toPos = view.pos ? v3(view.pos) : camera.position.clone();
     const toTarget = view.target ? v3(view.target) : target.clone();
@@ -389,6 +771,7 @@ export function createStage(el, opts = {}) {
         sph.set(s0.radius + (s1.radius - s0.radius) * k, s0.phi + (s1.phi - s0.phi) * k, s0.theta + dTheta * k);
         camera.position.setFromSpherical(sph).add(target);
         camera.lookAt(target);
+        dirty = true;
         if (t >= 1) { tweens.delete(tw); resolve(); }
       };
       tw.camera = true;
@@ -433,22 +816,39 @@ export function createStage(el, opts = {}) {
   }
 
   // ---------------------------------------------------------------- models and parts
+  const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  /** load(url, { add, pbr, shadows, detail, carbon: /name/, rubber: /name/ }): carbon and rubber pick parts by CAD name for those finishes */
   async function load(url, o = {}) {
-    const buf = await fetchBuffer(assetUrl(url));
+    const [buf] = await Promise.all([fetchBuffer(assetUrl(url)), envReady]);
     if (disposed) throw new Error('stage disposed while loading');
     const gltf = await loader.parseAsync(buf.slice(0), assetUrl(url).replace(/[^/]*$/, '').replace(/\?.*$/, ''));
     const obj = gltf.scene;
     obj.userData.rxModel = true;
     obj.userData.src = url;
     const cache = new Map();
+    // fine surface detail is invisible at phone size: phones and tablets skip it (fewer texture reads)
+    const detail = (opts.detail ?? !touch) !== false && o.detail !== false;
+    obj.updateWorldMatrix(true, true);
     obj.traverse((m) => {
       if (!m.isMesh) return;
       m.castShadow = o.shadows !== false; m.receiveShadow = o.shadows !== false;
       if (o.pbr === false) return;
-      const rubber = RUBBER.test(nameChain(m));
-      const fix = (mat) => { const k = mat.uuid + (rubber ? 'r' : ''); if (!cache.has(k)) cache.set(k, cadMaterial(mat, rubber)); return cache.get(k); };
+      const names = nameChain(m);
+      const kind = o.rubber?.test(names) || RUBBER.test(names) ? 'rubber' : o.carbon?.test(names) || CARBON.test(names) ? 'carbon' : '';
+      const fix = (mat) => {
+        const k = mat.uuid + kind;
+        if (!cache.has(k)) {
+          const nm = cadMaterial(mat, kind);
+          if (!detail && nm !== mat) for (const t of ['bumpMap', 'roughnessMap']) nm[t] = null;
+          cache.set(k, nm);
+        }
+        return cache.get(k);
+      };
       m.material = Array.isArray(m.material) ? m.material.map(fix) : fix(m.material);
+      const uvWant = [].concat(m.material).map((x) => x.userData?.rxUv).find(Boolean);
+      if (uvWant && detail) projectUVs(m, uvWant[0], uvWant[1]);
     });
+    for (const t of Object.values(TEX)) t.anisotropy = maxAniso;
     if (o.add !== false) root.add(obj);
     prepAllClip();
     fitGround();
@@ -498,7 +898,7 @@ export function createStage(el, opts = {}) {
     const q0 = g.quaternion.clone();
     let angle = 0;
     g.axis = axis;
-    g.setAngle = (a) => { angle = a; g.quaternion.setFromAxisAngle(axis, a).premultiply(q0); invalidate(); return g; };
+    g.setAngle = (a) => { if (a === angle) return g; angle = a; g.quaternion.setFromAxisAngle(axis, a).premultiply(q0); invalidate(); return g; };
     Object.defineProperty(g, 'angle', { get: () => angle });
     return g;
   }
@@ -513,7 +913,7 @@ export function createStage(el, opts = {}) {
         m.material = m.userData.rxOrig;
         delete m.userData.rxOrig;
       }
-      invalidate();
+      invalidate(false);
     };
     if (color == null) { clear(); return () => {}; }
     for (const m of meshes) {
@@ -526,7 +926,7 @@ export function createStage(el, opts = {}) {
         prepClip(mat);
       }
     }
-    invalidate();
+    invalidate(false);
     return clear;
   }
 
@@ -541,12 +941,14 @@ export function createStage(el, opts = {}) {
     disposed = true;
     el.removeEventListener('rx:unmount', dispose);
     if (raf) cancelAnimationFrame(raf);
+    clearTimeout(idleT);
     frameFns.clear(); tweens.clear();
     io.disconnect(); ro.disconnect();
     document.removeEventListener('visibilitychange', onVis);
     controls?.dispose();
     disposeTree(scene);
-    envTex.dispose();
+    envTex?.dispose();
+    contact?.dispose();
     key.shadow.map?.dispose();
     composer?.renderTarget1?.dispose(); composer?.renderTarget2?.dispose();
     composer?.passes.forEach((p) => p.dispose?.());
@@ -561,12 +963,12 @@ export function createStage(el, opts = {}) {
 
   resize();
   return {
-    THREE, scene, camera, renderer, controls, root, el, canvas, ground, light: key, reducedMotion: reduced, isTouch: touch,
-    load, frame, setView, tweenCamera, setShift, onFrame, invalidate, render: () => { render(); dirty = false; },
-    highlight, sectionPlane, part, pivot, dispose,
+    THREE, scene, camera, renderer, controls, root, el, canvas, ground, light: key, lights: { key, fill, rim }, reducedMotion: reduced, isTouch: touch,
+    load, frame, setView, tweenCamera, setShift, onFrame, invalidate, flush, render: () => { sceneDirty = true; lastShadow = -1e9; draw(false); },
+    highlight, sectionPlane, part, pivot, dispose, ready: envReady, cloneMaterial,
     bounds: (obj, refresh) => sphereOf(obj || root, refresh),
     fitGround,
     /** colours of the section cap (CSS colours) */
-    setCapColor(a, b = a) { cap.a.value.set(a); cap.b.value.set(b); invalidate(); },
+    setCapColor(a, b = a) { cap.a.value.set(a); cap.b.value.set(b); invalidate(false); },
   };
 }

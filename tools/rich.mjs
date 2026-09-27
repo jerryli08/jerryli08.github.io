@@ -65,12 +65,20 @@ export function createRich(env) {
   const plain = (s) => String(s ?? '').replace(/`([^`]+)`/g, '$1').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\*\*?([^*]+)\*\*?/g, '$1');
   const arr = (x) => (x == null ? [] : Array.isArray(x) ? x : [x]);
 
-  // paragraphs: strings, plus a few block shapes for technical write-ups
-  function blocks(list, warn) {
+  // paragraphs: strings, plus a few block shapes for technical write-ups. ctx: the render context
+  // (for inline figures), or a warn function (older callers).
+  function blocks(list, ctx) {
+    const warn = typeof ctx === 'function' ? ctx : ctx.warn;
     return arr(list).map((b) => {
       if (typeof b === 'string') return `<p>${md(b)}</p>`;
       if (b && typeof b === 'object') {
         if (b.h) return `<h3>${md(b.h)}</h3>`;
+        if (b.fig) { // a picture in the flow of the text: one item, or several side by side
+          if (typeof ctx === 'function') { warn('fig blocks are not allowed here'); return ''; }
+          const items = arr(b.fig);
+          const inner = items.length > 1 ? row(items, ctx, { width: b.wide ? 1140 : 720 }) : fig(items[0], ctx, { sizes: b.wide ? '(max-width: 1180px) 100vw, 1140px' : '(max-width: 760px) 100vw, 720px' });
+          return `<div class="rx-inline-fig${b.wide ? ' rx-bleed' : ''}">${inner}</div>`;
+        }
         if (b.ul) return `<ul>${arr(b.ul).map((i) => `<li>${md(i)}</li>`).join('')}</ul>`;
         if (b.ol) return `<ol>${arr(b.ol).map((i) => `<li>${md(i)}</li>`).join('')}</ol>`;
         if (b.table) {
@@ -193,48 +201,104 @@ export function createRich(env) {
   }
 
   // ---------------------------------------------------------------- sections
+  // Prose with media: the paragraphs are cut into as many runs as there are media items, of about
+  // the same length (never right after a subheading, never between a problem and its fix), and each
+  // run gets its picture beside it, so pictures come evenly all the way down the text. On a phone
+  // each picture follows its run.
+  const wordsOf = (b) => (typeof b === 'string' ? plain(b).split(/\s+/).filter(Boolean).length
+    : b && typeof b === 'object' ? (b.h ? 6 : b.fig ? 0 : wordsOf(JSON.stringify(Object.values(b)).replace(/[[\]{}",]/g, ' '))) : 0);
+  function chunk(list, k) {
+    const w = list.map(wordsOf), cum = [];
+    w.reduce((a, x, i) => (cum[i] = a + x), 0);
+    const total = cum[cum.length - 1] || 1;
+    // a break may follow block i unless it is a subheading or the next block is a fix / next-time
+    const ok = list.map((b, i) => i < list.length - 1 && !(b && b.h) && !(list[i + 1] && typeof list[i + 1] === 'object' && (list[i + 1].fix != null || list[i + 1].next != null)));
+    const cuts = [];
+    for (let j = 1; j < k; j++) { // the allowed break closest to each equal share
+      let best = -1;
+      for (let i = (cuts[cuts.length - 1] ?? -1) + 1; i < list.length; i++) if (ok[i] && (best < 0 || Math.abs(cum[i] - (total * j) / k) < Math.abs(cum[best] - (total * j) / k))) best = i;
+      if (best < 0) break;
+      cuts.push(best);
+    }
+    const out = [];
+    let from = 0;
+    for (const c of [...cuts, list.length - 1]) { out.push(list.slice(from, c + 1)); from = c + 1; }
+    return out.filter((r) => r.length);
+  }
   const H2 = (h, id) => (h ? `<h2 class="rx-h2"${id ? ` id="${id}-h"` : ''}>${md(h)}</h2>` : '');
   const open = (cls, s, ctx, id) => `<section class="rx-sec ${cls}"${id ? ` id="${esc(id)}"` : ''}${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}>`;
+  // heading and lead text sit in the centred reading column; pictures use the full width below
+  const head = (s, id, ctx, lead = true) => (s.h || (lead && s.p) ? `<div class="rx-col">${H2(s.h, id)}${lead && s.p ? `<div class="rx-text rx-lead">${blocks(s.p, ctx)}</div>` : ''}</div>` : '');
   const SECTIONS = {
     prose(s, ctx) {
       const id = ctx.uid(s.id, 'prose');
       if (s.p == null) ctx.warn(`prose ${id} has no p`);
-      return `${open('rx-prose', s, ctx, id)}<div class="rx-w">${H2(s.h, id)}<div class="rx-text">${blocks(s.p, ctx.warn)}</div></div></section>`;
+      const media = arr(s.media);
+      if (!media.length) return `${open('rx-prose', s, ctx, id)}<div class="rx-w"><div class="rx-col">${H2(s.h, id)}<div class="rx-text">${blocks(s.p, ctx)}</div></div></div></section>`;
+      const runs = chunk(arr(s.p), media.length);
+      const rows = runs.map((run, i) => {
+        const items = i === runs.length - 1 ? media.slice(i) : [media[i]]; // short text: extra pictures stack in the last row
+        const figs = items.map((m) => (Array.isArray(m) ? row(m, ctx, { width: 560 }) : fig(m, ctx, { sizes: '(max-width: 900px) 100vw, 560px' }))).join('');
+        return `<div class="rx-pm-row"><div class="rx-text">${blocks(run, ctx)}</div><div class="rx-pm-fig">${figs}</div></div>`;
+      }).join('');
+      return `${open(`rx-prose rx-pm${s.side === 'left' ? ' rx-pm-left' : ''}`, s, ctx, id)}<div class="rx-w">${H2(s.h, id)}${rows}</div></section>`;
     },
     media(s, ctx) {
       const id = ctx.uid(s.id, 'media');
       const layout = s.layout || 'grid';
       if (!MEDIA_LAYOUTS.includes(layout)) ctx.warn(`media ${id}: unknown layout "${layout}" (use ${MEDIA_LAYOUTS.join(', ')})`);
-      return `${open(`rx-media rx-media-${esc(layout)}`, s, ctx, id)}<div class="rx-w">${H2(s.h, id)}${s.p ? `<div class="rx-text rx-lead">${blocks(s.p, ctx.warn)}</div>` : ''}${mediaLayout(layout, s.items, ctx, { cols: s.cols })}</div></section>`;
+      return `${open(`rx-media rx-media-${esc(layout)}`, s, ctx, id)}<div class="rx-w">${head(s, id, ctx)}${mediaLayout(layout, s.items, ctx, { cols: s.cols })}</div></section>`;
     },
     demo(s, ctx) {
+      // the built-in CAD viewer is now a scroll-driven turntable: same data, no JavaScript to change
+      if (s.module === '@viewer') {
+        return SECTIONS.scrolly({ ...s, module: '@turntable', width: s.width || 'wide', side: s.aside === 'right' ? 'right' : 'left', steps: [], length: s.length }, ctx);
+      }
       const id = ctx.uid(s.id, 'demo');
       const b = block('demo', s, ctx, id);
       const cap = s.caption ? `<p class="rx-cap">${md(s.caption)}</p>` : '';
-      const text = `${H2(s.h, id)}${s.p ? `<div class="rx-text">${blocks(s.p, ctx.warn)}</div>` : ''}`;
+      const text = `${H2(s.h, id)}${s.p ? `<div class="rx-text">${blocks(s.p, ctx)}</div>` : ''}`;
       if (s.aside === 'left' || s.aside === 'right') {
         return `<section class="rx-sec rx-demo-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}><div class="rx-w"><div class="rx-aside rx-aside-${s.aside}"><div class="rx-aside-txt">${text}</div><div class="rx-aside-vis">${b}${cap}</div></div></div></section>`;
       }
-      return `<section class="rx-sec rx-demo-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}><div class="rx-w">${text}${b}${cap}</div></section>`;
+      return `<section class="rx-sec rx-demo-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}><div class="rx-w">${head(s, id, ctx)}${b}${cap}</div></section>`;
     },
+    // A sticky stage driven by the scroll. width 'full' (default): the stage spans the screen and the
+    // step cards scroll over its left side. 'wide': the stage takes about three quarters of the
+    // screen and the text runs beside it (side 'left' or 'right'). Without steps, the stage stays
+    // pinned for `length` of scrolling while the module plays through progress 0 to 1; a wide one
+    // keeps its heading and text pinned beside it. On a phone every scrolly is full width with the
+    // text over the bottom (or, without steps, above the stage).
     scrolly(s, ctx) {
       const id = ctx.uid(s.id, 'scrolly');
       const steps = arr(s.steps);
-      if (!steps.length) ctx.warn(`scrolly ${id} has no steps`);
+      const wide = s.width === 'wide';
+      if (s.width != null && !['full', 'wide'].includes(s.width)) ctx.warn(`scrolly ${id}: width "${s.width}" (use full or wide)`);
       const mod = resolveModule(s.module, ctx.slug);
       if (!mod) { ctx.warn(`scrolly ${id} has no module`); return ctx.err('scrolly needs a module'); }
       if (!mod.ok) ctx.warn(`scrolly ${id}: module ${mod.path} does not exist`);
       const stepH = s.stepHeight != null ? cssLen(s.stepHeight) : null;
-      const data = s.data != null ? ` data-rx-data="${esc(JSON.stringify(s.data))}"` : '';
+      const len = !steps.length ? cssLen(s.length ?? '180vh') : null;
+      // per-step `view` objects (for @turntable) travel to the module as data.steps
+      let data = s.data;
+      if (steps.some((st) => st && st.view)) data = { ...(data || {}), steps: steps.map((st) => st.view || {}) };
+      const dataAttr = data != null ? ` data-rx-data="${esc(JSON.stringify(data))}"` : '';
       ctx.modules = true;
+      const beside = wide && !steps.length; // the section's own text is the pinned column
+      const cap = s.caption ? `<p class="rx-cap">${md(s.caption)}</p>` : '';
+      const list = steps.length
+        ? steps.map((st, i) => `<li class="rx-step${i === 0 ? ' is-active' : ''}" data-step="${i}"><div class="rx-step-card rx-text">${st.h ? `<h3>${md(st.h)}</h3>` : ''}${blocks(st.p, ctx)}</div></li>`).join('')
+        : beside && (s.h || s.p) ? `<li class="rx-step rx-step-pin is-active"><div class="rx-step-card rx-text">${H2(s.h, id)}${blocks(s.p, ctx)}${cap}</div></li>` : '';
+      const style = [stepH ? `--step-h:${esc(stepH)}` : '', len ? `--len:${esc(len)}` : ''].filter(Boolean).join(';');
+      const cls = `rx-scrolly${wide ? ` rx-scrolly-wide rx-side-${s.side === 'right' ? 'right' : 'left'}` : ''}${steps.length ? '' : ' rx-stepless'}`;
       return `<section class="rx-sec rx-scrolly-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}>
-    <div class="rx-w">${H2(s.h, id)}${s.p ? `<div class="rx-text rx-lead">${blocks(s.p, ctx.warn)}</div>` : ''}</div>
-    <div class="rx-scrolly" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${data}${stepH ? ` style="--step-h:${esc(stepH)}"` : ''}>
+    ${beside ? '' : `<div class="rx-w">${head(s, id, ctx)}</div>`}
+    <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${dataAttr}${style ? ` style="${style}"` : ''}>
       <div class="rx-scrolly-body">
         <div class="rx-scrolly-stage"><div class="rx-stage" data-rx-stage>${stageInner(s, ctx)}</div></div>
-        <ol class="rx-steps">${steps.map((st, i) => `<li class="rx-step${i === 0 ? ' is-active' : ''}" data-step="${i}"><div class="rx-step-card rx-text">${st.h ? `<h3>${md(st.h)}</h3>` : ''}${blocks(st.p, ctx.warn)}</div></li>`).join('')}</ol>
+        <ol class="rx-steps">${list}</ol>
       </div>
-    </div>
+    </div>${!beside && cap ? `<div class="rx-w"><div class="rx-col">${cap}</div></div>` : ''}
   </section>`;
     },
     split(s, ctx) {
@@ -246,7 +310,7 @@ export function createRich(env) {
         if (it.module) vis = block('demo', it, ctx, ctx.uid(it.id || `${id}-${i + 1}`, 'demo'));
         else if (it.media) vis = Array.isArray(it.media) && it.media.length > 1 ? row(it.media, ctx, { width: 640 }) : fig(arr(it.media)[0], ctx, { sizes: '(max-width: 900px) 100vw, 640px' });
         else ctx.warn(`split ${id} item ${i + 1} has neither module nor media`);
-        return `<div class="rx-split-row${i % 2 ? ' rx-flip' : ''}"><div class="rx-split-vis">${vis}${it.caption ? `<p class="rx-cap">${md(it.caption)}</p>` : ''}</div><div class="rx-split-txt rx-text">${it.h ? `<h3>${md(it.h)}</h3>` : ''}${blocks(it.p, ctx.warn)}</div></div>`;
+        return `<div class="rx-split-row${i % 2 ? ' rx-flip' : ''}"><div class="rx-split-vis">${vis}${it.caption ? `<p class="rx-cap">${md(it.caption)}</p>` : ''}</div><div class="rx-split-txt rx-text">${it.h ? `<h3>${md(it.h)}</h3>` : ''}${blocks(it.p, ctx)}</div></div>`;
       }).join('');
       return `${open('rx-split', s, ctx, id)}<div class="rx-w">${H2(s.h, id)}${rows}</div></section>`;
     },
@@ -254,17 +318,17 @@ export function createRich(env) {
       const id = ctx.uid(s.id, 'iterations');
       const items = arr(s.items);
       if (!items.length) ctx.warn(`iterations ${id} has no items`);
-      return `${open('rx-iter', s, ctx, id)}<div class="rx-w">${H2(s.h, id)}<ol class="rx-tl">${items.map((it) => `<li class="rx-tl-item">${it.label ? `<p class="rx-tl-label">${md(it.label)}</p>` : ''}${it.title ? `<h3 class="rx-tl-title">${md(it.title)}</h3>` : ''}<div class="rx-text">${blocks(it.p, ctx.warn)}</div>${arr(it.media).length ? `<div class="rx-tl-media">${row(it.media, ctx, { width: 860 })}</div>` : ''}</li>`).join('')}</ol></div></section>`;
+      return `${open('rx-iter', s, ctx, id)}<div class="rx-w">${head(s, id, ctx, false)}<ol class="rx-tl">${items.map((it) => `<li class="rx-tl-item">${it.label ? `<p class="rx-tl-label">${md(it.label)}</p>` : ''}${it.title ? `<h3 class="rx-tl-title">${md(it.title)}</h3>` : ''}<div class="rx-text">${blocks(it.p, ctx)}</div>${arr(it.media).length ? `<div class="rx-tl-media">${row(it.media, ctx, { width: 860 })}</div>` : ''}</li>`).join('')}</ol></div></section>`;
     },
     callout(s, ctx) {
       const id = ctx.uid(s.id, 'callout');
-      return `<section class="rx-sec rx-callout-sec"${s.id ? ` id="${esc(id)}"` : ''}><div class="rx-w"><aside class="rx-callout">${s.h ? `<h2 class="rx-callout-h">${md(s.h)}</h2>` : ''}<div class="rx-text">${blocks(s.p, ctx.warn)}</div></aside></div></section>`;
+      return `<section class="rx-sec rx-callout-sec"${s.id ? ` id="${esc(id)}"` : ''}><div class="rx-w"><aside class="rx-callout">${s.h ? `<h2 class="rx-callout-h">${md(s.h)}</h2>` : ''}<div class="rx-text">${blocks(s.p, ctx)}</div></aside></div></section>`;
     },
     stats(s, ctx) {
       const id = ctx.uid(s.id, 'stats');
       const items = arr(s.items);
       if (!items.length) ctx.warn(`stats ${id} has no items`);
-      return `${open('rx-stats-sec', s, ctx, id)}<div class="rx-w">${H2(s.h, id)}<div class="stats rx-stats">${items.map((x) => `<div class="stat"><b>${md(x.v)}</b><span>${md(x.l)}</span></div>`).join('')}</div></div></section>`;
+      return `${open('rx-stats-sec', s, ctx, id)}<div class="rx-w">${head(s, id, ctx, false)}<div class="stats rx-stats">${items.map((x) => `<div class="stat"><b>${md(x.v)}</b><span>${md(x.l)}</span></div>`).join('')}</div></div></section>`;
     },
   };
 
@@ -322,7 +386,7 @@ export function createRich(env) {
       else if (hh.layout === 'row' && items.length > 1) hero = `<div class="rx-w"><div class="rx-hero rx-hero-row">${row(items, ctx, { eager: true })}</div></div>`;
       else hero = `<div class="rx-w"><div class="rx-hero rx-hero-single">${fig(items[0], ctx, { eager: true, sizes: '(max-width: 1180px) 100vw, 1140px' })}</div></div>`;
     }
-    const summary = page.summary?.text ? `<div class="rx-summary rx-text">${blocks(page.summary.text, ctx.warn)}</div>` : '';
+    const summary = page.summary?.text ? `<div class="rx-summary rx-text">${blocks(page.summary.text, ctx)}</div>` : '';
     const sections = arr(page.sections).map((s, i) => {
       const where = `section ${i + 1}${s?.type ? ` (${s.type})` : ''}`;
       if (!s || typeof s !== 'object' || !SECTIONS[s.type]) {
@@ -339,6 +403,29 @@ export function createRich(env) {
         return ctx.err(`${where} failed: ${e.message}`);
       }
     }).join('\n');
+    // Jerry's rule (Sept 26): every demo is a scroll-driven animation. Interactive ones still to convert:
+    const todo = arr(page.sections).flatMap((s) => (s?.type === 'demo' && s.module !== '@viewer' ? [s.id || s.module]
+      : s?.type === 'split' ? arr(s.items).filter((it) => it?.module).map((it) => it.id || it.module) : []));
+    if (todo.length) warnings.push(`${todo.length} interactive demo${todo.length > 1 ? 's' : ''} to convert to scroll-driven scrollies: ${todo.join(', ')}`);
+    // Jerry's rule: no long stretch of text without a picture. Text-only sections in a row are
+    // added up; a run of more than about a screenful is a warning. In prose with media each run of
+    // paragraphs has its picture pinned beside it, so only a very long run there is flagged.
+    const LIMIT = 220, LIMIT_BESIDE = 420;
+    let run = 0, runFrom = 0;
+    arr(page.sections).forEach((s, i) => {
+      if (!s || typeof s !== 'object') return;
+      const media = arr(s.media).length || arr(s.p).some((b) => b && b.fig) || ['media', 'scrolly', 'split', 'demo'].includes(s.type)
+        || (s.type === 'iterations' && arr(s.items).some((it) => arr(it.media).length));
+      if (s.type === 'prose' && arr(s.media).length) {
+        chunk(arr(s.p), arr(s.media).length).forEach((r) => { const n = r.reduce((a, b) => a + wordsOf(b), 0); if (n > LIMIT_BESIDE) warnings.push(`section ${i + 1} (prose): ${n} words beside one picture; add media items so each run of text has its own`); });
+      }
+      if (media) { run = 0; return; }
+      if (s.type === 'prose' || s.type === 'callout') {
+        if (!run) runFrom = i + 1;
+        run += arr(s.p).reduce((a, b) => a + wordsOf(b), 0);
+        if (run > LIMIT) { warnings.push(`${runFrom === i + 1 ? `section ${i + 1}` : `sections ${runFrom}-${i + 1}`}: about ${run} words of text in a row with no picture; give the prose \`media: [...]\` so pictures sit beside it, or put a media section between`); run = -1e9; }
+      }
+    });
     return {
       head: ctx.modules ? importMap(x.slug) : '',
       assets: esc(JSON.stringify(assetMap(x.slug, page.assets))),

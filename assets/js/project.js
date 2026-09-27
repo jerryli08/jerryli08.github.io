@@ -1,6 +1,7 @@
 // Runtime for rich project pages (pages built from src/pages/<slug>.mjs). Loaded as a module on
 // those pages only. It handles:
-//   - videos: muted loops that load and play only while on screen, poster first
+//   - videos: muted loops that load and play only while on screen, poster first; nothing is fetched
+//     until the page has loaded and gone idle, and at most two play at once (the most visible)
 //   - photos: click to open a lightbox (Esc closes, arrow keys and swipes step through)
 //   - demos, split modules and scrollies: import the page's module when it comes near the
 //     viewport and call mount(el, ctx); keep the poster (with a note) if WebGL or the module fails
@@ -35,24 +36,36 @@
   // With reduced motion or data saver on, nothing plays by itself: the video shows its controls.
   const vids = [...document.querySelectorAll('video[data-rx-src]')];
   const autoplay = !reduced && !slow;
+  const MAX_PLAY = 2;
+  // Videos wait for the page: first paint gets the network to itself, posters show meanwhile.
+  const afterLoad = new Promise((res) => (document.readyState === 'complete' ? res() : addEventListener('load', res, { once: true })))
+    .then(() => new Promise((res) => (window.requestIdleCallback ? requestIdleCallback(res, { timeout: 1500 }) : setTimeout(res, 300))));
   if (vids.length) {
-    const near = new IntersectionObserver((es) => {
-      for (const e of es) if (e.isIntersecting && !e.target.src) { e.target.src = e.target.dataset.rxSrc; e.target.load(); }
-    }, { rootMargin: '600px 0px' });
-    const seen = new IntersectionObserver((es) => {
-      for (const e of es) {
-        const v = e.target;
-        if (e.isIntersecting && autoplay && !v.dataset.userPaused) {
-          if (!v.src) { v.src = v.dataset.rxSrc; v.load(); }
-          v.play().catch(() => {});
-        } else if (!e.isIntersecting && !v.paused) v.pause();
+    const ensure = (v) => { if (!v.src) { v.src = v.dataset.rxSrc; v.load(); } };
+    const area = new Map(); // on-screen videos and how much of each shows
+    const choose = () => { // play the most visible few, pause the rest
+      const want = new Set([...area].filter(([v]) => !v.dataset.userPaused).sort((a, b) => b[1] - a[1]).slice(0, MAX_PLAY).map(([v]) => v));
+      for (const v of vids) {
+        if (want.has(v) && autoplay) { ensure(v); v.play().catch(() => {}); } else if (!v.paused) v.pause();
       }
-    }, { threshold: 0.2 });
+    };
+    afterLoad.then(() => {
+      const near = new IntersectionObserver((es) => {
+        for (const e of es) if (e.isIntersecting && !autoplay) ensure(e.target); // with controls: ready to press play
+      }, { rootMargin: '400px 0px' });
+      const seen = new IntersectionObserver((es) => {
+        for (const e of es) {
+          if (e.isIntersecting && e.intersectionRatio >= 0.2) area.set(e.target, e.intersectionRect.width * e.intersectionRect.height);
+          else area.delete(e.target);
+        }
+        choose();
+      }, { threshold: [0, 0.2, 0.45, 0.7, 1] });
+      for (const v of vids) { near.observe(v); seen.observe(v); }
+    });
     for (const v of vids) {
-      near.observe(v); seen.observe(v);
       if (!autoplay) v.controls = true;
       else v.addEventListener('click', () => {
-        if (v.paused) { delete v.dataset.userPaused; v.play().catch(() => {}); } else { v.dataset.userPaused = '1'; v.pause(); }
+        if (v.paused) { delete v.dataset.userPaused; area.set(v, Infinity); ensure(v); v.play().catch(() => {}); choose(); } else { v.dataset.userPaused = '1'; v.pause(); choose(); }
       });
     }
   }
@@ -108,7 +121,7 @@
   // Each block: [data-rx-block] with data-module (hashed URL), a stage element [data-rx-stage]
   // holding the poster, and for demos a controls strip [data-rx-panel].
   const blocks = [...document.querySelectorAll('[data-rx-block]')];
-  const MAX_LIVE = isTouch ? 4 : 6; // browsers cap live WebGL contexts; far-away demos are unmounted
+  const MAX_LIVE = isTouch ? 2 : 3; // each live canvas costs GPU memory; far-away blocks are unmounted
   const live = new Set();
   const state = new WeakMap();
   const note = (b, text) => {
@@ -152,9 +165,17 @@
     status(b, 'loading');
     let data = {};
     try { data = JSON.parse(b.dataset.rxData || '{}'); } catch { /* none */ }
+    const wide = b.classList.contains('rx-scrolly-wide');
     const ctx = {
       id: b.id, slug: main?.dataset.slug || '', data, asset, reducedMotion: reduced, isTouch,
-      panel: st.panel, kind: b.dataset.rxBlock,
+      panel: st.panel, kind: b.dataset.rxBlock, width: wide ? 'wide' : 'full',
+      // where the step text covers the stage right now, as a stage.setShift(fx, fy) that keeps the
+      // model clear of it: on a full-width desktop scrolly the cards cover the left
+      shift() {
+        // up to 900 px wide the text sits below the stage, and a wide scrolly has it beside
+        if (b.dataset.rxBlock !== 'scrolly' || wide || innerWidth <= 900) return [0, 0];
+        return [0.15, 0];
+      },
     };
     st.mounting = (async () => {
       const mod = await import(b.dataset.module);
@@ -166,10 +187,11 @@
       const api = await st.mounting;
       st.api = api;
       st.added = [...stage.children].filter((n) => !before.has(n));
+      st.canvases = [...stage.querySelectorAll('canvas')];
       live.add(b);
       status(b, 'live');
       note(b, '');
-      if (st.progress != null) callProgress(b, st, true);
+      if (b.dataset.rxBlock === 'scrolly') measure(b, true); // where the reader is now, not where they were
       evict();
     } catch (e) {
       console.error(`[${b.id}] demo module failed:`, e);
@@ -188,6 +210,8 @@
       const st = state.get(e.target);
       st.near = e.isIntersecting;
       if (e.isIntersecting && e.target.dataset.state !== 'failed') mount(e.target);
+      // arriving by a jump (a link, a reload part way down) sends no scroll event: measure now
+      if (e.isIntersecting && e.target.dataset.rxBlock === 'scrolly') measure(e.target);
     }
   }, { rootMargin: '400px 0px' });
   for (const b of blocks) {
@@ -206,20 +230,35 @@
     if (!force && key === st.lastKey) return;
     st.lastKey = key;
     try { st.api.setProgress(st.progress, st.step, st.stepP); } catch (e) { console.error(`[${b.id}] setProgress failed`, e); }
+    // draw in this same frame, so the canvas and any HTML labels on it move together
+    for (const c of st.canvases || []) c.rxFlush?.();
+  }
+  // layout values that only change on resize, read once instead of every scroll frame
+  function geom(b, st) {
+    if (st.geom && st.geom.w === innerWidth && st.geom.h === innerHeight) return st.geom;
+    const stage = b.querySelector('.rx-scrolly-stage');
+    return (st.geom = {
+      w: innerWidth, h: innerHeight, body: b.querySelector('.rx-scrolly-body'), stage,
+      top: parseFloat(getComputedStyle(stage).top) || 0,
+      // the active step is the last one whose text has come up past the line: its top passes 70%
+      // of the screen on a desktop (so it is in view and the one before has scrolled away), 84% on a
+      // phone, where the text scrolls in below the stage (--rx-line in site.css)
+      line: innerHeight * (parseFloat(getComputedStyle(b).getPropertyValue('--rx-line')) || 0.7),
+    });
   }
   function measure(b, force) {
     const st = state.get(b);
-    const body = b.querySelector('.rx-scrolly-body'), stage = b.querySelector('.rx-scrolly-stage');
-    const r = body.getBoundingClientRect();
-    const top = parseFloat(getComputedStyle(stage).top) || 0;
-    const span = r.height - stage.offsetHeight;
-    const p = span > 0 ? Math.min(1, Math.max(0, (top - r.top) / span)) : 0;
-    // the active step is the last one whose top has come up past the line (60% down the screen;
-    // lower on phones, where the cards ride at the bottom): --rx-line in site.css
-    const line = innerHeight * (parseFloat(getComputedStyle(b).getPropertyValue('--rx-line')) || 0.6);
+    const g = geom(b, st);
+    const r = g.body.getBoundingClientRect();
+    const span = r.height - g.stage.offsetHeight;
+    const p = span > 0 ? Math.min(1, Math.max(0, (g.top - r.top) / span)) : 0;
     const steps = st.steps || (st.steps = [...b.querySelectorAll('[data-step]')]);
-    let step = 0, stepP = 0;
-    steps.forEach((s, i) => { const sr = s.getBoundingClientRect(); if (sr.top <= line) { step = i; stepP = Math.min(1, Math.max(0, (line - sr.top) / (sr.height || 1))); } });
+    const cards = st.cards || (st.cards = steps.map((s) => s.querySelector('.rx-step-card') || s));
+    let step = 0, stepP = steps.length ? 0 : p; // a scrolly without steps: one step, the whole way
+    steps.forEach((s, i) => { // progress through a step runs over the height of its slot
+      const y = cards[i].getBoundingClientRect().top;
+      if (y <= g.line) { step = i; stepP = Math.min(1, Math.max(0, (g.line - y) / (s.offsetHeight || 1))); }
+    });
     if (step !== st.step) {
       steps.forEach((s, i) => s.classList.toggle('is-active', i === step));
       b.dataset.step = String(step);
@@ -232,7 +271,8 @@
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { ticking = false; for (const b of scrollies) if (state.get(b).near || state.get(b).api) measure(b); });
+      // only scrollies near the screen: one far away keeps its last picture and is not drawn anyway
+      requestAnimationFrame(() => { ticking = false; for (const b of scrollies) if (state.get(b).near) measure(b); });
     };
     addEventListener('scroll', onScroll, { passive: true });
     // a resize changes the stage's shape: re-send the progress so the module can re-frame

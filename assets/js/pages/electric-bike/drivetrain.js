@@ -166,8 +166,7 @@ export async function mount(el, ctx) {
 
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, LOOKS.length - 1);
-    const portrait = el.clientHeight > el.clientWidth;
-    stage.setShift(portrait ? 0 : 0.15, portrait ? 0.2 : 0);
+    stage.setShift(...ctx.shift()); // clear of the step cards on a desktop; none on a phone (text below)
     // blend in from the previous step over the first 40 % of this one (a cut with reduced motion)
     const k = step === 0 || reduced ? 1 : smooth(0, 0.4, stepP);
     const prev = Math.max(0, step - 1);

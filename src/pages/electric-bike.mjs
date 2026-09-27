@@ -5,6 +5,8 @@
 // name nobody), how the second-belt failure was finally fixed, what he would do differently next
 // time, and what changed in the V3 render (it is shown as a render only).
 const M = '/assets/models/electric-bike';
+// the carbon fibre parts in the CAD (same list as assets/js/pages/electric-bike/bike.js)
+const CARBON = 'motor_mount|4mm_drive_side_bearing_plate|2mm_non_drive_side_bearing_plate|2mm_bearing_retaining_plate|battery_door|cf_CSK_battery_holder|drive_side_static_battery_plate';
 
 export default {
   summary: {
@@ -24,7 +26,6 @@ export default {
     items: [
       { v: 'hero-ride-pass.mp4', c: 'Riding past on the street' },
       { v: 'hero-drive-running.mp4', c: 'The drive running on the stand: chain, sprocket and rear wheel under power while the cranks stay still' },
-      { v: 'hero-launch.mp4', c: 'Pulling away from a stop' },
     ],
   },
   sections: [
@@ -56,14 +57,19 @@ export default {
         ] },
       ] },
 
-    { type: 'demo', id: 'throttle', module: 'throttle', height: 'clamp(360px, 62vh, 620px)', poster: `${M}/poster-throttle.webp`,
+    { type: 'scrolly', id: 'throttle', module: 'runup', width: 'wide', stepHeight: '90vh', poster: `${M}/poster-throttle.webp`,
       h: 'Rev it up',
-      p: [
-        'Drag the thumb throttle. This is the bike on its repair stand with the rear wheel off the ground, the way I tested it. Both motors, both belts, every pulley, the idlers and the chain sprocket turn about their real axes in my CAD, each at the speed its tooth counts give it.',
-        'The table follows speed and torque through the reduction. Full throttle asks for 100 N·m at the sprocket: about 3.1 N·m from each motor becomes 27.8 N·m on axle 1 and 100 N·m on axle 2. As the motors near their no-load speed the pack runs out of voltage and the torque fades. Pick a rear cog to see what the same motor speed means at the wheel. Point at a row to light up its parts.',
-        'On the road, drag and weight hold it well below the stand numbers: it tops out at about 35 mph.',
+      p: ['This is the bike on its repair stand with the rear wheel off the ground, the way I tested it. Scroll to open the thumb throttle. Both motors, both belts, every pulley, the idlers and the chain sprocket turn about their real axes in my CAD, each at the speed its tooth counts give it, and the readout follows speed and torque through the reduction.'],
+      steps: [
+        { h: 'Throttle closed', p: ['Everything at rest. The two motors share the first belt, so they always turn together, and the 16.2 : 1 reduction sits between them and the chain sprocket.'] },
+        { h: 'Half throttle', p: ['In this model, half throttle asks for half of the peak torque, 50 N·m at the sprocket, and the motors start to spin up. Every stage of the reduction turns slower than the one before it and carries more torque.'] },
+        { h: 'Full throttle: 100 N·m', p: ['Full throttle asks for 100 N·m at the sprocket: about 3.1 N·m from each motor becomes 27.8 N·m on axle 1 and 100 N·m on axle 2. The second belt pulls about 1,745 N, 3.6 times the first.'] },
+        { h: 'Out of voltage', p: [
+          'As the motors near their nominal no-load speed, 150 KV x 48 V = 7,200 rpm, the pack runs out of voltage and the torque fades. That is about 444 rpm at the chain sprocket, and about 40 mph in the 18T cog with the wheel off the ground (an estimate).',
+          'On the road, drag and weight hold it well below the stand numbers: it tops out at about 35 mph.',
+        ] },
       ],
-      caption: 'Motor speed tops out at the nominal no-load speed, 150 KV x 48 V = 7,200 rpm. Torque is split through the ratios with no losses, the spin-up and coast-down are a simple model, and the animation runs 80 times slower than real. Road speed is an estimate: a 27 in rim with a standard tire, taken as 694 mm across, and an assumed cassette, the stock Shimano HG31 11-32 eight-speed of a 2019 Trek Dual Sport 2, since the one on my bike is not confirmed. The chain and rear wheel are not in the CAD; the videos below show them.' },
+      caption: 'Motor speed tops out at the nominal no-load speed, 150 KV x 48 V = 7,200 rpm. Torque is split through the ratios with no losses, and the spin-up is a simple model; the parts turn with your scroll, slowed down, while the numbers are the real speeds. Road speed is an estimate: a 27 in rim with a standard tire, taken as 694 mm across, and an assumed cassette, the stock Shimano HG31 11-32 eight-speed of a 2019 Trek Dual Sport 2, since the one on my bike is not confirmed. At 7,200 rpm that is about 23 mph in the 32T cog and about 66 mph in the 11T, wheel off the ground. The chain and rear wheel are not in the CAD; the videos below show them.' },
 
     { type: 'media', layout: 'row', items: [
       { v: 'test-drive-wide.mp4', c: 'The real drive on the stand: the whole rear drivetrain under power' },
@@ -75,24 +81,20 @@ export default {
       'I built this for my mom, and I did the whole design and build myself. It is a mid-drive: the motors sit in the front triangle and drive the bike\'s own chain, so their torque goes through the rear gears.',
       { h: 'Measuring and layout' },
       'I started from the stock bike, a 2019 Trek Dual Sport 2. I measured the frame tubes and clearances with a ruler, calipers and 3D-printed test pieces, then put a photo of the bike into Fusion 360 as a canvas and laid the pulleys out over it. I sketched the chain routing over a photo of the drivetrain: the chain wraps a drive sprocket and runs around jockey wheels. The CAD took about two days.',
-    ] },
-    { type: 'media', layout: 'grid', items: [
-      { i: 'before-stock-bike.webp', c: 'The stock bike before the conversion' },
-      { i: 'cad-layout-over-photo.webp', c: 'Laying out and measuring over a photo of the bike in Fusion 360' },
-      { i: 'design-chain-path-sketch.webp', c: 'The chain routing, sketched over a photo of the drivetrain: the chain wraps the drive sprocket, with two jockey wheels' },
-      { i: 'cad-render-v1-drive-side.webp', c: 'My render of the drive side from July: the second belt, the chain sprocket and two jockey wheels' },
-    ] },
+    ],
+      media: [
+        [{ i: 'before-stock-bike.webp', c: 'The stock bike before the conversion' }, { i: 'cad-layout-over-photo.webp', c: 'Laying out and measuring over a photo of the bike in Fusion 360' }],
+        [{ i: 'design-chain-path-sketch.webp', c: 'The chain routing, sketched over a photo of the drivetrain: the chain wraps the drive sprocket, with two jockey wheels' }, { i: 'cad-render-v1-drive-side.webp', c: 'My render of the drive side from July: the second belt, the chain sprocket and two jockey wheels' }],
+      ] },
 
     { type: 'prose', id: 'motors', h: 'Motors and controller', p: [
       'The motors are two [SKP 6465](https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW and 150 KV each, 5.3 kW together. They run on a 48 V, 16 Ah pack through a dual VESC. At 150 KV and 48 V their nominal no-load speed is 150 x 48 = 7,200 rpm, and the 16.2 : 1 reduction brings that down to about 444 rpm at the chain sprocket.',
       'I brought them up on the bench first, on their carbon fiber mount. I ran motor detection in VESC Tool for both controllers, and it measured the two motors almost the same: about 32 mΩ of resistance and a flux linkage of 4.73 and 4.82 mWb. Then I mapped the thumb throttle in the setup wizard.',
-    ] },
-    { type: 'media', layout: 'grid', items: [
-      { i: 'still-bench-motors.webp', c: 'Both motors on their carbon fiber mount during bench bring-up' },
-      { v: 'bench-first-spin.mp4', c: 'The first spin-up on the bench' },
-      { i: 'vesc-foc-detection.webp', c: 'Motor detection in VESC Tool: both controllers, one per motor' },
-      { i: 'vesc-throttle-mapping.webp', c: 'Mapping the thumb throttle in the VESC Tool setup wizard' },
-    ] },
+    ],
+      media: [
+        [{ i: 'still-bench-motors.webp', c: 'Both motors on their carbon fiber mount during bench bring-up' }, { v: 'bench-first-spin.mp4', c: 'The first spin-up on the bench' }],
+        [{ i: 'vesc-foc-detection.webp', c: 'Motor detection in VESC Tool: both controllers, one per motor' }, { i: 'vesc-throttle-mapping.webp', c: 'Mapping the thumb throttle in the VESC Tool setup wizard' }],
+      ] },
 
     { type: 'prose', id: 'belts', h: 'Two belt stages', p: [
       'The drive reduces speed in two belt stages, and the torque multiplies by the same 16.2 on the way to the sprocket, which is how 100 N·m gets there.',
@@ -117,58 +119,68 @@ export default {
         ],
         caption: 'From my CAD: belt paths as tangent lines between the HTD pitch circles, with the backside idlers.',
       } },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'parts-72t-pulleys.webp', c: 'The two 72T aluminum pulleys' },
-      { i: 'cad-render-serpentine.webp', c: 'My render of the serpentine first belt, from July' },
-    ] },
+    ],
+      media: [
+        { i: 'parts-72t-pulleys.webp', c: 'The two 72T aluminum pulleys' },
+        { i: 'cad-render-serpentine.webp', c: 'My render of the serpentine first belt, from July' },
+      ] },
 
     { type: 'prose', id: 'jackshaft', h: 'The jackshaft axles and the adapters', p: [
       'The jackshaft needed a lot of attachments to make three standards work together on the same axles: HTD belt pulleys, metric bearings and a bicycle chain sprocket. I standardized on 14 mm keyed shafts, cut to length. 6202 bearings with 14 mm bores carry each axle in bearing plates on both sides.',
       'The chain sprocket fits none of those, so axle 2 carries a 14 mm keyed robotics hub and a stainless steel adapter plate that couples the hub to the sprocket; I ground the plate by hand with a rotary tool. Printed spacers of exact lengths hold every pulley in line with its belt.',
-    ] },
-    { type: 'media', layout: 'grid', cols: 3, items: [
-      { i: 'build-keyed-shafts-cut.webp', c: 'Two 14 mm keyed shafts cut to length' },
-      { i: 'parts-sprocket-adapter-plate.webp', c: 'The stainless adapter plate that couples the keyed hub to the chain sprocket, with the sprocket behind it' },
-      { v: 'build-adapter-grinding.mp4', c: 'Grinding the stainless adapter plate with a rotary tool' },
-      { i: 'build-jackshaft-assembly.webp', c: 'Axle 1 coming together: the 20T pulley over the 72T pulley on the 14 mm keyed shaft' },
-      { i: 'build-output-stack.webp', c: 'Axle 2: the 72T pulley, keyed hub, adapter plate and sprocket on one shaft, with the CAD behind' },
-      { v: 'build-jackshaft-in-hand.mp4', c: 'Axle 1 off the bike: the 72T pulley, 20T pulley and a 6202 bearing on the keyed shaft' },
-    ] },
+    ],
+      media: [
+        [{ i: 'build-keyed-shafts-cut.webp', c: 'Two 14 mm keyed shafts cut to length' }, { i: 'build-jackshaft-assembly.webp', c: 'Axle 1 coming together: the 20T pulley over the 72T pulley on the 14 mm keyed shaft' }],
+        [{ i: 'parts-sprocket-adapter-plate.webp', c: 'The stainless adapter plate that couples the keyed hub to the chain sprocket, with the sprocket behind it' }, { v: 'build-adapter-grinding.mp4', c: 'Grinding the stainless adapter plate with a rotary tool' }],
+        [{ i: 'build-output-stack.webp', c: 'Axle 2: the 72T pulley, keyed hub, adapter plate and sprocket on one shaft, with the CAD behind' }, { v: 'build-jackshaft-in-hand.mp4', c: 'Axle 1 off the bike: the 72T pulley, 20T pulley and a 6202 bearing on the keyed shaft' }],
+      ] },
 
     { type: 'prose', id: 'chain', h: 'Into the bike\'s own chain', p: [
       'The 20T sprocket drives the bike\'s existing chain, with a jockey wheel guiding the chain around it, so the motors\' torque goes through the rear gears. The cranks freewheel, so the pedals stay still when the motors drive.',
       { h: 'Structure and battery box' },
       'I designed all of the custom parts. The motor mount, the bearing plates and the battery box panels are carbon fiber, cut by an outside shop. The outer plates and the brackets along the seat tube and down tube are powder-coated 5052 aluminum, with the brackets bent on a press brake. The adapter plate on axle 2 is stainless steel. I 3D printed the shaft spacers and the polycarbonate chain idler mount myself. The 48 V, 16 Ah battery sits in a box under the top tube, closed with a door and two draw latches.',
-    ] },
-    { type: 'media', layout: 'grid', items: [
-      { i: 'parts-flatlay.webp', c: 'The custom parts laid out: carbon fiber plates and black powder-coated aluminum lattice parts' },
-      { v: 'build-battery-door-latch.mp4', c: 'Closing the battery box door with its draw latches' },
-      { i: 'still-carbon-bearing-plate.webp', c: 'A carbon fiber bearing plate holding the axle bearings' },
-      { i: '/assets/media/ebike-nondrive-side.webp', c: 'Non-drive side: carbon fiber panel and bearing plate, the aluminum lattice plate and hex standoffs' },
-    ] },
+    ],
+      media: [
+        [{ i: 'parts-flatlay.webp', c: 'The custom parts laid out: carbon fiber plates and black powder-coated aluminum lattice parts' }, { i: 'still-carbon-bearing-plate.webp', c: 'A carbon fiber bearing plate holding the axle bearings' }],
+        [{ v: 'build-battery-door-latch.mp4', c: 'Closing the battery box door with its draw latches' }, { i: '/assets/media/ebike-nondrive-side.webp', c: 'Non-drive side: carbon fiber panel and bearing plate, the aluminum lattice plate and hex standoffs' }],
+      ] },
 
-    { type: 'demo', id: 'cad-versions', module: 'versions', aside: 'left', height: 'clamp(340px, 58vh, 560px)', poster: `${M}/poster-versions.webp`,
-      h: 'Two versions of the CAD',
-      p: [
-        'Both versions of my CAD, to orbit. Diffing every part between the two files shows that only the chain idler changed.',
-        '**V1** hangs two 11T jockey wheels on shoulder screws from a flange of the bent aluminum seat tube bracket, lit orange. **V2**, the one I built, keeps one jockey, moves it 4 mm outboard and carries it on a tall 3D-printed polycarbonate mount, lit orange and shown see-through so the jockey behind it reads.',
-      ],
-      caption: 'Drag to turn. Jockey wheels in blue. The frame mockup in V2 is hidden so the two match.' },
-    { type: 'iterations', id: 'iterations', h: 'Iteration: the chain idler', items: [
-      { label: 'V1', title: 'Two jockey wheels on an aluminum flange',
-        p: [
-          'Two 11T jockey wheels on shoulder screws route the chain around the drive sprocket. The screws thread into a flange of the aluminum seat tube bracket. One of the two was there to add chain wrap on the big pedaling chainring. The drive ran this way in the first tests on the stand.',
-          { problem: 'The flange was bent from a flat pattern on a press brake, and the drive\'s power, about 6 kW, easily bent it out of shape under the jockey wheels.', title: 'The idler mount bent' },
-          { fix: 'V2 carries one jockey on a tall 3D-printed polycarbonate mount instead of the bent flange. I also realized the second jockey, the one adding chain wrap on the pedaling chainring, was not really needed.' },
-        ],
-        media: [{ i: 'v1-mockup-two-jockeys.webp', c: 'V1 mocked up in the frame: the 20T sprocket above the chainring and two blue jockey wheels' }, { i: 'v1-chain-wrap.webp', c: 'The chain wrapped around the drive sprocket and past the two jockeys' }] },
-      { label: 'V2, as built', title: 'One jockey on a tall printed mount',
-        p: ['One jockey wheel, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube. The same update added a polycarbonate battery plate adapter and moved the drive-side battery panel out 6 mm. The motors, both belts, every pulley and both axle stacks are identical in the two CAD files.'],
-        media: [{ i: 'v2-idler-mount-print.webp', c: 'The 3D-printed idler mount on the print bed' }, { i: 'still-v2-idler-mount.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube' }] },
-      { label: 'V3, latest', title: 'The latest version of the design',
-        p: ['My latest version of the drive unit, rendered in October 2025 with the frame shown see-through. It exists as a render only; there is no CAD file of it on this page, so the viewer above shows V1 and V2.'],
-        media: [{ i: 'render-v3-latest.webp', c: 'V3, my latest version: a render of the drive unit and battery box with the frame see-through' }] },
+    { type: 'scrolly', id: 'iterations', module: '@turntable', width: 'wide', side: 'right', stepHeight: '105vh', poster: `${M}/poster-versions.webp`,
+      h: 'Iteration: the chain idler',
+      p: ['Two versions of my CAD and a render of the third. Diffing every part between the two CAD files shows that only the chain idler changed. Jockey wheels in blue, the part that carries them in orange; the frame mockup in V2 is hidden so the two match.'],
+      data: { models: [
+        { label: 'V1', src: `${M}/v1.glb`, hide: 'rough_bike_frame_mockup', carbon: CARBON,
+          highlight: [{ parts: 'seat_tube_mount', color: '#ff6b35', intensity: 0.6 }, { parts: 'Jockey_Wheel', color: '#3d8bff', intensity: 0.35 }] },
+        { label: 'V2', src: `${M}/final.glb`, hide: 'rough_bike_frame_mockup', ghost: 'polycarb_idler_mount', carbon: CARBON,
+          highlight: [{ parts: 'polycarb_idler_mount', color: '#ff6b35', intensity: 0.35 }, { parts: 'Jockey_Wheel', color: '#3d8bff', intensity: 0.35 }] },
+      ] },
+      steps: [
+        { h: 'V1: two jockey wheels on an aluminum flange',
+          view: { version: 0, focus: 'Jockey_Wheel', azimuth: 156, elevation: -15, pad: 2.3 },
+          p: [
+            'Two 11T jockey wheels on shoulder screws route the chain around the drive sprocket. The screws thread into a flange of the aluminum seat tube bracket, lit orange. One of the two was there to add chain wrap on the big pedaling chainring. The drive ran this way in the first tests on the stand.',
+          ] },
+        { h: 'The idler mount bent',
+          view: { version: 0, focus: 'Jockey_Wheel|seat_tube_mount', azimuth: 140, elevation: -8, pad: 1.15 },
+          p: [
+            { problem: 'The flange was bent from a flat pattern on a press brake, and the drive\'s power, about 6 kW, easily bent it out of shape under the jockey wheels.', title: 'The idler mount bent' },
+            { fix: 'V2 carries one jockey on a tall 3D-printed polycarbonate mount instead of the bent flange. I also realized the second jockey, the one adding chain wrap on the pedaling chainring, was not really needed.' },
+          ] },
+        { h: 'V2, as built: one jockey on a tall printed mount',
+          view: { version: 1, focus: 'Jockey_Wheel|polycarb_idler_mount', azimuth: 156, elevation: -15, pad: 1.2 },
+          p: ['One jockey wheel, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube, lit orange and shown see-through so the jockey behind it reads. The same update added a polycarbonate battery plate adapter and moved the drive-side battery panel out 6 mm.'] },
+        { h: 'Everything else stayed',
+          view: { version: 1, azimuth: 200, elevation: 16, pad: 1.05 },
+          p: ['The motors, both belts, every pulley and both axle stacks are identical in the two CAD files.'] },
+        { h: 'V3, latest: a render',
+          view: { version: 1, azimuth: 225, elevation: 18, pad: 1.05, image: 'render-v3-latest.webp', alt: 'V3, my latest version: a render of the drive unit and battery box with the frame see-through' },
+          p: ['My latest version of the drive unit, rendered in October 2025 with the frame shown see-through. It exists as a render only; there is no CAD file of it, so the 3D here shows V1 and V2.'] },
+      ] },
+    { type: 'media', layout: 'grid', items: [
+      { i: 'v1-mockup-two-jockeys.webp', c: 'V1 mocked up in the frame: the 20T sprocket above the chainring and two blue jockey wheels' },
+      { i: 'v1-chain-wrap.webp', c: 'V1: the chain wrapped around the drive sprocket and past the two jockeys' },
+      { i: 'v2-idler-mount-print.webp', c: 'V2: the 3D-printed idler mount on the print bed' },
+      { i: 'still-v2-idler-mount.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube' },
     ] },
 
     { type: 'prose', id: 'failures', h: 'What the first rides found', p: [
@@ -180,18 +192,17 @@ export default {
         'This is the harder-working of the two belts: at 100 N·m on the sprocket it pulls about 1,750 N, 3.6 times the first belt (from the pulley sizes in my CAD).',
       ], title: 'The second belt misaligned and stripped' },
       { next: 'My note from the same inspection: "I need to add a tensioner in here for the second belt that carries more torque."', title: 'A tensioner for the second belt', label: 'Planned' },
-    ] },
-    { type: 'media', layout: 'grid', items: [
-      { v: 'failure-fix-narration.mp4', c: 'The inspection: the bearing that slips out of the carbon plate' },
-      { v: 'failure-belt-stripped.mp4', c: 'The second belt after the top speed run, with a section of its teeth stripped' },
-      { i: 'failure-belt-worn.webp', c: 'The stripped section of the second belt, next to a 72T pulley' },
-      { i: 'failure-spacer-chewed.webp', c: 'A chewed-up printed spacer between a 6202 bearing and the 20T pulley' },
-    ] },
+    ],
+      media: [
+        [{ v: 'failure-fix-narration.mp4', c: 'The inspection: the bearing that slips out of the carbon plate' }, { i: 'failure-spacer-chewed.webp', c: 'A chewed-up printed spacer between a 6202 bearing and the 20T pulley' }],
+        [{ v: 'failure-belt-stripped.mp4', c: 'The second belt after the top speed run, with a section of its teeth stripped' }, { i: 'failure-belt-worn.webp', c: 'The stripped section of the second belt, next to a 72T pulley' }],
+      ] },
 
     { type: 'prose', id: 'results', h: 'Results', p: [
       'It rides: about 35 mph and about 20 miles of range, with 100 N·m at the sprocket.',
     ] },
     { type: 'media', layout: 'row', items: [
+      { v: 'hero-launch.mp4', c: 'Pulling away from a stop' },
       { v: 'ride-launch-sunny.mp4', c: 'Pulling away from the driveway' },
       { i: 'finished-drive-side.webp', c: 'The finished bike, drive side' },
     ] },

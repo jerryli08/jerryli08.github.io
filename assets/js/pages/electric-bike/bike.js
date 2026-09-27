@@ -20,6 +20,9 @@ import beltPaths from './belts.js';
 
 export const MODEL = '/assets/models/electric-bike/final.glb';
 export const MODEL_V1 = '/assets/models/electric-bike/v1.glb';
+// the carbon fibre parts (phase A carbon set, /home/claude/work/ebike/demos.md: the one part named
+// "cf" and the flat 2 mm and 4 mm plates; the aluminum plates are 3.2 mm), shaded as carbon
+export const CARBON = 'motor_mount|4mm_drive_side_bearing_plate|2mm_non_drive_side_bearing_plate|2mm_bearing_retaining_plate|battery_door|cf_CSK_battery_holder|drive_side_static_battery_plate';
 
 // tooth counts (part names, checked against the geometry) and HTD 5M pitch radii in metres
 export const T = { motor: 16, big: 72, jack: 20, chain: 20, jockey: 11, belt1: 115, belt2: 84 };
@@ -91,7 +94,7 @@ export const ROTATING = ['magnets', 'rotor', 'pulley16', 'pulley72j', 'pulley72o
  */
 export async function loadBike(stage, url = MODEL) {
   const { THREE } = stage;
-  const model = await stage.load(url);
+  const model = await stage.load(url, { carbon: new RegExp(CARBON) });
   const groups = {};
   const nodes = model.children.slice();
   const center = new THREE.Vector3();
