@@ -1,0 +1,6 @@
+{
+  "prefix": "bb2",
+  "remove": ["^hex_socket_button_head_M4x35", "^hex_socket_button_head_M3x10", "^m4 nonlock nut"],
+  "keep": ["^Weapon Blade", "^M4006_01_Rotor", "^M4006_02_Stator", "^M4006_03_Bearing", "^hex_socket_button_head_M3x06",
+           "^Wheel assembly", "^drive motor", "^Top Plate", "^Bottom Plate", "^full tpu", "^rev switch", "^4mm id bearing", "^spacer"]
+}
