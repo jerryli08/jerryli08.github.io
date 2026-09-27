@@ -1,6 +1,7 @@
-// Shared rig for the Drone on Wheels page demos: the docking latch, wheels, props and the elastic
-// bands, all on Jerry's real CAD (assets/models/rover.glb and drone.glb, the same models as the
-// landing scene) and about the same real axes that assets/js/world.js uses.
+// Shared rig for the Drone on Wheels page: the docking latch, wheels, props and the elastic bands,
+// all on Jerry's real CAD (assets/models/rover.glb and drone.glb, the same models as the landing
+// scene) and about the same real axes that assets/js/world.js uses. Every scrolly on the page is a
+// pure function of the scroll position: nothing in here animates on its own.
 //
 // Model frame: metres, y up, (x, y, z) = (x, z, -y) of the STEP in millimetres. Every latch pin
 // runs along model X. The rover's front (the AprilTag end) is -X and its left side is +Z.
@@ -10,7 +11,6 @@ export const DEG = Math.PI / 180;
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-export const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 // ------------------------------------------------------------------ latch geometry (from the STEP)
 // Pin axes as (y, z) in model metres, the same numbers world.js rigs the landing scene with.
@@ -23,9 +23,8 @@ export const LATCH_ARMS = [ // bottom pivot = the arm's 7-tooth pinion; top = th
   { re: /Component8/, sign: -1, bot: [-0.0888, -0.1737], top: [-0.0546, -0.1890], latch: 1 },
 ];
 export const LATCH_OPEN = 42 * DEG; // arm travel, confirmed by Jerry
-export const RATIO = 7 / 25;        // servo gear turns 7/25 of the arm angle
+export const RATIO = 7 / 25;        // the servo gear turns 7/25 of the arm angle
 export const LATCH_MID_Z = [-0.05635, -0.16635]; // centre plane of each latch (between its two door pins)
-export const TUBES = [[-0.0701, -0.0565], [-0.0701, -0.1665]]; // the drone's 16 mm landing tubes, docked (y, z)
 export const CUT_X = 0.417; // a section through the middle of the latch
 
 // ------------------------------------------------------------------ passive catch (computed from the CAD)
@@ -45,6 +44,16 @@ export function doorPush(hmm) {
   const f = (Math.max(2, hmm) - 2) / 0.25, i = Math.min(PUSH.length - 2, Math.floor(f));
   return lerp(PUSH[i], PUSH[i + 1], f - i);
 }
+/**
+ * The elastic pulling a door back up once the tube is past it (radians, finger down): a short
+ * damped bounce off the closed position so it reads as a snap. q runs 0..0.5 through the snap; the caller maps the
+ * scroll onto q, so it plays forwards and backwards with the scroll.
+ */
+export function snapDoor(q) {
+  if (q <= 0) return PUSH[0] * DEG;
+  if (q >= 0.5) return 0;
+  return PUSH[0] * DEG * Math.exp(-q * 16) * Math.abs(Math.cos(q * 38)); // bounces off the closed position
+}
 
 // ------------------------------------------------------------------ rigging
 const box3 = (o) => new THREE.Box3().setFromObject(o);
@@ -60,7 +69,7 @@ export function rigLatch(stage, rover) {
   const doorParts = P(/^anim_rover_\d+_passive_latch_doors/);
   const gear = P(/^anim_rover_\d+_Spur_Gear/)[0], idlerPart = P(/^anim_rover_\d+_Component43/)[0], horn = P(/^anim_rover_\d+_SERVO_ARM_HORN/)[0];
   // every latch part gets its own material, so it can be lit up without lighting the rest
-  for (const p of [...armParts, ...doorParts, gear, idlerPart, horn]) p?.traverse((m) => { if (m.isMesh) m.material = m.material.clone(); });
+  for (const p of [...armParts, ...doorParts, gear, idlerPart, horn]) p?.traverse((m) => { if (m.isMesh) m.material = stage.cloneMaterial(m.material); });
   // the horn sits face to face with the gear; nudge it forward so the two faces never speckle (as in world.js)
   horn?.traverse((m) => { if (m.isMesh) Object.assign(m.material, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }); });
 
@@ -90,25 +99,15 @@ export function rigLatch(stage, rover) {
     armParts: arms.map((a) => a.part).filter(Boolean),
     doorParts: doors.map((d) => d.part),
     get open() { return open; },
-    /** a: 0 latched .. 1 fully open (42 degrees of arm travel) */
-    set(a) {
+    /** a: 0 latched .. 1 fully open (42 degrees of arm travel); extra[i]: radians added to arm i (opening positive) */
+    set(a, extra = []) {
       open = a;
       const alpha = LATCH_OPEN * a, th = alpha * RATIO;
       servo.setAngle(th); idler.setAngle(-th);
-      for (const arm of arms) arm.pivot?.setAngle(arm.sign * alpha);
-      rig.onChange?.();
-    },
-    /** turn one door (or all) on its pin, finger down by b radians, relative to its arm */
-    setDoor(b, which = doors) {
-      for (const d of [].concat(which)) { d.b = b; d.pivot.setAngle(-d.arm.sign * b); }
-      rig.onChange?.();
-    },
-    /** arm angles offset for the backlash demo: extra[i] radians added to arm i (opening positive) */
-    setArmExtra(extra) {
-      const alpha = LATCH_OPEN * open;
       arms.forEach((arm, i) => arm.pivot?.setAngle(arm.sign * (alpha + (extra[i] || 0))));
-      rig.onChange?.();
     },
+    /** turn every door on its pin, finger down by b radians, relative to its arm */
+    setDoor(b) { for (const d of doors) { d.b = b; d.pivot.setAngle(-d.arm.sign * b); } },
   };
   return rig;
 }
@@ -181,12 +180,13 @@ export function addElastic(stage, rover, rig, { color = '#f4c542', xs = [0.397, 
   return { bands, update, rest: bands[0]?.len || 0, dispose() { geo.dispose(); mat.dispose(); } };
 }
 
-// ------------------------------------------------------------------ framing helpers
+// ------------------------------------------------------------------ framing
 /**
  * Tight camera fits for the docked pair. The pair is X-shaped, so one bounding box around it is
  * mostly empty corners and frames it small. hull(models) samples the real mesh vertices once (in
  * each model's own frame); fit(dir, pad) then places the camera so those points fill the view.
  * dir: from the model toward the camera (array or Vector3), or { azimuth, elevation } in degrees.
+ * Call it only with the models at rest (views are framed once and cached, never on moving parts).
  */
 export function hull(stage, models, { max = 24000 } = {}) {
   const sets = models.map((model) => {
@@ -250,170 +250,30 @@ export function region(min, max) {
   m.updateMatrixWorld(true);
   return m;
 }
-export function lerpView(a, b, t) {
-  return { pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t) };
-}
 
-// ------------------------------------------------------------------ HTML overlays
-// Labels anchored to points on the model, a small heads-up readout, and the styles for both.
-// They live inside the demo's stage element and are removed with it.
-let styled = false;
-export function injectStyle() {
-  if (styled || document.getElementById('hv-style')) { styled = true; return; }
-  styled = true;
-  const s = document.createElement('style');
-  s.id = 'hv-style';
-  s.textContent = `
-.hv-over{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
-.hv-lab{position:absolute;left:0;top:0;display:flex;align-items:center;white-space:nowrap;font-size:12px;line-height:1.2;font-weight:600;color:#eee9e3;transition:opacity .25s;will-change:transform}
-.hv-lab .d{flex:none;width:9px;height:9px;border-radius:50%;background:#ff6b35;box-shadow:0 0 0 2px rgba(10,8,7,.85)}
-.hv-lab.in .d{background:transparent;border:2px solid #ff6b35}
-.hv-lab .ln{flex:none;width:12px;height:1px;background:rgba(238,233,227,.55)}
-.hv-lab .t{padding:3px 8px;border-radius:999px;background:rgba(10,8,7,.74);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.hv-lab .t b{color:#ff9a6b;font-weight:700}
-.hv-lab.l{flex-direction:row-reverse}
-.hv-lab.num .t{padding:2px 6px;min-width:20px;text-align:center}
-.hv-lab.pas .d{background:#6cc3ff}
-.hv-lab.pas .t b{color:#9fd6ff}
-.hv-hud{position:absolute;z-index:2;right:12px;top:12px;display:grid;gap:2px;padding:9px 12px;border-radius:12px;background:rgba(10,8,7,.72);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:12px;color:#b8b0a7;pointer-events:none;transition:opacity .3s}
-.hv-hud div{display:flex;justify-content:space-between;gap:14px}
-.hv-hud b{color:#eee9e3;font-weight:650;font-variant-numeric:tabular-nums}
-.hv-hud .hv-state{color:#eee9e3;font-weight:650}
-.hv-hud .hv-state.ok{color:#8fe3a8}.hv-hud .hv-state.warn{color:#ffb45c}
-.hv-key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0;padding:0;list-style:none;font-size:13px;color:#b8b0a7;flex:1 1 100%}
-.hv-key li{display:flex;align-items:center;gap:7px}
-.hv-key i{font-style:normal;display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:rgba(255,107,53,.16);color:#ff9a6b;font-size:11.5px;font-weight:700}
-.hv-btn[disabled]{opacity:.38;cursor:default;pointer-events:none}
-.hv-cdot{position:absolute;left:0;top:0;width:9px;height:9px;border-radius:50%;background:#ff6b35;box-shadow:0 0 0 2px rgba(10,8,7,.85);font-size:0;color:transparent;transition:opacity .2s}
-.hv-cdot.in{background:#1a1512;border:2px solid #ff6b35}
-.hv-chip{position:absolute;left:0;top:0;height:24px;display:flex;align-items:center;padding:0 9px;border-radius:999px;white-space:nowrap;font-size:12px;font-weight:600;color:#eee9e3;background:rgba(10,8,7,.74);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .2s}
-.hv-small .hv-cdot{width:19px;height:19px;display:grid;place-items:center;font-size:10.5px;font-weight:700;color:#140a05;line-height:1}
-.hv-small .hv-cdot.in{color:#ff9a6b}
-.hv-sw{display:inline-block;width:18px;height:4px;border-radius:2px;background:#f4c542}
-@media (max-width:640px){.hv-lab{font-size:11px}.hv-hud{right:8px;top:8px;padding:7px 10px;font-size:11px}}
-@media (prefers-reduced-motion:reduce){.hv-lab,.hv-hud,.hv-cdot,.hv-chip{transition:none}}`;
-  document.head.appendChild(s);
+/** a cached view as a target and a spherical offset, so views blend by orbiting, never through the model */
+export function orbit(view) {
+  return { t: view.target.clone(), s: new THREE.Spherical().setFromVector3(view.pos.clone().sub(view.target)) };
+}
+const sp = new THREE.Spherical();
+/** the view k of the way from orbit a to orbit b, turned by drift radians about the vertical */
+export function blend(a, b, k, drift = 0) {
+  let dT = b.s.theta - a.s.theta;
+  while (dT > Math.PI) dT -= 2 * Math.PI;
+  while (dT < -Math.PI) dT += 2 * Math.PI;
+  const target = a.t.clone().lerp(b.t, k);
+  sp.set(lerp(a.s.radius, b.s.radius, k), lerp(a.s.phi, b.s.phi, k), a.s.theta + dT * k + drift);
+  return { pos: new THREE.Vector3().setFromSpherical(sp).add(target), target };
 }
 
 /**
- * labels(stage, items): items [{ text, anchor: Object3D, side: 'r' | 'l', cls, id }]. Each label
- * is a dot on the anchor's world position with a chip beside it. set(id, { text, on }) updates one;
- * update() re-projects (it runs after every render of the stage).
+ * A running total of speed(u) over the scroll, tabulated once, so an angle that follows a speed
+ * profile is still a pure function of the scroll position u (0..U).
  */
-export function labels(stage, items) {
-  injectStyle();
-  const layer = document.createElement('div');
-  layer.className = 'hv-over';
-  stage.el.appendChild(layer);
-  const v = new THREE.Vector3();
-  const list = items.map((it) => {
-    const e = document.createElement('div');
-    e.className = `hv-lab ${it.side === 'l' ? 'l' : 'r'} ${it.cls || ''}`;
-    e.innerHTML = '<span class="d"></span><span class="ln"></span><span class="t"></span>';
-    e.querySelector('.t').innerHTML = it.text;
-    e.style.opacity = it.on === false ? '0' : '1';
-    layer.appendChild(e);
-    return { ...it, e, on: it.on !== false };
-  });
-  let shown = true;
-  function update() {
-    const w = stage.el.clientWidth, h = stage.el.clientHeight;
-    for (const l of list) {
-      l.anchor.getWorldPosition(v).project(stage.camera);
-      const vis = shown && l.on && v.z < 1 && v.x > -1.05 && v.x < 1.05 && v.y > -1.05 && v.y < 1.05;
-      l.e.style.opacity = vis ? '1' : '0';
-      const x = (v.x * 0.5 + 0.5) * w, y = (-v.y * 0.5 + 0.5) * h;
-      l.e.style.transform = l.side === 'l' ? `translate(calc(${x.toFixed(1)}px - 100% + 4.5px), calc(${y.toFixed(1)}px - 50%))` : `translate(${(x - 4.5).toFixed(1)}px, calc(${y.toFixed(1)}px - 50%))`;
-    }
-  }
-  const prev = stage.scene.onAfterRender;
-  stage.scene.onAfterRender = function (...a) { prev?.apply(this, a); update(); };
-  return {
-    list, layer, update,
-    set(id, o = {}) {
-      const l = list.find((x) => x.id === id); if (!l) return;
-      if (o.text != null && o.text !== l.text) { l.text = o.text; l.e.querySelector('.t').innerHTML = o.text; }
-      if (o.on != null) l.on = o.on;
-      stage.invalidate();
-    },
-    show(on) { shown = on; stage.invalidate(); },
-    dispose() { layer.remove(); },
-  };
-}
-
-/**
- * callouts(stage, items, { narrow }): technical-drawing callouts. Chips stack in a column on each
- * side of the model with a leader line to a dot on the part, so they never pile up on the model.
- * On narrow stages only numbered dots show (pair them with a key list). items: [{ id, text, n,
- * anchor, cls }]; cls 'in' draws a hollow dot for a part inside the chassis.
- */
-export function callouts(stage, items, { narrow = () => false } = {}) {
-  injectStyle();
-  const layer = document.createElement('div');
-  layer.className = 'hv-over';
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%');
-  svg.style.cssText = 'position:absolute;inset:0;overflow:visible';
-  layer.appendChild(svg);
-  stage.el.appendChild(layer);
-  const v = new THREE.Vector3();
-  const list = items.map((it) => {
-    const dot = document.createElement('div');
-    dot.className = `hv-cdot ${it.cls || ''}`;
-    dot.textContent = String(it.n);
-    const chip = document.createElement('div');
-    chip.className = 'hv-chip';
-    chip.innerHTML = it.text;
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    line.setAttribute('fill', 'none'); line.setAttribute('stroke', 'rgba(238,233,227,0.5)'); line.setAttribute('stroke-width', '1');
-    svg.appendChild(line);
-    layer.append(dot, chip);
-    return { ...it, dot, chip, line, w: 0 };
-  });
-  let shown = true;
-  function update() {
-    const W = stage.el.clientWidth, H = stage.el.clientHeight, small = narrow();
-    layer.classList.toggle('hv-small', small);
-    const vis = [];
-    for (const l of list) {
-      l.anchor.getWorldPosition(v).project(stage.camera);
-      l.ax = (v.x * 0.5 + 0.5) * W; l.ay = (-v.y * 0.5 + 0.5) * H;
-      l.vis = shown && v.z < 1 && Math.abs(v.x) < 1.02 && Math.abs(v.y) < 1.02;
-      l.dot.style.opacity = l.vis ? '1' : '0';
-      l.dot.style.transform = `translate(${l.ax.toFixed(1)}px, ${l.ay.toFixed(1)}px) translate(-50%, -50%)`;
-      if (l.vis) vis.push(l);
-    }
-    if (small || !shown) {
-      for (const l of list) { l.chip.style.opacity = '0'; l.line.setAttribute('d', ''); }
-      return;
-    }
-    const mid = vis.reduce((s, l) => s + l.ax, 0) / Math.max(1, vis.length);
-    const sides = [vis.filter((l) => l.ax < mid), vis.filter((l) => l.ax >= mid)];
-    const ROW = 27, PAD = 14;
-    sides.forEach((col, si) => {
-      if (!col.length) return;
-      for (const l of col) if (!l.w) l.w = l.chip.offsetWidth || 120;
-      const wmax = Math.max(...col.map((l) => l.w));
-      // column edge: just clear of the outermost anchor on this side, but never off the stage
-      const edge = si === 0 ? clamp(Math.min(...col.map((l) => l.ax)) - 34, wmax + PAD, W / 2 - 16) : clamp(Math.max(...col.map((l) => l.ax)) + 34, W / 2 + 16, W - wmax - PAD);
-      col.sort((a, b) => a.ay - b.ay);
-      let y = -Infinity;
-      for (const l of col) { l.y = Math.max(l.ay, y + ROW); y = l.y; }
-      const over = y - (H - 18);
-      if (over > 0) { let yy = Infinity; for (let i = col.length - 1; i >= 0; i--) { col[i].y = Math.min(col[i].y - over, yy - ROW); yy = col[i].y; } }
-      for (const l of col) {
-        const x0 = si === 0 ? edge - l.w : edge;
-        l.chip.style.transform = `translate(${x0.toFixed(1)}px, ${(l.y - 12).toFixed(1)}px)`;
-        l.chip.style.opacity = '1';
-        const ex = si === 0 ? edge + 10 : edge - 10;
-        l.line.setAttribute('d', `M${l.ax.toFixed(1)} ${l.ay.toFixed(1)} L${ex.toFixed(1)} ${l.y.toFixed(1)} L${(si === 0 ? edge : edge).toFixed(1)} ${l.y.toFixed(1)}`);
-      }
-    });
-    for (const l of list) if (!l.vis) { l.chip.style.opacity = '0'; l.line.setAttribute('d', ''); }
-  }
-  const prev = stage.scene.onAfterRender;
-  stage.scene.onAfterRender = function (...a) { prev?.apply(this, a); update(); };
-  return { list, update, show(on) { shown = on; layer.style.opacity = on ? '1' : '0'; stage.invalidate(); }, dispose() { layer.remove(); } };
+export function integrate(speed, U, N = 1200) {
+  const table = new Float64Array(N + 1);
+  for (let i = 1; i <= N; i++) table[i] = table[i - 1] + speed(((i - 0.5) / N) * U) * (U / N);
+  return (u) => { const x = clamp(u / U, 0, 1) * N, i = Math.min(N - 1, Math.floor(x)); return lerp(table[i], table[i + 1], x - i); };
 }
 
 /** a point on (and moving with) a part: position given in the model frame of `model` */
@@ -425,40 +285,103 @@ export function anchor(parent, model, p) {
   return o;
 }
 
-/** heads-up readout inside the stage: rows [{ key, label }]; set({ key: html }) */
-export function hud(stage, rows, { where = 'tr' } = {}) {
-  injectStyle();
-  const e = document.createElement('div');
-  e.className = 'hv-hud';
-  if (where === 'tl') { e.style.right = 'auto'; e.style.left = '12px'; }
-  if (where === 'br') { e.style.top = 'auto'; e.style.bottom = '12px'; }
-  const cells = new Map();
-  for (const r of rows) {
-    const d = document.createElement('div');
-    if (r.state) { d.className = 'hv-state'; cells.set(r.key, d); e.appendChild(d); continue; }
-    d.innerHTML = `<span>${r.label}</span><b></b>`;
-    cells.set(r.key, d.querySelector('b'));
-    e.appendChild(d);
+// ------------------------------------------------------------------ HTML overlays
+const css = (el, s) => { Object.assign(el.style, s); return el; };
+
+/**
+ * Labels pinned to points that move with the parts: a dot on the point and a pill beside it.
+ * tag(text, anchor, { side: 'l' | 'r', short, hollow, color }) returns a tag; set tag.a (0..1)
+ * from setProgress and call update(narrow, freeLeft) after the camera is placed. Narrow stages use
+ * the short text. A pill that would run off the stage, or under the step cards (freeLeft, px from
+ * the stage's left edge), flips to the other side of its dot. Styles are only written when they
+ * change, and nothing fades on its own (no CSS transitions): the scroll drives every value.
+ */
+export function tags(stage) {
+  const layer = css(document.createElement('div'), {
+    position: 'absolute', inset: '0', zIndex: '2', pointerEvents: 'none', overflow: 'hidden',
+    font: '550 13px/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3',
+  });
+  layer.className = 'hv-tags';
+  stage.el.appendChild(layer);
+  const list = [];
+  const v = new THREE.Vector3();
+  function tag(text, anchorObj, o = {}) {
+    const el = css(document.createElement('div'), { position: 'absolute', left: '0', top: '0', opacity: '0', whiteSpace: 'nowrap', willChange: 'transform' });
+    const color = o.color || '#ff6b35';
+    const dot = css(document.createElement('span'), {
+      position: 'absolute', left: '-4.5px', top: '-4.5px', width: '9px', height: '9px', borderRadius: '50%', boxSizing: 'border-box',
+      background: o.hollow ? 'rgba(20,16,13,.9)' : color, border: o.hollow ? `2px solid ${color}` : '0', boxShadow: '0 0 0 3px rgba(10,8,7,.55)',
+    });
+    const pill = css(document.createElement('span'), {
+      position: 'absolute', top: '-12px', padding: '3px 10px', borderRadius: '999px',
+      background: 'rgba(10,8,7,.78)', border: '1px solid rgba(255,255,255,.15)',
+    });
+    el.append(dot, pill);
+    layer.appendChild(el);
+    const t = { el, pill, anchor: anchorObj, text, short: o.short || text, side: o.side === 'l' ? 'l' : 'r', a: 0, shown: -1, x: NaN, y: NaN, txt: '', w: {}, drawnSide: '' };
+    list.push(t);
+    return t;
   }
-  stage.el.appendChild(e);
+  function update(narrow = false, freeLeft = 0) {
+    const cam = stage.camera;
+    cam.updateMatrixWorld();
+    const W = stage.el.clientWidth, H = stage.el.clientHeight;
+    for (const t of list) {
+      if (t.anchor.isObject3D) t.anchor.getWorldPosition(v); else v.set(...t.anchor);
+      v.project(cam);
+      const on = t.a > 0.02 && v.z < 1 && Math.abs(v.x) < 1.02 && Math.abs(v.y) < 1.02;
+      const a = on ? Math.round(Math.min(1, t.a) * 100) / 100 : 0;
+      if (a !== t.shown) { t.el.style.opacity = String(a); t.shown = a; }
+      if (!on) continue;
+      const txt = narrow ? t.short : t.text;
+      if (txt !== t.txt) { t.pill.textContent = txt; t.txt = txt; }
+      const w = t.w[txt] || (t.w[txt] = t.pill.offsetWidth || txt.length * 7 + 22);
+      const x = Math.round(((v.x + 1) / 2) * W * 2) / 2, y = Math.round(((1 - v.y) / 2) * H * 2) / 2;
+      let side = t.side;
+      if (side === 'l' && x - w - 12 < Math.max(4, freeLeft)) side = 'r';
+      else if (side === 'r' && x + w + 12 > W - 4 && x - w - 12 >= Math.max(4, freeLeft)) side = 'l';
+      if (side !== t.drawnSide) {
+        t.drawnSide = side;
+        if (side === 'l') { t.pill.style.left = 'auto'; t.pill.style.right = '11px'; } else { t.pill.style.right = 'auto'; t.pill.style.left = '11px'; }
+      }
+      if (x !== t.x || y !== t.y) { t.el.style.transform = `translate(${x}px, ${y}px)`; t.x = x; t.y = y; }
+    }
+  }
+  return { layer, tag, update, list, dispose() { layer.remove(); } };
+}
+
+/**
+ * A readout panel (site.css .rx-hud) in the overlay layer. html holds elements with data-k keys;
+ * put(k, text) and bar(k, 0..1) only touch the DOM when a value changes, color(k, css) too.
+ */
+export function hudPanel(layer, html, style = {}) {
+  const hud = css(document.createElement('div'), { opacity: '0', ...style });
+  hud.className = 'rx-hud';
+  hud.innerHTML = html;
+  layer.append(hud);
+  const K = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
+  const shown = {};
   return {
-    el: e,
-    set(vals) { for (const [k, val] of Object.entries(vals)) { const c = cells.get(k); if (c && c.innerHTML !== String(val)) c.innerHTML = val; } },
-    state(text, cls = '') { const c = [...cells.values()].find((x) => x.classList?.contains('hv-state')); if (c) { c.textContent = text; c.className = `hv-state ${cls}`; } },
-    show(on) { e.style.opacity = on ? '1' : '0'; },
-    dispose() { e.remove(); },
+    el: hud,
+    put(k, text) { if (shown[k] !== text) { K[k].textContent = text; shown[k] = text; } },
+    bar(k, f) { const w = `${(clamp(f, 0, 1) * 100).toFixed(1)}%`; if (shown[k] !== w) { K[k].style.width = w; shown[k] = w; } },
+    color(k, c) { const key = `${k}:c`; if (shown[key] !== c) { K[k].style.color = c; shown[key] = c; } },
+    show(a) { const s = String(Math.round(clamp(a, 0, 1) * 100) / 100); if (shown._a !== s) { hud.style.opacity = s; hud.style.visibility = s === '0' ? 'hidden' : ''; shown._a = s; } },
   };
 }
 
-/** a small time-based animation driven by stage.onFrame; resolves when done. Reduced motion jumps to the end. */
-export function animate(stage, seconds, fn, reduced) {
-  if (reduced || seconds <= 0) { fn(1); stage.invalidate(); return { done: Promise.resolve(), stop() {} }; }
-  let t = 0, stop, resolve;
-  const done = new Promise((r) => { resolve = r; });
-  stop = stage.onFrame((dt) => {
-    t = Math.min(1, t + dt / seconds);
-    fn(t);
-    if (t >= 1) { stop(); resolve(); }
-  });
-  return { done, stop() { stop(); resolve(); } };
+/** the left edge of the free part of a full-width stage, clear of the step cards (px); 0 when nothing covers it */
+export function freeLeftOf(el, ctx) {
+  let key = -1, val = 0;
+  return () => {
+    if (ctx.shift()[0] <= 0) return 0;
+    if (key !== innerWidth) {
+      key = innerWidth;
+      const card = el.closest('.rx-scrolly')?.querySelector('.rx-step-card');
+      val = card ? Math.max(0, card.getBoundingClientRect().right - el.getBoundingClientRect().left + 10) : 0;
+    }
+    return val;
+  };
 }
+
+export const OK = '#8fe3a8', WARN = '#ffb45c', INK = '#eee9e3';

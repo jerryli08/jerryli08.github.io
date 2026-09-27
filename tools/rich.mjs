@@ -182,7 +182,8 @@ export function createRich(env) {
       if (has(src)) poster = `<img class="rx-poster" src="${v(src)}" alt="" loading="lazy" decoding="async">`;
       else ctx.warn(`missing poster ${src}`);
     }
-    return `${poster}<p class="rx-status" aria-hidden="true"><span class="rx-spin"></span>Loading 3D</p><button type="button" class="rx-load hud-go" data-rx-load>Load the interactive 3D</button><p class="rx-note" data-rx-note role="status" hidden></p>`;
+    const is3d = o.webgl !== false;
+    return `${poster}<p class="rx-status" aria-hidden="true"><span class="rx-spin"></span>${is3d ? 'Loading 3D' : 'Loading'}</p><button type="button" class="rx-load hud-go" data-rx-load>${is3d ? 'Load the 3D animation' : 'Load the animation'}</button><p class="rx-note" data-rx-note role="status" hidden></p>`;
   }
   // id: already registered with ctx.uid by the caller
   function block(kind, o, ctx, id) {
@@ -293,7 +294,7 @@ export function createRich(env) {
       const cls = `rx-scrolly${wide ? ` rx-scrolly-wide rx-side-${s.side === 'right' ? 'right' : 'left'}` : ''}${steps.length ? '' : ' rx-stepless'}`;
       return `<section class="rx-sec rx-scrolly-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}>
     ${beside ? '' : `<div class="rx-w">${head(s, id, ctx)}</div>`}
-    <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${dataAttr}${style ? ` style="${style}"` : ''}>
+    <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${dataAttr}${s.webgl === false ? ' data-webgl="false"' : ''}${style ? ` style="${style}"` : ''}>
       <div class="rx-scrolly-body">
         <div class="rx-scrolly-stage"><div class="rx-stage" data-rx-stage>${stageInner(s, ctx)}</div></div>
         <ol class="rx-steps">${list}</ol>

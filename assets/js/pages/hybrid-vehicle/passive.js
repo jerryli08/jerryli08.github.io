@@ -1,135 +1,100 @@
-// Passive latching, in a section through the middle of both latches. Lower the drone and its
-// landing tubes push the doors down on their pins; once the tubes are past, the elastic between
-// the knobs pulls the doors back over them. Pulling up only presses the tubes into the doors'
-// undersides. Door angles come from the real door section turned against the 16 mm tube
-// (common.js, doorPush); the elastic is drawn in (it is not part of the CAD).
+// "Passive latching", scroll-driven, in a section through the middle of the latch (x = 0.417).
+// u = step + progress through the step (0..5):
+//   0  the drone 32 mm up; elastic holds the doors up   3  pulling up: the tubes press into the doors
+//   1  the tubes push the doors down on their pins       4  the servo swings the arms out and the drone
+//   2  past the doors, the elastic snaps them shut          lifts clear; the arms close again
+// Door angles come from the real door section turned against the 16 mm tube (common.js, doorPush);
+// the elastic is drawn in (it is not in the CAD). Every picture is a pure function of u, and the
+// view is framed once per stage size.
 import { createStage } from '/assets/js/lib/stage.js';
-import { slider, button } from '/assets/js/lib/ui.js';
-import { rigLatch, addElastic, labels, anchor, hud, region, animate, doorPush, easeInOut, clamp, CUT_X, DEG, HOLD_H, FIRST_TOUCH, injectStyle } from './common.js';
+import { rigLatch, addElastic, tags, hudPanel, freeLeftOf, anchor, region, doorPush, snapDoor, smooth, lerp, clamp, CUT_X, DEG, HOLD_H, FIRST_TOUCH, SNAP_H, LATCH_OPEN, OK, WARN, INK } from './common.js';
 
 const TOP = 32; // mm, the drone's starting height above docked
+const PUSH0 = 38.75; // degrees: the door angle just before the tube passes (common.js PUSH[0])
+const LOW = 2.5; // mm, where step 1 leaves it
+// the drone's height above docked (mm) through the scroll
+function height(u) {
+  if (u < 2) return lerp(TOP, LOW, smooth(1.05, 1.9, u));
+  if (u < 3) return LOW * (1 - clamp((u - 2) / 0.25, 0, 1));
+  if (u < 4) return HOLD_H * smooth(3.1, 3.5, u);
+  return lerp(HOLD_H, TOP, smooth(4.35, 4.75, u));
+}
+const U_SNAP = 2 + 0.25 * (1 - SNAP_H / LOW);
+const openK = (u) => smooth(4.05, 4.3, u) * (1 - smooth(4.8, 4.96, u));
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { controls: false });
+  const stage = createStage(el, { controls: false, hint: false });
   const [rover, drone] = await Promise.all([stage.load('/assets/models/rover.glb'), stage.load('/assets/models/drone.glb')]);
   const latch = rigLatch(stage, rover);
   const elastic = addElastic(stage, rover, latch);
-  latch.onChange = elastic.update;
   stage.sectionPlane([-1, 0, 0], CUT_X);
+  const reduced = ctx.reducedMotion;
 
-  const both = region([0.405, -0.101, -0.206], [0.43, -0.012, -0.007]);
-  const one = region([0.405, -0.101, -0.094], [0.43, -0.012, -0.019]);
-  const DIR = [1, 0.1, 0.12];
-  function place() {
-    const wide = el.clientWidth > el.clientHeight * 1.25;
-    stage.frame(wide ? both : one, { dir: DIR, pad: 1.06 });
-  }
-  place();
-  const ro = new ResizeObserver(place);
-  ro.observe(el);
-
-  const labs = labels(stage, [
-    { id: 'band', anchor: elastic.bands[0].b, side: 'r', text: 'Elastic on the knobs', cls: 'pas' },
-    { id: 'held', anchor: anchor(drone, drone, [CUT_X, -0.0621, -0.0565]), side: 'r', text: '↑ Pulling up: <b>held</b>', on: false },
-  ]);
-  const info = hud(stage, [{ key: 'h', label: 'Drone height' }, { key: 'b', label: 'Door angle' }, { key: 's', label: 'Elastic stretch' }, { key: 'state', state: true }]);
-
-  // ---------------------------------------------------------------- state
-  let h = TOP, latched = false, snap = null, anim = null;
-  const rest = elastic.bands[0].len;
-  function show(state, cls) {
-    info.set({ h: `${h.toFixed(1)} mm`, b: `${(latch.doors[0].b / DEG).toFixed(1)}°`, s: `${Math.max(0, (elastic.bands[0].len - rest) * 1000).toFixed(1)} mm` });
-    info.state(state, cls);
-  }
-  function setDoors(b) { latch.setDoor(b); }
-  function apply(hmm) {
-    if (latched) hmm = Math.min(hmm, HOLD_H);
-    h = clamp(hmm, 0, TOP);
-    drone.position.y = h / 1000;
-    s.set(h, { silent: true });
-    let state, cls = '';
-    if (latched) {
-      if (!snap) setDoors(0);
-      const held = h >= HOLD_H - 0.02;
-      labs.set('held', { on: held });
-      state = held ? 'Held: the tubes press up into the doors' : 'Latched, no power';
-      cls = 'ok';
-    } else {
-      labs.set('held', { on: false });
-      const b = doorPush(h);
-      if (b == null) {
-        latched = true;
-        startSnap();
-        state = 'Latched, no power'; cls = 'ok';
-      } else {
-        setDoors(b * DEG);
-        state = h >= FIRST_TOUCH ? 'Above the latch' : 'The tubes push the doors down';
-        cls = h >= FIRST_TOUCH ? '' : 'warn';
-      }
-    }
-    buttons();
-    drone.updateMatrixWorld(true);
-    elastic.update();
-    show(state, cls);
-  }
-  // past the doors, the elastic pulls them back up: a short damped overshoot reads as the snap
-  function startSnap() {
-    const from = latch.doors[0].b;
-    if (ctx.reducedMotion) { setDoors(0); return; }
-    let t = 0;
-    snap = stage.onFrame((dt) => {
-      t += dt;
-      setDoors(from * Math.exp(-t * 16) * Math.cos(t * 38));
-      show(info.el.querySelector('.hv-state').textContent, 'ok');
-      if (t > 0.45) { snap(); snap = null; setDoors(0); show(info.el.querySelector('.hv-state').textContent, 'ok'); }
-    });
-  }
-  function run(seconds, fn) {
-    anim?.stop();
-    anim = animate(stage, seconds, fn, ctx.reducedMotion);
-    anim.done.then(() => { anim = null; buttons(); });
-    return anim.done;
+  // the first latch in section, with room above it for the drone's tube
+  const box = region([0.405, -0.122, -0.094], [0.43, -0.028, -0.019]);
+  let view = null, vkey = '';
+  function viewNow() {
+    const key = `${el.clientWidth}x${el.clientHeight}|${ctx.shift()[0]}`;
+    if (view && key === vkey) return view;
+    vkey = key;
+    const portrait = el.clientHeight > el.clientWidth * 1.05;
+    view = stage.frame(box, { dir: [1, 0.1, 0.12], pad: ctx.shift()[0] > 0 ? 1.65 : portrait ? 1.22 : 1.08, apply: false, track: false, refresh: true });
+    return view;
   }
 
-  // ---------------------------------------------------------------- controls
-  const s = slider(ctx.panel, { label: 'Drone height', min: 0, max: TOP, step: 0.1, value: TOP, unit: ' mm', format: (v) => v.toFixed(1), onInput: (v) => { anim?.stop(); anim = null; apply(v); } });
-  injectStyle();
-  const bLand = button(ctx.panel, { label: 'Lower it', onClick() { const h0 = h; run(Math.max(0.4, h0 / TOP * 2.6), (t) => apply(h0 * (1 - easeInOut(t)))); } });
-  const bPull = button(ctx.panel, { label: 'Pull up', onClick() { const h0 = h; run(0.5, (t) => apply(h0 + (HOLD_H + 1 - h0) * easeInOut(t))); } });
-  const bRel = button(ctx.panel, {
-    label: 'Release (servo)',
-    async onClick() {
-      const h0 = h;
-      await run(0.7, (t) => { latch.set(easeInOut(t)); apply(h0); });
-      latched = false;
-      await run(1.1, (t) => { const hh = h0 + (TOP - h0) * easeInOut(t); h = hh; drone.position.y = hh / 1000; s.set(hh, { silent: true }); elastic.update(); show('Released: the servo swings the arms open', ''); });
-      await run(0.6, (t) => { latch.set(1 - easeInOut(t)); apply(TOP); });
-    },
-  });
-  for (const b of [bLand, bPull, bRel]) b.classList.add('hv-btn');
-  function buttons() {
-    const busy = !!anim;
-    bLand.disabled = latched || h <= 0.01;
-    bPull.disabled = !latched || h >= HOLD_H - 0.02;
-    bRel.disabled = !latched || (busy && latch.open > 0);
-  }
-
-  // mouse or pen: drag the drone up and down on the canvas (touch keeps scrolling the page)
-  const canvas = stage.canvas;
-  canvas.style.pointerEvents = 'auto';
-  canvas.style.cursor = 'ns-resize';
-  let drag = null;
-  const pxPerMm = () => {
-    const a = new stage.THREE.Vector3(CUT_X, -0.07, -0.0565).project(stage.camera), b = new stage.THREE.Vector3(CUT_X, -0.06, -0.0565).project(stage.camera);
-    return Math.abs(b.y - a.y) * 0.5 * el.clientHeight / 10;
+  const ov = tags(stage);
+  const T = {
+    band: ov.tag('Elastic on the knobs', elastic.bands[0].b, { side: 'r', short: 'Elastic', color: '#f4c542' }),
+    door: ov.tag('Door, on the pin at the arm tip', anchor(latch.doors[0].part, rover, [CUT_X, -0.0531, -0.0380]), { side: 'r', short: 'Door' }),
+    arm: ov.tag('Arm', anchor(latch.arms[0].part, rover, [CUT_X, -0.078, -0.041]), { side: 'r' }),
+    tube: ov.tag('Landing tube, 16 mm', anchor(drone, drone, [CUT_X, -0.0701, -0.0565]), { side: 'l', short: 'Tube, 16 mm' }),
+    held: ov.tag('Pulling up: held', anchor(drone, drone, [CUT_X, -0.0621, -0.0565]), { side: 'l', short: 'Held', color: '#8fe3a8' }),
   };
-  canvas.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') return; drag = { y: e.clientY, h, k: pxPerMm() }; canvas.setPointerCapture(e.pointerId); anim?.stop(); anim = null; });
-  canvas.addEventListener('pointermove', (e) => { if (drag) apply(drag.h - (e.clientY - drag.y) / drag.k); });
-  const end = () => { drag = null; };
-  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  const hud = hudPanel(ov.layer, `
+    <div class="rx-hud-row"><b data-k="state"></b></div>
+    <div class="rx-hud-row"><span>Drone above docked</span><b class="num" data-k="h"></b></div>
+    <div class="rx-hud-row"><span>Door angle</span><b class="num" data-k="b"></b><i><em data-k="bBar"></em></i></div>
+    <div class="rx-hud-row rx-hud-x"><span>Elastic stretch</span><b class="num" data-k="s"></b></div>
+    <div class="rx-hud-row rx-hud-x"><span>Arms (servo)</span><b class="num" data-k="arm"></b></div>`);
+  const freeLeft = freeLeftOf(el, ctx);
+  const rest = elastic.rest;
 
-  apply(TOP);
-  return {
-    dispose() { anim?.stop(); snap?.(); ro.disconnect(); labs.dispose(); info.dispose(); elastic.dispose(); both.geometry.dispose(); one.geometry.dispose(); stage.dispose(); },
-  };
+  let moved = '';
+  function setProgress(p, step, stepP) {
+    const u = clamp(step + stepP, 0, 5);
+    // full-width desktop: a little further right than usual, clear of the step cards
+    const [sx, sy] = ctx.shift();
+    // a phone's readout spans the top of the stage: the section sits a little lower there
+    stage.setShift(sx > 0 ? 0.2 : 0, el.clientWidth < 640 ? -0.08 : sy);
+    stage.setView(viewNow());
+    const h = height(u);
+    const a = openK(u);
+    latch.set(a);
+    let b = 0; // door angle, radians finger down
+    if (u < U_SNAP) b = (doorPush(h) ?? PUSH0) * DEG;
+    else if (u < 3) b = reduced ? 0 : snapDoor((u - U_SNAP) * 1.1);
+    latch.setDoor(b);
+    if (`${a}|${b}|${h}` !== moved) { moved = `${a}|${b}|${h}`; drone.position.y = h / 1000; drone.updateMatrixWorld(true); elastic.update(); }
+    // labels
+    const narrow = el.clientWidth < 620;
+    T.band.a = 1 - smooth(3.9, 4.05, u);
+    T.door.a = u < 1 ? smooth(0.1, 0.35, u) : 1 - smooth(3.25, 3.4, u);
+    T.arm.a = smooth(0.1, 0.35, u) * (1 - smooth(0.9, 1.1, u)) + smooth(4.02, 4.15, u) * (1 - smooth(4.8, 4.95, u));
+    T.tube.a = smooth(0.1, 0.35, u) * (1 - smooth(1.05, 1.2, u));
+    T.held.a = smooth(3.4, 3.55, u) * (1 - smooth(3.95, 4.05, u));
+    ov.update(narrow, freeLeft());
+    // readout
+    hud.show(1);
+    let s = 'Above the latch', c = INK;
+    if (u >= 4.05) s = u < 4.3 ? 'The servo swings the arms open' : u < 4.78 ? 'Open: the drone lifts clear' : u < 4.96 ? 'Closing' : 'Closed, ready for the next landing';
+    else if (u >= U_SNAP) { s = h >= HOLD_H - 0.05 ? 'Held: the tubes press up into the doors' : 'Latched, no power'; c = OK; }
+    else if (h < FIRST_TOUCH) { s = 'The tubes push the doors down'; c = WARN; }
+    hud.put('state', s); hud.color('state', c);
+    hud.put('h', `${h.toFixed(1)} mm`);
+    hud.put('b', `${(b / DEG).toFixed(1)}°`); hud.bar('bBar', Math.max(0, b / DEG) / 42);
+    hud.put('s', `${Math.max(0, (elastic.bands[0].len - rest) * 1000).toFixed(1)} mm`);
+    hud.put('arm', `${(a * LATCH_OPEN / DEG).toFixed(1)}°`);
+  }
+  setProgress(0, 0, 0);
+  return { setProgress, dispose() { ov.dispose(); elastic.dispose(); box.geometry.dispose(); stage.dispose(); } };
 }

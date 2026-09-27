@@ -4,7 +4,8 @@
 // video plainly show, and numbers measured or counted in his final Fusion 360 model (marked
 // "in the CAD"). The stow angle is computed from the CAD with Jerry's rule (the whole arm inside the
 // inner edge of the bumper wood). Held back: the Kraken to flywheel ratio (the coupling is not in
-// the CAD export). Demos: assets/js/pages/frc-rebuilt/.
+// the CAD export). Scrollies: assets/js/pages/frc-rebuilt/ (story, tour, stow; rig.js holds every
+// axis and the top panel's fold, checked clear of the shooters and the transfer on the CAD).
 const M = '/assets/models/frc-rebuilt'; // the web model and the demo posters (stills of the live demos)
 
 export default {
@@ -47,24 +48,32 @@ export default {
     { type: 'prose', id: 'job', h: 'Designing a robot from another state', p: [
       'Planetary Drive had never used CAD. I had a friend on the team, so I designed the whole robot for them in Fusion 360, in my first FRC season. WestCoast Products’ open 2026 robot was my initial inspiration, and what the two have in common is three separate shooters.',
       { problem: 'I was in Maryland for the whole season and the team was in Kentucky. I could never stand next to the robot, and the team had never used CAD.', title: 'Remote, with a team new to CAD' },
-      { fix: 'I shared the model through Fusion 360 links, so anyone on the team could open it, and sent DXF files for the flat parts. Bill, a machinist in the shop, waterjet cut all of the aluminum plates from them. Some of the build happened over video calls, like the one in the first photo below.' },
+      { fix: 'I shared the model through Fusion 360 links, so anyone on the team could open it, and sent DXF files for the flat parts. Bill, a machinist in the shop, waterjet cut all of the aluminum plates from them. Some of the build happened over video calls, like the one pictured here.' },
       { problem: 'The team was not very competitive, and syncing a timeline for design iterations was hard.', title: 'No shared schedule' },
       { fix: 'I asked how much time they actually had and planned small test iterations they could really do in it. Through those small iterations I essentially got the design in one shot: the robot basically worked on the first try.' },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'build-pulley-call.webp', c: 'Mar 10, a screenshot from a video call with the shop: the intake pivot sprocket and its chain going on beside an upright' },
-      { i: 'build-shooter-plate.webp', c: 'Feb 13: a shooter side plate waterjet cut from my DXF, with the triangle pockets and PLANETARY DRIVE cut through' },
-    ] },
+    ],
+      media: [
+        { i: 'build-pulley-call.webp', c: 'Mar 10, a screenshot from a video call with the shop: the intake pivot sprocket and its chain going on beside an upright' },
+        { i: 'build-shooter-plate.webp', c: 'Feb 13: a shooter side plate waterjet cut from my DXF, with the triangle pockets and PLANETARY DRIVE cut through' },
+      ] },
 
     {
-      type: 'demo', id: 'cad', module: 'viewer', height: 'clamp(460px, 74vh, 760px)', poster: `${M}/poster-cad.webp`,
-      h: 'Take the CAD apart',
-      p: ['The final robot, from my Fusion 360 model with the fasteners left out. Pick a mechanism to light it up, cut a section through any of the three lanes, stow the intake, or run the rollers and wheels.'],
-      caption: 'Drag to turn the model. Polycarbonate is drawn clear, as on the real robot. Spin directions follow the fuel path; speeds are not to scale.',
+      type: 'scrolly', id: 'cad', module: 'tour', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-tour.webp`,
+      h: 'The CAD, mechanism by mechanism',
+      p: ['The final robot, from my Fusion 360 model with the fasteners left out. Nothing changed between the Feb 18 model and this final CAD.'],
+      caption: 'Polycarbonate is drawn clear, as on the real robot. Spin directions follow the fuel path; speeds are not to scale.',
+      steps: [
+        { h: 'The whole robot', p: ['The intake is at the front, the shooters are at the back, and everything between them is hopper.'] },
+        { h: 'Drive', p: ['Four REV MAXSwerve modules, lit, one in each corner of the 26.5 in square frame, with the bumpers drawn see-through. The robot is 33.0 in square over the bumpers.'] },
+        { h: 'Intake', p: ['The full-width roller on its arm at the front, and the two belts that spin it from a NEO 2.0 on the frame, 2:1 overall.'] },
+        { h: 'Transfer', p: ['A section through the middle lane. Two full-width shafts of flex wheels at the back of the hopper lift the fuel into the shooters, tied 1:1 by a belt.'] },
+        { h: 'Shooters', p: ['Three shooters side by side, one per lane, each a Kraken X60 and two 4 in wheels under a 3D printed hood.'] },
+        { h: 'Three lanes', p: ['The section sweeps across the robot. Two divider plates split the hopper into three lanes, one per shooter, each 6.5 in wide between the shooter plates for 5.91 in fuel.'] },
+      ],
     },
 
     { type: 'prose', id: 'decisions', h: 'The big decisions', p: [
-      'The intake is at the front, the shooters are at the back, and everything between them is hopper. Four choices shaped the rest of the robot.',
+      'Four choices shaped the rest of the robot.',
       { h: 'Three independent shooters, no turret' },
       { problem: 'The shooter had to be something this team could build and keep running.', title: 'What shooter' },
       { fix: 'Three independent shooters, one per lane. I thought three separate shooters would be more reliable than one big full-width shooter, a single set of wheels across the whole robot. The team was not experienced, so a turret was out.' },
@@ -75,37 +84,43 @@ export default {
       'Four REV MAXSwerve modules with 3 in wheels and the medium speed gearing, each with a NEO to drive and a NEO 550 to steer. We used them because the team had them.',
       { h: 'No climber' },
       'The robot has no climber for the tower. We ran out of time.',
-    ] },
+    ],
+      media: [
+        { i: 'robot-regional.webp', c: 'The finished robot at the regional, orange flywheels at the back and the hopper full of fuel' },
+        { i: 'build-wood-test-frame.webp', c: 'Feb 7: the four swerve modules wired up on a wooden test frame' },
+      ] },
 
     { type: 'prose', id: 'drive', h: 'Frame and drivetrain', p: [
       'The frame is 26.5 in square in 2x1 in pre-drilled aluminum box tube: 19.5 in rails between the four MAXSwerve modules, joined by gussets, with a triangle-pocketed aluminum belly pan. The roboRIO, the power distribution panel and the battery sit on the pan. Over the bumpers the robot is 33.0 in square, and the wheelbase is 23.0 in.',
       'The modules were wired up on a wooden test frame first. The aluminum frame and pan show up in the build photos a week later.',
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'build-wood-test-frame.webp', c: 'Feb 7: the four swerve modules wired up on a wooden test frame' },
-      { i: 'build-frame-bellypan.webp', c: 'Feb 13: the aluminum frame and the triangle-pocketed belly pan with the modules in' },
-    ] },
+    ],
+      media: [{ i: 'build-frame-bellypan.webp', c: 'Feb 13: the aluminum frame and the triangle-pocketed belly pan with the modules in' }] },
 
     { type: 'prose', id: 'intake', h: 'The intake and its pivot', p: [
       'The roller is a 22.6 in polycarbonate tube with a silicone sleeve, on a 1/2 in hex live axle. It sits at the end of an arm made of two 3/8 in polycarbonate plates, 12.0 in from the pivot.',
       { problem: 'The roller rides on a swinging arm, and it has to keep spinning at every arm angle.', title: 'Driving a roller on a moving arm' },
-      { fix: 'The NEO 2.0 that spins the roller sits on the frame. Its belt climbs 12 to 24 teeth to a pulley on the pivot axis, and a second belt runs 24 to 24 teeth from that axis out to the roller, 2:1 overall. With the middle pulley on the pivot axis, both belts keep fixed centres wherever the arm is: 244.8 mm for the first (motor and pivot are both on the frame) and 304.4 mm for the second (pivot and roller are both on the arm).' },
+      { fix: 'The NEO 2.0 that spins the roller sits on the frame. Its belt climbs 12 to 24 teeth to a pulley on the pivot axis, and a second belt runs 24 to 24 teeth from that axis out to the roller, 2:1 overall. With the middle pulley on the pivot axis, both belts keep fixed centres wherever the arm is: 244.5 mm between the pulley centres in the CAD for the first (motor and pivot are both on the frame) and 305.0 mm for the second (pivot and roller are both on the arm).' },
       'The arm is driven on the other side. A NEO on a 25:1 MAXPlanetary turns a 12 tooth sprocket, and #25 chain runs to a 40 tooth sprocket bolted to the arm, 83.3:1 in total. A REV Through Bore Encoder sits on a 24 tooth sprocket that rides on the same chain, so it turns 40/24 = 1.67 times as far as the arm. Tooth counts are from the CAD.',
-    ] },
+    ],
+      media: [
+        { i: 'cad-v1-roller-belts.webp', c: 'The same two-belt roller drive in my first model (Jan 31): a NEO, a belt up to a shared pulley, and a second belt down to the roller' },
+        { i: 'cad-v1-sprocket-detail.webp', c: 'The first model’s large sprocket and chain beside a pre-drilled upright' },
+      ] },
     {
-      type: 'demo', id: 'pivot', module: 'pivot', aside: 'left', height: '560px', poster: `${M}/poster-pivot.webp`,
+      type: 'scrolly', id: 'pivot', module: 'stow', width: 'wide', side: 'left', stepHeight: '90vh', poster: `${M}/poster-stow.webp`,
       h: 'Stowed for the start, deployed to play',
-      p: [
-        'Deployed, the front of the intake and hopper reaches 8.6 in past the front bumper in the CAD. To start a match legally all of it has to fold back inside the robot, so the pivot swings the arm up and back until it is completely inside the inner edge of the wooden bumper frame. In the CAD that is a 132 degree swing, which is 220 degrees at the encoder: still less than one turn.',
-        'The front of the hopper, its side panels and front panels, is bolted to the arm and swings with it, so the hopper is bigger whenever the intake is down. Its top panel pivots on a single bolt at each lower corner. A spring runs from the one hole at its top corner to a row of holes along the top of the side panel, which sets the tension, so the panel starts the match folded inward and unfolds.',
-        'Drag the slider and watch the two belt lengths: they do not change.',
+      p: ['A side view from the roller motor side, with the parts outside the belts cut away. The readout is measured on the CAD as the arm swings.'],
+      caption: 'The arm turns about its real pivot axis from the CAD, and the dashed line is the inner face of the bumper wood. The belt centres are measured between the pulley centres at every angle; the distance past the bumper wood is measured on the CAD for every degree of swing.',
+      steps: [
+        { h: 'Deployed', p: ['Deployed, the front of the intake and hopper reaches 8.6 in past the front bumper in the CAD. To start a match legally all of it has to fold back inside the robot, until it is completely inside the inner edge of the wooden bumper frame: the dashed line.'] },
+        { h: 'Swinging up, belts unchanged', p: ['The pivot swings the arm up and back. The roller keeps turning the whole way, because the middle pulley sits on the pivot axis: both belts keep fixed centres. Watch the readout: the distances between the pulley centres do not change.'] },
+        { h: 'The top panel folds', p: [
+          'The front of the hopper, its side panels and front panels, is bolted to the arm and swings with it, so the hopper is bigger whenever the intake is down. Its top panel pivots on a single bolt at each lower corner. A spring runs from the one hole at its top corner to a row of holes along the top of the side panel, which sets the tension, so the panel starts the match folded inward and unfolds.',
+          'In the CAD it has to fold from about 106 degrees of swing on to stay clear of the shooters and the transfer, and stowed it is folded about 100 degrees.',
+        ] },
+        { h: 'Stowed', p: ['In the CAD the whole arm is inside the inner edge of the bumper wood after a 132 degree swing, which is 220 degrees at the encoder: still less than one turn.'] },
       ],
-      caption: 'Side view from the roller motor side, with the parts outside the belts cut away. The arm turns about its real pivot axis from the CAD; the dashed line is the inner edge of the bumper wood.',
     },
-    { type: 'media', layout: 'row', items: [
-      { i: 'cad-v1-roller-belts.webp', c: 'The same two-belt roller drive in my first model (Jan 31): a NEO, a belt up to a shared pulley, and a second belt down to the roller' },
-      { i: 'cad-v1-sprocket-detail.webp', c: 'The first model’s large sprocket and chain beside a pre-drilled upright' },
-    ] },
 
     { type: 'prose', id: 'transfer', h: 'Hopper and transfer', p: [
       'The hopper walls are 0.177 in polycarbonate. Its floor peaks at the intake pivot and slopes down toward the back, so the fuel rolls to the shooters on its own, and two divider plates split it into three lanes. Each lane is 6.5 in wide for 5.91 in fuel, measured between the shooter plates in the CAD.',
@@ -120,11 +135,8 @@ export default {
     { type: 'prose', id: 'shooters', h: 'Three shooters', p: [
       'Three shooters sit side by side, one per lane. Each is a Kraken X60 and a short 1/2 in hex shaft carrying two 4 in wheels, with a 3D printed hood behind them. In the CAD the hood sits 133 mm from the wheels, so each 150 mm ball is squeezed by about 17 mm as it goes through. The hood curls forward at the top, so the fuel leaves up and forward over the robot.',
       'The shooter side plates are aluminum with triangular pockets and the team name cut through them. The Feb 11 model still had solid plates with a few holes; by Feb 13 the cut plates had the pockets and the lettering.',
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'cad-v2-three-shooters.webp', c: 'Feb 11: the three shooter bays in the model, each with its own motor, between solid side plates' },
-      { i: 'robot-regional.webp', c: 'The finished robot at the regional, orange flywheels at the back and the hopper full of fuel' },
-    ] },
+    ],
+      media: [{ i: 'cad-v2-three-shooters.webp', c: 'Feb 11: the three shooter bays in the model, each with its own motor, between solid side plates' }] },
 
     { type: 'prose', id: 'numbers', h: 'By the numbers', p: [
       { table: {

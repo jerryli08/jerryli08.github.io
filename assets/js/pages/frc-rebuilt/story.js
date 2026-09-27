@@ -1,17 +1,19 @@
 // Scroll story for the FRC REBUILT robot (Jerry's checklist): fuel on the left, the robot on the
 // right, folded up as it starts a match; scrolling drives the robot over, swings the intake pivot
-// down (the front of the hopper rides on the arm and its top panel unfolds), shows the roller and
-// its belts picking fuel up, drives on toward the hub, cuts a section through the middle lane to
-// show the transfer, fires the three shooters and ends on the robot's height under the trench.
+// down (the front of the hopper rides on the arm and its sprung top panel springs open), shows the
+// roller and its belts picking fuel up, drives on toward the hub, cuts a section through the middle
+// lane to show the transfer, fires the three shooters and ends on the robot's height under the trench.
 //
 // Everything is a pure function of (step, stepP), so scrolling back plays it backwards. The robot
 // is Jerry's real CAD (see rig.js for every axis). The fuel, the floor, the labels and the
 // dimension lines are drawn in as annotations; fuel paths inside the robot follow the CAD's lane
-// ramps, transfer wheels, backing and hood, and the shot arcs are drawn, not measured.
+// ramps, transfer wheels, backing and hood, and the shot arcs are drawn, not measured. The camera
+// follows the robot along its path: every view is a fixed offset from where the robot is, never
+// fitted to moving parts.
 import { createStage } from '/assets/js/lib/stage.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
 import * as THREE from 'three';
-import { loadRobot, fuelKit, G, FLOOR, FUEL_R, LANES, AX, STOW } from './rig.js';
-import { createLabels } from './labels.js';
+import { loadRobot, fuelKit, FLOOR, FUEL_R, LANES, AX, STOW, onArm, onPanel } from './rig.js';
 
 const DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -20,7 +22,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
 // Travel: straight ahead, front (intake) first. The CAD has the swerve wheels set in an X, and
-// the modules' steering parts are not separate in the export, so the robot slides without the
+// the modules' steering parts are not separate in the model, so the robot slides without the
 // wheels steering or turning rather than turning them about a wrong axis.
 const D = V(0, 0, 1);
 const AZ_D = Math.atan2(D.x, D.z) / DEG;
@@ -44,20 +46,14 @@ const EXIT = V(0, 0.894, 0.447); // tangent of the hood's top edge in the CAD
 const V0 = 7.2, T_PER = 0.28; // drawn, not measured
 const LANE_OFF = [0.33, 0, 0.66]; // left, middle, right: middle lane first, then alternate
 
-// a point on the arm (y, z in the deployed pose) after the arm turns by a about the pivot axis
-const onArm = (y, z, a) => {
-  const c = Math.cos(a), s = Math.sin(a), dy = y - AX.pivot[0], dz = z - AX.pivot[1];
-  return [AX.pivot[0] + c * dy - s * dz, AX.pivot[1] + s * dy + c * dz];
-};
-
 function rng(seed) { let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { controls: false });
+  const stage = createStage(el, { controls: false, hint: false });
   const rig = await loadRobot(stage);
   const { model } = rig;
   const reduced = !!ctx.reducedMotion;
-  const labels = createLabels(el);
+  const ov = labelLayer(stage);
 
   // ---------------------------------------------------------------- the drawn-in world
   const world = new THREE.Group(); world.name = 'annotations';
@@ -74,7 +70,8 @@ export async function mount(el, ctx) {
   g2.strokeStyle = 'rgba(0,0,0,0.45)'; g2.lineWidth = 1.2;
   for (let i = 0; i <= 512; i += 512 / 16) { g2.beginPath(); g2.moveTo(i, 0); g2.lineTo(i, 512); g2.stroke(); g2.beginPath(); g2.moveTo(0, i); g2.lineTo(512, i); g2.stroke(); }
   const floorTex = new THREE.CanvasTexture(cv); floorTex.colorSpace = THREE.SRGBColorSpace;
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(4, 64), new THREE.MeshBasicMaterial({ map: floorTex, transparent: true, depthWrite: false }));
+  const floorMat = new THREE.MeshBasicMaterial({ map: floorTex, transparent: true, depthWrite: false });
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(4, 64), floorMat);
   floor.rotation.x = -Math.PI / 2; floor.renderOrder = -2;
   const mid = D.clone().multiplyScalar(S3 * 0.45).add(V(0.3, 0, 0));
   floor.position.set(mid.x, FLOOR - 0.002, mid.z);
@@ -167,12 +164,10 @@ export async function mount(el, ctx) {
     (o) => ({ target: o.clone().add(V(0.4, 0.22, -0.2)), az: 90, el: 0, w: 1.75, h: 0.72 }),
   ];
   const fov = stage.camera.fov * DEG;
-  function place(v) {
+  function place(v, usableW) {
     const aspect = el.clientWidth / Math.max(1, el.clientHeight);
-    const portrait = aspect < 1;
-    const usableH = portrait ? 0.62 : 1, usableW = portrait ? 1 : 0.7; // step cards cover part of the stage
     const tv = Math.tan(fov / 2), th = tv * aspect;
-    const dist = Math.max(v.h / (2 * tv * usableH), v.w / (2 * th * usableW)) + 0.1;
+    const dist = Math.max(v.h / (2 * tv * 0.94), v.w / (2 * th * usableW)) + 0.1;
     const az = v.az * DEG, e = v.el * DEG;
     const dir = V(Math.sin(az) * Math.cos(e), Math.sin(e), Math.cos(az) * Math.cos(e));
     return { pos: v.target.clone().addScaledVector(dir, dist), target: v.target };
@@ -181,71 +176,63 @@ export async function mount(el, ctx) {
     let dAz = b.az - a.az; while (dAz > 180) dAz -= 360; while (dAz < -180) dAz += 360;
     return { target: a.target.clone().lerp(b.target, t), az: a.az + dAz * t, el: lerp(a.el, b.el, t), w: Math.exp(lerp(Math.log(a.w), Math.log(b.w), t)), h: Math.exp(lerp(Math.log(a.h), Math.log(b.h), t)) };
   }
+  function blendView(step, t, o) {
+    const cur = views[step](o);
+    if (step === 0 || reduced) return cur;
+    return blend(views[step - 1](o), cur, smooth(0, 0.34, t));
+  }
 
+  // labels: made once, moved and faded by the scroll (o: robot offset, a: arm angle)
   const P = (o, x, y, z) => [o.x + x, o.y + y, o.z + z];
   const PA = (o, x, y, z, a) => { const [yy, zz] = onArm(y, z, a); return P(o, x, yy, zz); };
-  const LABELS = {
-    0: (o, a) => [{ text: 'Intake folded inside the bumpers', p: PA(o, 0.6, AX.roller[0], AX.roller[1], a), side: 'l' }],
-    2: (o, a) => [
-      { text: 'NEO, 25:1 MAXPlanetary, 12T sprocket', p: P(o, 0.59, 0.1186, -0.1206), side: 'l' },
-      { text: 'Encoder on a 24T sprocket', p: P(o, 0.59, AX.encoder[0], AX.encoder[1]) },
-      { text: '40T sprocket on the arm', p: P(o, 0.59, AX.pivot[0], AX.pivot[1]), side: 'l' },
-      { text: 'Top panel, sprung', p: PA(o, 0.586, 0.43, 0.343, a) },
-      { text: 'Roller', p: PA(o, 0.6, AX.roller[0], AX.roller[1], a) },
-    ],
-    3: (o) => [
-      { text: 'NEO 2.0', p: P(o, 0.045, 0.06, -0.21), side: 'l' },
-      { text: '12T to 24T belt', p: P(o, 0.02, 0.15, -0.1), side: 'l' },
-      { text: 'Pivot axis', p: P(o, 0, AX.pivot[0], AX.pivot[1]) },
-      { text: '24T to 24T belt', p: P(o, 0.006, 0.19, 0.08) },
-      { text: 'Roller', p: P(o, 0.02, AX.roller[0], AX.roller[1]) },
-    ],
-    5: (o) => [
-      { text: '3D printed hood', p: P(o, 0.2955, 0.47, -0.588) },
-      { text: 'Flywheel', p: P(o, 0.2955, 0.377, -0.421), side: 'l' },
-      { text: 'Upper flex wheels', p: P(o, 0.2955, 0.2985, -0.432), side: 'l' },
-      { text: 'Lower flex wheels', p: P(o, 0.2955, 0.2065, -0.424), side: 'l' },
-      { text: 'Bent backing', p: P(o, 0.2955, 0.09, -0.585) },
-      { text: 'Lane ramp', p: P(o, 0.2955, 0.13, -0.27), side: 'l' },
-    ],
-    6: (o) => [
-      { text: 'Kraken X60', p: P(o, 0.47, 0.3, -0.35) },
-      { text: '4 in flywheels', p: P(o, 0.13, 0.43, -0.42), side: 'l' },
-    ],
-    7: (o) => [
-      { text: 'Robot 22.0 in', p: P(o, DX, (FLOOR + TOP) / 2, DZ), side: 'l' },
-      { text: 'Trench opening 22.25 in', p: P(o, DX, TRENCH, 0.5) },
-    ],
-  };
-  const HL = {
-    1: ['bumpers'], 2: ['gearbox', 'chain', 'gearboxSprocket', 'pivotSprocket', 'encoder', 'encSprocket', 'topPanel'], 3: ['motorBelt', 'rollerBelt', 'motorPulley'],
-    5: ['feeders'], 6: ['flyWheels', 'hoods'],
-  };
+  const PP = (o, x, y, z, a) => { const [yy, zz] = onPanel(y, z, a); return P(o, x, yy, zz); };
+  const LAB = [
+    [0, 'Intake folded inside the bumpers', (o, a) => PA(o, 0.6, AX.roller[0], AX.roller[1], a), 'l'],
+    [2, 'NEO, 25:1 MAXPlanetary, 12T sprocket', (o) => P(o, 0.59, AX.gearbox[0], AX.gearbox[1]), 'l'],
+    [2, 'Encoder on a 24T sprocket', (o) => P(o, 0.59, AX.encoder[0], AX.encoder[1])],
+    [2, '40T sprocket on the arm', (o) => P(o, 0.59, AX.pivot[0], AX.pivot[1]), 'l'],
+    [2, 'Top panel, sprung', (o, a) => PP(o, 0.586, 0.45, 0.343, a)],
+    [2, 'Roller', (o, a) => PA(o, 0.6, AX.roller[0], AX.roller[1], a)],
+    [3, 'NEO 2.0', (o) => P(o, 0.045, 0.06, -0.21), 'l'],
+    [3, '12T to 24T belt', (o) => P(o, 0.02, 0.15, -0.1), 'l'],
+    [3, 'Pivot axis', (o) => P(o, 0, AX.pivot[0], AX.pivot[1])],
+    [3, '24T to 24T belt', (o) => P(o, 0.006, 0.19, 0.08)],
+    [3, 'Roller', (o) => P(o, 0.02, AX.roller[0], AX.roller[1])],
+    [5, '3D printed hood', (o) => P(o, 0.2955, 0.47, -0.588)],
+    [5, 'Flywheel', (o) => P(o, 0.2955, AX.fly[0], AX.fly[1]), 'l'],
+    [5, 'Upper flex wheels', (o) => P(o, 0.2955, AX.upper[0], AX.upper[1]), 'l'],
+    [5, 'Lower flex wheels', (o) => P(o, 0.2955, AX.lower[0], AX.lower[1]), 'l'],
+    [5, 'Bent backing', (o) => P(o, 0.2955, 0.09, -0.585)],
+    [5, 'Lane ramp', (o) => P(o, 0.2955, 0.13, -0.27), 'l'],
+    [6, 'Kraken X60', (o) => P(o, 0.47, 0.3, -0.35)],
+    [6, '4 in flywheels', (o) => P(o, 0.13, 0.43, -0.42), 'l'],
+    [7, 'Robot 22.0 in', (o) => P(o, DX, (FLOOR + TOP) / 2, DZ), 'l'],
+    [7, 'Trench opening 22.25 in', (o) => P(o, DX, TRENCH, -0.3)],
+  ].map(([step, text, at, side]) => ({ step, at, l: ov.label(text, [0, 0, 0], { color: '#fff1e2', side }) }));
+
+  // what is lit in each step (moving parts only; the static ones get labels)
+  const HL = { 1: ['bumpers', 'swerve'], 2: ['gearboxSprocket', 'chain', 'encSprocket', 'fold'], 3: ['motorBelt', 'rollerBelt', 'motorPulley', 'pivotShaft'], 5: ['lower', 'upper'], 6: ['fly'] };
   let hlStep = -1, unlight = null;
   function highlightFor(step) {
     if (step === hlStep) return;
     hlStep = step;
     unlight?.(); unlight = null;
-    const keys = HL[step];
-    if (keys) {
-      const list = keys.flatMap((k) => rig.parts(G[k]));
-      if (step === 1) list.push(...rig.swerve);
-      unlight = stage.highlight(list, '#ff6b35', { intensity: 0.55 });
+    if (HL[step]) {
+      unlight = stage.highlight(rig.parts(HL[step]), '#ff6b35', { intensity: 0.55 });
       rig.fixClear();
     }
   }
 
   const tmp = new THREE.Vector3();
-  let last = [0, 0];
+  let lastS = -1;
   function setProgress(p, step = 0, stepP = 0) {
-    last = [step, stepP];
     step = clamp(step | 0, 0, 7);
     const t = reduced ? 0.7 : clamp(stepP, 0, 1); // reduced motion: one still pose per step
     const s = travel(step, t);
     const o = D.clone().multiplyScalar(s);
     model.position.copy(o);
     inside.position.copy(o);
-    stage.fitGround();
+    if (s !== lastS) { lastS = s; stage.fitGround(); }
 
     // mechanisms
     const u = step + t;
@@ -277,9 +264,11 @@ export async function mount(el, ctx) {
       h.m.position.copy(pos);
     });
 
+    // camera: clear of the step cards on a desktop (they cover the left); the text is below on a phone
+    const shift = ctx.shift();
+    stage.setShift(...shift);
+    const view = place(blendView(step, t, o), shift[0] > 0 ? 0.7 : 0.96);
     // decor fuel in front of the camera fades so it never hides the mechanism
-    const v = blendView(step, t, o);
-    const view = place(v);
     const cam = view.pos, tgt = view.target;
     const ab = tgt.clone().sub(cam), len = ab.length(); ab.normalize();
     for (const d of decor) {
@@ -299,26 +288,15 @@ export async function mount(el, ctx) {
 
     highlightFor(step);
     dims.visible = step === 7;
-
-    const portrait = el.clientHeight > el.clientWidth;
-    stage.setShift(portrait ? 0 : 0.15, portrait ? 0.2 : 0);
     stage.setView(view);
-    const lab = LABELS[step];
-    labels.set(lab ? lab(o, a) : []);
-    labels.opacity(lab ? (reduced ? 1 : smooth(0.3, 0.45, t)) : 0);
-    labels.update(stage.camera);
-  }
-  function blendView(step, t, o) {
-    const cur = views[step](o);
-    if (step === 0 || reduced) return cur;
-    return blend(views[step - 1](o), cur, smooth(0, 0.34, t));
+    const la = reduced ? 1 : smooth(0.3, 0.45, t);
+    for (const x of LAB) { x.l.a = x.step === step ? la : 0; if (x.l.a > 0) x.l.p.set(...x.at(o, a)); }
+    ov.update();
   }
 
   setProgress(0, 0, 0);
-  const ro = new ResizeObserver(() => setProgress(0, last[0], last[1]));
-  ro.observe(el);
   return {
     setProgress,
-    dispose() { ro.disconnect(); labels.dispose(); unlight?.(); kit.dispose(); floorTex.dispose(); lineMat.dispose(); trenchMat.dispose(); stage.dispose(); },
+    dispose() { ov.dispose(); unlight?.(); kit.dispose(); floorTex.dispose(); floorMat.dispose(); lineMat.dispose(); trenchMat.dispose(); stage.dispose(); },
   };
 }

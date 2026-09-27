@@ -1,7 +1,8 @@
 // Drone on Wheels (hybrid UAV-UGV). Page text from the phase A write-up for this project,
 // corrected against Jerry's answers of Sept 26, 2026 (/home/claude/work/answers.md). Facts only from
-// Jerry, his poster and his CAD. Demos: assets/js/pages/hybrid-vehicle/. The 3D demos reuse the
-// landing scene's models (assets/models/rover.glb, drone.glb); demo posters live in M.
+// Jerry, his poster and his CAD. Every animation is scroll-driven (Jerry, Sept 26): the modules in
+// assets/js/pages/hybrid-vehicle/ reuse the landing scene's models (assets/models/rover.glb,
+// drone.glb) and rig them about the real axes in the CAD; demo posters live in M.
 const M = '/assets/models/hybrid-vehicle';
 
 export default {
@@ -22,7 +23,6 @@ export default {
     items: [
       { v: 'hero-drone-carries-rover.mp4', c: 'The drone carrying the rover' },
       { v: 'hero-rover-carries-drone.mp4', c: 'The rover carrying the drone' },
-      { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover waits' },
     ],
   },
   sections: [
@@ -32,10 +32,24 @@ export default {
       { fix: 'Dock them. The rover carries the drone across open ground so the drone saves its battery. When the rover reaches something it cannot cross, or we need a view from above, the drone lifts off, on its own or carrying the rover with it.' },
       'We framed it as a cooperative multi-agent system for search and rescue and data collection.',
       'The drone is a Holybro X500 V2 quadcopter on a 5000 mAh battery. I designed new 3D-printed landing gear for it: two mounts that hold a pair of 16 mm tubes 110 mm apart, and those tubes are what the rover grabs. The rover is a 3D-printed truss chassis, 327 mm long and about 1.23 kg, with two latches on its deck, one per tube, and an AprilTag in front of them for the drone’s downward camera.',
-    ] },
+    ],
+      media: [
+        { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover waits' },
+        { i: 'airborne-docked.webp', c: 'Docked and airborne: the drone carrying the rover in a low hover (Figure 1 of our poster)' },
+      ] },
 
-    { type: 'demo', id: 'model', module: 'explorer', h: 'The whole system, from my CAD', height: 'clamp(360px, min(72vh, 125vw), 720px)', poster: `${M}/poster-model.webp`,
-      caption: 'Drag to turn it. **Apart** runs the release: the servo opens the latch, the drone lifts off and the latch closes again. **Docked** runs the passive catch. **Cut open** takes the rover’s left half off along its centreline; hollow dots mark parts inside the chassis.' },
+    { type: 'scrolly', id: 'model', module: 'system', stepHeight: '90vh', poster: `${M}/poster-model.webp`,
+      h: 'One full cycle, on my CAD',
+      p: ['Both vehicles from my CAD. Scroll to see what is where, cut the rover open, and run a whole cycle: the drone carries the rover, lets go with the servo, and comes back to a latch that catches it with no power.'],
+      steps: [
+        { h: 'Two vehicles, one system', p: ['The drone sits on the rover with its two landing tubes held in the rover’s two latches. Docked, the rover can carry the drone across open ground, and the drone can lift the rover over what the rover cannot drive.'] },
+        { h: 'What is where', p: ['The drone’s printed landing gear holds a pair of 16 mm tubes 110 mm apart. The two latches sit on the rover’s deck, one per tube, with an AprilTag in front of them for the drone’s downward camera.'] },
+        { h: 'Inside the rover', p: ['A cut along the centreline takes the rover’s left half off; hollow dots mark parts inside the chassis. The latch servo, a Feetech FT5325M, sits under the deck between the two latches. A Raspberry Pi 5 and an Arduino Mega ride in the middle, powered from a 2S 2200 mAh LiPo, and two Axon MINI drive servos sit inboard of the rear wheels.'] },
+        { h: 'The drone carries the rover', p: ['Latched, the rover hangs from the drone’s tubes. The doors hold them without the servo doing anything: pulling up only presses the tubes into the undersides of the doors. In the flight cage the drone lifted the rover and flew it across the cage.'] },
+        { h: 'Let go on command', p: ['The servo turns 11.8 degrees, the geartrain swings every arm 42 degrees, and the doors ride out on the arm tips, clear of the tubes. The drone lifts straight out and the latch closes behind it. On the course run, the servo let the rover go this way and the drone flew the course alone.'] },
+        { h: 'Coming back: a catch with no power', p: ['As the drone comes down, its tubes push the four doors down and out of the way. Once the tubes are down in their cradles, elastic pulls the doors back up over them, and the pair is latched again with no help from the servo. The next sections go inside each of these mechanisms.'] },
+      ],
+      caption: 'The latch angles are from my CAD, and the door angles during the catch come from a section of the real door turned against the tube. How high the vehicles lift is an illustration. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
 
     { type: 'stats', id: 'size', items: [
       { v: '327 mm', l: 'Rover length' },
@@ -67,10 +81,15 @@ export default {
         caption: 'Tooth counts from my CAD. Centre distances in the CAD are 50.0 mm (25 to 25 teeth), 32.0 mm (25 to 7) and 14.0 mm (7 to 7), all consistent with module 2.',
       } },
       'The same step up that gives the arms their swing has a cost: a little play at a 7-tooth pinion becomes a lot of play at the doors. That is the story of the iterations further down.',
-    ] },
+    ],
+      media: [
+        { v: 'latch-doors-by-hand.mp4', c: 'The finished latches worked by hand: pushing one arm open swings all four arms through the gears, then the doors are pressed down and spring back' },
+        { i: 'landing-gear-latched.webp', c: 'The printed landing-gear mounts and tubes held in both latches, off the drone' },
+      ] },
 
-    { type: 'scrolly', id: 'latch', module: 'latch', h: 'Inside the latch', poster: `${M}/poster-latch.webp`,
-      p: ['Scroll to cut the rover open through the middle of both latches and run the geartrain.'],
+    { type: 'scrolly', id: 'latch', module: 'latch', width: 'wide', poster: `${M}/poster-latch.webp`,
+      h: 'Inside the latch',
+      p: ['A section through the middle of both latches, and the geartrain running as you scroll.'],
       steps: [
         { h: 'Two latches, one per tube', p: ['The drone sits on the rover with its two landing tubes in the two latches. The whole latch mechanism sits in one block behind the AprilTag.'] },
         { h: 'A cut through the middle', p: ['The section runs through the middle of the arms. The tubes sit in the latches with the doors closed above them, and the geartrain is underneath.'] },
@@ -80,32 +99,37 @@ export default {
         { h: 'Six active, four passive', p: ['The servo closes the arms again, ready for the next landing. The servo gear, the idler and the four arms are the six active degrees of freedom. The four doors on the arm tips are the passive ones, and they are what catches the drone.'] },
       ] },
 
-    { type: 'demo', id: 'passive', module: 'passive', aside: 'left', h: 'Passive latching: elastic on the knobs', height: 'clamp(400px, 60vh, 560px)', poster: `${M}/poster-passive.webp`,
-      p: [
-        'The four doors do the catching, with no power. Each door hangs on the pin at the tip of its arm. Elastic stretched between a knob on the door and a knob on the arm holds the door up.',
-        'When the drone comes down, its tubes push the doors down and out of the way. Once a tube is past them and down in its cradle, the elastic pulls the doors back up over it. The drone is now held without the servo doing anything, and pulling up only presses the tubes into the undersides of the doors. To let go, the servo swings the arms out and the doors go with them.',
-        { note: 'Door angles come from my CAD: a section of the real door turned on its pin against the 16 mm tube. A door has to swing about 42 degrees to let a tube past, and the doors close over the tubes about 2 mm before the drone is fully down. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
+    { type: 'scrolly', id: 'passive', module: 'passive', poster: `${M}/poster-passive.webp`,
+      h: 'Passive latching: elastic on the knobs',
+      p: ['The four doors do the catching, with no power. Here is the first latch in section as the drone comes down onto it.'],
+      steps: [
+        { h: 'Doors held up by elastic', p: ['Each door hangs on the pin at the tip of its arm. Elastic stretched between a knob on the door and a knob on the arm holds the door up. The drone starts 32 mm above its docked position.'] },
+        { h: 'The tubes push the doors down', p: ['When the drone comes down, its tubes meet the tips of the doors about 24 mm above the docked position (in my CAD) and push them down and out of the way, stretching the elastic. A door has to swing about 42 degrees to let a tube past.'] },
+        { h: 'Past the doors, they snap shut', p: ['About 2 mm before the drone is fully down, the tube is past the doors, and the elastic pulls them back up over it. The drone is now held without the servo doing anything.'] },
+        { h: 'Pulling up only holds it tighter', p: ['Pulling up only presses the tubes into the undersides of the doors. In my CAD the drone can rise about 7 mm before the tubes meet them, and from there it is held.'] },
+        { h: 'Let go', p: ['To let go, the servo swings the arms out and the doors go with them, so nothing is left over the tube and the drone lifts straight out. Then the arms close again, ready for the next landing.'] },
       ],
-      caption: 'Drag the slider (or the drone, with a mouse) to bring it down. **Pull up** tries to lift the latched drone; **Release** opens the latch with the servo.' },
+      caption: 'Door angles come from my CAD: a section of the real door turned on its pin against the 16 mm tube. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
 
-    { type: 'media', layout: 'row', items: [
-      { v: 'latch-doors-by-hand.mp4', c: 'The finished latches worked by hand: pushing one arm open swings all four arms through the gears, then the doors are pressed down and spring back' },
-      { i: 'landing-gear-latched.webp', c: 'The printed landing-gear mounts and tubes held in both latches, off the drone' },
-    ] },
-
-    { type: 'demo', id: 'drive', module: 'belt', aside: 'right', h: 'The belt drivetrain', height: 'clamp(380px, 56vh, 540px)', poster: `${M}/poster-drive.webp`,
-      p: [
-        'The rover is skid steered. Two Axon MINI servos, one per side, sit inboard of the rear wheels and drive them through printed hubs. I reused the servos and hubs from my [Science Olympiad Robot Tour robot](/projects/robot-tour). Each rear wheel has a 35-tooth HTD 3M pulley built into it, and a 384 mm long, 12 mm wide belt carries the drive to the same pulley inside the front wheel, about 140 mm ahead. Both wheels on a side turn together, 1:1.',
-        'The wheels are 70 mm across. The electronics ride in the middle of the chassis: a Raspberry Pi 5 and an Arduino Mega, powered from a 2S 2200 mAh LiPo through an LM2596 buck converter. The latch servo sits under the deck, between the two latches.',
-        'The drive code on the Arduino Mega is a small state machine: an array of states (drive forward, turn left, stop) that it steps through, driving the left and right wheel servos for each one and printing every transition to the serial monitor. In the first bench test, below, the turns were commented out of the sequence and the chassis was stood on end: forward, then stop.',
+    { type: 'scrolly', id: 'drive', module: 'drive', width: 'wide', side: 'right', poster: `${M}/poster-drive.webp`,
+      h: 'The belt drivetrain',
+      p: ['The rover’s left side, cut open along the outside of the belt. The wheels turn as you scroll.'],
+      steps: [
+        { h: 'Skid steered, one servo per side', p: ['The rover is skid steered. Two Axon MINI servos, one per side, sit inboard of the rear wheels and drive them through printed hubs. I reused the servos and hubs from my [Science Olympiad Robot Tour robot](/projects/robot-tour).'] },
+        { h: 'One belt per side, 1 : 1', p: ['Each rear wheel has a 35-tooth HTD 3M pulley built into it, and a 384 mm long, 12 mm wide belt carries the drive to the same pulley inside the front wheel, about 140 mm ahead. Both wheels on a side turn together, 1:1. The wheels are 70 mm across.'] },
+        { h: 'Steering by speed', p: ['There is no steering linkage: the rover turns by running one side slower than the other. Here the left side runs at 30\u00a0% and the right at 70\u00a0%, so it arcs to the left. The inset is ideal skid steering, with no slip.'] },
+        { h: 'Turning in place', p: ['Run the two sides in opposite directions and it turns on the spot. The terrain tests further down measured how fast it turns on six surfaces.'] },
       ],
-      caption: 'Cut open along the outside of the left belt. Set each side, or pick a preset; the inset shows the turn for ideal skid steering with no slip. The marks on the belt are drawn on, one per tooth, to show it moving.' },
+      caption: 'The belt in my CAD is one solid part, so its motion is shown with marks drawn on it, one per tooth. The speeds are for the picture; the inset is a diagram, not CAD.' },
 
-    { type: 'media', layout: 'row', id: 'drive-media', items: [
-      { i: 'drivetrain-top-view.webp', c: 'Top plate off, Aug 1: both belt runs, the two drive servos between the wheels, and the first (module 1) latch gears in the middle' },
-      { v: 'drivetrain-bench-test.mp4', c: 'Bench test with the chassis on end: one side’s wheels turning together on the belt, then the state sequence and serial monitor on the laptop' },
-      { v: 'rover-first-drive.mp4', c: 'First drive test on the foam mats: driving and turning' },
-    ] },
+    { type: 'prose', id: 'electronics', h: 'Electronics and drive code', p: [
+      'The electronics ride in the middle of the chassis: a Raspberry Pi 5 and an Arduino Mega, powered from a 2S 2200 mAh LiPo through an LM2596 buck converter. The latch servo sits under the deck, between the two latches.',
+      'The drive code on the Arduino Mega is a small state machine: an array of states (drive forward, turn left, stop) that it steps through, driving the left and right wheel servos for each one and printing every transition to the serial monitor. In the first bench test the turns were commented out of the sequence and the chassis was stood on end: forward, then stop.',
+    ],
+      media: [
+        { i: 'drivetrain-top-view.webp', c: 'Top plate off, Aug 1: both belt runs, the two drive servos between the wheels, and the first (module 1) latch gears in the middle' },
+        [{ v: 'drivetrain-bench-test.mp4', c: 'Bench test with the chassis on end: one side’s wheels turning together on the belt, then the state sequence and serial monitor on the laptop' }, { v: 'rover-first-drive.mp4', c: 'First drive test on the foam mats: driving and turning' }],
+      ] },
 
     { type: 'iterations', id: 'iterations', h: 'Fixing the latch', items: [
       { label: 'Version 1', title: 'Module 1 gears: the teeth skipped',
@@ -132,7 +156,7 @@ export default {
       { label: 'The fix', title: 'Doors cut to overlap',
         p: [
           { fix: 'On one latch the cut doors now overlap. On the other, because of the backlash, they barely close, but that is enough to close the latch around the tube.' },
-          { note: 'The cut is not in my CAD, so the 3D demos on this page show the doors as modelled, with a gap between them. The photos show the real, cut doors.' },
+          { note: 'The cut is not in my CAD, so the 3D on this page shows the doors as modelled, with a gap between them. The photos show the real, cut doors.' },
         ],
         media: [
           { i: 'rover-on-scale.webp', c: 'Weighing the rover, Aug 10: about 1.23 kg. Stood on end, it shows both latches: the left one’s cut doors overlap, the right one’s barely close' },
@@ -140,13 +164,21 @@ export default {
         ] },
     ] },
 
-    { type: 'demo', id: 'backlash', module: 'backlash', aside: 'left', h: 'Why backlash hurts this latch', height: 'clamp(380px, 56vh, 520px)', poster: `${M}/poster-backlash.webp`,
-      p: [
-        'Play at a mesh, measured along the pitch circle, turns a 7-tooth pinion by the play divided by its 7 mm pitch radius. So 1 mm of play is 8.2 degrees at the arm, and a door’s finger tip sits about 36 mm from its arm’s pinion: about 5 mm at the tip.',
-        { problem: 'The play also adds up along the chain. On the first latch the inner arm is one mesh from the servo gear and the outer arm is two. On the second latch the arms sit behind the idler, two and three meshes out. And in the CAD each door finger reaches only about 3.7 mm past the edge of the tube: about three quarters of a millimetre of play at each mesh is enough to swing the outer finger that far.', title: 'Play stacks up' },
-        { fix: 'The overlap cut on the real doors is what closes the latch around the tube despite the play: on one latch the doors overlap, on the other they barely close, and that is enough.' },
+    { type: 'scrolly', id: 'backlash', module: 'backlash', poster: `${M}/poster-backlash.webp`,
+      h: 'Why backlash hurts this latch',
+      p: ['The first latch in section, on the final CAD, with the doors as modelled (before the cut). The ghosts show each arm at both ends of its free play.'],
+      steps: [
+        { h: 'Play at a 7-tooth pinion', p: ['Play at a mesh, measured along the pitch circle, turns a 7-tooth pinion by the play divided by its 7 mm pitch radius. So 1 mm of play is 8.2 degrees at the arm, and a door’s finger tip sits about 36 mm from its arm’s pinion: about 5 mm at the tip.'] },
+        { h: 'Half a millimetre at each mesh', p: ['The ghosts are each arm at both ends of its free play, with 0.5 mm of play at each mesh. The arms can rock anywhere between them, and the doors ride along on the arm tips.'] },
+        { h: 'Play stacks up', p: [
+          { problem: 'The play also adds up along the chain. On the first latch the inner arm is one mesh from the servo gear and the outer arm is two. On the second latch the arms sit behind the idler, two and three meshes out. And in the CAD each door finger reaches only about 3.7 mm past the edge of the tube: about three quarters of a millimetre of play at each mesh is enough to swing the outer finger that far.', title: 'Play stacks up' },
+        ] },
+        { h: 'The fix went into the doors', p: [
+          { fix: 'The overlap cut on the real doors is what closes the latch around the tube despite the play: on one latch the doors overlap, on the other they barely close, and that is enough.' },
+          { note: 'The cut is not in my CAD, so it is not shown here; the photos in the iterations above show the real doors.' },
+        ] },
       ],
-      caption: 'The first latch in section, on the final CAD, with the doors as modelled (before the cut). The ghosts show each arm at both ends of its free play; **Wiggle** rocks the arms through it. The numbers are computed from the CAD geometry, not measured.' },
+      caption: 'The numbers are computed from the CAD geometry, not measured.' },
 
     { type: 'media', layout: 'collage', id: 'build-log', h: 'Build log', p: ['The project was self-initiated and went beyond the curriculum, using the lab’s drones and 3D printers. Dates are from the photos.'], items: [
       { i: 'cad-docking-concept.webp', c: 'Jul 24: first CAD of the docking interface under the drone' },
@@ -157,11 +189,10 @@ export default {
       { i: 'cad-in-the-hallway.webp', c: 'Jul 30: CADing the rover frame in the hallway' },
       { i: 'electronics-and-latch-gear.webp', c: 'Jul 31: Raspberry Pi and Arduino in, latch gears going on' },
       { i: 'docking-by-hand.webp', c: 'Aug 1: me connecting the ground rover to power in the flight cage' },
-      { i: 'still-carry-flight-cage.webp', c: 'Carrying the rover across the flight cage' },
     ] },
 
     { type: 'prose', id: 'results', h: 'Testing and results', p: [
-      'In the flight cage the drone lifted the rover and flew it across the cage, and the rover drove and turned with the drone riding on top: the first two videos at the top of this page.',
+      'In the flight cage the drone lifted the rover and flew it across the cage, and the rover drove and turned with the drone riding on top: the two videos at the top of this page.',
       'On the course run, the docked pair lifted off together and the drone carried the rover onto the course. Then the servo opened the latch and let the rover go, and the drone flew the course on its own, through the gate, and came back down beside the rover.',
     ] },
     { type: 'media', layout: 'row', items: [
@@ -170,15 +201,22 @@ export default {
       { v: 'final-run-lands-beside-rover.mp4', c: 'The drone comes back and lands beside the rover' },
     ] },
 
-    { type: 'demo', id: 'terrain', module: 'terrain', webgl: false, h: 'Six terrains', height: 'clamp(430px, 52vh, 480px)',
-      p: [
-        'We then tested the rover on six surfaces at a constant 8.0 V, three trials each. We timed straight runs over a meterstick with a stopwatch, and turns with a protractor and a timer.',
-        'Concrete was the fastest in a straight line, at 0.63 m/s. The rover turned fastest on foam (4.20 rad/s) and concrete (4.05 rad/s). Those two are synthetic surfaces, so our poster’s text leaves them out and names sand, at 3.40 rad/s, as the fastest turning surface; the table here has all six. On forest floor the rover kept most of its straight-line speed but turned at 1.25 rad/s, less than a third of its rate on foam.',
-        { problem: 'The rover could not cross grass at all.', title: 'Grass' },
-        { fix: 'This is where the drone takes over: on terrain the rover cannot drive, the drone flies, alone or carrying the rover.' },
-        'The data points to terrain-aware mission planning: on low-mobility surfaces like forest floor and mulch, deploy the drone more often; on smooth, fast ones like concrete, let the rover carry it.',
+    { type: 'scrolly', id: 'terrain', module: 'terrain', webgl: false, width: 'wide', stepHeight: '85vh',
+      h: 'Six terrains',
+      p: ['We then tested the rover on six surfaces at a constant 8.0 V, three trials each. We timed straight runs over a meterstick with a stopwatch, and turns with a protractor and a timer.'],
+      steps: [
+        { h: 'Straight-line speed', p: ['In a straight line the surface hardly mattered: on every surface the rover could drive, it averaged between 0.57 and 0.63 m/s.'] },
+        { h: 'Concrete was the fastest', p: ['Concrete was the fastest in a straight line, at 0.63 m/s.'] },
+        { h: 'Turning: foam and concrete', p: ['Turning is where the surfaces split apart. The rover turned fastest on foam (4.20 rad/s) and concrete (4.05 rad/s). Those two are synthetic surfaces, so our poster’s text leaves them out and names sand as the fastest turning surface; the chart has all six.'] },
+        { h: 'Sand', p: ['On sand it turned at 3.40 rad/s, the fastest of the natural surfaces.'] },
+        { h: 'Forest floor', p: ['On forest floor the rover kept most of its straight-line speed but turned at 1.25 rad/s, less than a third of its rate on foam.'] },
+        { h: 'Grass', p: [
+          { problem: 'The rover could not cross grass at all.', title: 'Grass' },
+          { fix: 'This is where the drone takes over: on terrain the rover cannot drive, the drone flies, alone or carrying the rover.' },
+          'The data points to terrain-aware mission planning: on low-mobility surfaces like forest floor and mulch, deploy the drone more often; on smooth, fast ones like concrete, let the rover carry it.',
+        ] },
       ],
-      caption: 'Averages of three trials per surface, from Table 1 of our poster. Hover or tap a bar for the exact value.' },
+      caption: 'Averages of three trials per surface, from Table 1 of our poster: straight-line speed (m/s) and turning speed (rad/s). Foam 0.62 and 4.20, concrete 0.63 and 4.05, grass could not cross, mulch 0.57 and 1.88, sand 0.60 and 3.40, forest floor 0.59 and 1.25.' },
 
     { type: 'callout', id: 'strength', h: '27.28 N per latch', p: [
       'We loaded the docked latches with weights, adding them until the latches let go. On average they held 4,337 g of weights plus the 1.23 kg rover: 5,564 g in all, or 54.57 N. That is 27.28 N per latch, and about four and a half times the rover’s own weight.',
@@ -186,7 +224,7 @@ export default {
     ] },
 
     { type: 'media', layout: 'grid', cols: 3, items: [
-      { i: 'airborne-docked.webp', c: 'Docked and airborne: the drone carrying the rover in a low hover (Figure 1 of our poster)' },
+      { i: 'still-carry-flight-cage.webp', c: 'Carrying the rover across the flight cage' },
       { i: 'rover-on-foam.webp', c: 'The finished rover on the foam mats' },
       { i: 'terrain-forest-floor.webp', c: 'Forest floor, one of the six test surfaces (Figure 4 of our poster)' },
     ] },
@@ -208,4 +246,5 @@ export default {
       { next: 'Coordinating the two vehicles as a team (multi-agent integration), and SLAM so they can map together, were the other next steps we identified.', title: 'Working as a team' },
     ] },
   ],
+  assets: [`${M}/`],
 };
