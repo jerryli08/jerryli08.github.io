@@ -257,7 +257,15 @@
     let step = 0, stepP = steps.length ? 0 : p; // a scrolly without steps: one step, the whole way
     steps.forEach((s, i) => { // progress through a step runs over the height of its slot
       const y = cards[i].getBoundingClientRect().top;
-      if (y <= g.line) { step = i; stepP = Math.min(1, Math.max(0, (g.line - y) / (s.offsetHeight || 1))); }
+      if (y <= g.line) {
+        step = i; stepP = Math.min(1, Math.max(0, (g.line - y) / (s.offsetHeight || 1)));
+        // the last step's slot runs past the point where the stage unpins, so it would stop part way
+        // (about 0.6): finish it exactly when the section's progress reaches 1
+        if (i === steps.length - 1 && span > 0) {
+          const p0 = Math.min(0.999, Math.max(0, (g.top - g.line + (y - r.top)) / span));
+          stepP = Math.min(1, Math.max(stepP, (p - p0) / (1 - p0)));
+        }
+      }
     });
     if (step !== st.step) {
       steps.forEach((s, i) => s.classList.toggle('is-active', i === step));
