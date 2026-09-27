@@ -1,0 +1,21 @@
+{
+ "prefix": "eb1",
+ "remove": [
+  "^M2\\.5 x 5 flathead",
+  "^Flipsky Dual 75100 ESC"
+ ],
+ "keep": [
+  "^11t Jockey Wheel with bearing",
+  "^91273A403",
+  "^uxcell Steel Spacer 6\\.2mm Bore x 15mm OD x 4mm Length:1[23]$",
+  "^seat tube mount"
+ ],
+ "carbon": [
+  "motor.mount.1",
+  "4mm.drive.side.bearing.plate",
+  "battery.door.1$",
+  "battery_door_1$",
+  "drive.side.static.battery.plate",
+  "cf.CSK.battery.holder"
+ ]
+}

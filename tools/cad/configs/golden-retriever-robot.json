@@ -1,0 +1,25 @@
+{
+  "prefix": "gr",
+  "remove": [
+    "Socket Head Screw",
+    "Hurricane Nut",
+    "Washer",
+    "Lock Nut",
+    "hex nut",
+    "cap screw"
+  ],
+  "keep": [
+    "^1906-0025-0032 Low-Profile Servo Hub",
+    "^1504-0032-0040 32mm OD Pattern Spacer",
+    "^3614-0014-0072 Rhino Wheel",
+    "^1309-0016-4008 Sonic Hub",
+    "^1520-4012-0160 8mm REX Plastic Spacer",
+    "^2106-4008-0480 8mm REX Stainless Shaft",
+    "^Carriage:1$",
+    "^3407-0002-0112 Hub-Mount Winch Pulley",
+    "^1922-0025-0036 8mm REX Servo Shaft",
+    "^2908-0100-0005 Synthetic Cable",
+    "^SO101 L[0-6] "
+  ],
+  "simplify": 0.0005
+}

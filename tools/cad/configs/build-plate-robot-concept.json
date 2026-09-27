@@ -1,0 +1,5 @@
+{
+  "prefix": "bprc",
+  "remove": [],
+  "keep": ["^G_"]
+}

@@ -51,11 +51,15 @@ const poster = (x) => (has(`/assets/posters/${x.slug}.jpg`) ? `/assets/posters/$
 const arrow = '<span class="arrow" aria-hidden="true">&#8599;</span>';
 
 function mediaSrc(m) {
+  // 'videos/x.mp4', 'images/x.jpg', a per-project 'slug/x' or an absolute '/assets/media/slug/x'
+  const bare = (u, re) => u.replace(/^\/assets\/media\//, '').replace(re, '');
   if (m.v) {
-    const name = m.v.replace(/^videos\//, '').replace(/\.mp4$/, '');
-    return { type: 'video', src: `/assets/media/${name}.mp4`, poster: `/assets/media/posters/${name}.jpg` };
+    const name = bare(m.v, /^videos\//).replace(/\.mp4$/, '');
+    // per-project folders keep the poster next to the clip; the old flat clips use posters/
+    const poster = name.includes('/') ? `/assets/media/${name}.jpg` : `/assets/media/posters/${name}.jpg`;
+    return { type: 'video', src: `/assets/media/${name}.mp4`, poster };
   }
-  const name = m.i.replace(/^images\//, '').replace(/\.\w+$/, '');
+  const name = bare(m.i, /^images\//).replace(/\.\w+$/, '');
   const webp = `/assets/media/${name}.webp`;
   return { type: 'image', src: has(webp) ? webp : `/${m.i}` };
 }

@@ -1,0 +1,5 @@
+{
+  "prefix": "morph",
+  "remove": [],
+  "keep": ["^Top:1$", "^Hub_Moving:1$"]
+}

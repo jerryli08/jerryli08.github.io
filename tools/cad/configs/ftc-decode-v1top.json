@@ -1,0 +1,24 @@
+{
+ "prefix": "ftc",
+ "remove": [
+  "[Ss]crew",
+  "SHCS",
+  "_9\\d{4}A\\d{3}",
+  "^2800-",
+  "^M4 x 0\\.7mm",
+  "[Ll]ocknut",
+  "^Shim(:|$)",
+  "e-clip",
+  "PCB",
+  "^Packages",
+  "^Board:",
+  "encoder pins_MalePinHeader"
+ ],
+ "keep": [
+  "^flywheel$",
+  "^gate$",
+  "^feed_[lr]$",
+  "^flap$",
+  "^ball_"
+ ]
+}

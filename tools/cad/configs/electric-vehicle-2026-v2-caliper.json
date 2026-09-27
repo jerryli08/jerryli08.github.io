@@ -1,0 +1,21 @@
+{
+ "prefix": "ev2",
+ "remove": ["screw"],
+ "keep": [
+  "^front wheel holder:1$",
+  "^front wheel bearing holder:1$",
+  "^front axle:1$",
+  "Wheel:4$",
+  "Wheel Hub:4$",
+  "spacer:2$",
+  "spacer:4$",
+  "^1603-0032-0012 assembly:1$",
+  "^1603-0032-0012 assembly:3$",
+  "^Component23:1$",
+  "^Component24:1$",
+  "^Component25:1$",
+  "^bottom dynamic caliper end:1$",
+  "^top dynamic caliper end:1$",
+  "^caliper linkage:1$"
+ ]
+}

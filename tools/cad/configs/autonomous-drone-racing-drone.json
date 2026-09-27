@@ -1,0 +1,37 @@
+{
+  "prefix": "adr",
+  "remove": [
+    "^GB70-",
+    "^GB818-",
+    "^ZSLM-",
+    "^LM-M3-DING",
+    "^M3-",
+    "^M25-",
+    "^NILONGZHU-",
+    "^(C|R|D|Q|J|FB|U)\\d+ARK_Flow_PCB",
+    "^0402_cap"
+  ],
+  "keep": [
+    "^Propeller 10x45",
+    "^Raspberry Pi Camera Module 3",
+    "^ARK Flow Rev 2 3D Model",
+    "^Raspberry Pi 5:",
+    "^rpi5 \\+ rpicam3 mount",
+    "^raspi top cover",
+    "^optical \\+ downwards picam3 mount",
+    "^Turnigy",
+    "^top battery mount",
+    "^new landing gear mount",
+    "^PCBA-PM06_ASM"
+  ],
+  "carbon": [
+    "^CARBON-FIBER-TUBE",
+    "^HMX5V-GUAN-DINGWEI",
+    "^GUAN-CHENG",
+    "^TOP-PLATE-X500",
+    "^BOTTOM-PLATE-X500",
+    "^PLATFORM-PLAT-X500",
+    "^BATTERY-MOUNTING-PLAT"
+  ],
+  "simplify": 0.0002
+}

@@ -1,0 +1,15 @@
+{
+  "prefix": "sm",
+  "remove": [],
+  "keep": [
+    "^2020 T slot 400mm v1 \\(2\\):1$",
+    "^2020 T slot 400mm v1 \\(3\\):1$",
+    "^linkage ends:[12]$",
+    "^Component4:1$",
+    "^\\(2x\\) fulcrum rod indexer:[12]$",
+    "^\\(2x\\) fulcrum rod mount:[12]$",
+    "^\\(2x\\) ruler thing:[12]$",
+    "^\\(2x\\) fulcrum stand mount:[12]$",
+    "Bearings:[5678]$"
+  ]
+}

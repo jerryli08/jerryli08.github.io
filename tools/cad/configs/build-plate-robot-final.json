@@ -1,0 +1,6 @@
+{
+  "prefix": "bpr",
+  "remove": [],
+  "keep": ["^G_"],
+  "simplify": 0.001
+}

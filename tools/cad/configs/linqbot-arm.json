@@ -1,0 +1,5 @@
+{
+  "prefix": "lq",
+  "remove": ["Screw", "Nut", "^Bus Servo Adapter"],
+  "keep": ["^SO101 L[0-6] "]
+}

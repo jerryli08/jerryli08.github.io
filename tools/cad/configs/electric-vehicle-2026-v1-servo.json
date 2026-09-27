@@ -1,0 +1,15 @@
+{
+ "prefix": "ev1",
+ "remove": ["screw"],
+ "keep": [
+  "^front wheel holder:1$",
+  "^Ass servo:2$",
+  "^front axle:1$",
+  "Wheel:4$",
+  "Wheel Hub:4$",
+  "spacer:2$",
+  "spacer:4$",
+  "^1603-0032-0012 assembly:1$",
+  "^1603-0032-0012 assembly:3$"
+ ]
+}

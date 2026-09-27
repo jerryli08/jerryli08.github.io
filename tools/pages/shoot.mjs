@@ -18,7 +18,7 @@ await page.goto(url, { waitUntil: 'load' });
 await page.addStyleTag({ content: 'html { scroll-behavior: auto !important; }' });
 await page.waitForTimeout(1000);
 let n = 0;
-const shot = async (name) => { const f = `${prefix}-${String(n++).padStart(2, '0')}-${name}.png`; await page.screenshot({ path: f }); console.log('wrote', f); };
+const shot = async (name) => { const f = `${prefix}-${String(n++).padStart(2, '0')}-${name}.png`; await page.screenshot({ path: f, timeout: 240000 }); console.log('wrote', f); };
 const settle = async (sel) => {
   // wait for any interactive block in view to finish mounting (or fail)
   await page.waitForFunction((s) => [...document.querySelectorAll(`${s} [data-rx-block], ${s}[data-rx-block]`)].every((b) => !['idle', 'loading'].includes(b.dataset.state) || b.getBoundingClientRect().top > innerHeight + 300), sel, { timeout: 120000 }).catch(() => console.log('timed out waiting for', sel));

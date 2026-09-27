@@ -1,0 +1,8 @@
+{
+ "prefix": "dcc",
+ "remove": [],
+ "keep": [
+  "^(wheel0|wheel1|wheel2|wheel3|mpul0|mpul1|mpul2|mpul3|omni0|omni1|omni2|omni3|pin1|pin2|idl1|idl2|chA|chB|p1f|p1b|p2f|p2b|car1|spd1|car2|spd2|wormsh|linkA|linkP|idler|Bpul|belt1|belt2|belt3|belt4|belt5|beltS|beltP|Gpul|Dpul|Epul|Fpul|armL|armR|cplr|turret|ring|shell|sidewheels|walls|plates|ramps|bottom|top)$"
+ ],
+ "carbon": []
+}
