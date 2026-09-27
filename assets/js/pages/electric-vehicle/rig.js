@@ -27,7 +27,11 @@ export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 export const lerp = (a, b, t) => a + (b - a) * t;
 
-/** Parts of the final model, found by their CAD names (tools/optimize-cad.mjs keeps them named). */
+/**
+ * Parts of the final model, found by their CAD names (tools/optimize-cad.mjs keeps them named).
+ * Each motor keeps one rotor node, its bell (Corps supérieur): the stator, the magnets and the
+ * motor mount are merged with the static parts (tools/cad/configs/electric-vehicle-final.json).
+ */
 export function partsOf(stage, model) {
   const P = (re) => stage.part(re, model);
   return {
@@ -41,14 +45,10 @@ export function partsOf(stage, model) {
     belts: P(/1140_2GT_6_for_ev/),
     gear48: P(/Spur_Gear_48_teeth/),
     pinion: P(/Spur_Gear_8_teeth/),
-    rotor: P(/D2830_Rotor/),
+    rotor: P(/Corps_sup_rieur/), // the D2830's bell, the outrunner's rotor
     shaft: P(/_Axe_1$/),
-    circlip: P(/Circlip/),
-    stator: P(/D2830_Stator/),
-    motorMount: P(/MOTEUR_Support/),
     gear40: P(/Spur_Gear_40_teeth/),
     encShaft: P(/1501_0006_0100/),
-    encBearings: P(/1601_0412_0006/),
     encoder: P(/mt6701_mockup/),
     encMount: P(/MT6701_Mount/),
     btnLaser: P(/Button_d12_1$/), // left (-X): toggles the laser pointer
@@ -56,7 +56,6 @@ export function partsOf(stage, model) {
     laserHolder: P(/_0_1_1_17_$/),
     endPanels: P(/_0_1_1_58_$/), // printed front and rear end panels plus the gearbox housing
     mountPlate: P(/_0_1_1_46_$/), // printed motor mount and the button plate
-    electronics: P(/0_electronics_v2/),
   };
 }
 
@@ -66,7 +65,7 @@ export function rigDrive(stage, parts) {
   const zc = (o) => stage.bounds(o).center.z;
   const rear = stage.pivot(onAxles.filter((o) => zc(o) > 0), AXES.rear, XDIR);
   const front = stage.pivot(onAxles.filter((o) => zc(o) < 0), AXES.front, XDIR);
-  const motor = stage.pivot([...parts.rotor, ...parts.shaft, ...parts.circlip, ...parts.pinion], AXES.motor, XDIR);
+  const motor = stage.pivot([...parts.rotor, ...parts.shaft, ...parts.pinion], AXES.motor, XDIR);
   const enc = stage.pivot([...parts.gear40, ...parts.encShaft], AXES.enc, XDIR);
   return {
     rear, front, motor, enc,
@@ -100,7 +99,10 @@ export function beltMarkers(stage, model, { n = 12, color = '#7fb6ff', radius = 
     s -= span;
     const a = s / r; return [yc - r * Math.cos(a), zr + r * Math.sin(a)];
   };
+  let last = NaN;
   const setTravel = (travel) => {
+    if (travel === last) return;
+    last = travel;
     let k = 0;
     for (const x of [-BELT_X, BELT_X]) {
       for (let i = 0; i < n; i++) {
@@ -116,76 +118,38 @@ export function beltMarkers(stage, model, { n = 12, color = '#7fb6ff', radius = 
   return { mesh, setTravel, dispose() { model.remove(mesh); geo.dispose(); mat.dispose(); } };
 }
 
-/** Set a part list's opacity (1 = the CAD's own look). Clones materials once. */
-export function fade(parts, a) {
-  for (const p of parts) p.traverse((m) => {
-    if (!m.isMesh) return;
-    if (!m.userData.evOwn) {
-      m.userData.evOwn = true;
-      m.material = Array.isArray(m.material) ? m.material.map((x) => x.clone()) : m.material.clone();
-    }
-    for (const mat of [].concat(m.material)) {
-      const t = a < 0.999;
-      if (mat.transparent !== t) { mat.transparent = t; mat.needsUpdate = true; }
-      mat.opacity = a; mat.depthWrite = !t;
-    }
-    m.castShadow = a > 0.5;
-  });
-}
-
-/** Screen-space labels pinned to model points (annotations only). */
-export function labels(el) {
-  const box = document.createElement('div');
-  box.setAttribute('aria-hidden', 'true');
-  Object.assign(box.style, { position: 'absolute', inset: '0', pointerEvents: 'none', overflow: 'hidden', zIndex: '2' });
-  el.append(box);
-  let items = [];
-  const v = { x: 0, y: 0, z: 0 };
-  return {
-    set(list) {
-      box.textContent = '';
-      items = list.map((x) => {
-        const d = document.createElement('span');
-        Object.assign(d.style, { position: 'absolute', left: '0', top: '0', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
-          font: '500 12.5px/1.2 var(--font, system-ui, sans-serif)', color: '#eee9e3', transition: 'opacity .25s', flexDirection: x.side === 'l' ? 'row-reverse' : 'row' });
-        const dot = document.createElement('i');
-        Object.assign(dot.style, { width: '8px', height: '8px', borderRadius: '50%', background: x.color || '#ff6b35', boxShadow: '0 0 0 2px rgba(11,10,9,.75)', flex: 'none' });
-        const b = document.createElement('b');
-        Object.assign(b.style, { fontWeight: '550', padding: '3px 8px', borderRadius: '7px', background: 'rgba(11,10,9,.8)', border: '1px solid rgba(237,232,226,.2)' });
-        b.textContent = x.text;
-        d.append(dot, b);
-        box.append(d);
-        return { ...x, d };
-      });
-    },
-    opacity(a) { box.style.opacity = String(a); },
-    update(camera, THREE) {
-      const w = el.clientWidth, h = el.clientHeight;
-      camera.updateMatrixWorld();
-      const p = new THREE.Vector3();
-      for (const it of items) {
-        p.set(it.p[0], it.p[1], it.p[2]).project(camera);
-        Object.assign(v, p);
-        const x = ((v.x + 1) / 2) * w, y = ((1 - v.y) / 2) * h;
-        const off = it.side === 'l' ? -it.d.offsetWidth + 4 : -4;
-        it.d.style.transform = `translate(${(x + off).toFixed(1)}px, ${(y - 10).toFixed(1)}px)`;
-        it.d.style.opacity = v.z > 1 || x < 0 || x > w || y < 0 || y > h ? '0' : '1';
-      }
-    },
-    dispose() { box.remove(); },
+/**
+ * Camera views are framed once, at rest, and blended by orbiting about a moving target (a straight
+ * line between camera positions on opposite sides of the car would pass through it).
+ */
+export function blendViews(stage) {
+  const { THREE } = stage;
+  const S0 = new THREE.Spherical(), S1 = new THREE.Spherical(), off = new THREE.Vector3();
+  return (a, b, k, drift = 0) => {
+    S0.setFromVector3(off.copy(a.pos).sub(a.target)); S1.setFromVector3(off.copy(b.pos).sub(b.target));
+    let dT = S1.theta - S0.theta;
+    while (dT > Math.PI) dT -= 2 * Math.PI;
+    while (dT < -Math.PI) dT += 2 * Math.PI;
+    const target = a.target.clone().lerp(b.target, k);
+    off.setFromSphericalCoords(lerp(S0.radius, S1.radius, k), clamp(lerp(S0.phi, S1.phi, k), 0.05, Math.PI - 0.05), S0.theta + dT * k + drift);
+    return { pos: target.clone().add(off), target };
   };
 }
 
-/** A small caption chip in a corner of the stage (styled like the stage's own notes). */
-export function chip(el, pos = { right: '14px', top: '14px' }) {
-  const c = document.createElement('p');
-  c.className = 'rx-note';
-  Object.assign(c.style, { left: 'auto', bottom: 'auto', ...pos, maxWidth: 'min(360px, calc(100% - 28px))', flexWrap: 'wrap', lineHeight: '1.35', color: '#eee9e3', fontSize: '13px' });
-  c.hidden = true;
-  el.append(c);
+/** A small instrument panel (.rx-hud in site.css) that only writes the values that changed. */
+export function hud(parent, html, cls = '') {
+  const el = document.createElement('div');
+  el.className = `rx-hud${cls ? ` ${cls}` : ''}`;
+  el.innerHTML = html;
+  parent.append(el);
+  const K = Object.fromEntries([...el.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
+  const shown = {};
+  const set = (key, v, fn) => { if (shown[key] !== v) { shown[key] = v; fn(v); } };
   return {
-    el: c,
-    set(text) { if (!text) { c.hidden = true; return; } c.hidden = false; if (c.textContent !== text) c.textContent = text; },
-    dispose() { c.remove(); },
+    el,
+    put: (k, text) => set(k, text, (v) => { K[k].textContent = v; }),
+    bar: (k, f) => set(`${k}:w`, `${(clamp(f, 0, 1) * 100).toFixed(1)}%`, (v) => { K[k].style.width = v; }),
+    color: (k, c) => set(`${k}:c`, c, (v) => { K[k].style.color = v; }),
+    show: (k, on) => set(`${k}:d`, on ? '' : 'none', (v) => { K[k].style.display = v; }),
   };
 }

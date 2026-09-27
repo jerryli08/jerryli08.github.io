@@ -15,8 +15,8 @@ const IN = 0.05; // grip point this far behind the shelf front
 // items stand in the three cubbies; grip heights come from the item sizes
 export const ITEMS = {
   water: { name: 'water bottle', x: -0.4, board: 0.3, grip: 0.15, width: 0.065 },
-  pill: { name: 'pill bottle', x: 0, board: 0.55, grip: 0.035, width: 0.035 },
-  book: { name: 'book', x: 0.4, board: 0.8, grip: 0.1, width: 0.025 },
+  pill: { name: 'pill bottle', x: 0, board: 0.8, grip: 0.035, width: 0.035 }, // up top, so the lift has to raise the arm
+  book: { name: 'book', x: 0.4, board: 0.55, grip: 0.1, width: 0.025 },
 };
 export const START = { x: -0.45, z: 1.0, psi: Math.PI }; // beside the chair, arm side facing it
 export const USER = { x: -1.3, z: 1.0 };

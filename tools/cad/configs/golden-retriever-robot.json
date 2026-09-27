@@ -1,4 +1,5 @@
 {
+  "about": "Input: the raw CAD after /home/claude/work/golden-retriever-corgi-hackathon/prep-robot.mjs (drops the fasteners fused inside the servo brackets, Axon servos and SO-101 arm, and the arm's servo-driver board parts, then splits the arm into its seven links).",
   "prefix": "gr",
   "remove": [
     "Socket Head Screw",

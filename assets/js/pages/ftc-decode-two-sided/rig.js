@@ -1,4 +1,4 @@
-// Shared rig for the ftc-decode-two-sided demos: Jerry's concept CAD (one web model, one
+// Shared rig for the ftc-decode-two-sided scrollies: Jerry's concept CAD (one web model, one
 // download for every demo on the page) with every moving part turned about its real axis.
 //
 // The web model is tools/cad/configs/ftc-decode-two-sided-robot.json run on a pre-pass that
@@ -66,9 +66,16 @@ const LBD = Math.hypot(D0[0] - B[0], D0[1] - B[1]);
 const LCD = Math.hypot(D0[0] - C0[0], D0[1] - C0[1]);
 export const THETA0 = Math.atan2(C0[1] - A[1], C0[0] - A[0]); // 93.18 deg: the CAD pose (transfer)
 const PSI0 = Math.atan2(D0[1] - B[1], D0[0] - B[0]);
-// Travel: swept in 2 deg steps against every static part; the roller wheels on the arms reach the
-// 48 mm wheels at the sides at about 32 deg (right) and 160 deg (left). The demos stop 4 deg short.
-export const THETA_RIGHT = 36 * DEG, THETA_LEFT = 156 * DEG;
+// Endstops (Jerry, Sept 26: the 4-bar goes all the way to its endstops on either side). Found by
+// sweeping the linkage and everything it carries against every static part of the CAD in fine
+// steps (surface samples, /home/claude/work/ftc-decode-concept/cad/endstops*.py): on each side the
+// first thing the linkage lands on is the last 48 mm wheel in the row along that side of the robot,
+// under the back end of the coupler where the arm servos sit. Right: driven link at 21.4 deg
+// (coupler 86.9 mm out, 71.0 mm down, tilted 16.2 deg); left: 176.6 deg (86.8 mm, 70.8 mm, 16.1
+// deg). Nothing on the links or the coupler touches anything before that. The two tray arms are
+// held in their CAD pose on the coupler (their servo angles are not in the CAD): from about 33 deg
+// (right) and 159 deg (left) their roller wheels overlap the side wheel rows.
+export const THETA_RIGHT = 21.4 * DEG, THETA_LEFT = 176.6 * DEG;
 /** driven link angle (rad, from +x) -> { C, D (mm), phi: coupler tilt, psi: passive link turn } */
 export function solve(th) {
   const C = [A[0] + LAC * Math.cos(th), A[1] + LAC * Math.sin(th)];
@@ -79,9 +86,6 @@ export function solve(th) {
   const D = c1[1] > c2[1] ? c1 : c2; // the branch with D above B
   return { C, D, phi: Math.atan2(D[1] - C[1], D[0] - C[0]), psi: Math.atan2(D[1] - B[1], D[0] - B[0]) - PSI0 };
 }
-/** slider value s in [-1, 1] (-1 left side, 0 transfer, +1 right side) <-> driven link angle */
-export const sToTheta = (s) => (s >= 0 ? THETA0 + s * (THETA_RIGHT - THETA0) : THETA0 - s * (THETA_LEFT - THETA0));
-export const thetaToS = (th) => (th <= THETA0 ? (th - THETA0) / (THETA_RIGHT - THETA0) : -(th - THETA0) / (THETA_LEFT - THETA0));
 
 // ------------------------------------------------------------------ loading and rigging
 const GROUPS = ['wheel0', 'wheel1', 'wheel2', 'wheel3', 'mpul0', 'mpul1', 'mpul2', 'mpul3', 'omni0', 'omni1', 'omni2', 'omni3',
@@ -173,25 +177,109 @@ export function rigRobot(stage, P, which = {}) {
 }
 
 // ------------------------------------------------------------------ looks
-/** Fade (0..1) or hide (0) groups. Materials are cloned once per mesh so other parts keep theirs. */
-export function fade(objs, opacity) {
-  for (const o of [].concat(objs)) {
-    if (!o) continue;
-    o.visible = opacity > 0.001;
-    o.traverse((m) => {
+/**
+ * Per-group opacity and tint, set every scroll frame but written only when a value changes.
+ * Materials are copied once per group with stage.cloneMaterial, so section caps keep working and
+ * other groups keep theirs. look(name | object | array, opacity, color, strength).
+ */
+export function looks(stage) {
+  const st = new Map();
+  const black = new THREE.Color(0), tmp = new THREE.Color();
+  function prep(obj) {
+    if (st.has(obj)) return st.get(obj);
+    const mats = [], meshes = [];
+    obj.traverse((m) => {
       if (!m.isMesh) return;
-      if (!m.userData.dccFaded) {
-        m.material = Array.isArray(m.material) ? m.material.map((x) => x.clone()) : m.material.clone();
-        m.userData.dccFaded = true;
-      }
-      for (const mat of [].concat(m.material)) {
-        mat.transparent = opacity < 1; mat.opacity = opacity; mat.depthWrite = opacity >= 1;
-        mat.needsUpdate = true;
-      }
-      m.castShadow = opacity >= 1;
+      meshes.push(m);
+      const list = [].concat(m.material).map((x) => { const c = stage.cloneMaterial(x); mats.push(c); return c; });
+      m.material = list.length === 1 ? list[0] : list;
     });
+    const s = { obj, mats, meshes, o: 1, key: '' };
+    st.set(obj, s);
+    return s;
   }
+  function look(objs, o = 1, color = null, k = 0) {
+    for (const obj of [].concat(objs)) {
+      if (!obj) continue;
+      const s = prep(obj);
+      o = Math.round(o * 200) / 200;
+      if (o !== s.o) {
+        const wasT = s.o < 1, isT = o < 1;
+        s.o = o;
+        obj.visible = o > 0.004;
+        for (const m of s.mats) { m.opacity = o; m.transparent = isT; m.depthWrite = !isT; if (wasT !== isT) m.needsUpdate = true; }
+        for (const m of s.meshes) m.castShadow = !isT;
+        stage.invalidate();
+      }
+      const key = color && k > 0.004 ? `${color}|${Math.round(k * 100)}` : '';
+      if (key !== s.key) {
+        s.key = key;
+        if (key) tmp.set(color).multiplyScalar(Math.round(k * 100) / 100); else tmp.copy(black);
+        for (const m of s.mats) if (m.emissive) { m.emissive.copy(tmp); m.emissiveIntensity = 1; }
+        stage.invalidate(false);
+      }
+    }
+  }
+  return look;
 }
+
+// ------------------------------------------------------------------ scroll helpers
+export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+export const lerp = (a, b, t) => a + (b - a) * t;
+
+/**
+ * Camera views framed once with everything at rest and cached per canvas aspect; place(a, b, k)
+ * blends between two cached views along a sphere about the target (never re-framed on moving parts).
+ * defs: { key: () => ({ pos, target }) } built with stage.frame(..., { apply: false, refresh: true }).
+ */
+export function viewSet(stage, el, defs) {
+  let cache = null, aspect = 0;
+  const sph = (v) => ({ t: v.target.clone(), s: new THREE.Spherical().setFromVector3(v.pos.clone().sub(v.target)) });
+  const get = (key) => {
+    const a = el.clientWidth / Math.max(1, el.clientHeight);
+    if (!cache || a !== aspect) { aspect = a; cache = {}; }
+    return (cache[key] ||= sph(defs[key]()));
+  };
+  const sp = new THREE.Spherical();
+  function place(ka, kb, k, drift = 0) {
+    const a = get(ka), b = get(kb);
+    let dT = b.s.theta - a.s.theta;
+    while (dT > Math.PI) dT -= 2 * Math.PI;
+    while (dT < -Math.PI) dT += 2 * Math.PI;
+    const target = a.t.clone().lerp(b.t, k);
+    sp.set(lerp(a.s.radius, b.s.radius, k), lerp(a.s.phi, b.s.phi, k), a.s.theta + dT * k + drift);
+    stage.setView({ pos: new THREE.Vector3().setFromSpherical(sp).add(target), target });
+  }
+  return { place, get };
+}
+
+/** An invisible box (model metres) to frame a view on, instead of parts that move. */
+export function frameBox(size, center) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(...size));
+  m.position.set(...center);
+  m.updateMatrixWorld();
+  return m;
+}
+
+/**
+ * A small readout on the stage: rows of label and value, written only when a value changes. With
+ * `mini`, phones show only the one-line summary (key 'mini') instead of the rows.
+ */
+export function hud(layer, rows, mini = false) {
+  const el = document.createElement('div');
+  el.className = 'rx-hud';
+  el.innerHTML = rows.map(([k, label, x]) => `<div class="rx-hud-row${x || mini ? ' rx-hud-x' : ''}"><span>${label}</span><b class="num" data-k="${k}"></b></div>`).join('')
+    + (mini ? '<div class="rx-hud-mini num" data-k="mini"></div>' : '');
+  layer.append(el);
+  const K = Object.fromEntries([...el.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
+  const shown = {};
+  return {
+    el,
+    put(k, text) { if (shown[k] !== text) { K[k].textContent = text; shown[k] = text; } },
+  };
+}
+export const fmt = (v) => Math.round(v).toLocaleString('en-US');
 
 /** Belt path of two pulleys (centres in mm, radii in mm) as a closed CCW loop, resampled every `step` mm. */
 export function beltLoop(c1, r1, c2, r2, step = 4) {
@@ -259,10 +347,3 @@ export function beltDots(name, parent, color = '#ff2bd6', radius = 1.25) {
   return { mesh, set, r1: pitchR(t1), dispose() { mesh.removeFromParent(); geo.dispose(); mat.dispose(); } };
 }
 
-/** "Colour a set of groups" helper returning a restore function. */
-export function tint(stage, objs, color, intensity = 0.5) {
-  return stage.highlight(objs, color, { intensity });
-}
-
-/** Wrap an angle to (-pi, pi]. */
-export const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));

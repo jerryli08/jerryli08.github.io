@@ -14,8 +14,6 @@ export const TURNING = /^anim_morph_[01]_/; // the green half: Top and Hub_Movin
 const PT = [0, 1, 0, 1, 0, 0, 0, 0, -1]; // CAD module frame -> planner module frame (P transposed; P is symmetric)
 const W = [1, 0, 0, 0, 0, 1, 0, -1, 0]; // planner world -> page world
 
-const ease = (u) => u * u * (3 - 2 * u);
-
 /** The module is printed plastic; the stage's colour pass reads saturated green as PCB soldermask
  *  (glossy clearcoat). Give printed parts a matte PLA finish instead. */
 export function matte(obj) {
@@ -91,46 +89,37 @@ export async function createChain(stage) {
     return box;
   }
   function settleGround() { for (const x of inst) x.im.computeBoundingBox(); stage.fitGround(); }
+  // a new invisible box around poses, each a chain at rest or [chain, move, u] part way through a move
+  // (a swinging tail can reach past both ends of it); made once and kept, for stage.frame()
+  const unit = new THREE.BoxGeometry(1, 1, 1), hidden = new THREE.MeshBasicMaterial();
+  function boxAround(poses, parent = stage.scene) {
+    const b = new THREE.Box3(), v = new THREE.Vector3();
+    for (const q of poses) {
+      const [c, m, u] = Array.isArray(q) ? q : [q, null, 0];
+      for (const h of c.world(m, u).still) { v.set(h.c[0] / 1000, h.c[2] / 1000, -h.c[1] / 1000); b.expandByPoint(v); }
+    }
+    b.expandByScalar(0.042);
+    const mesh = new THREE.Mesh(unit, hidden);
+    mesh.visible = false;
+    b.getCenter(mesh.position); b.getSize(mesh.scale);
+    parent.add(mesh);
+    mesh.updateMatrixWorld(true);
+    return mesh;
+  }
+  /** fit the ground, key light and contact shadow once to every pose the chain will take */
+  function groundAround(poses) { boxAround(poses, group); settleGround(); }
 
-  // ---------------------------------------------------------------- state and motion
+  // ---------------------------------------------------------------- state (posed by the caller; nothing moves on its own)
   let chain = new Chain(I3);
   write(matrices(chain));
   settleGround();
 
-  const queue = [];
-  let stop = null, cur = null;
-  function tick(dt) {
-    if (!cur) {
-      cur = queue.shift();
-      if (!cur) { stop?.(); stop = null; settleGround(); api.onIdle?.(); return; }
-      cur.t = 0;
-      if (cur.swap) { chain = cur.swap; write(matrices(chain)); api.onSwap?.(cur); cur = null; return; }
-      api.onMove?.(cur);
-    }
-    cur.t = Math.min(1, cur.t + dt / cur.seconds);
-    if (cur.t >= 1) {
-      chain.step(cur);
-      write(matrices(chain));
-      const done = cur; cur = null;
-      api.onMoved?.(done);
-    } else write(matrices(chain, cur, ease(cur.t)));
-  }
-  const api = {
-    group, inst, matrices, write, boundsOf,
+  return {
+    group, inst, matrices, write, boundsOf, boxAround, groundAround, settleGround,
     get chain() { return chain; },
-    get busy() { return !!cur || queue.length > 0; },
-    get moving() { return cur; },
-    /** jump to a chain pose (no motion) */
-    set(c) { queue.length = 0; cur = null; stop?.(); stop = null; chain = c; write(matrices(chain)); settleGround(); },
-    /** queue moves ({ j, d, out, base, ...extra }) at `seconds` per 120 degree step; { swap: chain } entries replace the pose */
-    play(moves, seconds = 0.8) {
-      for (const m of moves) queue.push({ ...m, seconds });
-      if (!stop) stop = stage.onFrame(tick);
-    },
-    cancel() { queue.length = 0; },
-    onMove: null, onMoved: null, onIdle: null, onSwap: null,
+    /** jump to a chain pose */
+    set(c) { chain = c; write(matrices(chain)); },
   };
-  return api;
 }
 
 /** an outline of one cube (an annotation, not a part): 80 mm box edges */

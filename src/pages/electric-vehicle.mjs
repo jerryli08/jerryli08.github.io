@@ -3,6 +3,10 @@
 // the media; tooth counts, ratios, dimensions and the torsion numbers are computed from his CAD and
 // his code (github.com/jerryli08/sciolyEv) and say so. The torsion FEA uses assumed G10 values,
 // labelled on the page.
+// Every animation is a scrolly driven only by the scroll (Jerry, Sept 26): mechanisms.js (the
+// final CAD, one step per mechanism), encoder-loop.js (2D: why the encoder was geared down),
+// versions.js (V1 to V2 in CAD), torsion.js (the FEA re-run, twisting with the scroll) and
+// stop-profile.js (2D: each sketch's power command as the car runs in). rig.js is shared.
 // Held back until Jerry answers (/home/claude/work/scioly-ev-2025/questions.md): every "next time"
 // item, why version one had two motors and version two one, which sketch ran at which
 // tournament, the regional's name for the competition clips, whether IMG_8414 shows the chassis
@@ -29,7 +33,6 @@ export default {
     items: [
       { v: 'hero-regional-run.mp4', c: 'A competition run, filmed from behind the start line' },
       { v: 'hero-stop-on-target.mp4', c: 'Testing at home: the car rolls in and stops at the tape mark' },
-      { v: 'hero-launch.mp4', c: 'Launching from a standstill on tile' },
     ],
   },
   sections: [
@@ -60,27 +63,37 @@ export default {
       ] },
 
     { type: 'media', layout: 'row', items: [
+      { v: 'hero-launch.mp4', c: 'Launching from a standstill on tile' },
       { i: 'still-v2-drivetrain-gears.webp', c: 'The real drivetrain: the printed gears, the purple D2830 and a honeycomb spacer on the carbon axle' },
-      { i: 'still-v2-motor-belt.webp', c: 'From above: the motor, the printed gearbox and a GT2 belt running through the lattice' },
       { i: 'still-buttons.webp', c: 'Through the top plate: the gearbox, the 48T gear and the two buttons' },
     ] },
 
-    { type: 'prose', id: 'encoder', h: 'Why the encoder had to be geared down', p: [
-      'The Arduino reads the MT6701\'s absolute angle once per loop and adds the change since the last read to a running distance. It decides which way the magnet moved by taking the shorter way around the circle, which only works if the magnet turned less than half a turn between two reads.',
-      { problem: [
-        'On version one the MT6701 read the motor shaft, so it turned 6 times for every turn of the wheels. Half a turn of the magnet was only **19.1 mm** of travel.',
-        'At the car\'s average speed over 8.3 m in 2.97 s, 2.8 m/s, the loop would have had to finish in under **6.8 ms**, every time, and faster still at top speed. Miss that and the code reads the magnet turning the wrong way, and the distance count goes wrong.',
-      ], title: 'The encoder on the motor shaft' },
-      { fix: [
-        'In version two the encoder rides on a 40-tooth gear driven by the motor pinion, **1.2 turns** per wheel turn. Half a turn is now **95.6 mm** of travel, and the same 2.8 m/s leaves **34 ms** per loop: five times the headroom.',
-        'In the code the change is one constant, `gearRatio`, from 6.0 to 1.2.',
-      ], title: 'Gear the encoder down' },
-      { note: 'Numbers from the wheel size (2.875 in, 229.4 mm around) and the tooth counts.' },
-    ] },
-    { type: 'demo', id: 'encoder-loop', module: 'encoder-loop', webgl: false, height: 'clamp(380px, 56vh, 520px)', poster: `${M}/poster-encoder-loop.webp`,
-      h: 'Try it: what the code reads',
-      p: ['Pick the car speed and a loop time, and switch between the encoder on the motor and the geared one. The dial shows how far the magnet really turns between two reads and which way the code takes it. Past half a turn the code reads it backwards, and the distance it counts for an 8.3 m run falls apart.'],
-      caption: 'Constant speed and no noise: this shows the sampling limit only. The loop time is a free choice here.' },
+    { type: 'scrolly', id: 'encoder', module: 'encoder-loop', webgl: false, width: 'wide', stepHeight: '85vh',
+      h: 'Why the encoder had to be geared down',
+      p: ['The Arduino reads the MT6701\'s absolute angle once per loop and adds the change since the last read to a running distance. It decides which way the magnet moved by taking the shorter way around the circle, which only works if the magnet turned less than half a turn between two reads.'],
+      steps: [
+        { h: 'One loop of the code', p: [
+          'Between two reads the magnet turns (the dashed ring). The code only sees the new angle and takes the short way round from the last one (the solid arc).',
+          'The speed here is the car\'s average over 8.3 m in 2.97 s: 2.8 m/s. With a short loop the magnet turns a little between reads, and the count is right.',
+        ] },
+        { h: 'Version one: the encoder on the motor shaft', p: [
+          { problem: [
+            'On version one the MT6701 read the motor shaft, so it turned 6 times for every turn of the wheels. Half a turn of the magnet was only **19.1 mm** of travel.',
+            'At 2.8 m/s the loop would have had to finish in under **6.8 ms**, every time, and faster still at top speed.',
+          ], title: 'The encoder on the motor shaft' },
+        ] },
+        { h: 'Past half a turn', p: [
+          'Miss that and the code reads the magnet turning the wrong way, and the distance count goes wrong. Past half a turn the code reads it backwards, and the distance it counts for an 8.3 m run falls apart.',
+        ] },
+        { h: 'Version two: gear it down', p: [
+          { fix: 'In version two the encoder rides on a 40-tooth gear driven by the motor pinion, **1.2 turns** per wheel turn. Half a turn is now **95.6 mm** of travel.', title: 'Gear the encoder down' },
+        ] },
+        { h: 'Five times the headroom', p: [
+          'The same 2.8 m/s leaves **34 ms** per loop: five times the headroom. In the code the change is one constant, `gearRatio`, from 6.0 to 1.2.',
+          { note: 'Numbers from the wheel size (2.875 in, 229.4 mm around) and the tooth counts.' },
+        ] },
+      ],
+      caption: 'Constant speed and no noise: this shows the sampling limit only. The loop times are swept to show the limit; they are not measured from my code.' },
 
     { type: 'prose', id: 'versions', h: 'Version one to version two', p: [
       'Version one used CNC-cut HDF plates. They were heavy, and too stiff: I knew the chassis needed to flex over floor bumps. The G10 plates arrived on January 9, 2025, and I started rebuilding the car on them the same day.',
@@ -96,10 +109,16 @@ export default {
       { i: 'photo-hdf-plate-scale.webp', c: 'One HDF plate from version one: 369 g' },
       { i: 'photo-g10-plate-scale.webp', c: 'One G10 lattice plate on the same scale: 99 g' },
     ] },
-    { type: 'demo', id: 'versions-cad', module: 'versions', height: 'clamp(360px, 60vh, 580px)', poster: `${M}/poster-versions.webp`,
+    { type: 'scrolly', id: 'versions-cad', module: 'versions', stepHeight: '90vh', poster: `${M}/poster-versions.webp`,
       h: 'Both versions in CAD',
-      p: ['Both of my CAD files, to orbit. Pick a version to see what changed: version one\'s two motors and its STM32 board and LCD, version two\'s single motor and belts. **Both** lays version one over version two as a ghost: the same car with 50 mm more at each end.'],
-      caption: 'Drag to turn. The top plates start cut away so the parts between the plates show. Version one\'s plates are tinted brown like the real HDF; screws are left out of both models.' },
+      p: ['My two CAD files, one after the other. Version one\'s plates are tinted brown like the real HDF. Screws are left out of both models, and so is version one\'s STM32 board.'],
+      steps: [
+        { h: 'Version one: HDF plates', p: ['CNC-cut HDF plates, 287 x 690 mm, with a 623 mm wheelbase (CAD).'] },
+        { h: 'Two motors', p: ['Between the plates: one D2830 geared to each axle, and the encoder on the rear motor\'s shaft, 6 turns per wheel turn. The controls were an STM32 Nucleo board, a 16x2 LCD and three buttons.'] },
+        { h: 'Version two: one motor and belts', p: ['One D2830 drives all four wheels, the rear axle through the gears and the front axle through two GT2 belts. The encoder rides on a 40T gear, 1.2 turns per wheel turn, and an Arduino Nano with two buttons replaced the STM32 board and the LCD.'] },
+        { h: 'The same car, 100 mm shorter', p: ['Version one as a ghost over version two: the same car with 50 mm more at each end. The plate outline went from 287 x 690 mm to 287 x 590 mm and the wheelbase from 623 mm to 523 mm.'] },
+        { h: 'The G10 lattice', p: ['From above, with the top plate back on. The wide ends of each plate are open, irregular cells; the narrow spine between them is a row of hexagons between two rails, tied across.'] },
+      ] },
     { type: 'prose', id: 'changes', p: [
       { table: {
         head: ['', 'Version one', 'Version two'],
@@ -116,13 +135,16 @@ export default {
       } },
     ] },
 
-    { type: 'demo', id: 'torsion', module: 'torsion', height: 'clamp(380px, 62vh, 600px)', poster: `${M}/poster-torsion.webp`,
+    { type: 'scrolly', id: 'torsion', module: 'torsion', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-torsion.webp`,
       h: 'The torsion FEA, re-run',
-      p: [
-        'A new run of the torsion study, on the plate from my final CAD, next to a solid plate with the same outline. Each plate is held where the pillow blocks bolt through it. The rear pair stays put and the front pair turns about the car\'s long axis, the way the chassis twists when one front wheel rides over a bump. Drag the twist, or switch plates.',
-        'The lattice keeps **34%** of the plate\'s material (322 of 944 cm²) and **28%** of its torsional stiffness: 10.6 N·mm per degree of twist against 38.0 for the solid plate. At the same twist, the highest bending stress is nearly the same in both, about 1.3 MPa per degree, so the lattice gives up stiffness without piling stress into its rails.',
+      p: ['A new run of the torsion study, on the plate from my final CAD, next to a solid plate with the same outline.'],
+      steps: [
+        { h: 'Held at the pillow blocks', p: ['Each plate is held where the pillow blocks bolt through it. The rear pair stays put and the front pair turns about the car\'s long axis.'] },
+        { h: 'One front wheel over a bump', p: ['That is the way the chassis twists when one front wheel rides over a bump. The colour is the bending stress at the surface.'] },
+        { h: 'A solid plate, same outline', p: ['The lattice keeps **34%** of the plate\'s material (322 of 944 cm²) and **28%** of its torsional stiffness: 10.6 N·mm per degree of twist against 38.0 for the solid plate.'] },
+        { h: 'Flexible, without piling up stress', p: ['At the same twist, the highest bending stress is nearly the same in both, about 1.3 MPa per degree, so the lattice gives up stiffness without piling stress into its rails.'] },
       ],
-      caption: 'Plate model (Kirchhoff plate, 1 mm elements) of one main plate, with assumed typical values for G10: E = 18 GPa, Poisson\'s ratio 0.12, isotropic. E sets the absolute numbers; the lattice-to-solid ratio does not depend on it. Both plates twist together, so the chassis is at least twice one plate; the beams tying the two plates make it stiffer than that, and this model leaves them out. The bending and the front axle\'s tilt are drawn 3 times larger than real; the readouts are not.' },
+      caption: 'Plate model (Kirchhoff plate, 1 mm elements) of one main plate, with assumed typical values for G10: E = 18 GPa, Poisson\'s ratio 0.12, isotropic. E sets the absolute numbers; the lattice-to-solid ratio does not depend on it. Both plates twist together, so the chassis is at least twice one plate; the beams tying the two plates make it stiffer than that, and this model leaves them out. The solid plate is generated from my outline, not a CAD part. The bending and the front axle\'s tilt are drawn 3 times larger than real; the readouts are not.' },
 
     { type: 'iterations', id: 'iterations', h: 'Iterations', items: [
       { label: 'Version one', title: 'HDF plates, two motors (December 2024)',
@@ -161,11 +183,18 @@ export default {
       { h: 'The speed profile is scheduled on distance, not time' },
       'In `SOUPCode` and `PUSOCode` the car ramps power up over the first 1.8 m, runs at full power, and 3 m before the target hands over to a PID controller (ArduPID) whose setpoint is the target distance. It only uses the proportional term, 0.002 per cm of distance left, plus a constant feedforward of 0.08 while the command is positive. Its output can go negative: if the car passes the target, the motor reverses and pulls it back.',
       '`regionalsCode` ramps the power down on a fixed schedule over the last 3 m instead, and creeps the final 20 cm at a constant 0.08. In every sketch the target is a single constant at the top of the file.',
-    ] },
-    { type: 'demo', id: 'stop-profile', module: 'stop-profile', webgl: false, height: 'clamp(340px, 52vh, 480px)', poster: `${M}/poster-stop-profile.webp`,
+    ],
+      media: [{ i: 'photo-pid-code.webp', c: 'Tuning the PID: the serial monitor prints power, distance and target on every loop' }] },
+    { type: 'scrolly', id: 'stop-profile', module: 'stop-profile', webgl: false, width: 'wide', stepHeight: '80vh',
       h: 'How each sketch brings the car in',
-      p: ['The power command each sketch sends, against the distance the encoder has counted, over the last 4 m before the target. Switch sketches, drag the target, and point at the chart to read the command and the ESC pulse.'],
-      caption: `Transcribed from the sketches in [the repo](${REPO}); no physics. The distance comes from the encoder: angle change x 229.4 mm / 1.2 per turn (6.0 in fullEvCode).` },
+      p: ['The power command each sketch sends, against the distance the encoder has counted, over the last 4 m before its target, oldest sketch first. The car runs in as you scroll, and the readout shows the command and the ESC pulse where it is.'],
+      steps: [
+        { h: '`fullEvCode`', p: ['My first closed loop, forward only: power proportional to the distance left (gain 12.5, so it stays at full until the end), cut 60 cm before the target, then the car coasts in.'] },
+        { h: '`AWDGearedEncoderCode`', p: ['An earlier test with the geared encoder: full power until 2 m out, proportional to 50 cm, then a slow creep. The small offsets after the clamp push the command just past full.'] },
+        { h: '`regionalsCode`', p: ['Full power, then from 3 m out the power ramps down on a fixed schedule, creeps the last 20 cm at 0.08 and stops at the target.'] },
+        { h: '`SOUPCode` and `PUSOCode`', p: ['Full power, then from 3 m out a P controller on position (Kp 0.002 per cm) plus 0.08 feedforward while it drives forward. Past the target the command goes negative: the motor reverses. The two are the same sketch with a different target, 823 and 888 cm.'] },
+      ],
+      caption: `Transcribed from the sketches in [the repo](${REPO}); no physics. Each sketch is drawn against its own target: 700 cm in fullEvCode, 495.7 cm in AWDGearedEncoderCode and 823 cm in the last two. The distance comes from the encoder: angle change x 229.4 mm / 1.2 per turn (6.0 in fullEvCode).` },
     { type: 'prose', id: 'code-history', p: [
       { h: 'How it got there' },
       'The repo keeps every stage as its own sketch:',
@@ -179,11 +208,8 @@ export default {
       ] },
       { problem: 'My first closed loop could only drive forward. It cut the motor 60 cm before the target, a constant the code calls `overshoot`, and let the car coast in, so where it stopped depended on its momentum.', title: 'Coasting onto the target' },
       { fix: 'I set the ESC up for both directions, with 1500 µs as neutral, so the approach could become a controller on position whose output goes negative: past the target, the motor reverses and pulls the car back.', title: 'Let the controller brake' },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'photo-pid-code.webp', c: 'Tuning the PID: the serial monitor prints power, distance and target on every loop' },
-      { i: 'photo-stm32.webp', c: 'The first electronics: STM32CubeIDE and the Nucleo board, before I moved to an Arduino' },
-    ] },
+    ],
+      media: [{ i: 'photo-stm32.webp', c: 'The first electronics: STM32CubeIDE and the Nucleo board, before I moved to an Arduino' }] },
 
     { type: 'prose', id: 'electronics', h: 'Electronics', p: [
       'An Arduino Nano reads the MT6701 magnetic absolute encoder over I2C and drives the motor\'s ESC with a servo pulse. The ESC is an AIKON AK32 35A, as its label reads, tuned in BLHeli_32 Suite. The electronics sit on perfboard between the two plates.',
@@ -220,6 +246,7 @@ export default {
       { v: 'clip-chassis-twist.mp4', c: 'The finished chassis, in hand' },
       { i: 'still-regional-rear.webp', c: 'Before a run at a tournament: the rear of the car' },
       { i: 'still-v1-buttons-laser.webp', c: 'Wiring version one\'s top HDF plate' },
+      { i: 'still-v2-motor-belt.webp', c: 'From above: the motor, the printed gearbox and a GT2 belt running through the lattice', tall: true },
     ] },
   ],
   assets: [`${M}/`],

@@ -5,30 +5,43 @@
 //   3 the two buttons on the top plate: left toggles the laser pointer, right starts the run
 //   4 the whole car
 // The picture is a pure function of the scroll (step, progress through it). The drivetrain turns
-// only while the reader scrolls, every part at its tooth ratio (rig.js); with reduced motion
+// only while the reader scrolls, every part at its tooth ratio (rig.js), and the readout counts the
+// turns. Each view is framed ONCE with the drivetrain at rest and cached (per stage shape); scrolling
+// only blends between those fixed views. Framing the spinning gears on every scroll frame made the
+// camera shake, because a turning gear's bounding box changes size as it turns. With reduced motion
 // nothing turns and the views cut from one step to the next.
 import { createStage } from '/assets/js/lib/stage.js';
-import { M, AXES, WHEEL_R, PITCH_R, partsOf, rigDrive, beltMarkers, labels, chip, clamp, smooth, lerp } from './rig.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
+import { M, AXES, WHEEL_R, PITCH_R, BELT_X, partsOf, rigDrive, beltMarkers, blendViews, hud, clamp, smooth, lerp } from './rig.js';
 
-const ORANGE = '#ff6b35', PURPLE = '#a78bfa', BLUE = '#3d8bff';
+const ORANGE = '#ff6b35', PURPLE = '#a78bfa', BLUE = '#3d8bff', INK = '#fff1e2';
 const PARK = 5; // a plane constant that keeps everything
+const TURN = 2 * Math.PI;
+const CIRC = 2 * Math.PI * WHEEL_R; // m of travel per wheel turn (229.4 mm)
+// what the readout says in each step
+const HUD = [
+  { t: '8T pinion to 48T axle gear', r: '6 : 1' },
+  { t: '8T pinion to 40T encoder gear', r: '1.2 : 1' },
+  { t: '47T to 47T, both sides', r: '1 : 1' },
+  { t: 'Left: laser pointer on and off. Right: run. The plate is lettered LASER and RUN in the CAD.', r: '' },
+  { t: 'Wheelbase 523 mm, track 320 mm (CAD)', r: '' },
+];
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { controls: false });
+  const stage = createStage(el, { controls: false, hint: false });
   const { THREE } = stage;
   const model = await stage.load(`${M}/final.glb`);
   const parts = partsOf(stage, model);
   const car = [...model.children]; // the CAD only: framing ignores the markers and the beam added below
   const drive = rigDrive(stage, parts);
   const reduced = ctx.reducedMotion;
+  const blend = blendViews(stage);
 
   // section planes (world metres): keep y <= c (drops the top plate) and x <= c (drops the right-hand belt,
   // wheels and the goBILDA beam in front of the gears, so the gear train is seen face on)
   const cutY = stage.sectionPlane([0, -1, 0], PARK);
   const cutX = stage.sectionPlane([-1, 0, 0], PARK);
   const markers = beltMarkers(stage, model);
-  const labs = labels(el);
-  const info = chip(el);
 
   const gears = [...parts.pinion, ...parts.gear48, ...parts.gear40];
   const encoderSet = [...parts.gear40, ...parts.encShaft, ...parts.encoder, ...parts.encMount];
@@ -42,7 +55,15 @@ export async function mount(el, ctx) {
   // buttons: pressed = pushed 2 mm down into the plate
   const btnL = parts.btnLaser, btnR = parts.btnRun;
   const base = new Map([...btnL, ...btnR].map((o) => [o, o.position.y]));
-  const press = (list, t) => { for (const o of list) o.position.y = base.get(o) - 0.002 * t; };
+  const pressed = new Map();
+  const press = (list, t) => {
+    for (const o of list) {
+      if (pressed.get(o) === t) continue;
+      pressed.set(o, t);
+      o.position.y = base.get(o) - 0.002 * t;
+      stage.invalidate();
+    }
+  };
   // the laser pointer's beam (an annotation line, not a part): out of the front clamp on the top
   // plate, whose U cradle is 12 mm wide with its floor at y = 89.5 mm, so the module's axis is ~95.5 mm up
   const beamLen = 1.4;
@@ -53,66 +74,75 @@ export async function mount(el, ctx) {
   beam.visible = false;
   model.add(beam);
 
-  // blend two views by orbiting about a moving target (a straight line between camera positions
-  // on opposite sides of the car would pass through it)
-  const S0 = new THREE.Spherical(), S1 = new THREE.Spherical(), off = new THREE.Vector3();
-  const blend = (a, b, k) => {
-    S0.setFromVector3(off.copy(a.pos).sub(a.target)); S1.setFromVector3(off.copy(b.pos).sub(b.target));
-    let dT = S1.theta - S0.theta;
-    while (dT > Math.PI) dT -= 2 * Math.PI;
-    while (dT < -Math.PI) dT += 2 * Math.PI;
-    const target = a.target.clone().lerp(b.target, k);
-    off.setFromSphericalCoords(lerp(S0.radius, S1.radius, k), lerp(S0.phi, S1.phi, k), S0.theta + dT * k);
-    return { pos: target.clone().add(off), target };
-  };
-  // camera for each step as a function of the progress through it
-  const V = (obj, o) => stage.frame(obj, { ...o, apply: false });
-  // Each step's camera is framed ONCE, with the drivetrain at rest, and scrolling only blends
-  // between those fixed views. Framing the spinning gears on every scroll frame made the camera
-  // shake, because a turning gear's bounding box changes size as it turns.
-  drive.set(0);
-  const fixed = [
-    [V(gears, { azimuth: 90, elevation: 12, pad: 1.45 }), V(gears, { azimuth: 90, elevation: 16, pad: 1.45 })],
-    [V([...parts.pinion, ...encoderSet], { azimuth: 90, elevation: 16, pad: 1.9 }), V([...parts.pinion, ...encoderSet], { azimuth: 60, elevation: 26, pad: 1.9 })],
-    [V(beltSet, { azimuth: 58, elevation: 42, pad: 1.3 }), V(beltSet, { azimuth: 118, elevation: 32, pad: 1.3 })],
-    [V([...btnL, ...btnR, ...parts.mountPlate], { azimuth: 6, elevation: 50, pad: 1.6 }), V(car, { azimuth: 30, elevation: 28, pad: 1.0, offset: [0, 0, -0.1] })],
-    [V(car, { azimuth: 250, elevation: 30, pad: 1.04 }), V(car, { azimuth: 212, elevation: 20, pad: 1.04 })],
-  ];
-  const views = fixed.map(([a, b], i) => (sp) => blend(a, b, i === 3 ? smooth(0.3, 0.55, sp) : sp));
-  const TEXT = [
-    '8T pinion : 48T axle gear = 1 : 6. The motor turns 6 times per wheel turn.',
-    '8T pinion : 40T encoder gear = 1 : 5. The encoder turns 1.2 times per wheel turn.',
-    '47T to 47T on both sides: 1 : 1. All four wheels driven.',
-    'Left button: laser pointer on and off. Right button: run. The plate is lettered LASER and RUN in the CAD.',
-    '',
+  // labels pinned to the parts (annotations)
+  const ov = labelLayer(stage);
+  const center = (list) => stage.bounds(list).center.toArray();
+  const L = [
+    [ov.label('8T pinion', [0.012, AXES.motor[1] + 0.012, AXES.motor[2]], { color: ORANGE }),
+      ov.label('48T on the rear axle', [0.006, AXES.rear[1] - 0.026, AXES.rear[2]], { color: ORANGE })],
+    [ov.label('MT6701 encoder', center(parts.encoder), { color: PURPLE }),
+      ov.label('40T gear', [0.006, AXES.enc[1] + 0.021, AXES.enc[2]], { color: PURPLE, side: 'l' })],
+    [ov.label('GT2 belt, 1140 mm', [-BELT_X, AXES.rear[1] + PITCH_R, 0], { color: BLUE, side: 'l' }),
+      ov.label('47T pulleys', [-BELT_X - 0.01, AXES.front[1] + PITCH_R, AXES.front[2]], { color: BLUE, minW: 520 })],
+    [ov.label('Laser', center(btnL), { color: INK, side: 'l' }), ov.label('Run', center(btnR), { color: INK })],
+    [],
   ];
 
-  let lastKey = '';
+  // the readout
+  const H = hud(ov.layer, `
+    <div class="rx-hud-row"><span data-k="t"></span><b class="num" data-k="r"></b></div>
+    <table class="num" data-k="tab"><thead><tr><th></th><th>Turns</th></tr></thead><tbody>
+      <tr data-k="rowM"><td>Motor <small>8T pinion</small></td><td data-k="m"></td></tr>
+      <tr data-k="rowE"><td>Encoder <small>40T gear, MT6701</small></td><td data-k="e"></td></tr>
+      <tr><td>Rear wheels <small>48T gear</small></td><td data-k="w"></td></tr>
+      <tr data-k="rowF"><td>Front wheels <small>through the belts</small></td><td data-k="f"></td></tr>
+    </tbody></table>
+    <div class="rx-hud-mini num" data-k="mini"></div>
+    <div class="rx-hud-row rx-hud-big rx-hud-x" data-k="big"><span>Travel</span><b class="num" data-k="d"></b></div>`);
+
+  // Views, framed once per stage shape with the drivetrain at rest and the buttons up. Each step
+  // has a start and an end view; the step drifts slowly from one to the other.
+  const V = (obj, o) => stage.frame(obj, { ...o, apply: false, refresh: true });
+  let fixed = null, aspect = 0;
+  function viewsNow(theta) {
+    const a = el.clientWidth / Math.max(1, el.clientHeight);
+    if (fixed && a === aspect) return fixed;
+    aspect = a;
+    drive.set(0); press([...btnL, ...btnR], 0);
+    fixed = [
+      [V(gears, { azimuth: 90, elevation: 12, pad: 1.8 }), V(gears, { azimuth: 90, elevation: 16, pad: 1.8 })],
+      [V([...parts.pinion, ...encoderSet], { azimuth: 90, elevation: 16, pad: 2.2 }), V([...parts.pinion, ...encoderSet], { azimuth: 60, elevation: 26, pad: 2.2 })],
+      [V(beltSet, { azimuth: 58, elevation: 42, pad: 1.75 }), V(beltSet, { azimuth: 118, elevation: 32, pad: 1.75 })],
+      [V([...btnL, ...btnR, ...parts.mountPlate], { azimuth: 6, elevation: 50, pad: 1.6 }), V(car, { azimuth: 30, elevation: 28, pad: 1.0, offset: [0, 0, -0.1] })],
+      [V(car, { azimuth: 250, elevation: 30, pad: 1.04 }), V(car, { azimuth: 212, elevation: 20, pad: 1.04 })],
+    ];
+    drive.set(theta);
+    return fixed;
+  }
+  const within = (i, sp) => (i === 3 ? smooth(0.3, 0.55, sp) : sp); // step 3 holds on the buttons, then pulls back
+
   function setProgress(p, step, stepP = 0) {
     step = clamp(step | 0, 0, 4);
     const sp = reduced ? 0.5 : clamp(stepP, 0, 1);
-    const portrait = el.clientHeight > el.clientWidth;
-    stage.setShift(portrait ? 0 : 0.15, portrait ? 0.2 : 0);
-
-    // camera: each step eases in from where the previous one ended
-    let view = views[step](sp);
-    if (step > 0 && !reduced) {
-      const k = smooth(0, 0.35, stepP);
-      if (k < 1) {
-        view = blend(views[step - 1](1), view, k);
-      }
-    }
-    stage.setView(view);
+    const k = step === 0 || reduced ? 1 : smooth(0, 0.35, stepP);
+    stage.setShift(...ctx.shift());
 
     // drivetrain: turns with the scroll (about 0.8 m of travel over the section)
     const theta = reduced ? 0 : -22 * clamp(p, 0, 1);
+    const views = viewsNow(theta);
     drive.set(theta);
     markers.setTravel(-theta * PITCH_R);
 
-    // what is cut, hidden and lit in each step
+    // camera: each step eases in from where the previous one ended, then drifts to its end view
+    const [a, b] = views[step];
+    let view = blend(a, b, within(step, sp));
+    if (k < 1) view = blend(blend(...views[step - 1], within(step - 1, 1)), view, k);
+    stage.setView(view);
+
+    // what is cut, hidden and lit in each step; the cuts sweep open as a step comes in
     const gearSteps = step <= 1;
-    cutY.set(step <= 2 ? 0.083 : PARK);
-    cutX.set(gearSteps ? 0.031 : PARK);
+    cutY.set(step <= 2 ? 0.083 : step === 3 && k < 1 ? lerp(0.083, 0.14, k) : PARK);
+    cutX.set(gearSteps ? 0.031 : step === 2 && k < 1 ? lerp(0.031, 0.2, k) : PARK);
     for (const o of parts.endPanels) o.visible = !gearSteps;
     for (const o of [...parts.encoder, ...parts.encMount]) o.visible = step !== 0;
     for (const o of parts.mountPlate) o.visible = !gearSteps;
@@ -125,28 +155,29 @@ export async function mount(el, ctx) {
     const bp = step === 3 ? (reduced ? 1 : sp) : step > 3 ? 1 : 0;
     press(btnL, step === 3 ? smooth(0.15, 0.3, bp) - smooth(0.4, 0.5, bp) : 0);
     press(btnR, step === 3 ? smooth(0.62, 0.72, bp) - smooth(0.8, 0.9, bp) : 0);
-    beam.visible = step > 3 || (step === 3 && bp > 0.24);
+    const beamOn = step > 3 || (step === 3 && bp > 0.24);
+    if (beam.visible !== beamOn) { beam.visible = beamOn; stage.invalidate(); }
 
-    // chip and labels
-    const w = WHEEL_R * Math.abs(theta) / (2 * Math.PI * WHEEL_R); // wheel turns
-    let text = TEXT[step];
-    if (step === 1) text += ` Now: motor ${(6 * w).toFixed(1)} turns, encoder ${(1.2 * w).toFixed(1)}, wheels ${w.toFixed(1)}.`;
-    info.set(text);
-    const key = String(step);
-    if (key !== lastKey) {
-      lastKey = key;
-      if (step === 1) labs.set([{ text: 'MT6701 encoder', p: stage.bounds(parts.encoder).center.toArray(), side: 'r', color: PURPLE }]);
-      else if (step === 0) labs.set([
-        { text: '8T pinion', p: [0.012, AXES.motor[1] + 0.012, AXES.motor[2]], side: 'r', color: ORANGE },
-        { text: '48T on the rear axle', p: [0.006, AXES.rear[1] + 0.026, AXES.rear[2]], side: 'l', color: ORANGE },
-      ]);
-      else labs.set([]);
-    }
-    labs.update(stage.camera, THREE);
+    // labels: the previous step's leave before this step's arrive
+    L.forEach((ls, i) => {
+      const s = i === step ? (step === 0 ? 1 : smooth(0.5, 1, k)) : i === step - 1 ? 1 - smooth(0, 0.5, k) : 0;
+      for (const l of ls) l.a = s;
+    });
+
+    // readout
+    const w = Math.abs(theta) / TURN; // wheel turns
+    H.put('t', HUD[step].t); H.put('r', HUD[step].r);
+    H.show('tab', step <= 2); H.show('big', step <= 2); H.show('mini', step <= 2);
+    H.show('rowM', step <= 1); H.show('rowE', step === 1); H.show('rowF', step === 2);
+    H.put('m', (6 * w).toFixed(1)); H.put('e', (1.2 * w).toFixed(1)); H.put('w', w.toFixed(1)); H.put('f', w.toFixed(1));
+    H.put('d', `${Math.round(w * CIRC * 100)} cm`);
+    H.put('mini', step === 0 ? `Motor ${(6 * w).toFixed(1)} turns, wheels ${w.toFixed(1)}`
+      : step === 1 ? `Encoder ${(1.2 * w).toFixed(1)} turns, wheels ${w.toFixed(1)}` : `Front and rear wheels ${w.toFixed(1)} turns`);
+    ov.update();
   }
   setProgress(0, 0, 0);
   return {
     setProgress,
-    dispose() { labs.dispose(); info.dispose(); markers.dispose(); model.remove(beam); beam.geometry.dispose(); beam.material.dispose(); stage.dispose(); },
+    dispose() { ov.dispose(); markers.dispose(); model.remove(beam); beam.geometry.dispose(); beam.material.dispose(); stage.dispose(); },
   };
 }

@@ -11,8 +11,8 @@ const REPO = 'https://github.com/AydanLing/Hack-The-North';
 
 const booth = {
   label: 'Diagram: from a text message to a fold, as it ran at the booth',
-  rows: 2,
-  steps: [
+  minBox: 170,
+  boxes: [
     { t: "Visitor's phone", s: 'texts anything: a shape, a joke, a name' },
     { t: 'Linq', s: 'iMessage API', edge: 'text' },
     { t: 'Cloudflare tunnel', s: 'public URL to our laptop', edge: 'webhook' },
@@ -30,8 +30,7 @@ const booth = {
 
 const discovery = {
   label: 'Diagram: how a drawing becomes a playable shape',
-  rows: 1,
-  steps: [
+  boxes: [
     { t: 'Draw', s: '17-cell drawings (27 for the full chain), several per concept; about 8,000 generated with Claude', accent: true },
     { t: 'Gate', s: 'A path with two ends and no branches? Does our roll word thread it exactly? Tens of milliseconds.', edge: 'each drawing', accent: true,
       branch: { t: 'Rejected', s: 'not a path, or the roll word cannot thread it', edge: 'fails', tone: 'reject' } },
@@ -43,12 +42,17 @@ const discovery = {
       branch: { t: 'Rejected', s: 'the path thrashes', edge: 'fails', tone: 'reject' } },
     { t: 'Library', s: 'path, silhouette, renders, moves; 88 playable names at the booth', edge: 'export', accent: true },
   ],
+  tally: { title: 'One library run: 282 everyday concepts', rows: [
+    { l: 'Drawings', v: 1383, at: 0 },
+    { l: 'Threadable', v: 865, at: 1 },
+    { l: 'Named by the blind judge', v: 81, at: 2 },
+    { l: 'Folded and passed', v: 66, at: 4 },
+  ] },
 };
 
 const checks = {
   label: 'Diagram: one step of the fold search',
-  rows: 1,
-  steps: [
+  boxes: [
     { t: 'Pop', s: 'the queued step with the fewest 120 degree steps left, then the fewest detours' },
     { t: 'Pick a side', s: 'the side with the smaller gravity moment swings: out = the tail, in = the base side', edge: 'joint j, +1 or -1' },
     { t: 'Hard checks', s: 'still 17 distinct cells\nswept CAD within tolerance\ntether keep-out clear\nno dig into the table past the limit\ntorque under 10.6 N·m', edge: 'new pose', accent: true,
@@ -64,8 +68,8 @@ const checks = {
 
 const servo = {
   label: 'Diagram: from a joint state to a 120 degree turn',
-  rows: 1,
-  steps: [
+  minBox: 150,
+  boxes: [
     { t: 'Plan', s: 'joint j to state -1, 0 or +1' },
     { t: 'Target', s: 'home + state × 5,461 counts × sign', edge: 'per joint', accent: true,
       branch: { t: 'Software zero', s: 'the straight chain at the start of a session is home', edge: 'home', into: true } },
@@ -88,7 +92,7 @@ export default {
     ],
     text: [
       'Morph is a chain of 17 cubes. Each cube is cut in half across its body diagonal, and a servo turns one half against the other in 120 degree steps. You text it, a small language model picks a shape it knows, and the chain folds into that shape one planned move at a time.',
-      'I built the software that turns a text into motion, and spent 8 hours soldering USB-C breakout boards for the motor controller drivers. The demo below runs the booth\'s own classifier and fold plans in your browser.',
+      'I built the software that turns a text into motion, and spent 8 hours soldering USB-C breakout boards for the motor controller drivers. Scroll down to watch five texts go through the booth\'s own classifier and fold plans.',
     ],
   },
   hero: {
@@ -109,20 +113,30 @@ export default {
       { v: 'hero-fold-sideview.mp4', c: 'The straight chain starting a fold, from the side' },
     ] },
 
-    { type: 'demo', id: 'text', module: 'textfold', height: 'clamp(400px, 62vh, 620px)', poster: 'still-column-standing.webp',
+    { type: 'scrolly', id: 'text', module: 'textfold', width: 'wide', side: 'left', stepHeight: '120vh', poster: 'still-column-standing.webp',
       h: 'Text it. It folds.',
       p: [
-        'This is the booth without the phone network. Type a message or tap a suggestion. The page runs the path the robot ran: the bridge\'s rules, then the booth\'s own MiniLM classifier, then a shape from our library, then that shape\'s planned moves, one 120 degree step at a time, on 17 copies of our module CAD.',
+        'This is the booth without the phone network. Five texts go through the path the robot ran: the bridge\'s rules, then the booth\'s own MiniLM classifier, then a shape from our library, then that shape\'s planned moves, one 120 degree step at a time, on 17 copies of our module CAD.',
+      ],
+      data: { texts: ['show the judges some love', 'straight line', 'build a pyramid', 'yo whats good', 'curl up into a spiral'] },
+      steps: [
+        { h: '"show the judges some love"', p: ['No word in it says heart. The bridge\'s rules pass it on, and MiniLM, running on our laptop, puts **heart** first at 38.8%, far ahead of "none" at 2.8%. The bridge looks up the heart\'s planned path, texts back, and the chain folds: 11 moves, one 120 degree step at a time.'] },
+        { h: '"straight line"', p: ['A home phrase. The bridge\'s rules catch it before any model runs, reply "Going back to a straight line (home).", and every joint goes back to 0. Here the heart\'s plan plays backwards; the robot drove every joint home at once.'] },
+        { h: '"build a pyramid"', p: ['There is no pyramid in the library. MiniLM\'s best guess is **triangle** at 21.0%, just over the 20% it needs to act on its own. The triangle takes 5 moves and ends standing on edge.'] },
+        { h: '"yo whats good"', p: ['Chitchat. MiniLM\'s top class is **none**, at 43.3%: the class trained on exactly this. Nothing folds, and the triangle stays. At the booth, GPT-4o-mini got a turn next, and it could only answer with a shape from the same list or "none", in which case the bot asked again. This page never calls it.'] },
+        { h: '"curl up into a spiral"', p: ['MiniLM is surest here: **spiral** at 85.4%. The triangle unfolds first, backwards, then the spiral\'s 13 planned moves. The highest torque it asks of any joint is 5.0 N·m, against a 10.6 N·m stall cap.'] },
       ],
       caption: 'Blue outline: the wire end (power and the servo bus). Orange outline: the cube whose joint is turning. Joints are numbered from the wire end.' },
     { type: 'prose', id: 'text-notes', p: [
       { note: [
-        'What is real here. The classifier: the team\'s int8 MiniLM file and fitted head from the repo, run by this page after a 26 MB download. Checked against our Python pipeline: the same tokens on all 7,578 training texts, and the same top label on all 400 texts I sampled from them. The shapes: the 20 fold plans that are public in the repo (the booth had 88), every move and side copied and replayed against the planner\'s own recorded poses. The cubes: our module CAD.',
+        'What is real here. The scores and replies: each text was run through the team\'s own Python pipeline ahead of time (the bridge\'s rules, then the int8 MiniLM and its fitted head from the repo), and the page shows what it returned. The shapes: the 20 fold plans that are public in the repo (the booth had 88), every move and side copied and replayed against the planner\'s own recorded poses. The cubes: our module CAD.',
         'What is not. GPT-4o-mini is never called; where the booth would ask it, the page says so. Between shapes the page unfolds the last plan backwards; the robot drove every joint home at once.',
       ].join(' ') },
     ] },
 
-    { type: 'prose', id: 'joints', h: 'Seventeen cubes, sixteen joints', p: [
+    { type: 'prose', id: 'joints', h: 'Seventeen cubes, sixteen joints', media: [
+      { i: 'still-module-closeup.webp', c: 'The printed cubes up close: a green half and a black half each' },
+    ], p: [
       'Each module is an 80 mm printed cube split along the plane through its center, normal to its body diagonal (the line between opposite corners). A Feetech STS3215 servo turns one half against the other about that diagonal through a 4:1 reduction, so one 120 degree step at the joint is 480 degrees, 5,461 encoder counts, at the servo.',
       'A 120 degree turn about the body diagonal maps a cube onto itself, but it moves the face the next cube is bolted to. So every joint has exactly three positions, -120, 0 and +120 degrees, and the chain always sits on a cubic grid, 82 mm from one cube center to the next. There is no ±240 degree winding: -120 to +120 is two steps through zero. The planner, the robot description (URDF) and the servo driver all share that contract.',
       'Our URDF has 17 revolute joints, one in every cube. The one in the cube at the tip turns a half with nothing mounted on it, and because the turn maps the cube onto itself, it never changes the shape. That leaves 16 joints that matter: 3^16 = 43,046,721 joint words. Most of them drive cubes through each other. The real question is which of the rest look like something.',
@@ -130,19 +144,20 @@ export default {
       { fix: 'At about 5 AM on the last night we cut the robot to the first 17 modules of the 27-module design, with a 17-module URDF, planner config and MuJoCo scene. I switched the text bridge to a new 17-cube shape library and retired the 27-cube one, which had 138 planned folds. Everything at the booth ran on 17.' },
       { next: 'Much more robust modules, so all 27 can be chained.' },
     ] },
-    { type: 'demo', id: 'module', module: 'module', aside: 'left', height: 'clamp(340px, 50vh, 480px)', poster: 'still-module-cad-render.webp',
+    { type: 'scrolly', id: 'module', module: 'module', stepHeight: '90vh', poster: 'still-module-cad-render.webp',
       h: 'One joint, three positions',
-      p: [
-        'One module from our CAD (my teammates designed it; the gear set was hidden when it was exported). Turn the joint and watch the green half leave the cube\'s outline mid-turn: at 60 degrees it reaches 22 mm into each of the three neighboring cells across its faces, and into no other cell. That sweep is what the planner has to keep clear.',
-        'Show the next cube to see why three positions give three directions.',
+      p: ['One module from our CAD (my teammates designed it; the gear set was hidden when it was exported). The black half stays put and the green half turns against it about the dashed line, the cube\'s body diagonal.'],
+      steps: [
+        { h: 'At rest', p: ['The joint at 0. The blue arrow points out of the face the next cube is bolted to.'] },
+        { h: 'Mid-turn: the sweep', p: ['Halfway through a step the green half leaves the cube\'s outline: at 60 degrees it reaches 22 mm into each of the three neighboring cells across its faces, and into no other cell. That sweep is what the planner has to keep clear.'] },
+        { h: 'A full step: +120 degrees', p: ['Through the 4:1 reduction, one step at the joint is 480 degrees and 5,461 encoder counts at the servo. The cube is back inside its own outline, but the face the next cube mounts on now points another way.'] },
+        { h: 'Three positions, three directions', p: ['With the next cube on, -120, 0 and +120 degrees send it into three different neighboring cells, each 82 mm from this cube\'s center. That is why the chain always sits on a cubic grid.'] },
       ],
       caption: 'The dashed line is the joint axis; the blue arrow points to where the next cube mounts. Servo angle and counts follow from the 4:1 reduction; the reach is measured on the CAD as it turns.' },
-    { type: 'media', layout: 'row', items: [
-      { i: 'chain-wave-floor.webp', c: 'The chain bent into a wave on the floor of our work room' },
-      { i: 'still-module-closeup.webp', c: 'The printed cubes up close: a green half and a black half each' },
-    ] },
 
-    { type: 'prose', id: 'roll', h: 'Why most drawings are impossible', p: [
+    { type: 'prose', id: 'roll', h: 'Why most drawings are impossible', media: [
+      { i: 'chain-wave-floor.webp', c: 'The chain bent into a wave on the floor of our work room' },
+    ], p: [
       'The shape is not a sculpted shell. It is the set of grid cells the 17 cubes occupy, each cube sharing a face with the next. A heart is 17 specific cells, visited in an order the chain can actually thread.',
       'The catch is the roll word: the quarter turn at which each module is mounted relative to the one before it, fixed when the chain is assembled. For our 17-cube chain it is `1200130013310123`. Each joint can only swing its own exit face among three directions, so the roll word decides which paths through the grid are reachable at all.',
       'What we learned about which drawings survive:',
@@ -155,9 +170,16 @@ export default {
       ] },
     ] },
 
-    { type: 'demo', id: 'discovery', module: 'flow', webgl: false, data: discovery,
+    { type: 'scrolly', id: 'discovery', module: 'flow', webgl: false, width: 'wide', side: 'right', stepHeight: '85vh', data: discovery,
       h: 'Finding shapes worth folding',
-      p: ['Recognizability is decided before mechanics, not scored afterwards. Checking whether a drawing can be threaded takes milliseconds; searching for a fold takes about a minute. So the funnel does the cheap tests first and spends fold time only on drawings a judge could already name.'] },
+      p: ['Recognizability is decided before mechanics, not scored afterwards. Checking whether a drawing can be threaded takes milliseconds; searching for a fold takes about a minute. So the funnel does the cheap tests first and spends fold time only on drawings a judge could already name.'],
+      steps: [
+        { h: 'Draw', p: ['Every shape starts as a drawing: 17 cells for our chain (27 for the full one), several per concept. We generated about 8,000 with Claude.'], view: { to: 0 } },
+        { h: 'The cheap test first', p: ['Is it a path with two ends and no branches, and does our roll word thread it exactly? That takes tens of milliseconds. In one library run of 282 everyday concepts, 865 of 1,383 drawings passed.'], view: { to: 1 } },
+        { h: 'A blind judge', p: ['A judge names every threadable drawing without seeing the concept list. Only drawings it names as what they were meant to be go on: 81 in that run.'], view: { to: 2 } },
+        { h: 'Only then, the fold', p: ['The fold search spends about a minute per drawing under the hard checks, and the audit throws out paths that thrash. 66 folded and passed.'], view: { to: 4 } },
+        { h: 'Into the library', p: ['Each survivor goes into the library with its path, silhouette, renders and moves. At the booth that was 88 playable names.'], view: { to: 5 } },
+      ] },
     { type: 'prose', id: 'counts', p: [
       { table: { head: ['Stage', 'Count', 'Source'], rows: [
         ['Candidate drawings generated with Claude', 'about 8,000', 'my count; 3,330 drawn masks are committed in the repo'],
@@ -182,12 +204,15 @@ export default {
         { h: 'Standing on edge', p: ['Because of the in moves, the finished heart stands on edge instead of lying flat, as the planner predicted before the robot ever moved. Its 17 cells match the drawing it started from.'] },
       ] },
 
-    { type: 'demo', id: 'checks', module: 'flow', webgl: false, data: checks,
+    { type: 'scrolly', id: 'checks', module: 'flow', webgl: false, width: 'wide', side: 'left', length: '170vh', data: checks,
       h: 'How the planner searches',
       p: [
         'A move is one joint, one 120 degree step and a side. **Out** swings the tail. **In** swings the base side the other way and leaves the tail where it is, which re-orients everything already folded. The planner chooses the side with the smaller gravity moment about the joint, so the heavier side stays planted; when the two are close, it tries both.',
       ] },
-    { type: 'prose', id: 'search', p: [
+    { type: 'prose', id: 'search', media: [
+      { v: 'fold-column-stands.mp4', c: 'The end of a fold: a column of cubes stands up off the flat base' },
+      { v: 'fold-frame.mp4', c: 'A fold into a rectangular frame, from the side' },
+    ], p: [
       'The search runs over joint words from the straight chain. Its queue is ordered by the number of 120 degree steps still needed (the sum over joints of the distance to the target state, which never overestimates), then by detours taken (steps away from the goal, capped at 8 in the working profile), then by how badly the soft checks scored. Steps toward the goal are tried before detours; among them it first places a few joints far apart, near the ends of the chain, then grows runs of neighboring joints. A pose reached again at no lower cost is dropped.',
       'Checking a move against the real CAD is the expensive part, because the swing is sampled every 4 degrees. So new steps go into the queue unchecked and are only checked when they come out, and every finished plan is replayed through a fresh checker before it is reported. Up to 8 passing plans are kept and ranked: fewest moves first, then the soft scores.',
       'I had called it A*. It is close, but not textbook A*. A* orders by moves made plus moves left, and since every step here changes the distance by exactly one, that sum is the starting distance plus twice the detours. Our planner orders by moves left first, which makes it a greedy best-first search with a detour budget: it finds a legal fold fast, then keeps collecting candidates and ships the shortest.',
@@ -197,15 +222,21 @@ export default {
       { fix: 'I wrote an audit that rejects any path longer than 1.5 times the minimum number of steps its goal needs, or that bends a joint only to return it. Square, plus and C failed and came out of the booth library; C came back with a clean two-move path.' },
       { next: 'A better way to generate paths and shapes than drawing thousands of candidates and searching each one.' },
     ] },
-    { type: 'media', layout: 'row', items: [
-      { v: 'fold-column-stands.mp4', c: 'The end of a fold: a column of cubes stands up off the flat base' },
-      { v: 'fold-frame.mp4', c: 'A fold into a rectangular frame, from the side' },
-    ] },
 
-    { type: 'demo', id: 'booth', module: 'flow', webgl: false, data: booth,
+    { type: 'scrolly', id: 'booth', module: 'flow', webgl: false, width: 'wide', side: 'right', stepHeight: '80vh', data: booth,
       h: 'Text it, it becomes that',
-      p: ['At the booth anyone could text a phone number. The message went through Linq\'s iMessage API to a webhook on our laptop behind a Cloudflare tunnel. The bridge worked out which shape was meant, looked up its planned path, drove the servos and a MuJoCo mirror at the same time, and texted back.'] },
-    { type: 'prose', id: 'language', p: [
+      p: ['At the booth anyone could text a phone number. The message went through Linq\'s iMessage API to a webhook on our laptop behind a Cloudflare tunnel. The bridge worked out which shape was meant, looked up its planned path, drove the servos and a MuJoCo mirror at the same time, and texted back.'],
+      steps: [
+        { h: 'A text arrives', p: ['Through Linq\'s iMessage API and a Cloudflare tunnel to the bridge on our laptop, which checks the signature and drops repeats.'], view: { to: 3 } },
+        { h: 'Rules first', p: ['Help words get the shape list; "straight line" or "home" sends every joint back to zero. Nothing else runs for those.'], view: { to: 4 } },
+        { h: 'MiniLM, then maybe GPT-4o-mini', p: ['MiniLM picks a label on the laptop in a few milliseconds. Only when it is unsure does GPT-4o-mini get a turn, and it can only pick from the same list or answer "none".'], view: { to: 5 } },
+        { h: 'Only the library reaches the motors', p: ['A label looks up one planned path in the shape library: its moves, sides, silhouette and torque. Nothing else can reach the motors.'], view: { to: 7 } },
+        { h: 'Fold and reply', p: ['The same plan drives the servo bus and a MuJoCo mirror, and the bridge texts back what it is doing, or what went wrong.'], view: { to: 9 } },
+      ] },
+    { type: 'prose', id: 'language', media: [
+      { v: 'sim-fold-mujoco.mp4', c: 'MuJoCo replaying a fold after a text, from our demo video' },
+      { i: 'imessage-to-mujoco.webp', c: 'Earlier, on the 27-cube chain: the bot\'s replies on the left, the MuJoCo joint panel on the right' },
+    ], p: [
       { h: 'The language path' },
       { ol: [
         '**Rules first.** Help words get the shape list; "straight line" or "home" sends every joint back to zero. Nothing else runs for those.',
@@ -224,10 +255,6 @@ export default {
       { quote: 'I worked out the checkmark fold but couldn\'t start it. Tell my operator.' },
       'The last one is the failure path doing its job: the fold was planned but could not start, and the sender got a plain answer instead of silence. When the USB adapter was unplugged, the same plan played in MuJoCo and the reply said the physical robot was not plugged in.',
     ] },
-    { type: 'media', layout: 'row', items: [
-      { v: 'sim-fold-mujoco.mp4', c: 'MuJoCo replaying a fold after a text, from our demo video' },
-      { i: 'imessage-to-mujoco.webp', c: 'Earlier, on the 27-cube chain: the bot\'s replies on the left, the MuJoCo joint panel on the right' },
-    ] },
 
     { type: 'prose', id: 'code', h: 'The code', p: [
       `The code is public: [github.com/AydanLing/Hack-The-North](${REPO}).`,
@@ -241,7 +268,7 @@ export default {
       'Three things in it I would point an engineer at. The kinematics are integer lookups: 24 cube orientations, a table of where each joint state sends the next cube, and an independent floating-point check of the same thing. The fold search checks edges lazily, as above. And the bridge treats a text as data from start to finish: the only thing that can leave the language layer is one label from a fixed list.',
     ] },
 
-    { type: 'demo', id: 'servos', module: 'flow', webgl: false, data: servo,
+    { type: 'scrolly', id: 'servos', module: 'flow', webgl: false, width: 'wide', side: 'left', length: '140vh', data: servo,
       h: 'Driving the servos',
       p: ['Every servo shares one serial bus on a CH343 USB adapter. The executor soft-zeros the chain lying straight, so a session starts from a known pose. If the chain is still bent from an earlier fold, it drives every joint home first. Then, for each planned move, it sends one joint to its target, polls the bus until it arrives, and re-drives any joint that has sagged.'] },
     { type: 'split', id: 'wiring', items: [

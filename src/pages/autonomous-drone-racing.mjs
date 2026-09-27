@@ -3,6 +3,8 @@
 // facts.md and answers.md. Code facts come from the team's line-following flight script (the repo is
 // read-only here; it is never linked or named on the page), numbers marked "from the CAD" from his
 // CAD. The org line stays as src/projects.mjs has it.
+// Every demo is scroll-driven (Jerry, Sept 26): the flight, the CAD tour, the software path and the
+// vision steps all move only with the scroll.
 // Held back until Jerry answers (see the phase A questions.md): which race clip is our winning run,
 // how the drone handled the hoops, what caused the late-July runs that climbed into the cage net
 // (left out: the drone in those clips is not clearly ours either), whether the repo's script is the
@@ -19,7 +21,7 @@ export default {
     ],
     text: [
       'I led a team of five writing the software for an autonomous drone race: a Holybro X500 quadcopter has to follow an LED line on the floor, past hoops, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and that becomes velocity commands for the flight controller. A forward camera is for obstacle avoidance: the hoops carry AprilTags.',
-      'We won in 52 seconds, less than half the second-best team’s time, and we were the only team to take off autonomously and complete the whole course in one run. Below: our line follower running in a course you can reshape, the drone from our CAD, and how the code turns a picture of the floor into a velocity command.',
+      'We won in 52 seconds, less than half the second-best team’s time, and we were the only team to take off autonomously and complete the whole course in one run. Below: our line follower flying a lap as you scroll, the drone from our CAD, and how the code turns a picture of the floor into a velocity command.',
     ],
   },
   hero: {
@@ -30,14 +32,21 @@ export default {
     ],
   },
   sections: [
-    // ------------------------------------------------------------------ the checklist demo
+    // ------------------------------------------------------------------ the flight (scroll-driven)
     {
-      type: 'demo', id: 'try', module: 'line-follow', height: 'clamp(470px, 74vh, 740px)', poster: `${M}/poster-try.webp`,
-      h: 'Try it: move the line, move the hoops',
-      p: [
-        'Press **Fly**, then drag the white handles to reshape the course and drag the hoops anywhere. The drone runs the vision steps, constants and control law of our line-following script: every control tick it looks at the floor, finds the line again and sends a new velocity command, so it adapts to whatever you do, or loses the line if you pull it out from under the drone. The inset is what the downward camera sees and what the code does to that picture.',
+      type: 'scrolly', id: 'flight', module: 'flight', width: 'wide', stepHeight: '85vh', poster: `${M}/poster-flight.webp`,
+      h: 'Follow the line',
+      p: ['Scroll to fly one lap. The drone runs the vision steps, constants and control law of our line-following script: every control tick it looks at the floor, finds the line again and sends a new velocity command. The inset is what the downward camera sees and what the code does to that picture; the readout is what the code sends.'],
+      steps: [
+        { h: 'Take off over the line', p: ['The drone starts on the LED line. The script arms it and starts Offboard mode with a slow climb; here it levels off at 1.0 m, the script’s take-off height. The orange box on the floor is the patch the downward camera sees, and it grows as the drone climbs.'] },
+        { h: 'What the downward camera sees', p: ['Each time round the loop the script takes one 640 x 360 frame from the downward camera: the inset. The nose is at the bottom of the picture. Up close, the LED rope is a row of separate bright dots.'] },
+        { h: 'Dots into one bar', p: ['Dilate 30 x 30, erode 20 x 20, then keep only pixels from 250 to 255 in all three channels. The dots merge into one solid bar: the mask in the inset.'] },
+        { h: 'A line, and a point to chase', p: ['`cv2.fitLine` puts a straight line through the bar (green), and the script takes the point 100 px ahead along it (orange). That point’s offset from the image centre and the line’s angle become the forward, sideways and yaw-rate commands in the readout. One command, then the loop sleeps 0.5 s while the flight controller flies it.'] },
+        { h: 'A hoop ahead', p: ['The forward camera, its view in blue, is for obstacle avoidance: the hoops carry AprilTags. What the drone does here is an illustrative stand-in, not our obstacle code: once it has seen the tags it adds a sideways push until it is past the hoop, and then the line pulls it back.'] },
+        { h: 'Round the bends', p: ['Chasing a point ahead of the drone, not the nearest point, is what turns it into each bend before it gets there: the yaw rate follows the curves. The same law that centres it on the line also pushes it along, because on a straight the target is always ahead. The second hoop gets the same stand-in.'] },
+        { h: 'A reflection on the floor', p: ['A round reflection comes into view, bright enough to pass the threshold, so the mask has two blobs. The script keeps the one with the longest side, the rope, and ignores the other. Then the drone is back over the start: one lap, with the line found in every frame.'] },
       ],
-      caption: 'A simulation on our CAD, not a recording. From our script: the image processing, the gains and limits, the 0.5 s between commands and landing after 10 frames with no line. Assumed for the page: the drone holds 1.0 m (the script’s take-off height), the flight controller follows each command with a 0.3 s lag, the camera has the 66° lens of a standard Camera Module 3, and the LED rope, course and glare spot are drawn for the page. The hoop reaction is an illustrative stand-in, not our obstacle code. Speed changes time only; the controller is the same at every speed.',
+      caption: 'A simulation on our CAD, not a recording: a JavaScript port of our script flies the lap ahead of time, and the scroll picks the moment. From our script: the image processing, the gains and limits, the 0.5 s between commands and landing after 10 frames with no line. Assumed for the page: the drone holds 1.0 m (the script’s take-off height), the flight controller follows each command with a 0.3 s lag, and the camera has the 66° lens of a standard Camera Module 3. The course, the LED rope, the hoops, the reflection and the climb are drawn for the page, and the hoop reaction is an illustrative stand-in, not our obstacle code. Some steps cover more of the flight than others; that changes time only, and the readout is what the code sent at that moment.',
     },
 
     // ------------------------------------------------------------------ the race
@@ -60,24 +69,40 @@ export default {
 
     // ------------------------------------------------------------------ the drone
     {
-      type: 'demo', id: 'drone', module: 'drone-cad', aside: 'right', height: 'clamp(360px, min(64vh, 115vw), 620px)', poster: `${M}/poster-drone.webp`,
+      type: 'scrolly', id: 'drone', module: '@turntable', stepHeight: '85vh', poster: `${M}/poster-drone.webp`,
       h: 'The drone',
-      p: [
-        'A Holybro X500 V2: a carbon quadcopter with four 2216 880 KV motors, 500 mm apart on the diagonal, turning 10 x 4.5 in props on a 4S LiPo. What makes it autonomous sits on the nose.',
-        { ul: [
-          'A **Raspberry Pi 5** on the front payload plate, with the **forward camera** (a Raspberry Pi Camera Module 3) in the same printed mount, under a printed cover.',
-          'Under the nose, a second printed mount holds the **downward camera**, another Camera Module 3, next to an **ARK Flow** board: an optical flow camera and a distance sensor that look at the floor.',
-          'The battery rides on top of the frame in printed mounts, and printed landing gear mounts carry the frame low.',
-        ] },
-        'In the CAD both camera sensors sit on the centreline about 14 cm ahead of the centre of the frame: the forward one looks straight ahead at top-plate height, the downward one looks at the floor from 16 mm under the bottom plate. Turn on **Camera views** to see what each one covers.',
+      p: ['Our CAD, turned by the scroll, with the parts that make it autonomous lit up one group at a time.'],
+      data: { models: [{ src: `${M}/drone.glb` }], azimuth: -32, elevation: 24, pad: 0.9, drift: 10 },
+      steps: [
+        { h: 'A Holybro X500 V2', view: { azimuth: -32, elevation: 24, pad: 0.88 },
+          p: ['A carbon quadcopter with four 2216 880 KV motors, 500 mm apart on the diagonal, turning 10 x 4.5 in props on a 4S LiPo. What makes it autonomous sits on the nose.'] },
+        { h: 'The Pi 5 and the forward camera', view: { focus: 'rpi5_rpicam3_mount|raspi_top_cover', azimuth: -62, elevation: 20, pad: 4.2,
+            highlight: [{ parts: 'rpi5_rpicam3_mount|raspi_top_cover|Raspberry_Pi_5', color: '#3ddc84', intensity: 0.55 }, { parts: 'Raspberry_Pi_Camera_Module_3_2', color: '#3aa0ff', intensity: 0.9 }],
+            labels: [{ text: 'Forward camera', at: [0.2745, -0.006, -0.1115], color: '#7cc4ff', side: 'l' }, { text: 'Raspberry Pi 5, under the printed cover', at: [0.33, 0.006, -0.1115], color: '#3ddc84', minW: 600 }] },
+          p: ['A **Raspberry Pi 5** on the front payload plate, with the **forward camera** (a Raspberry Pi Camera Module 3) in the same printed mount, under a printed cover.'] },
+        { h: 'Under the nose', view: { focus: 'optical_downwards_picam3_mount|ARK_Flow', azimuth: -48, elevation: -34, pad: 4.6,
+            highlight: [{ parts: 'Raspberry_Pi_Camera_Module_3_3', color: '#3aa0ff', intensity: 0.9 }, { parts: 'ARK_Flow', color: '#b18cff', intensity: 0.9 }, { parts: 'optical_downwards_picam3_mount', color: '#ff6b35', intensity: 0.35 }],
+            labels: [{ text: 'Downward camera', at: [0.279, -0.051, -0.1115], color: '#7cc4ff', side: 'l' }, { text: 'ARK Flow: optical flow + distance', at: [0.3136, -0.041, -0.1115], color: '#b18cff', minW: 600 }] },
+          p: ['A second printed mount holds the **downward camera**, another Camera Module 3, next to an **ARK Flow** board: an optical flow camera and a distance sensor that look at the floor.'] },
+        { h: 'Both cameras, 14 cm ahead', view: { azimuth: 180, elevation: 4, pad: 0.95,
+            highlight: [{ parts: 'Raspberry_Pi_Camera_Module_3_', color: '#3aa0ff', intensity: 0.9 }],
+            labels: [{ text: 'Forward camera', at: [0.2745, -0.006, -0.1115], color: '#7cc4ff' }, { text: 'Downward camera', at: [0.279, -0.051, -0.1115], color: '#7cc4ff' }, { text: 'Centre of the frame', at: [0.418, -0.003, -0.1115], color: '#fff1e2', side: 'l' }] },
+          p: ['In the CAD both camera sensors sit on the centreline about 14 cm ahead of the centre of the frame. The forward one looks straight ahead at top-plate height; the downward one looks at the floor from 16 mm under the bottom plate.'] },
+        { h: 'Power', view: { azimuth: 38, elevation: 30, pad: 0.92,
+            highlight: [{ parts: 'Turnigy_3300mAh|top_battery_mount|PCBA_PM06', color: '#ffb454', intensity: 0.8 }],
+            labels: [{ text: '4S LiPo', part: 'Turnigy', color: '#ffb454' }, { text: 'Power module', at: [0.408, -0.022, -0.1115], color: '#ffb454', side: 'l' }] },
+          p: ['The 4S LiPo rides on top of the frame in printed mounts, over the power module.'] },
+        { h: 'The printed parts', view: { azimuth: -135, elevation: 16, pad: 0.92,
+            highlight: [{ parts: 'rpi5_rpicam3_mount|raspi_top_cover|optical_downwards_picam3_mount|top_battery_mount|new_landing_gear_mount', color: '#ff6b35', intensity: 0.6 }],
+            labels: [{ text: 'Printed landing gear mount', part: 'new_landing_gear_mount_1', color: '#ff6b35', minW: 600 }, { text: 'Printed cover', part: 'raspi_top_cover', color: '#ff6b35', side: 'l' }] },
+          p: ['Everything lit here is 3D printed: the mount and cover on the nose, the mount under it, the battery mounts and the landing gear mounts, which carry the frame low.'] },
       ],
-      caption: 'Our CAD with the screws left out. The props turn about the motor shafts in the CAD. The downward view is drawn to a floor 1.0 m below the camera; its picture is turned on the drone, so the nose is at the bottom of the image and its wide side runs across the drone.',
+      caption: 'Our CAD with the screws left out.',
     },
     {
-      type: 'media', layout: 'grid', items: [
+      type: 'media', layout: 'grid', cols: 3, items: [
         { i: 'photo-x500-day-one.webp', c: 'Jul 7: the X500 early in the build' },
         { i: 'photo-wiring-flight-controller.webp', c: 'Jul 8: wiring the flight controller stack' },
-        { i: 'photo-bench-with-transmitter.webp', c: 'Jul 11: on the kit’s tall landing legs beside the flight cage, with a laptop and the RC transmitter' },
         { i: 'photo-finished-drone.webp', c: 'Aug 2: the finished drone, the Pi and wiring inside the printed parts' },
       ],
     },
@@ -100,19 +125,26 @@ export default {
             ['Prototyping', 'Jupyter notebooks'],
           ],
         } },
-        'The Pi does not fly the drone. The flight controller keeps it stable and holds whatever velocity it is told; our code decides that velocity: go forward this fast, slide right this fast, turn this fast. The flight controller stays in charge of the motors the whole time.',
       ],
     },
     {
-      type: 'demo', id: 'stack-figure', module: 'stack', webgl: false,
-      caption: 'Tap or hover a box to see what it does. The arrows are the path of one command, from a camera frame to the motors.',
+      type: 'scrolly', id: 'stack-figure', module: 'stack', width: 'wide', side: 'right', webgl: false, stepHeight: '70vh',
+      steps: [
+        { h: 'One frame in', p: ['The downward camera looks at the floor under the nose. `camera.capture_array()` in Picamera2 hands the script a 640 x 360 image each time round the loop.'] },
+        { h: 'Find the line', p: ['OpenCV and NumPy dilate, erode and threshold the frame, keep the longest blob and fit a line to it. The next section goes through each step.'] },
+        { h: 'PD control', p: ['Pixel and angle errors in; forward, right and yaw-rate commands out, rotated from the camera frame to the drone and clamped.'] },
+        { h: 'Over MAVLink', p: ['Our asyncio program sends one body-frame velocity and yaw-rate setpoint, then sleeps 0.5 s. MAVSDK-Python talks over gRPC to `mavsdk_server` (the linux-arm64 build) running on the Pi, which speaks MAVLink to the flight controller over the Pi’s UART.'] },
+        { h: 'The flight controller flies it', p: ['The Pi does not fly the drone. The flight controller keeps it stable and holds whatever velocity it is told; our code decides that velocity: go forward this fast, slide right this fast, turn this fast. The flight controller stays in charge of the motors the whole time.'] },
+        { h: 'From the side', p: ['The forward camera is for obstacle avoidance: the hoops on the course carry AprilTags. The ARK Flow board under the nose is an optical flow camera and a distance sensor looking at the floor. During test flights, teammates stood by with RC transmitters, ready to take over by hand.'] },
+      ],
+      caption: 'The path of one command, from a camera frame to the motors.',
     },
 
     // ------------------------------------------------------------------ vision, step by step
     {
       type: 'scrolly', id: 'pipeline', module: 'pipeline', poster: `${M}/poster-pipeline.webp`,
       h: 'Seeing the line, one step at a time',
-      p: ['One downward-camera frame through every step of our script, computed live on this page with the same code as the simulation above. The frame is drawn for the page: a bend in the rope and a wide round reflection.'],
+      p: ['One downward-camera frame through every step of our script, computed live on this page with the same code as the flight at the top. The frame is drawn for the page: a bend in the rope and a wide round reflection.'],
       steps: [
         { h: 'The raw frame', p: ['The downward camera sees a 640 x 360 patch of floor under the nose. The nose is at the bottom of the picture. Up close, the LED rope is a row of separate bright dots.'] },
         { h: 'Dilate, 30 x 30', p: ['`cv2.dilate` gives every pixel the brightest value in the 30 x 30 square around it. Each bulb grows by 15 px each way, and neighbouring bulbs merge into one bar. The reflection grows too.'] },
@@ -130,13 +162,12 @@ export default {
         { problem: 'Up close an LED rope is a row of separate bright dots with dark gaps between them. Thresholded as it is, the rope falls apart into dozens of small blobs, each one or two bulbs long.', title: 'The rope is not a line to a camera' },
         { fix: 'Dilate with a 30 x 30 kernel first, so neighbouring bulbs grow into each other, then erode with a 20 x 20 kernel to take most of the growth back. What is left is one solid bar along the rope.' },
         { problem: 'The rope is not the only bright thing a downward camera can see. A light reflected in the floor is bright too, and it can be bigger than the part of the rope in view.', title: 'Other bright things' },
-        { fix: 'Two filters. The threshold keeps only pixels that are almost fully saturated in all three channels, and of the blobs that survive, the script keeps the one with the longest minimum-area rectangle, not the one with the most area. A reflection is round; the rope is long and thin. The **Glare spot** switch in the simulation puts one on the floor.' },
+        { fix: 'Two filters. The threshold keeps only pixels that are almost fully saturated in all three channels, and of the blobs that survive, the script keeps the one with the longest minimum-area rectangle, not the one with the most area. A reflection is round; the rope is long and thin. The flight at the top passes one near the end of its lap.' },
         { problem: ['In my computer vision coursework I fit the line as y = mx + b by least squares on the bright pixels:', { pre: 'm = (mean(x) * mean(y) - mean(x*y)) / (mean(x)^2 - mean(x^2))\nb = mean(y) - m * mean(x)' }, 'That form measures error vertically and needs a finite slope. On our drone the camera is mounted so that forward runs straight down the image, so when the drone is on the line, the line is vertical in the picture: the points barely vary in x, the denominator (minus the variance of x) goes to zero and the slope blows up.'], title: 'y = mx + b cannot follow a line straight ahead' },
         { fix: 'The flight script fits the line with `cv2.fitLine` and `DIST_L2` instead. It minimises the perpendicular distance from the points to the line and returns a unit direction and a point, not a slope, so it works the same at every angle, including straight ahead.' },
       ],
-    },
-    {
-      type: 'media', layout: 'wide', items: [
+      media: [
+        { i: 'photo-drone-on-led-rope.webp', c: 'Jul 30: sitting on the line before a run. Up close, the LED rope is a row of separate bulbs.' },
         { i: 'coursework-regression-grid.webp', c: 'From my coursework notebook: threshold, dilate and a y = mx + b fit (green) on downward-camera frames. Clean frames fit well; a small blob at the edge (downward_13) still gets a confident line, and an empty frame (downward_14) gets none.' },
       ],
     },
@@ -154,7 +185,11 @@ export default {
         { pre: 'R_dc2bd = [[ 0, 1, 0],\n           [-1, 0, 0],\n           [ 0, 0, 1]]     # forward = image y, right = -image x, yaw unchanged' },
         '**5. Send and wait.** The result goes to the flight controller as one body-frame velocity and yaw-rate setpoint with zero vertical speed, so the drone holds its height. Then the loop sleeps 0.5 s, and the flight controller keeps flying that setpoint until the next one arrives.',
         'Because the look-ahead point sits 100 px ahead of the image centre, the same law that centres the drone on the line also pushes it along the line: on a straight the target is always ahead, so the drone keeps moving toward it.',
-        'If a frame has no line in it, the script sends nothing new and captures again at once, counting the miss; it is written to land after 10 such frames. The **Frames with no line** readout in the simulation counts them.',
+        'If a frame has no line in it, the script sends nothing new and captures again at once, counting the miss; it is written to land after 10 such frames. The **Frames with no line** row in the flight’s readout counts them.',
+      ],
+      media: [
+        { v: 'corner-turn.mp4', c: 'Taking a 90° corner in the flight cage' },
+        { v: 'diagonal-line-tracking.mp4', c: 'Tracking a diagonal leg back toward the camera' },
       ],
     },
 
@@ -166,7 +201,7 @@ export default {
         p: [
           'The forward camera is for obstacle avoidance. The obstacles on the course are hoops with AprilTags on them: square markers whose four corners, seen by a calibrated camera, give the tag’s position and orientation.',
           'Calibration comes first, because a tag’s pixels only turn into metres once the camera’s focal length, optical centre and lens distortion are known. Our calibration script uses a printed chessboard with 7 x 7 inner corners and 25 mm squares, photographed 70 times at different angles. It finds the corners, refines each one to sub-pixel accuracy with `cv2.cornerSubPix`, and solves for the camera matrix and distortion coefficients with `cv2.calibrateCamera`.',
-          { note: 'The hoop reaction in the simulation at the top is a stand-in to show the idea, not our obstacle code.' },
+          { note: 'The hoop reaction in the flight at the top of the page is a stand-in to show the idea, not our obstacle code.' },
         ],
       }],
     },
@@ -189,6 +224,9 @@ export default {
           ],
         } },
       ],
+      media: [
+        { i: 'photo-bench-with-transmitter.webp', c: 'Jul 11: on the kit’s tall landing legs beside the flight cage, with a laptop and the RC transmitter' },
+      ],
     },
 
     // ------------------------------------------------------------------ testing timeline
@@ -207,16 +245,13 @@ export default {
           p: ['An LED rope taped to the cage floor in a rectangle: lift off from the line, follow the straight, take a 90° corner, run the next side past the team tables, and reach the hoop in the far corner.'],
           media: [
             { i: 'photo-led-rope-course.webp', c: 'Jul 29: the practice course, LED rope taped to the cage floor' },
-            { i: 'photo-drone-on-led-rope.webp', c: 'Jul 30: sitting on the line before a run' },
             { i: 'still-cage-hoop.webp', c: 'The ring hoops at the far end of the practice cage' },
             { v: 'liftoff-from-line.mp4', c: 'Lifting off from the line' },
-            { v: 'corner-turn.mp4', c: 'Taking a 90° corner' },
           ] },
         { label: 'Start of August', title: 'A harder layout',
           p: ['The rope was laid again with diagonal legs and a zig-zag, and a gate went up over the line.'],
           media: [
             { i: 'still-new-cage-layout.webp', c: 'The new layout: diagonals and a zig-zag' },
-            { v: 'diagonal-line-tracking.mp4', c: 'Tracking a diagonal leg back toward the camera' },
             { v: 'practice-gate.mp4', c: 'A gate over the line in the cage' },
           ] },
         { label: 'Race day', title: '52 seconds, first of five',

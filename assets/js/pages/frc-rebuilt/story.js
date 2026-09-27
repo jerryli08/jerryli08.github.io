@@ -6,14 +6,17 @@
 //
 // Everything is a pure function of (step, stepP), so scrolling back plays it backwards. The robot
 // is Jerry's real CAD (see rig.js for every axis). The fuel, the floor, the labels and the
-// dimension lines are drawn in as annotations; fuel paths inside the robot follow the CAD's lane
-// ramps, transfer wheels, backing and hood, and the shot arcs are drawn, not measured. The camera
-// follows the robot along its path: every view is a fixed offset from where the robot is, never
-// fitted to moving parts.
+// dimension lines are drawn in as annotations. Each ball the robot picks up is one ball the whole
+// way: it waits on the floor until the roller reaches it, goes under the roller and up its back
+// against the bumper, is thrown over the ridge at the pivot, rolls down its lane, and is later fed
+// up the transfer and shot (fuel-path.js has the path and where every number in it comes from; the
+// throw and the shot arcs are drawn, not measured). The camera follows the robot along its path:
+// every view is a fixed offset from where the robot is, never fitted to moving parts.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
 import * as THREE from 'three';
 import { loadRobot, fuelKit, FLOOR, FUEL_R, LANES, AX, STOW, onArm, onPanel } from './rig.js';
+import { intake, fed, arrival, CONTACT, T_ORBIT, T_THROW } from './fuel-path.js';
 
 const DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -29,22 +32,27 @@ const AZ_D = Math.atan2(D.x, D.z) / DEG;
 const A0 = AZ_D + 90; // side view from +X: the direction of travel points left on screen
 
 // travel distances (m)
-const S1 = 1.2, SC0 = 1.32, SC1 = 1.95, S2 = 2.12, S3 = 3.25;
+const S1 = 1.2, S2 = 2.12, S3 = 3.25;
 const CENTER = V(0.292, 0.16, -0.16); // middle of the robot, model frame
-const Z_PICK = 0.36; // fuel centre (model z) where it meets the roller
 const Y_FUEL = FLOOR + FUEL_R;
 const TOP = 0.493; // top of the robot in the CAD (22.0 in above the floor)
 const TRENCH = FLOOR + 22.25 * 0.0254; // the trench opening
-
-// fuel slots in each lane (y, z in the model frame), from the CAD's surfaces:
-// 0 in the curve of the backing above the lane ramp, 1 and 2 resting on the ramp (15.6 degree slope)
-const SLOTS = [[0.16, -0.5], [0.1743, -0.351], [0.2147, -0.2065]];
-// up through the transfer: touching the lower flex wheels and the backing, the upper wheels, the
-// flywheel squeezed against the hood, and the hood's top edge, whose tangent sets the exit direction
-const LIFT = [[0.16, -0.5], [0.2065, -0.52], [0.2985, -0.526], [0.377, -0.538], [0.495, -0.555]];
-const EXIT = V(0, 0.894, 0.447); // tangent of the hood's top edge in the CAD
-const V0 = 7.2, T_PER = 0.28; // drawn, not measured
+const V0 = 7.2, T_PER = 0.28; // shot speed and flight time per unit of feed: drawn, not measured
 const LANE_OFF = [0.33, 0, 0.66]; // left, middle, right: middle lane first, then alternate
+// The fuel the robot picks up: three for each lane (middle, left, right in turn), touching the
+// roller one after another as the robot drives on, at scroll U0 + i DU (in steps). Three balls in a
+// lane are DU * 3 apart, which keeps them a ball apart along the path.
+const U0 = 3.38, DU = 0.075, LANE_ORDER = [1, 0, 2];
+
+// 0 start, 1 drive, 2 intake pivot, 3 intake, 4 to the hub, 5 transfer, 6 shooters, 7 22 inches
+const travel = (step, t) => {
+  if (step <= 0) return 0;
+  if (step === 1) return S1 * smooth(0.12, 1, t);
+  if (step === 2) return S1;
+  if (step === 3) return lerp(S1, S2, smooth(0.3, 1, t));
+  if (step === 4) return lerp(S2, S3, smooth(0.15, 0.9, t));
+  return S3;
+};
 
 function rng(seed) { let s = seed; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 
@@ -77,19 +85,21 @@ export async function mount(el, ctx) {
   floor.position.set(mid.x, FLOOR - 0.002, mid.z);
   world.add(floor);
 
-  // fuel the robot picks up: each meets the roller at its own point across the roller's width
+  // fuel the robot picks up, each placed on the floor where the roller will first touch it
   const R = rng(2856);
-  const picks = [];
-  for (let tries = 0; picks.length < 9 && tries < 500; tries++) {
-    const xc = lerp(0.08, 0.5, R()), sc = lerp(SC0, SC1 - 0.12, R());
-    const B = D.clone().multiplyScalar(sc).add(V(xc, Y_FUEL, Z_PICK));
-    if (picks.some((p) => p.B.distanceTo(B) < 2 * FUEL_R + 0.012)) continue;
-    picks.push({ xc, sc, B });
+  // (the draws the pile's layout was made with before this path existed, so the rest of the pile keeps its place)
+  for (let n = [], tries = 0; n.length < 9 && tries < 500; tries++) {
+    const x = lerp(0.08, 0.5, R()), z = lerp(1.32, 1.83, R());
+    if (!n.some(([a, b]) => Math.hypot(a - x, b - z) < 2 * FUEL_R + 0.012)) n.push([x, z]);
   }
-  picks.sort((a, b) => a.sc - b.sc);
-  for (const p of picks) {
-    p.m = kit.ball(); p.m.material = kit.mat.clone(); p.m.material.transparent = true;
-    world.add(p.m);
+  const jitter = rng(8568);
+  const fuel = [];
+  for (let i = 0; i < 9; i++) {
+    const lane = LANE_ORDER[i % 3], uc = U0 + DU * i;
+    const xc = LANES[lane] + (jitter() - 0.5) * 0.016; // lanes are 169 mm apart: neighbours never touch
+    const B = D.clone().multiplyScalar(travel(3, uc - 3)).add(V(xc, Y_FUEL, CONTACT[1]));
+    const m = kit.ball(); world.add(m);
+    fuel.push({ lane, k: Math.floor(i / 3), uc, xc, B, m, done: arrival(Math.floor(i / 3)) });
   }
   // the rest of the pile, outside the strip the robot sweeps (so nothing drives through a ball)
   const swept = (B) => {
@@ -99,23 +109,19 @@ export async function mount(el, ctx) {
     }
     return false;
   };
-  const pileC = D.clone().multiplyScalar((SC0 + SC1) / 2 + 0.2).add(V(0.3, Y_FUEL, Z_PICK));
+  const pileC = D.clone().multiplyScalar(1.835).add(V(0.3, Y_FUEL, 0.36)); // the middle of the pile
   const decor = [];
   for (let tries = 0; decor.length < 24 && tries < 6000; tries++) {
     // both sides of the strip the robot clears, more of them on the far side from the camera
     const far = R() < 0.85, dx = 0.3 + (FUEL_R + 0.08) + R() * 0.75;
     const B = V(pileC.x + (far ? -1 : 1) * dx + (far ? -0.1 : 0.1), Y_FUEL, pileC.z + (R() - 0.5) * 1.5);
-    if (swept(B) || [...decor, ...picks].some((p) => p.B.distanceTo(B) < 2 * FUEL_R + 0.01)) continue;
+    if (swept(B) || [...decor, ...fuel].some((p) => p.B.distanceTo(B) < 2 * FUEL_R + 0.01)) continue;
     const m = kit.ball(); m.material = kit.mat.clone(); m.material.transparent = true; m.position.copy(B);
     world.add(m);
     decor.push({ B, m });
   }
-  // fuel inside the robot: three per lane, moved with the robot
+  // the last step's lines (annotations), moved with the robot: its height and the trench opening, seen side on
   const inside = new THREE.Group(); world.add(inside);
-  const held = [];
-  for (let k = 0; k < 3; k++) for (const l of [1, 0, 2]) { const m = kit.ball(); inside.add(m); held.push({ lane: l, k, m }); }
-
-  // the last step's lines (annotations): the robot's height and the trench opening, seen side on
   const dims = new THREE.Group(); dims.visible = false; inside.add(dims);
   const lineMat = new THREE.LineBasicMaterial({ color: '#ff6b35', depthTest: false, transparent: true });
   const trenchMat = new THREE.LineDashedMaterial({ color: '#8fc3ff', dashSize: 0.03, gapSize: 0.02, depthTest: false, transparent: true });
@@ -132,23 +138,7 @@ export async function mount(el, ctx) {
   kit.mat.clippingPlanes = [cut.plane]; kit.mat.side = THREE.DoubleSide; kit.mat.needsUpdate = true;
 
   // ---------------------------------------------------------------- the story as a function of scroll
-  // 0 start, 1 drive, 2 intake pivot, 3 intake, 4 to the hub, 5 transfer, 6 shooters, 7 22 inches
-  const travel = (step, t) => {
-    if (step <= 0) return 0;
-    if (step === 1) return S1 * smooth(0.12, 1, t);
-    if (step === 2) return S1;
-    if (step === 3) return lerp(S1, S2, smooth(0.3, 1, t));
-    if (step === 4) return lerp(S2, S3, smooth(0.15, 0.9, t));
-    return S3;
-  };
   const armAt = (step, t) => (step < 2 ? STOW : step === 2 ? lerp(STOW, 0, smooth(0.12, 0.88, t)) : 0);
-  const slot = (lane, x) => {
-    // x >= 0: along the lane (slot index); -1..0: up through the transfer; < -1: in flight
-    if (x >= 0) { const i = Math.min(1, Math.floor(x)), f = clamp(x - i, 0, 1); const a = SLOTS[Math.min(2, i)], b = SLOTS[Math.min(2, i + 1)]; return V(LANES[lane], lerp(a[0], b[0], f), lerp(a[1], b[1], f)); }
-    if (x >= -1) { const u = -x * (LIFT.length - 1), i = Math.min(LIFT.length - 2, Math.floor(u)), f = u - i; return V(LANES[lane], lerp(LIFT[i][0], LIFT[i + 1][0], f), lerp(LIFT[i][1], LIFT[i + 1][1], f)); }
-    const t = (-1 - x) * T_PER, e = LIFT[LIFT.length - 1];
-    return V(LANES[lane], e[0] + V0 * EXIT.y * t - 4.905 * t * t, e[1] + V0 * EXIT.z * t);
-  };
   const conveyor = (step, t) => (step < 5 ? 0 : step === 5 ? 0.8 * smooth(0.3, 1, t) : step === 6 ? lerp(0.8, 4.6, smooth(0.08, 0.95, t)) : 4.6);
 
   // camera for each step: target (model frame plus the robot offset), azimuth, elevation, and the size to fit
@@ -238,31 +228,37 @@ export async function mount(el, ctx) {
     const u = step + t;
     const a = armAt(step, t);
     rig.setArm(a);
-    rig.setRoller(28 * clamp(u - 2.7, 0, 2));
+    rig.setRoller(28 * clamp(u - 2.7, 0, 2)); // positive: the bottom of the roller moves back, pulling fuel under it
     rig.setTransfer(26 * clamp(u - 5, 0, 2));
     rig.setFly(70 * clamp(u - 5.4, 0, 1.6));
 
-    // fuel on the floor: taken in when the roller reaches it
-    let taken = 0;
-    for (const f of picks) {
-      const k = (s - f.sc) / 0.14;
-      if (k <= 0) { f.m.visible = true; f.m.position.copy(f.B); f.m.material.opacity = 1; f.m.scale.setScalar(1); continue; }
-      if (k >= 1) { f.m.visible = false; taken++; continue; }
-      f.m.visible = true;
-      f.m.position.set(o.x + f.xc, lerp(Y_FUEL, Y_FUEL + 0.035, k), o.z + lerp(Z_PICK, 0.24, k));
-      f.m.material.opacity = 1 - k;
-      f.m.scale.setScalar(lerp(1, 0.8, k));
-    }
-    // fuel held in the lanes, then lifted and shot
+    // the fuel: on the floor until the roller reaches it, then through the intake into its lane,
+    // then fed up the transfer and shot
     const q = conveyor(step, t);
-    held.forEach((h, i) => {
-      const shown = i < taken || step >= 4;
-      const x = h.k - clamp(q - LANE_OFF[h.lane], 0, 9);
-      const pos = slot(h.lane, x);
-      const flying = x < -1, gone = flying && ((-1 - x) * T_PER > 1.1 || step >= 7);
-      h.m.visible = shown && !gone && !(step === 5 && h.lane === 2);
-      h.m.position.copy(pos);
-    });
+    for (const f of fuel) {
+      const m = f.m, tau = u - f.uc;
+      let sq = 1, dir = 0;
+      if (tau < 0) m.position.copy(f.B);
+      else if (tau < f.done && step < 5) {
+        const [y, z, sqz, d, stage] = intake(tau, f.k);
+        // sideways from where it was picked up to the middle of its lane while it is thrown
+        const x = stage === 0 ? f.xc : stage === 1 ? lerp(f.xc, LANES[f.lane], smooth(0, 1, (tau - T_ORBIT) / T_THROW)) : LANES[f.lane];
+        m.position.set(o.x + x, o.y + y, o.z + z);
+        sq = sqz; dir = d;
+      } else {
+        const x = f.k - clamp(q - LANE_OFF[f.lane], 0, 9);
+        const [y, z, sqz, d] = fed(x, T_PER, V0);
+        m.position.set(o.x + LANES[f.lane], o.y + y, o.z + z);
+        m.visible = !(x < -1 && ((-1 - x) * T_PER > 1.1 || step >= 7));
+        if (!m.visible) continue;
+        sq = sqz; dir = d;
+      }
+      m.visible = true;
+      // squeezed (by the roller, the flex wheels or the flywheel): flatter along the squeeze, a little wider across it
+      const w = sq < 1 ? Math.pow(sq, -0.3) : 1;
+      m.rotation.x = Math.PI / 2 - dir;
+      m.scale.set(w, sq, w);
+    }
 
     // camera: clear of the step cards on a desktop (they cover the left); the text is below on a phone
     const shift = ctx.shift();

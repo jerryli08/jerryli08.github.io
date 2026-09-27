@@ -1,6 +1,7 @@
 // The line follower from our flight script, ported to JavaScript for this page, plus the small
-// simulation around it. No DOM and no three.js here, so the same code drives the live demo, the
-// step-by-step scrolly and a headless test.
+// simulation around it. No DOM and no three.js here, so the same code flies the lap ahead of time
+// (gen-flight.mjs in the page's working notes writes flight-data.js), redoes each frame's vision
+// for the flight's inset, and runs the step-by-step scrolly.
 //
 // From the script (the downward-camera line follower in our team's repo), unchanged:
 //   image 640 x 360; cv2.dilate 30 x 30, cv2.erode 20 x 20; cv2.inRange 250..255 on all channels;

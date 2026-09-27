@@ -3,34 +3,27 @@
  "remove": [
   "^hex_socket_button_head_M3x16",
   "^countersunk flat head",
-  "^Goupille_M2"
+  "^Goupille_M2",
+  "^NUCLEO-F446RE"
  ],
  "keep": [],
  "keepIndices": [
   265,
   7,
   164,
-  8,
-  169,
+  27,
+  188,
   59,
   168,
   254,
   258,
-  64,
-  95,
-  150,
-  151,
-  152,
+  96,
+  145,
   158,
-  159,
-  255,
-  234,
-  236,
-  237,
-  239
+  159
  ],
  "carbon": [
   "^Carbon Fiber Axle Rod"
  ],
- "simplify": 0.0002
+ "simplify": 0.0005
 }

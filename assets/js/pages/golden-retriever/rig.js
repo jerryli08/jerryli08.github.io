@@ -1,5 +1,7 @@
-// Shared rig for the Golden Retriever demos: loads the robot from Jerry's CAD and pivots every
-// moving part about the axis it turns on in that CAD.
+// Shared rig for the Golden Retriever scrollies: loads the robot from Jerry's CAD and pivots every
+// moving part about the axis it turns on in that CAD. The web model is the CAD with its screws,
+// nuts and washers (including the ones fused inside the servo brackets, Axon servos and SO-101
+// arm) and the arm's servo-driver board parts left out (prep-robot.mjs in the phase A folder).
 //
 // Model frame (metres, Y up, floor at y = 0): +X is the arm side (lift rails, carriage and the
 // SO-101 all sit on the +X face), the wheels turn about X, and +Z is taken as forward.
@@ -132,6 +134,7 @@ export async function loadRobot(stage, o = {}) {
     dy: 0,
     set(dy) {
       dy = Math.min(LIFT_MAX, Math.max(LIFT_MIN, dy));
+      if (dy === lift.dy && liftG.position.y === dy) return;
       lift.dy = dy;
       liftG.position.y = dy;
       lineG.scale.y = (LINE_LEN - dy) / LINE_LEN;
@@ -185,7 +188,7 @@ export const lerp = (a, b, t) => a + (b - a) * t;
 export const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 export const lerpPose = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
-/** Injects a page-scoped stylesheet once (the demos' own UI: chat, labels, HUD). */
+/** Injects a page-scoped stylesheet once (the fetch scrolly's text thread). */
 export function style(id, css) {
   if (document.getElementById(id)) return;
   const s = document.createElement('style');
@@ -193,57 +196,3 @@ export function style(id, css) {
   s.textContent = css;
   document.head.appendChild(s);
 }
-
-/**
- * Screen-space labels for points in the scene: HTML chips positioned over the canvas.
- * add(text, getWorldPos, cls) -> label; update() after the camera or the scene moves.
- */
-export function labelLayer(stage, el) {
-  const layer = document.createElement('div');
-  layer.className = 'gr-labels';
-  el.appendChild(layer);
-  const list = [];
-  const v = new THREE.Vector3();
-  const api = {
-    el: layer,
-    add(text, pos, cls = '') {
-      const d = document.createElement('div');
-      d.className = `gr-label ${cls}`;
-      d.innerHTML = `<span>${text}</span>`;
-      layer.appendChild(d);
-      const l = { el: d, pos, visible: true, set text(t) { d.firstChild.textContent = t; } };
-      list.push(l);
-      return l;
-    },
-    show(l, on) { l.visible = on; l.el.style.display = on ? '' : 'none'; },
-    clear() { for (const l of list) l.el.remove(); list.length = 0; },
-    update() {
-      const w = el.clientWidth, h = el.clientHeight;
-      stage.camera.updateMatrixWorld();
-      for (const l of list) {
-        if (!l.visible) continue;
-        const p = typeof l.pos === 'function' ? l.pos(v) : v.copy(l.pos);
-        if (!p) { l.el.style.opacity = '0'; continue; }
-        p.project(stage.camera);
-        const behind = p.z > 1;
-        const x = (p.x * 0.5 + 0.5) * w, y = (-p.y * 0.5 + 0.5) * h;
-        l.el.style.opacity = behind || x < -40 || x > w + 40 || y < -20 || y > h + 20 ? '0' : '';
-        l.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-      }
-    },
-  };
-  return api;
-}
-
-export const SHARED_CSS = `
-.gr-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
-.gr-label { position: absolute; left: 0; top: 0; will-change: transform; transition: opacity .25s; }
-.gr-label > span { position: absolute; left: 0; bottom: 8px; transform: translateX(-50%); white-space: nowrap;
-  padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.35; color: #f3eee8;
-  background: rgba(12, 10, 9, 0.78); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.gr-label::after { content: ''; position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: #ff6b35; box-shadow: 0 0 0 3px rgba(255, 107, 53, .25); }
-.gr-label.gr-accent > span { border-color: rgba(255, 107, 53, .6); color: #ffd9c9; }
-.gr-label.gr-nodot::after { display: none; }
-.gr-label.gr-nodot > span { bottom: 0; transform: translate(-50%, 50%); }
-@media (max-width: 640px) { .gr-label > span { font-size: 11px; padding: 2px 7px; } }
-`;

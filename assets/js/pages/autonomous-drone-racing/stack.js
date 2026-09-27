@@ -1,98 +1,153 @@
-// The software and hardware path from the downward camera to the motors, as the flight script and
-// the CAD have it. A 2D figure (no WebGL): tap or hover a box to read what it does.
+// The path of one command, from a downward-camera frame to the motors, as the flight script and the
+// CAD have it. A 2D scrolly (SVG, no WebGL): each step lights the boxes it is about, and a dot runs
+// along the arrows as the reader scrolls. Every picture is a pure function of (step, progress).
 const NODES = {
-  down: ['Downward camera', 'Pi Camera Module 3', 'Looks at the floor under the nose. The script reads it at 640 x 360.'],
-  pic: ['Picamera2', 'one frame per loop', 'camera.capture_array() hands the script a 640 x 360 image each time round the loop.'],
-  cv: ['OpenCV + NumPy', 'find the line', 'Dilate, erode, threshold, keep the longest blob, fit a line to it (the scrolly above goes through each step).'],
-  pd: ['PD control', 'pixels to m/s and °/s', 'Pixel and angle errors in, forward, right and yaw-rate commands out, rotated from the camera frame to the drone and clamped.'],
-  mav: ['MAVSDK-Python', 'gRPC to mavsdk_server', 'Our asyncio program sends one body-frame velocity and yaw-rate setpoint, then sleeps 0.5 s. mavsdk_server (the linux-arm64 build) runs on the Pi and speaks MAVLink.'],
-  fc: ['Flight controller', 'Offboard mode', 'Holds whatever body velocity and yaw rate it is told, and keeps the drone stable. The Pi never drives the motors itself.'],
-  motors: ['4 motors', '2216, 880 KV, 10 x 4.5 in props', 'From the CAD: the X500 frame\'s four motors, 500 mm apart on the diagonal.'],
-  fwd: ['Forward camera', 'Pi Camera Module 3', 'For obstacle avoidance: the hoops on the course carry AprilTags.'],
-  flow: ['ARK Flow', 'optical flow + distance', 'In the CAD under the nose, beside the downward camera: an optical flow camera and a distance sensor looking at the floor.'],
-  rc: ['RC transmitter', 'manual takeover', 'Teammates stood by with transmitters during test flights, ready to take over by hand.'],
+  down: ['Downward camera', 'Pi Camera Module 3'],
+  pic: ['Picamera2', 'one frame per loop'],
+  cv: ['OpenCV + NumPy', 'find the line'],
+  pd: ['PD control', 'pixels to m/s and °/s'],
+  mav: ['MAVSDK-Python', 'gRPC to mavsdk_server'],
+  fc: ['Flight controller', 'Offboard mode'],
+  motors: ['4 motors', '2216, 880 KV'],
+  fwd: ['Forward camera', 'Pi Camera Module 3'],
+  flow: ['ARK Flow', 'optical flow + distance'],
+  rc: ['RC transmitter', 'manual takeover'],
 };
+// [x, y, w] per box (height BH), the Pi's frame [x, y, w, h], and the arrows [from, to, dashed]
 const WIDE = {
-  vb: [1100, 330],
-  box: { down: [10, 45, 125], pic: [170, 45, 125], cv: [318, 45, 135], pd: [476, 45, 125], mav: [624, 45, 140], fc: [890, 45, 200], motors: [890, 255, 200], fwd: [10, 215, 125], flow: [640, 185, 190], rc: [640, 255, 190] },
-  pi: [155, 20, 624, 122],
-  arrows: [['down', 'pic'], ['pic', 'cv'], ['cv', 'pd'], ['pd', 'mav'], ['mav', 'fc', 'MAVLink over UART', ['/dev/ttyAMA0', '57,600 baud']], ['fc', 'motors'], ['flow', 'fc'], ['rc', 'fc'], ['fwd', 'pi', 'obstacle avoidance: hoops with AprilTags', null, true]],
+  vb: [820, 600], bh: 58, t1: 15, t2: 12,
+  box: { down: [30, 20, 160], fwd: [630, 20, 160], pic: [30, 160, 160], cv: [230, 160, 160], pd: [430, 160, 160], mav: [630, 160, 160],
+    flow: [30, 390, 180], fc: [290, 390, 240], rc: [610, 390, 180], motors: [330, 522, 160] },
+  pi: [14, 128, 792, 128], piLabel: 'Raspberry Pi 5: Python 3 with asyncio',
+  link: { at: [614, 310], lines: ['MAVLink over UART', '/dev/ttyAMA0, 57,600 baud'] },
+  fwdNote: { at: [622, 108], text: 'obstacles: hoops with AprilTags', anchor: 'end' },
 };
 const NARROW = {
-  vb: [360, 670],
-  box: { down: [10, 10, 200], pic: [10, 110, 200], cv: [10, 185, 200], pd: [10, 260, 200], mav: [10, 335, 200], fc: [10, 485, 200], motors: [10, 600, 200], fwd: [228, 110, 124], flow: [228, 460, 124], rc: [228, 535, 124] },
-  pi: [2, 88, 216, 330],
-  arrows: [['down', 'pic'], ['pic', 'cv'], ['cv', 'pd'], ['pd', 'mav'], ['mav', 'fc', 'MAVLink over UART', null], ['fc', 'motors'], ['flow', 'fc'], ['rc', 'fc'], ['fwd', 'pi', null, null, true]],
+  vb: [360, 466], bh: 50, t1: 13.5, t2: 11,
+  box: { down: [8, 6, 166], fwd: [186, 6, 166], pic: [20, 100, 150], cv: [190, 100, 150], pd: [190, 186, 150], mav: [20, 186, 150],
+    flow: [8, 322, 100], fc: [120, 322, 120], rc: [252, 322, 100], motors: [120, 410, 120] },
+  pi: [8, 76, 344, 196], piLabel: 'Raspberry Pi 5, Python 3',
+  link: { at: [14, 300], lines: ['MAVLink, UART'] },
+  fwdNote: null,
 };
-const BH = 52;
+const ARROWS = [['down', 'pic'], ['pic', 'cv'], ['cv', 'pd'], ['pd', 'mav'], ['mav', 'fc'], ['fc', 'motors'], ['fwd', 'pi', true], ['flow', 'fc'], ['rc', 'fc']];
+// per step: the boxes it is about, and the arrows a dot runs along (each inner list one after another)
+const STEPS = [
+  { lit: ['down', 'pic'], run: [['down-pic']] },
+  { lit: ['cv'], run: [['pic-cv']] },
+  { lit: ['pd'], run: [['cv-pd']] },
+  { lit: ['mav', 'fc'], run: [['pd-mav', 'mav-fc']], link: true },
+  { lit: ['fc', 'motors'], run: [['fc-motors']] },
+  { lit: ['fwd', 'flow', 'rc'], run: [['fwd-pi'], ['flow-fc'], ['rc-fc']] },
+];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const NS = 'http://www.w3.org/2000/svg';
 
 export async function mount(el, ctx) {
+  const reduced = ctx.reducedMotion;
   el.style.background = 'var(--bg-raise)';
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px;';
+  wrap.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(12px, 3%, 40px);box-sizing:border-box;';
   el.appendChild(wrap);
-  const info = document.createElement('p');
-  info.style.cssText = 'margin:0;min-height:3em;font-size:14px;line-height:1.5;color:var(--text-2);flex:1 1 100%;';
-  info.setAttribute('aria-live', 'polite');
-  ctx.panel.appendChild(info);
-  const say = (k) => { const n = NODES[k]; info.innerHTML = ''; const b = document.createElement('b'); b.textContent = `${n[0]}: `; b.style.color = 'var(--text)'; info.append(b, n[2]); };
-  say('pd');
-  let layout = null;
-  function draw() {
-    const narrow = el.clientWidth < 700;
-    const L = narrow ? NARROW : WIDE;
-    const [vw, vh] = L.vb;
-    // size the stage to the figure
-    el.style.height = `${Math.round(Math.min(el.clientWidth - 20, narrow ? 460 : 1180) * (vh / vw) + 20)}px`;
-    if (layout === L) return; layout = L;
-    const ns = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(ns, 'svg');
+
+  let L = null, parts = null;
+  function build() {
+    const narrow = el.clientWidth < 560;
+    const want = narrow ? NARROW : WIDE;
+    if (L === want) return false;
+    L = want;
+    const [vw, vh] = L.vb, BH = L.bh;
+    const svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', 'Data path: downward camera, Picamera2, OpenCV and NumPy, PD control and MAVSDK on the Raspberry Pi 5, then MAVLink over UART to the flight controller in Offboard mode and the four motors; the forward camera, the ARK Flow sensor and the RC transmitter feed in from the side.');
-    svg.style.cssText = `width:100%;height:100%;max-width:${narrow ? 460 : 1180}px;font-family:inherit;overflow:visible;`;
-    const E = (tag, attrs, parent = svg) => { const e = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent.appendChild(e); return e; };
+    svg.style.cssText = 'width:100%;height:100%;max-width:100%;max-height:100%;font-family:inherit;overflow:visible;';
+    const E = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent.appendChild(e); return e; };
     const defs = E('defs', {});
-    const mk = E('marker', { id: 'adr-arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    const mk = E('marker', { id: `adr-arrow-${ctx.id}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
     E('path', { d: 'M0 0L10 5L0 10z', fill: '#ff9a62' }, mk);
     const [px, py, pw, ph] = L.pi;
-    E('rect', { x: px, y: py, width: pw, height: ph, rx: 14, fill: 'rgba(61,220,132,.05)', stroke: 'rgba(61,220,132,.55)', 'stroke-dasharray': '6 5' });
-    const pl = E('text', { x: px + 12, y: py + ph - 9, fill: '#3ddc84', 'font-size': 13, 'font-weight': 650 });
-    pl.textContent = narrow ? 'Raspberry Pi 5, Python 3' : 'Raspberry Pi 5: Python 3 with asyncio';
-    const center = (k) => { const [x, y, w] = L.box[k]; return [x + w / 2, y + BH / 2]; };
+    const piRect = E('rect', { x: px, y: py, width: pw, height: ph, rx: 14, fill: 'rgba(61,220,132,.05)', stroke: 'rgba(61,220,132,.55)', 'stroke-dasharray': '6 5' });
+    const piText = E('text', { x: px + 12, y: py + ph - 10, fill: '#3ddc84', 'font-size': L.t2 + 1, 'font-weight': 650 });
+    piText.textContent = L.piLabel;
+    // box edges, for arrows between them
+    const rectOf = (k) => (k === 'pi' ? [px, py, pw, ph] : [L.box[k][0], L.box[k][1], L.box[k][2], BH]);
     const edge = (k, toward) => {
-      if (k === 'pi') { const [cx, cy] = [px + pw / 2, py + ph / 2]; const [tx, ty] = toward; const dx = tx - cx, dy = ty - cy; const s = Math.min(Math.abs((pw / 2) / (dx || 1e-6)), Math.abs((ph / 2) / (dy || 1e-6))); return [cx + dx * s, cy + dy * s]; }
-      const [x, y, w] = L.box[k], [cx, cy] = [x + w / 2, y + BH / 2], [tx, ty] = toward;
-      const dx = tx - cx, dy = ty - cy;
-      const s = Math.min(Math.abs((w / 2) / (dx || 1e-6)), Math.abs((BH / 2) / (dy || 1e-6)));
+      const [x, y, w, h] = rectOf(k), cx = x + w / 2, cy = y + h / 2, dx = toward[0] - cx, dy = toward[1] - cy;
+      const s = Math.min(Math.abs(w / 2 / (dx || 1e-6)), Math.abs(h / 2 / (dy || 1e-6)));
       return [cx + dx * s, cy + dy * s];
     };
-    const labels = [];
-    for (const [a, b, l1, l2, dashed] of L.arrows) {
-      const ca = a === 'pi' ? [px + pw / 2, py + ph / 2] : center(a), cb = b === 'pi' ? [px + pw / 2, py + ph / 2] : center(b);
-      let [x1, y1] = edge(a, cb), [x2, y2] = edge(b, ca);
-      if (b === 'pi' && !narrow) { x2 = x1 + 190; y2 = py + ph; [x1, y1] = edge(a, [x2, y2]); }
-      E('line', { x1, y1, x2, y2, stroke: '#ff9a62', 'stroke-width': 2, 'marker-end': 'url(#adr-arrow)', ...(dashed ? { 'stroke-dasharray': '5 4' } : {}) });
-      if (l1) labels.push([l1, l2, (x1 + x2) / 2, (y1 + y2) / 2, b === 'pi']);
+    const center = (k) => { const [x, y, w, h] = rectOf(k); return [x + w / 2, y + h / 2]; };
+    const arrows = {};
+    for (const [a, b, dashed] of ARROWS) {
+      let p1, p2;
+      if (b === 'pi') { const [x, y, w] = rectOf(a); p1 = [x + w / 2, y + BH]; p2 = [x + w / 2, py]; } // straight down into the Pi's frame
+      else { p1 = edge(a, center(b)); p2 = edge(b, center(a)); }
+      const line = E('line', { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: '#ff9a62', 'stroke-width': 2, 'marker-end': `url(#adr-arrow-${ctx.id})`, ...(dashed ? { 'stroke-dasharray': '5 4' } : {}) });
+      arrows[`${a}-${b}`] = { line, p1, p2, o: -1 };
     }
+    const link = E('g', {});
+    L.link.lines.forEach((t, i) => { const e = E('text', { x: L.link.at[0], y: L.link.at[1] + i * (L.t2 + 4), fill: i ? 'rgba(238,233,227,.6)' : 'rgba(238,233,227,.88)', 'font-size': i ? L.t2 - 0.5 : L.t2 }, link); e.textContent = t; });
+    if (L.fwdNote) { const e = E('text', { x: L.fwdNote.at[0], y: L.fwdNote.at[1], 'text-anchor': L.fwdNote.anchor, fill: 'rgba(238,233,227,.7)', 'font-size': L.t2 }); e.textContent = L.fwdNote.text; }
+    const boxes = {};
     for (const [k, [x, y, w]] of Object.entries(L.box)) {
-      const g = E('g', { tabindex: 0, role: 'button', 'aria-label': `${NODES[k][0]}: ${NODES[k][2]}`, style: 'cursor:pointer;outline:none' });
-      const r = E('rect', { x, y, width: w, height: BH, rx: 10, fill: '#1b1714', stroke: 'rgba(238,233,227,.22)' }, g);
-      const t1 = E('text', { x: x + w / 2, y: y + 22, 'text-anchor': 'middle', fill: '#eee9e3', 'font-size': 14, 'font-weight': 650 }, g); t1.textContent = NODES[k][0];
-      const t2 = E('text', { x: x + w / 2, y: y + 40, 'text-anchor': 'middle', fill: 'rgba(238,233,227,.62)', 'font-size': 11.5 }, g); t2.textContent = NODES[k][1];
-      const on = () => { svg.querySelectorAll('rect[data-hot]').forEach((q) => { q.removeAttribute('data-hot'); q.setAttribute('stroke', 'rgba(238,233,227,.22)'); }); r.setAttribute('data-hot', ''); r.setAttribute('stroke', '#ff6b35'); say(k); };
-      g.addEventListener('pointerenter', on); g.addEventListener('click', on); g.addEventListener('focus', on);
+      const g = E('g', {});
+      const r = E('rect', { x, y, width: w, height: BH, rx: 10, fill: '#1b1714', stroke: 'rgba(238,233,227,.22)', 'stroke-width': 1.5 }, g);
+      const t1 = E('text', { x: x + w / 2, y: y + BH * 0.44, 'text-anchor': 'middle', fill: '#eee9e3', 'font-size': L.t1, 'font-weight': 650 }, g); t1.textContent = NODES[k][0];
+      const t2 = E('text', { x: x + w / 2, y: y + BH * 0.76, 'text-anchor': 'middle', fill: 'rgba(238,233,227,.62)', 'font-size': L.t2 }, g); t2.textContent = NODES[k][1];
+      boxes[k] = { g, r, s: '' };
     }
-    for (const [l1, l2, mx, my, side] of labels) {
-      const x = narrow ? mx + 8 : side ? mx + 16 : mx, anchor = narrow || side ? 'start' : 'middle';
-      const t = E('text', { x, y: narrow ? my + 4 : side ? my + 22 : my - 10, 'text-anchor': anchor, fill: 'rgba(238,233,227,.82)', 'font-size': 12 });
-      t.textContent = l1;
-      (l2 || []).forEach((line, i) => { const t2 = E('text', { x, y: my + 22 + i * 15, 'text-anchor': anchor, fill: 'rgba(238,233,227,.55)', 'font-size': 11 }); t2.textContent = line; });
-    }
+    const dots = [0, 1, 2].map(() => E('circle', { r: narrow ? 5 : 6, fill: '#ff6b35', stroke: '#fff1e2', 'stroke-width': 1.5, opacity: 0 }));
     wrap.replaceChildren(svg);
+    parts = { svg, boxes, arrows, dots, link, piRect, piText, linkO: -1 };
+    return true;
   }
-  draw();
-  const ro = new ResizeObserver(() => draw());
+
+  // how lit each box is at a step: 1 now, 0.62 already covered, 0.34 still to come
+  const firstLit = {};
+  STEPS.forEach((s, i) => s.lit.forEach((b) => { if (!(b in firstLit)) firstLit[b] = i; }));
+  const levelAt = (b, i) => (STEPS[i].lit.includes(b) ? 1 : firstLit[b] < i ? 0.62 : 0.34);
+  const arrowAt = (a, i) => (STEPS[i].run.some((r) => r.includes(a)) ? 1 : STEPS.slice(0, i).some((s) => s.run.some((r) => r.includes(a))) ? 0.6 : 0.25);
+
+  let last = [0, 0];
+  function setProgress(p, step, stepP) {
+    last = [step, stepP];
+    build();
+    step = clamp(step | 0, 0, STEPS.length - 1);
+    const prev = Math.max(0, step - 1);
+    const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+    for (const [b, o] of Object.entries(parts.boxes)) {
+      const lv = lerp(levelAt(b, prev), levelAt(b, step), k);
+      const s = lv.toFixed(3);
+      if (s === o.s) continue;
+      o.s = s;
+      o.g.setAttribute('opacity', String(0.25 + 0.75 * lv));
+      const on = lv > 0.9;
+      o.r.setAttribute('stroke', on ? '#ff6b35' : 'rgba(238,233,227,.22)');
+      o.r.setAttribute('fill', on ? '#2a1b12' : '#1b1714');
+    }
+    for (const [a, o] of Object.entries(parts.arrows)) {
+      const lv = lerp(arrowAt(a, prev), arrowAt(a, step), k).toFixed(3);
+      if (lv !== o.o) { o.line.setAttribute('opacity', lv); o.o = lv; }
+    }
+    const lk = (lerp(STEPS[prev].link ? 1 : 0.55, STEPS[step].link ? 1 : 0.55, k)).toFixed(3);
+    if (lk !== parts.linkO) { parts.link.setAttribute('opacity', lk); parts.linkO = lk; }
+    // a dot runs along this step's arrows as the reader scrolls through it
+    const runs = STEPS[step].run;
+    parts.dots.forEach((d, i) => {
+      const r = runs[i];
+      if (!r || reduced) { d.setAttribute('opacity', '0'); return; }
+      const f = smooth(0.12, 0.92, stepP) * r.length, j = Math.min(r.length - 1, Math.floor(f)), g = f - j;
+      const { p1, p2 } = parts.arrows[r[j]];
+      d.setAttribute('cx', lerp(p1[0], p2[0], g).toFixed(1));
+      d.setAttribute('cy', lerp(p1[1], p2[1], g).toFixed(1));
+      d.setAttribute('opacity', (smooth(0.04, 0.14, stepP) * (1 - smooth(0.93, 1, stepP))).toFixed(3));
+    });
+  }
+  setProgress(0, 0, 0);
+  const ro = new ResizeObserver(() => { if (build()) setProgress(0, last[0], last[1]); });
   ro.observe(el);
-  return { dispose() { ro.disconnect(); wrap.remove(); info.remove(); } };
+  return { setProgress, dispose() { ro.disconnect(); wrap.remove(); } };
 }
