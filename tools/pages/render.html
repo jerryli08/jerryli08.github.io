@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CAD render</title>
+<style>html,body{margin:0;height:100%;background:#0b0b0c}#s{position:fixed;inset:0}</style>
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js","three/addons/":"/assets/vendor/addons/"}}</script>
+<div id="s"></div>
+<script type="module">
+// Renders one GLB for thumbnails and posters: tools/pages/render.mjs drives it.
+import { createStage } from '/assets/js/lib/stage.js';
+const q = new URLSearchParams(location.search);
+const el = document.getElementById('s');
+if (q.get('bg')) document.body.style.background = q.get('bg');
+const stage = createStage(el, { controls: false, hint: false, shadow: q.get('shadow') !== '0', background: q.get('bg') || 'transparent', pixelRatio: 1 });
+const model = await stage.load(q.get('src'));
+for (const re of (q.get('hide') || '').split(',').filter(Boolean)) for (const p of stage.part(new RegExp(re))) p.visible = false;
+stage.frame(model, { azimuth: +q.get('az') || 35, elevation: +q.get('el') || 22, pad: +q.get('pad') || 1.1 });
+stage.invalidate();
+setTimeout(() => { document.body.dataset.ready = '1'; }, 1500);
+</script>
