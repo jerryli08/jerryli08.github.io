@@ -102,7 +102,7 @@ ${PREVIEW ? '<meta name="robots" content="noindex">\n' : ''}${extra}</head>`;
 function nav({ home = false } = {}) {
   const pre = home ? '' : '/';
   return `<nav class="nav" aria-label="Main">
-  <a class="wordmark" href="/">Jerry Li</a>
+  <a class="wordmark" href="/" aria-label="Jerry Li, home">jerryli.design</a>
   <div class="nav-links">
     <a href="${pre}#work">Work</a>
     <a href="${pre}#about">About</a>

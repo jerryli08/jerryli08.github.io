@@ -62,7 +62,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   padding: 18px var(--gutter) 16px;
   background: linear-gradient(var(--bg) 72%, rgba(11, 10, 9, 0));
 }
-.wordmark { font-weight: 800; font-stretch: 125%; font-size: 17px; letter-spacing: -0.01em; }
+.wordmark { font-weight: 650; font-stretch: 125%; font-size: 17px; letter-spacing: -0.01em; }
 .nav-links { display: flex; align-items: center; gap: clamp(12px, 1.6vw, 24px); font-size: 14px; color: var(--text-2); }
 .nav-links a { transition: color 0.2s; }
 .nav-links a:hover { color: var(--text); }
@@ -652,14 +652,14 @@ a.rx-m:hover > img { transform: scale(1.02); }
 .rx-step { display: flex; align-items: center; min-height: var(--step-h, 80vh); max-width: 1180px; margin: 0 auto; }
 .rx-step:first-child { min-height: calc(var(--step-h, 80vh) + 10vh); }
 .rx-step-card {
-  pointer-events: auto; width: min(400px, 100%); padding: 20px 22px; border-radius: 16px;
+  pointer-events: auto; width: min(540px, 100%); padding: 24px 28px; border-radius: 16px;
   background: rgba(12, 10, 9, 0.76); border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.9);
   opacity: 0.5; transition: opacity 0.35s var(--ease);
 }
 .rx-step.is-active .rx-step-card { opacity: 1; }
-.rx-step-card p, .rx-step-card li { font-size: 16px; line-height: 1.55; }
-.rx-step-card h3 { font-size: 18px; }
+.rx-step-card p, .rx-step-card li { font-size: 22px; line-height: 1.5; } /* 1.4x, Jerry Sept 26 */
+.rx-step-card h3 { font-size: 25px; }
 
 /* split: picture and text side by side, alternating */
 .rx-split-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
@@ -756,7 +756,8 @@ html.rx-lb-open { overflow: hidden; }
   .rx-step { align-items: flex-end; }
   .rx-step-card { position: sticky; bottom: 14px; width: 100%; padding: 16px 18px; }
   .rx-step:not(.is-active) .rx-step-card { opacity: 0; pointer-events: none; } /* no old card drifting over the model */
-  .rx-step-card p, .rx-step-card li { font-size: 15px; }
+  .rx-step-card p, .rx-step-card li { font-size: 20px; }
+  .rx-step-card h3 { font-size: 22px; }
   .rx-lb figure { padding: 60px 12px 84px; }
   .rx-lb-prev, .rx-lb-next { top: auto; bottom: 18px; transform: none; }
   .rx-lb-prev { left: calc(50% - 56px); }

@@ -67,18 +67,18 @@ export async function mount(el, ctx) {
   };
   // camera for each step as a function of the progress through it
   const V = (obj, o) => stage.frame(obj, { ...o, apply: false });
-  const views = [
-    (sp) => V(gears, { azimuth: 90, elevation: 12 + 4 * sp, pad: 1.45 }),
-    (sp) => V([...parts.pinion, ...encoderSet], { azimuth: 90 - 30 * sp, elevation: 16 + 10 * sp, pad: 1.9 }),
-    (sp) => V(beltSet, { azimuth: lerp(58, 118, sp), elevation: lerp(42, 32, sp), pad: 1.3 }),
-    (sp) => {
-      // close on the buttons, then pull back along the car to show the beam
-      const near = V([...btnL, ...btnR, ...parts.mountPlate], { azimuth: 6, elevation: 50, pad: 1.6 });
-      const far = V(car, { azimuth: 30, elevation: 28, pad: 1.0, offset: [0, 0, -0.1] });
-      return blend(near, far, smooth(0.3, 0.55, sp));
-    },
-    (sp) => V(car, { azimuth: lerp(250, 212, sp), elevation: lerp(30, 20, sp), pad: 1.04 }),
+  // Each step's camera is framed ONCE, with the drivetrain at rest, and scrolling only blends
+  // between those fixed views. Framing the spinning gears on every scroll frame made the camera
+  // shake, because a turning gear's bounding box changes size as it turns.
+  drive.set(0);
+  const fixed = [
+    [V(gears, { azimuth: 90, elevation: 12, pad: 1.45 }), V(gears, { azimuth: 90, elevation: 16, pad: 1.45 })],
+    [V([...parts.pinion, ...encoderSet], { azimuth: 90, elevation: 16, pad: 1.9 }), V([...parts.pinion, ...encoderSet], { azimuth: 60, elevation: 26, pad: 1.9 })],
+    [V(beltSet, { azimuth: 58, elevation: 42, pad: 1.3 }), V(beltSet, { azimuth: 118, elevation: 32, pad: 1.3 })],
+    [V([...btnL, ...btnR, ...parts.mountPlate], { azimuth: 6, elevation: 50, pad: 1.6 }), V(car, { azimuth: 30, elevation: 28, pad: 1.0, offset: [0, 0, -0.1] })],
+    [V(car, { azimuth: 250, elevation: 30, pad: 1.04 }), V(car, { azimuth: 212, elevation: 20, pad: 1.04 })],
   ];
+  const views = fixed.map(([a, b], i) => (sp) => blend(a, b, i === 3 ? smooth(0.3, 0.55, sp) : sp));
   const TEXT = [
     '8T pinion : 48T axle gear = 1 : 6. The motor turns 6 times per wheel turn.',
     '8T pinion : 40T encoder gear = 1 : 5. The encoder turns 1.2 times per wheel turn.',
