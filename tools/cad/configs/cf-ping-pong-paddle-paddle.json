@@ -1,0 +1,9 @@
+{
+ "prefix": "paddle",
+ "keep": [
+  "^carbon blade$",
+  "^red rubber$",
+  "^black rubber$"
+ ],
+ "note": "input: paddle GLB split by material first (/home/claude/work/static-models/model-prep/split.mjs)"
+}

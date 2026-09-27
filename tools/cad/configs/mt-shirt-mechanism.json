@@ -1,0 +1,9 @@
+{
+ "prefix": "mt",
+ "remove": ["^DDJ-STDLOW-LUOSI"],
+ "keep": ["^DDJ-STDLOW2", "^DDJ-STDLOW-ZHOUCHENG", "^DDJ-STDLOW-GEAR6", "^2802-", "^2317-4008-0024:",
+          "^3422-0006-0020 core", "^3422 series", "^monkeybelt", "^M4 x 10", "^1501-",
+          "^Body", "^AA - R6", "^Spring", "^Contact", "^Spur Gear", "^\\[LS",
+          "^Bottom:", "^Top:", "^Pulsador", "^Pieza5", "^Pin[12]:", "^Led",
+          "^Component(38|52|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|71|72|73):"]
+}

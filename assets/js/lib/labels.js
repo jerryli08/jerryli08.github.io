@@ -19,7 +19,11 @@ export function labelLayer(stage) {
   const labels = [];
   const v = new THREE.Vector3();
 
-  /** A label at point p ([x, y, z] in world metres, or an Object3D whose centre it follows). side 'l' puts the text left of the dot. minW: hide on stages narrower than this. */
+  /**
+   * A label at point p ([x, y, z] in world metres, or an Object3D whose centre it follows). side 'l' puts the
+   * text left of the dot. minW: hide on stages narrower than this. Empty text draws the dot only;
+   * l.setText(t) changes the text later.
+   */
   function label(text, p, o = {}) {
     const el = css(document.createElement('div'), { position: 'absolute', left: '0', top: '0', opacity: '0', whiteSpace: 'nowrap', willChange: 'transform' });
     const dot = css(document.createElement('span'), {
@@ -31,10 +35,11 @@ export function labelLayer(stage) {
       background: 'rgba(10,8,7,.74)', border: '1px solid rgba(255,255,255,.14)',
     });
     if (o.side === 'l') pill.style.right = '10px'; else pill.style.left = '10px';
-    pill.textContent = text;
+    const setText = (t) => { pill.textContent = t ?? ''; pill.style.display = t == null || t === '' ? 'none' : ''; };
+    setText(text);
     el.append(dot, pill);
     layer.appendChild(el);
-    const l = { el, p: Array.isArray(p) ? new THREE.Vector3(...p) : null, obj: p && p.isObject3D ? p : null, a: 0, minW: o.minW || 0, shown: -1, x: NaN, y: NaN };
+    const l = { el, pill, setText, p: Array.isArray(p) ? new THREE.Vector3(...p) : null, obj: p && p.isObject3D ? p : null, a: 0, minW: o.minW || 0, shown: -1, x: NaN, y: NaN };
     labels.push(l);
     return l;
   }

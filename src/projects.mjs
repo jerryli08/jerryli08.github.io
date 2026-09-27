@@ -405,18 +405,24 @@ export const projects = [
   {
     slug: 'powerplay-offseason',
     kind: 'main',
-    draft: true,
     title: 'PowerPlay Off-Season Robot',
     subtitle: 'My first CAD-designed robot',
-    short: 'The off-season robot I built after PowerPlay, and the first robot I ever designed in CAD.',
+    short: 'An off-season FTC robot with string-driven drawer slides and a belted virtual four bar, and the first robot I ever designed in CAD.',
     org: 'FIRST Tech Challenge',
-    date: '2023',
+    date: 'Apr to Aug 2023',
     year: '2023',
     team: 'S.T.A.T.I.C., FTC 18996',
-    body: [
-      { h: 'Overview', p: ['The first robot I designed in CAD, built in the off-season after the 2022-23 PowerPlay season.'] },
+    tools: ['Fusion 360', '3D printing', 'Drawer slides', 'String-driven lift', 'Belted virtual four bar', 'Servo gearing'],
+    stats: [
+      { v: '1st', l: 'Robot I designed in CAD' },
+      { v: '2 x 3', l: 'Lift towers, each three string-driven drawer slides' },
     ],
-    media: [],
+    body: [
+      { h: 'Overview', p: ['The first robot I designed in CAD, built in the off-season after the 2022-23 PowerPlay season. It lifts with two towers of string-driven drawer slides and swings the cone with a belted virtual four bar on top of them.'] },
+    ],
+    media: [
+      { v: 'powerplay-offseason/hero-arm-swing.mp4', c: 'Aug 2023: the belted arm swinging under servo power, driven from a handheld servo tester', tall: true },
+    ],
   },
 
   // ------------------------------------------------------------------ HACKATHONS
@@ -643,7 +649,15 @@ export const projects = [
 
   // ------------------------------------------------------------------ 3D MODELS
   { slug: 'voronoi-face', kind: 'object', draft: true, title: 'Voronoi Face', short: 'A face sculpted as a Voronoi lattice.', year: '', media: [] },
-  { slug: 'hex-napkin-holder', kind: 'object', draft: true, title: 'Hexagonal Napkin Holder', short: 'A 3D-printed hexagonal napkin holder.', year: '', media: [] },
+  { slug: 'cf-ping-pong-paddle', kind: 'object', title: 'Carbon Fiber Ping Pong Paddle', short: 'A table tennis paddle and its mold, designed for a wet carbon fiber layup.', date: '', year: '', tools: ['Fusion 360', 'Mold design', 'Draft analysis'], media: [{ i: '/assets/media/prints/paddle-render.webp', c: 'My render of the paddle: carbon fiber blade and handle, rubber on both faces' }] },
+  { slug: 'gt3rs-wheel', kind: 'object', title: 'GT3 RS Wheel Replica', short: 'A replica of the Porsche 911 GT3 RS wheel, made to experiment with vapor smoothing.', date: '', year: '', media: [{ i: '/assets/media/gt3rs-wheel/cad-wheel.webp', c: 'The wheel, rendered from my CAD' }] },
+  { slug: 'voronoi-vase', kind: 'object', title: 'Voronoi Vase', short: 'A 3D-printed vase with an open Voronoi lattice wall.', date: 'Oct 2023', year: '2023', media: [{ i: '/assets/media/prints/vase-roses.webp', c: 'The vase with red roses' }, { i: '/assets/media/prints/vase-flowers-mixed.webp', c: 'With a mixed bouquet, Oct 2023' }] },
+  { slug: 'green-garden-print', kind: 'object', title: 'Green Garden, Remade in Print', short: 'A painting by Carmen Herrera, remade as a multi-colour 3D print.', org: 'Spanish project', date: 'Jun 2025', year: '2025', media: [{ i: '/assets/media/prints/green-garden-print.webp', c: 'The finished print' }, { i: '/assets/media/prints/green-garden-slicer.webp', c: 'Sliced for four colours' }] },
+  { slug: 'iphone-voronoi-case', kind: 'object', title: 'iPhone 11 Pro Voronoi Case', short: 'A TPU phone case with a Voronoi pattern across the back.', date: '', year: '', media: [{ i: '/assets/media/iphone-voronoi-case/cad-case.webp', c: 'The case, rendered from my CAD' }] },
+  { slug: 'hex-napkin-holder', kind: 'object', title: 'Hexagonal Napkin Holder', short: 'A napkin holder with hexagon lattice walls.', date: 'Jun 2024', year: '2024', media: [{ i: '/assets/media/prints/napkin-holder-supports.webp', c: 'The holder and the support material that came out of it' }, { v: '/assets/media/prints/napkin-holder-turn.mp4', c: 'Turning it over: the lattice walls and floor' }] },
+  { slug: 'voronoi-pencil-holder', kind: 'object', title: 'Voronoi Pencil Holder', short: 'A Voronoi-pattern case for two mechanical pencils.', date: '', year: '', media: [{ i: '/assets/media/voronoi-pencil-holder/cad-pencil-holder.webp', c: 'The holder and its two inserts, rendered from my CAD' }] },
+  { slug: 'kindred-board-game', kind: 'object', title: 'Kindred Board Game', short: 'A Candy Land style board game for the novel Kindred, designed in CAD.', org: 'English project', date: 'Jun 2025', year: '2025', body: [{ h: 'Overview', p: ['For an English project I designed a Candy Land style board game in CAD, based on the novel Kindred by Octavia E. Butler. The path runs from Maryland in the early 1800s to Altadena, California, in 1976.'] }], media: [{ i: '/assets/media/prints/kindred-board-cad.webp', c: 'The board in CAD' }] },
+  { slug: 'triple-t', kind: 'object', title: 'Triple T', short: 'Triple T, printed in gold.', date: 'May 2025', year: '2025', media: [{ i: '/assets/media/prints/triple-t.webp', c: 'Triple T' }] },
 
   // ------------------------------------------------------------------ ARCHIVE
   {
@@ -667,10 +681,12 @@ export const projects = [
     title: 'FTC POWERPLAY Robot',
     short: 'My first season as captain, and the team\'s first time advancing to regionals.',
     org: 'S.T.A.T.I.C., FTC 18996',
+    role: 'Team captain',
     date: 'Sep 2022 to Feb 2023',
     year: '2023',
     body: [{ h: 'Overview', p: ['2022-23 was my first season as captain and our first year advancing to regionals.'] }],
     media: [{ v: 'videos/ftc-2023.mp4', c: 'The 2022-23 robot' }],
+    links: [{ label: 'Official results', href: 'https://ftc-events.firstinspires.org/2022/team/18996' }],
   },
   {
     slug: 'robot-tour',
@@ -694,7 +710,7 @@ export const projects = [
     slug: 'mt-shirt',
     kind: 'main',
     title: 'Monkeytype Shirt',
-    short: 'A shirt I designed for Monkeytype, sold on their official store.',
+    short: 'A shirt I designed for Monkeytype, sold on their official store: the print is an exploded view of a servo-driven mechanism I designed in CAD.',
     org: 'Monkeytype',
     date: 'May to Jun 2025',
     year: '2025',
@@ -714,8 +730,10 @@ export const projects = [
     org: 'Personal project',
     date: 'Jun 2025',
     year: '2025',
+    tools: ['Fusion 360', '3D printing (FDM)', 'Arduino Nano (C++)', 'MT6701 magnetic angle sensor', '16x2 character LCD', 'Perfboard soldering'],
     body: [{ h: 'Overview', p: ['I made an odometer for my family\'s stationary bike. To challenge myself I gave myself one day, and finished in 12 hours.'] }],
     media: [{ v: 'videos/bike-odometer.mp4', c: 'Demo' }],
+    links: [{ label: 'Code on GitHub', href: 'https://github.com/jerryli08/bikeOdometer' }],
     cad: 'https://a360.co/4gWhdq9',
   },
   {
@@ -728,14 +746,15 @@ export const projects = [
     year: '2022',
     body: [{ h: 'Overview', p: ['The 2021-22 robot. Unfortunately it was not finished in time, so we did not compete that season.'] }],
     media: [{ v: 'videos/ftc-2022.mp4', c: 'The 2021-22 robot' }],
+    links: [{ label: 'Official record', href: 'https://ftc-events.firstinspires.org/2021/team/18996' }],
   },
   {
     slug: 'ftc-ultimate-goal',
     kind: 'archive',
     title: 'FTC ULTIMATE GOAL Robot',
     short: 'My first FTC season. I was the team\'s only programmer.',
-    org: 'S.T.A.T.I.C., FTC 18996',
-    date: 'Sep 2020 to Jan 2021',
+    org: 'FTC team 18996',
+    date: '2020-21 season',
     year: '2021',
     body: [{ h: 'Overview', p: ['2020-21 was my first year in FTC, and I was the only programmer on the team.'] }],
     media: [{ v: 'videos/ftc-2021.mp4', c: 'The 2020-21 robot' }],
@@ -743,7 +762,6 @@ export const projects = [
   {
     slug: 'cty-2023',
     kind: 'archive',
-    draft: true,
     title: 'Breadboard Game Console',
     subtitle: 'CTY, summer 2023',
     short: 'A breadboard circuit with an LCD that ran several games, played with push buttons.',
@@ -751,7 +769,7 @@ export const projects = [
     date: 'Summer 2023',
     year: '2023',
     body: [{ h: 'Overview', p: ['On a breadboard we built a circuit with an LCD display and programmed it to run several different games, with buttons to jump and play.'] }],
-    media: [],
+    media: [{ v: 'cty-2023/hero-run-or-pong.mp4', c: 'Pick a game: "Run or Pong?", then Run: jump the blocks while the score counts up' }],
   },
   {
     slug: 'cardboard-simulator',
@@ -762,7 +780,7 @@ export const projects = [
     date: 'Mar 2020',
     year: '2020',
     body: [{ h: 'Overview', p: ['When I was 11, I made a racing simulator out of cardboard, duct tape and conductive tape, wired with alligator clips to a Makey Makey keyboard emulator.'] }],
-    media: [{ v: 'videos/cardboard-simulator-demo.mp4', c: 'Demo', tall: true }],
+    media: [{ i: 'cardboard-simulator/still-wheel-mount.webp', c: 'The second version: a duct-taped cardboard wheel on a cardboard stand, with alligator clips running to the board on the desk' }],
   },
 ];
 

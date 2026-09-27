@@ -266,6 +266,28 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .archive-head p { font-size: 15px; color: var(--muted); }
 .grid-archive .card-img > img { filter: saturate(0.7) brightness(0.85); }
 .grid-archive .card:hover .card-img > img, .grid-archive .card:focus-visible .card-img > img { filter: none; }
+/* prints and small models: photo prints at their own aspect ratio, tilted a little, title on the
+   print's bottom margin; hovering straightens one. --ar, --tilt and --dy come from the build */
+.collage { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 40px 30px; padding: 14px 0 26px; }
+.pcard {
+  --h: clamp(140px, 12vw, 185px);
+  display: block; flex: none; width: calc(var(--h) * var(--ar) + 18px); max-width: min(100%, 420px);
+  padding: 9px 9px 0; border-radius: 5px; background: #efe9e1; color: #3f3831;
+  box-shadow: 0 22px 36px -22px rgba(0, 0, 0, 0.9), 0 2px 5px rgba(0, 0, 0, 0.3);
+  transform: translateY(var(--dy, 0px)) rotate(var(--tilt, 0deg)); transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.pcard-img { position: relative; display: block; aspect-ratio: var(--ar, 1.3333); border-radius: 2px; overflow: hidden; background: #d9d1c7; }
+.pcard-img > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pcard-none { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, #ddd5cb 0 9px, #d4cbc0 9px 18px); }
+.pcard-t { display: block; padding: 8px 4px 11px; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; text-wrap: balance; }
+.pcard:hover, .pcard:focus-visible { transform: translateY(calc(var(--dy, 0px) - 5px)) rotate(0deg) scale(1.04); box-shadow: 0 30px 44px -24px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(255, 107, 53, 0.7); }
+.pcard:focus-visible { outline: none; }
+@media (max-width: 640px) {
+  .collage { gap: 26px 14px; padding-bottom: 12px; }
+  .pcard { width: calc(50% - 8px); padding: 6px 6px 0; transform: translateY(calc(var(--dy, 0px) * 0.4)) rotate(calc(var(--tilt, 0deg) * 0.6)); }
+  .pcard-t { font-size: 12px; padding: 6px 2px 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .pcard { transition: none; } }
 .about { padding: 72px var(--gutter) 20px; }
 .home .footer { padding: 36px var(--gutter) 32px; }
 
@@ -758,6 +780,10 @@ a.rx-m:hover > img { transform: scale(1.02); }
 .rx-stats { margin-top: 0; }
 .rx-h2 + .rx-stats { margin-top: 22px; }
 .rx-end .block-title { margin-top: 72px; }
+.rx-cad-link { margin-top: 72px; font-size: 15px; }
+.rx-cad-link a { color: var(--text-2); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.25); text-underline-offset: 4px; transition: color 0.2s, text-decoration-color 0.2s; }
+.rx-cad-link a:hover, .rx-cad-link a:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
+.rx-cad-link + .next { margin-top: 28px; }
 .rx-err { margin-top: 24px; padding: 14px 16px; border-radius: 12px; border: 1px dashed #e8c547; color: #e8c547; font-size: 14px; }
 
 /* shared controls (assets/js/lib/ui.js) */

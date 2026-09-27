@@ -1,0 +1,5 @@
+{
+  "prefix": "odo",
+  "remove": [],
+  "keep": ["^handlebar clamp$"]
+}

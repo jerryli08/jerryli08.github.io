@@ -202,46 +202,86 @@ function projectUVs(mesh, mode, tile) {
 }
 
 // The material pass: STEP exports carry only a colour, so the colour decides the finish (as on the
-// landing scene). Materials that already have textures are left alone. userData.rxUv says which UV
-// projection and tile the finish wants.
+// landing scene), unless the page or the GLB names one (see FINISHES). Materials that already have
+// textures are left alone. userData.rxUv says which UV projection and tile the finish wants.
 const RUBBER = /wheel|tire|tyre|tread|o.?ring|grommet|belt(?![\w\s-]*(pulley|sprocket|clamp|idler|tension))/i;
 const CARBON = /carbon|\bcf[_\s-]|cf_|_cf\b/i;
+// finishes a page (load options, @turntable model fields) or the GLB (material extras.finish,
+// written by tools/optimize-cad.mjs "finish") can ask for instead of the colour's guess:
+//   printed   printed plastic with faint layer lines, whatever the colour (green PLA is not a PCB,
+//             grey PLA is not aluminium)
+//   moulded   injection-moulded plastic: smooth, slightly glossy, no layer lines ('smooth' too)
+//   anodized  anodized metal in the part's colour: smooth, no brushing
+//   metal     brushed metal in the part's colour
+//   rubber, carbon   as the name-based guesses
+//   plain     the colour's finish without the fine surface detail (no bump or roughness texture)
+const FINISHES = ['printed', 'moulded', 'anodized', 'metal', 'rubber', 'carbon', 'plain'];
 // the part's own name and its parent's (a multi-material part is a group of meshes); not the whole
 // assembly chain, or every part of a "wheel module" would turn to rubber
 function nameChain(o) { return `${o.name} ${o.parent?.userData?.rxModel ? '' : o.parent?.name || ''}`; }
+// a RegExp (its g / y flags dropped, so test() has no state) from a RegExp or a string, else null
+function toRx(x) {
+  if (x instanceof RegExp) return x.global || x.sticky ? new RegExp(x.source, x.flags.replace(/[gy]/g, '')) : x;
+  return typeof x === 'string' && x ? new RegExp(x, 'i') : null;
+}
+// Printed layer lines are 0.2 mm apart: at most sizes a layer is under a pixel, and the bump of
+// ridges that fine aliases into a woven, carbon-like moire on big flat plates; the carbon twill's
+// tows do the same, into a dithered noise. The bump fades out by how many pixels one feature
+// covers on screen: full from 3 px, gone below 1.5 px. period: feature size in UV; axis 'v' for
+// the layers (they repeat up the part), 'uv' for the weave.
+function bumpFade(period, axis) {
+  const d = axis === 'v' ? 'abs( a.y ) + abs( b.y )' : 'max( abs( a.x ) + abs( b.x ), abs( a.y ) + abs( b.y ) )';
+  const fn = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <bumpmap_pars_fragment>', THREE.ShaderChunk.bumpmap_pars_fragment
+      .replace('vec2 dHdxy_fwd() {', `float rxBumpFade( vec2 a, vec2 b ) { return smoothstep( 1.5, 3.0, ${period.toFixed(6)} / max( ${d}, 1e-8 ) ); }\n\tvec2 dHdxy_fwd() {`)
+      .replace('return vec2( dBx, dBy );', 'return vec2( dBx, dBy ) * rxBumpFade( dSTdx, dSTdy );'));
+  };
+  const key = `rxfade${period.toFixed(5)}${axis}`;
+  return (m) => { m.onBeforeCompile = fn; m.customProgramCacheKey = () => key; };
+}
+const layerFade = bumpFade(1 / 32, 'v'); // a tile of the layers texture holds 32 layers
+const twillFade = bumpFade(1 / 8, 'uv'); // and of the twill, 8 tows each way
 function cadMaterial(mat, kind) {
   if (!mat || !mat.color || mat.map || mat.normalMap || mat.roughnessMap || mat.metalnessMap) return mat;
   const c = mat.color.clone(), hsl = {};
   c.getHSL(hsl, THREE.SRGBColorSpace);
   // CAD black is a colour name, not a physical albedo: real black plastic, anodizing and powder
   // coat reflect about 2-4 %. Lifting pure black to that keeps it black but lets it show its shape.
-  if (hsl.l < 0.1) { const f = 0.022; c.r = Math.max(c.r, f); c.g = Math.max(c.g, f); c.b = Math.max(c.b, f); }
+  if (hsl.l < 0.1) { const f = kind === 'anodized' ? 0.045 : 0.022; c.r = Math.max(c.r, f); c.g = Math.max(c.g, f); c.b = Math.max(c.b, f); }
   let m;
   const P = (o) => new THREE.MeshPhysicalMaterial({ color: c, ...o });
   const S = (o) => new THREE.MeshStandardMaterial({ color: c, ...o });
+  const printed = () => {
+    if (hsl.l < 0.12) m = S({ roughness: 0.58, metalness: 0, bumpMap: layers(), bumpScale: 0.5, roughnessMap: grain() }); // black printed parts, nylon, powder coat
+    else if ((hsl.h < 0.04 || hsl.h > 0.96) && hsl.s > 0.6) m = P({ roughness: 0.46, metalness: 0, clearcoat: 0.12, clearcoatRoughness: 0.5, bumpMap: layers(), bumpScale: 0.5 }); // red PLA
+    else m = S({ roughness: 0.48, metalness: 0, bumpMap: layers(), bumpScale: 0.45 }); // other plastics
+    m.userData.rxUv = ['layers', 0.0064];
+    layerFade(m);
+  };
   if (mat.name === 'carbon' || mat.userData?.carbon || (kind === 'carbon' && hsl.l < 0.25)) {
     m = P({ roughness: 0.42, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, bumpMap: twill(), bumpScale: 0.6, roughnessMap: twill() });
     m.userData.rxUv = ['box', 0.012];
+    twillFade(m);
   } else if (kind === 'rubber') {
     m = S({ roughness: 0.86, metalness: 0, bumpMap: grain(), bumpScale: 0.25 });
     m.userData.rxUv = ['box', 0.006];
-  } else if (hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.82) { // aluminium, steel
+  } else if (kind === 'printed') {
+    printed();
+  } else if (kind === 'moulded') {
+    m = P({ roughness: hsl.l < 0.12 ? 0.4 : 0.34, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.3 });
+  } else if (kind === 'anodized') {
+    m = S({ roughness: 0.34, metalness: 1 });
+  } else if (kind === 'metal' || (hsl.s < 0.1 && hsl.l > 0.28 && hsl.l < 0.82)) { // aluminium, steel
     m = S({ roughness: hsl.l > 0.55 ? 0.3 : 0.38, metalness: 1, roughnessMap: brushed(), bumpMap: brushed(), bumpScale: 0.22 });
     m.userData.rxUv = ['box', 0.05];
   } else if (hsl.h > 0.08 && hsl.h < 0.16 && hsl.s > 0.5 && hsl.l > 0.45) {
     m = S({ roughness: 0.25, metalness: 1 }); // gold contacts
-  } else if (hsl.h > 0.25 && hsl.h < 0.5 && hsl.s > 0.3) {
-    m = P({ roughness: 0.4, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.2, bumpMap: grain(), bumpScale: 0.25 }); // PCB soldermask
+  } else if (hsl.h > 0.25 && hsl.h < 0.5 && hsl.s > 0.3 && hsl.l < 0.4) {
+    // PCB soldermask: the dark greens of board libraries. Brighter greens are printed parts
+    m = P({ roughness: 0.4, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.2, bumpMap: grain(), bumpScale: 0.25 });
     m.userData.rxUv = ['box', 0.004];
-  } else if (hsl.l < 0.12) { // black printed parts, nylon, powder coat
-    m = S({ roughness: 0.58, metalness: 0, bumpMap: layers(), bumpScale: 0.5, roughnessMap: grain() });
-    m.userData.rxUv = ['layers', 0.0064];
-  } else if ((hsl.h < 0.04 || hsl.h > 0.96) && hsl.s > 0.6) { // red PLA
-    m = P({ roughness: 0.46, metalness: 0, clearcoat: 0.12, clearcoatRoughness: 0.5, bumpMap: layers(), bumpScale: 0.5 });
-    m.userData.rxUv = ['layers', 0.0064];
-  } else { // other plastics
-    m = S({ roughness: 0.48, metalness: 0, bumpMap: layers(), bumpScale: 0.45 });
-    m.userData.rxUv = ['layers', 0.0064];
+  } else {
+    printed();
   }
   m.name = mat.name; m.side = mat.side;
   if (mat.transparent) { m.transparent = true; m.opacity = mat.opacity; }
@@ -636,11 +676,43 @@ export function createStage(el, opts = {}) {
   // ---------------------------------------------------------------- bounds, ground, shadow fit
   const bounds = { box: new THREE.Box3(), c: new THREE.Vector3(), r: 0.5 };
   const sphereCache = new WeakMap();
+  // Exact world box of each mesh. The quick box (the geometry's box turned by the node) is exact
+  // only for an unrotated node: a long merged mesh under a rotated node comes out far too big,
+  // which shrank the framing and left the ground floating below the model. Rotated meshes are
+  // measured vertex by vertex, once per placement (static parts once, moving parts when they move).
+  const meshBoxes = new WeakMap();
+  const vTmp = new THREE.Vector3();
+  function meshBox(m) {
+    const geo = m.geometry, pos = geo?.attributes?.position;
+    if (!pos) return null;
+    const e = m.matrixWorld.elements;
+    let c = meshBoxes.get(m);
+    if (c && c.geo === geo && c.ver === pos.version && c.e.every((x, i) => x === e[i])) return c.box;
+    if (!c) meshBoxes.set(m, (c = { box: new THREE.Box3(), e: new Float64Array(16) }));
+    c.geo = geo; c.ver = pos.version; c.e.set(e);
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    // unrotated (scaled, moved, axes swapped or flipped): every column of the 3x3 has one non-zero
+    const s = Math.max(Math.abs(e[0]), Math.abs(e[1]), Math.abs(e[2]), Math.abs(e[4]), Math.abs(e[5]), Math.abs(e[6]), Math.abs(e[8]), Math.abs(e[9]), Math.abs(e[10])) * 1e-6;
+    const aligned = [0, 4, 8].every((k) => (Math.abs(e[k]) > s) + (Math.abs(e[k + 1]) > s) + (Math.abs(e[k + 2]) > s) <= 1);
+    if (m.boundingBox !== undefined) { // instanced and batched meshes: their own box over every instance (never cached)
+      m.computeBoundingBox();
+      c.box.copy(m.boundingBox).applyMatrix4(m.matrixWorld);
+      c.geo = null;
+    } else if (aligned || !m.isMesh || m.isSkinnedMesh || geo.morphAttributes?.position) c.box.copy(geo.boundingBox).applyMatrix4(m.matrixWorld);
+    else {
+      c.box.makeEmpty();
+      for (let i = 0, n = pos.count; i < n; i++) c.box.expandByPoint(vTmp.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld));
+    }
+    return c.box;
+  }
   function sphereOf(obj, refresh) {
     obj = obj || root;
     if (!refresh && sphereCache.has(obj)) return sphereCache.get(obj);
     const box = new THREE.Box3();
-    for (const o of Array.isArray(obj) ? obj : [obj]) { o.updateWorldMatrix(true, true); box.expandByObject(o); }
+    for (const o of Array.isArray(obj) ? obj : [obj]) {
+      o.updateWorldMatrix(true, true);
+      o.traverse((x) => { if (x.geometry) { const b = meshBox(x); if (b && !b.isEmpty()) box.union(b); } });
+    }
     const s = { box, center: box.getCenter(new THREE.Vector3()), radius: Math.max(1e-4, box.getSize(new THREE.Vector3()).length() / 2) };
     if (box.isEmpty()) { box.setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)); s.center.set(0, 0, 0); s.radius = 0.5; }
     sphereCache.set(obj, s);
@@ -671,24 +743,38 @@ export function createStage(el, opts = {}) {
   // Cut faces show the parts' inside (their back faces). Those are painted as a flat cap: a light
   // tint of the part's own colour with thin antialiased hatch lines, alternating direction from part
   // to part like a drawing, so the cut reads as solid material and neighbouring parts stay apart.
+  // A mesh (or anything under an object) with userData.rxNoClip set, or passed to noClip(), is never
+  // cut: balls rolling through a cut robot stay whole.
   const clipPlanes = [];
-  const cap = { a: { value: new THREE.Color('#ebe4d9') }, b: { value: new THREE.Color('#b9ae9f') }, hatch: { value: 7 } };
-  const capped = new WeakSet();
-  let capN = 0;
+  // on: 1 while a plane is enabled; with none, back faces are drawn as ordinary faces again (most
+  // CAD materials are double-sided, so without this a switched-off cut would leave hatching)
+  const cap = { a: { value: new THREE.Color('#ebe4d9') }, b: { value: new THREE.Color('#b9ae9f') }, hatch: { value: 7 }, on: { value: 0 } };
+  const capped = new Set(); // materials prepared for the cut (the stage frees them all on dispose)
+  const pre = new WeakMap(); // material -> { side, obc, key } from before it was prepared
+  const BASE_OBC = THREE.Material.prototype.onBeforeCompile, BASE_KEY = THREE.Material.prototype.customProgramCacheKey;
+  let capN = 0, doubleSided = false;
+  const mats = (o) => (Array.isArray(o.material) ? o.material : [o.material]).filter(Boolean);
   function prepClip(m) {
-    if (!m || capped.has(m) || !clipPlanes.length) return;
+    // custom shader materials are left alone: their shaders may not have the chunks the cap needs
+    if (!m || capped.has(m) || !clipPlanes.length || m.isShaderMaterial) return;
     capped.add(m);
     const dirSign = (capN++ & 1) ? 1 : -1;
     const prev = m.onBeforeCompile, prevKey = m.customProgramCacheKey;
+    pre.set(m, { side: m.side, obc: prev, key: prevKey });
     m.onBeforeCompile = (sh, r) => {
       prev?.call(m, sh, r);
-      sh.uniforms.rxCapA = cap.a; sh.uniforms.rxCapB = cap.b; sh.uniforms.rxHatch = cap.hatch;
-      sh.fragmentShader = `uniform vec3 rxCapA; uniform vec3 rxCapB; uniform float rxHatch;\n${sh.fragmentShader.replace('#include <tonemapping_fragment>', `#include <tonemapping_fragment>
-        if (!gl_FrontFacing) {
+      const fs = sh.fragmentShader;
+      if (!fs.includes('#include <tonemapping_fragment>')) return; // clipped, without a cap
+      // unlit materials (MeshBasicMaterial) have no emissive term; some have no diffuseColor
+      const col = /\bdiffuseColor\b/.test(fs) ? 'diffuseColor.rgb' : 'vec3(0.7)';
+      const glow = /\btotalEmissiveRadiance\b/.test(fs) ? ' + totalEmissiveRadiance * 0.6' : '';
+      sh.uniforms.rxCapA = cap.a; sh.uniforms.rxCapB = cap.b; sh.uniforms.rxHatch = cap.hatch; sh.uniforms.rxCapOn = cap.on;
+      sh.fragmentShader = `uniform vec3 rxCapA; uniform vec3 rxCapB; uniform float rxHatch; uniform float rxCapOn;\n${fs.replace('#include <tonemapping_fragment>', `#include <tonemapping_fragment>
+        if (!gl_FrontFacing && rxCapOn > 0.5) {
           float h = mod(gl_FragCoord.x ${dirSign > 0 ? '+' : '-'} gl_FragCoord.y, rxHatch) - rxHatch * 0.5;
           float line = 1.0 - smoothstep(0.55, 1.35, abs(h));
-          vec3 base = mix(rxCapA, diffuseColor.rgb, 0.28);
-          gl_FragColor.rgb = mix(base, rxCapB * mix(vec3(1.0), diffuseColor.rgb, 0.4), line * 0.85) + totalEmissiveRadiance * 0.6;
+          vec3 base = mix(rxCapA, ${col}, 0.28);
+          gl_FragColor.rgb = mix(base, rxCapB * mix(vec3(1.0), ${col}, 0.4), line * 0.85)${glow};
           gl_FragColor.a = 1.0;
         }`)}`;
     };
@@ -698,26 +784,72 @@ export function createStage(el, opts = {}) {
     m.clipShadows = true;
     m.needsUpdate = true;
   }
-  /** A copy of a material that keeps the section-cut caps working (use it instead of material.clone()). */
+  /** A copy of a material that keeps its shader changes and the section-cut caps (use it instead of material.clone()). */
   function cloneMaterial(m) {
     const c = m.clone();
-    if (capped.has(m)) { c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; c.clippingPlanes = clipPlanes; capped.add(c); }
+    if (m.onBeforeCompile !== BASE_OBC) { c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; }
+    if (capped.has(m)) { c.clippingPlanes = clipPlanes; capped.add(c); pre.set(c, pre.get(m)); }
     return c;
   }
-  function prepAllClip() {
-    root.traverse((o) => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(prepClip); });
+  // every mesh under root that may be cut; subtrees marked rxNoClip are skipped
+  function eachCuttable(fn, o = root) {
+    if (o.userData?.rxNoClip) return;
+    if (o.isMesh) fn(o);
+    for (const c of o.children) eachCuttable(fn, c);
   }
-  function sectionPlane(normal = [1, 0, 0], constant = 0) {
+  function prepAllClip() {
+    if (clipPlanes.length) eachCuttable((o) => mats(o).forEach(prepClip));
+  }
+  // With no plane on, prepared materials go back to their own side, so no back face shows the cap.
+  function setCapSides(on) {
+    cap.on.value = on ? 1 : 0;
+    if (on === doubleSided) return;
+    doubleSided = on;
+    for (const m of capped) {
+      const s = on ? THREE.DoubleSide : pre.get(m)?.side ?? THREE.FrontSide;
+      if (m.side !== s) { m.side = s; m.needsUpdate = true; }
+    }
+  }
+  /** Keep objects (and everything under them) out of every section cut. yes = false cuts them again. */
+  function noClip(objs, yes = true) {
+    const copies = new Map();
+    const uncut = (m) => { // a copy of a prepared material as it was before the cut
+      if (!capped.has(m)) return m;
+      if (!copies.has(m)) {
+        const p = pre.get(m) || {}, c = m.clone();
+        c.clippingPlanes = null; c.side = p.side ?? THREE.FrontSide;
+        if (p.obc && p.obc !== BASE_OBC) { c.onBeforeCompile = p.obc; c.customProgramCacheKey = p.key || BASE_KEY; }
+        copies.set(m, c);
+      }
+      return copies.get(m);
+    };
+    for (const x of (Array.isArray(objs) ? objs : [objs]).filter(Boolean)) {
+      x.userData.rxNoClip = yes;
+      if (yes) x.traverse((o) => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(uncut) : uncut(o.material); });
+    }
+    if (!yes) prepAllClip();
+    invalidate();
+  }
+  /** Add a model loaded with { add: false } (or anything else) to the stage: cut like the rest, ground refitted. */
+  function add(obj) {
+    root.add(obj);
+    prepAllClip();
+    fitGround();
+    return obj;
+  }
+  /** sectionPlane(normal, constant, { enabled: false }) creates it switched off (materials untouched until enabled). */
+  function sectionPlane(normal = [1, 0, 0], constant = 0, o = {}) {
     const plane = new THREE.Plane(v3(normal).normalize(), constant);
     let on = false;
     const enable = (yes) => {
+      yes = !!yes;
       if (yes === on) return;
       on = yes;
-      if (yes) { clipPlanes.push(plane); renderer.localClippingEnabled = true; prepAllClip(); }
-      else { const i = clipPlanes.indexOf(plane); if (i >= 0) clipPlanes.splice(i, 1); }
+      if (yes) { clipPlanes.push(plane); renderer.localClippingEnabled = true; prepAllClip(); setCapSides(true); }
+      else { const i = clipPlanes.indexOf(plane); if (i >= 0) clipPlanes.splice(i, 1); if (!clipPlanes.length) setCapSides(false); }
       invalidate();
     };
-    enable(true);
+    if (o.enabled !== false) enable(true);
     return {
       plane,
       get constant() { return plane.constant; },
@@ -817,7 +949,11 @@ export function createStage(el, opts = {}) {
 
   // ---------------------------------------------------------------- models and parts
   const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  /** load(url, { add, pbr, shadows, detail, carbon: /name/, rubber: /name/ }): carbon and rubber pick parts by CAD name for those finishes */
+  /**
+   * load(url, { add, pbr, shadows, detail, finish, rubber, carbon, printed, moulded (or smooth), anodized, metal, plain }):
+   * the finish names take a regex (or string) on CAD part names: matching parts get that finish
+   * (see FINISHES); `finish: 'printed'` sets the finish of every other part of this model.
+   */
   async function load(url, o = {}) {
     const [buf] = await Promise.all([fetchBuffer(assetUrl(url)), envReady]);
     if (disposed) throw new Error('stage disposed while loading');
@@ -828,18 +964,27 @@ export function createStage(el, opts = {}) {
     const cache = new Map();
     // fine surface detail is invisible at phone size: phones and tablets skip it (fewer texture reads)
     const detail = (opts.detail ?? !touch) !== false && o.detail !== false;
+    // page-chosen finishes by part name, first match wins; then the GLB's own (material extras),
+    // then the name guesses (wheels and belts are rubber), then the model default, then the colour
+    const picks = FINISHES.map((f) => [f, toRx(o[f] ?? (f === 'moulded' ? o.smooth : null))]).filter(([, r]) => r);
+    const fallback = FINISHES.includes(o.finish) ? o.finish : o.finish === 'smooth' ? 'moulded' : '';
     obj.updateWorldMatrix(true, true);
     obj.traverse((m) => {
       if (!m.isMesh) return;
       m.castShadow = o.shadows !== false; m.receiveShadow = o.shadows !== false;
       if (o.pbr === false) return;
       const names = nameChain(m);
-      const kind = o.rubber?.test(names) || RUBBER.test(names) ? 'rubber' : o.carbon?.test(names) || CARBON.test(names) ? 'carbon' : '';
+      const picked = picks.find(([, r]) => r.test(names))?.[0] || '';
+      const guess = RUBBER.test(names) ? 'rubber' : CARBON.test(names) ? 'carbon' : '';
       const fix = (mat) => {
-        const k = mat.uuid + kind;
+        const own = mat.userData?.finish === 'smooth' ? 'moulded' : FINISHES.includes(mat.userData?.finish) ? mat.userData.finish : '';
+        const chain = [picked, own, guess, fallback].filter(Boolean);
+        const plain = chain[0] === 'plain'; // the colour's (or the next named) finish, no surface detail
+        const kind = chain.find((x) => x !== 'plain') || '';
+        const k = `${mat.uuid}|${kind}|${plain}`;
         if (!cache.has(k)) {
           const nm = cadMaterial(mat, kind);
-          if (!detail && nm !== mat) for (const t of ['bumpMap', 'roughnessMap']) nm[t] = null;
+          if ((!detail || plain) && nm !== mat) for (const t of ['bumpMap', 'roughnessMap']) nm[t] = null;
           cache.set(k, nm);
         }
         return cache.get(k);
@@ -909,7 +1054,7 @@ export function createStage(el, opts = {}) {
     const clear = () => {
       for (const m of meshes) {
         if (!m.userData.rxOrig) continue;
-        for (const x of Array.isArray(m.material) ? m.material : [m.material]) disposeMaterial(x);
+        for (const x of Array.isArray(m.material) ? m.material : [m.material]) { capped.delete(x); disposeMaterial(x); }
         m.material = m.userData.rxOrig;
         delete m.userData.rxOrig;
       }
@@ -919,11 +1064,13 @@ export function createStage(el, opts = {}) {
     for (const m of meshes) {
       if (!m.userData.rxOrig) {
         m.userData.rxOrig = m.material;
-        m.material = Array.isArray(m.material) ? m.material.map((x) => x.clone()) : m.material.clone();
+        m.material = Array.isArray(m.material) ? m.material.map(cloneMaterial) : cloneMaterial(m.material);
       }
+      let cut = true;
+      for (let p = m; p; p = p.parent) if (p.userData?.rxNoClip) cut = false;
       for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
         if (mat.emissive) { mat.emissive.set(color); mat.emissiveIntensity = o.intensity ?? 0.45; }
-        prepClip(mat);
+        if (cut) prepClip(mat);
       }
     }
     invalidate(false);
@@ -942,7 +1089,7 @@ export function createStage(el, opts = {}) {
     el.removeEventListener('rx:unmount', dispose);
     if (raf) cancelAnimationFrame(raf);
     clearTimeout(idleT);
-    frameFns.clear(); tweens.clear();
+    frameFns.clear(); tweens.clear(); capped.clear();
     io.disconnect(); ro.disconnect();
     document.removeEventListener('visibilitychange', onVis);
     controls?.dispose();
@@ -965,7 +1112,7 @@ export function createStage(el, opts = {}) {
   return {
     THREE, scene, camera, renderer, controls, root, el, canvas, ground, light: key, lights: { key, fill, rim }, reducedMotion: reduced, isTouch: touch,
     load, frame, setView, tweenCamera, setShift, onFrame, invalidate, flush, render: () => { sceneDirty = true; lastShadow = -1e9; draw(false); },
-    highlight, sectionPlane, part, pivot, dispose, ready: envReady, cloneMaterial,
+    highlight, sectionPlane, part, pivot, dispose, ready: envReady, cloneMaterial, noClip, add,
     bounds: (obj, refresh) => sphereOf(obj || root, refresh),
     fitGround,
     /** colours of the section cap (CSS colours) */

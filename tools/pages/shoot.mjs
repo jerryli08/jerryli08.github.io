@@ -2,11 +2,18 @@
 //   node tools/pages/shoot.mjs http://localhost:8123/projects/<slug>.html /tmp/shots/<slug> [1440 900]
 //   node tools/pages/shoot.mjs http://localhost:8123/projects/<slug>.html /tmp/shots/<slug>-phone 390 844
 //   add --only=drivetrain,throttle to shoot just the sections holding those ids, --p=0,0.5,1 for
-//   the scrolly positions (default 0, 0.25, 0.5, 0.75, 1)
+//   the scrolly positions (default 0, 0.25, 0.5, 0.75, 1), --video to see the videos play: this
+//   Chromium has no H.264, so each mp4 is served as a WebM copy (made once with ffmpeg, cached in
+//   /tmp/shoot-webm); without it videos show their posters
 // Writes <prefix>-00-top.png, then one shot per section (demos are given time to go live) and
 // five shots through each scrolly (progress 0, 0.25, 0.5, 0.75, 1). Prints console errors, failed
 // requests, blocks that did not go live, and whether the page scrolls sideways.
 import { chromium } from 'playwright';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
 const [url, prefix, w = '1440', h = '900'] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
@@ -20,6 +27,19 @@ const page = await (await browser.newContext({ viewport: { width: +w, height: +h
 page.on('console', (m) => { if (m.type() === 'error') console.log('console error:', m.text().slice(0, 300)); });
 page.on('pageerror', (e) => console.log('page error:', e.message));
 page.on('response', (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.url()); });
+if (flags.video != null) {
+  const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..'), CACHE = '/tmp/shoot-webm';
+  mkdirSync(CACHE, { recursive: true });
+  await page.route(/\.mp4(\?|$)/, async (route) => {
+    const file = join(ROOT, decodeURIComponent(new URL(route.request().url()).pathname));
+    if (!existsSync(file)) return route.continue();
+    const out = join(CACHE, `${createHash('sha1').update(`${file}|${statSync(file).mtimeMs}`).digest('hex').slice(0, 16)}.webm`);
+    try {
+      if (!existsSync(out)) execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', file, '-an', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '42', '-deadline', 'realtime', '-cpu-used', '8', out]);
+      await route.fulfill({ status: 200, contentType: 'video/webm', body: readFileSync(out) });
+    } catch (e) { console.log('webm copy failed for', file, e.message.split('\n')[0]); await route.continue(); }
+  });
+}
 await page.goto(url, { waitUntil: 'load' });
 await page.addStyleTag({ content: 'html { scroll-behavior: auto !important; }' });
 await page.waitForTimeout(1000);

@@ -19,7 +19,9 @@
 // Each step blends in from the one before over its first 45 % and then keeps turning slowly
 // (data.drift degrees per step, default 14), so the model is never frozen while the text is read.
 // Per model: { src, label, hide: 'regex' (parts left out), ghost: 'regex' (see-through),
-// highlight: [{ parts, color }], carbon: 'regex', azimuth, elevation, pad }.
+// highlight: [{ parts, color }], azimuth, elevation, pad, and finishes by part name: carbon, rubber,
+// printed, moulded (or smooth), anodized, metal, plain: 'regex'; finish: 'printed' for the rest of
+// the model (data.finish sets it for every model) }.
 // data.explode: [{ parts: 'regex', dir: [x, y, z], dist: metres, cad: true }]: dir in the model
 // frame (metres, Y up), or a STEP direction (Z up) with cad: true, taken from tools/cad-axes.py.
 // Every picture is a pure function of the scroll position; nothing moves on its own.
@@ -31,6 +33,8 @@ const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t
 const lerp = (a, b, t) => a + (b - a) * t;
 const rx = (s) => (s instanceof RegExp ? s : s ? new RegExp(s, 'i') : null);
 const DEG = Math.PI / 180;
+// per-model finish fields, passed to stage.load (see FINISHES in stage.js)
+const FINISH_FIELDS = ['carbon', 'rubber', 'printed', 'moulded', 'smooth', 'anodized', 'metal', 'plain'];
 
 export async function mount(el, ctx) {
   const d = ctx.data || {};
@@ -48,7 +52,10 @@ export async function mount(el, ctx) {
   function get(i) {
     loading[i] ||= (async () => {
       const def = defs[i];
-      const obj = await stage.load(def.src, { add: true, carbon: rx(def.carbon) });
+      // finishes by part name (regex strings), and a default for the model (else the whole turntable's)
+      const fin = { finish: def.finish ?? d.finish };
+      for (const f of FINISH_FIELDS) if (def[f]) fin[f] = rx(def[f]);
+      const obj = await stage.load(def.src, { add: true, ...fin });
       obj.visible = false;
       const hide = rx(def.hide);
       if (hide) for (const p of stage.part(hide, obj)) p.removeFromParent(); // out of the bounds too

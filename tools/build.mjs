@@ -150,6 +150,20 @@ function card(x) {
   <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${x.year ? ` · ${esc(x.year)}` : ''}</span><b>${esc(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
 </a>`;
 }
+// Prints and small models: a collage of photo prints, each at its own aspect ratio, tilted a little.
+// The picture is assets/thumbs/collage/<slug>.webp (native aspect), else the card thumbnail, else
+// a blank print with the title, so a missing image never breaks the shelf.
+const TILTS = [-2.4, 1.7, -1.1, 2.6, -0.5, 1.2, -2.0, 0.8];
+const DROPS = [0, 16, -6, 10, -12, 6, 14, -4]; // px up or down: rows that do not line up exactly
+function printCard(x, i) {
+  const src = has(`/assets/thumbs/collage/${x.slug}.webp`) ? `/assets/thumbs/collage/${x.slug}.webp` : thumb(x);
+  const d = src ? dims(src) : null;
+  const ar = d ? d.w / d.h : 4 / 3;
+  const img = src ? `<img src="${v(src)}" alt=""${d ? ` width="${d.w}" height="${d.h}"` : ''} loading="lazy" decoding="async">` : '<span class="pcard-none" aria-hidden="true"></span>';
+  return `<a class="pcard" href="${url(x)}" style="--ar:${+ar.toFixed(4)};--tilt:${TILTS[i % TILTS.length]}deg;--dy:${DROPS[i % DROPS.length]}px">
+  <span class="pcard-img">${img}${x.draft ? '<span class="badge draft">Draft</span>' : ''}</span><span class="pcard-t">${esc(x.title)}</span>
+</a>`;
+}
 // the project the live scene is showing
 function heroCard(x) {
   return `<aside class="scene-card" aria-labelledby="scene-card-h">
@@ -175,7 +189,8 @@ function landing() {
   const everything = [...all.filter((x) => x.pinned).sort(newestFirst), ...all.filter((x) => !x.pinned).sort(newestFirst)];
   const concepts = list('concept').sort(newestFirst);
   const archive = list('archive').sort(newestFirst);
-  const objects = list('object').sort(newestFirst);
+  // prints go in the order their entries give (`order: 1, 2, ...`), then newest first
+  const objects = list('object').sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || newestFirst(a, b));
   const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
   const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon]].filter(([, , n]) => n);
   // "20+ more projects": everything not already on the first screen, rounded down to a 5
@@ -235,7 +250,10 @@ ${nav({ home: true })}
   </section>
   ${shelf('concepts', 'Concepts', 'Designed in CAD, never built out.', concepts, 'shelf-concepts')}
   ${shelf('archive', 'Archive', 'Before 2023: early robots and side builds.', archive)}
-  ${shelf('prints', 'Prints and small models', 'Quick CAD and 3D printing experiments.', objects, 'shelf-prints')}
+  ${objects.length ? `<section class="archive shelf-prints" id="prints" aria-labelledby="prints-h">
+    <div class="archive-head"><h2 id="prints-h">Prints and small models</h2><p>Quick CAD and 3D printing experiments.</p></div>
+    <div class="collage">${objects.map(printCard).join('\n')}</div>
+  </section>` : ''}
   <section class="section about" id="about" aria-labelledby="about-h">
     <div class="section-head"><h2 id="about-h">About</h2></div>
     <div class="about-grid">
@@ -363,6 +381,9 @@ const cadBlock = (x) => (x.cad ? `<h2 class="block-title">CAD</h2>
   <div class="cad" data-cad="${esc(x.cad)}">
     <div class="cad-load"><b>Interactive CAD model</b><span>Rotate and inspect the full design in Autodesk Viewer.</span><button class="hud-go" type="button">Load the 3D model ${arrow}</button></div>
   </div>` : '');
+// rich pages: the page's own scroll-driven 3D replaces the click-to-load embed (Jerry: nothing gated
+// behind a click); the full Fusion 360 model stays one plain link away
+const cadLink = (x) => (x.cad ? `<p class="rx-cad-link"><a href="${esc(x.cad)}" rel="noopener">Open the full Fusion 360 model in Autodesk Viewer ${arrow}</a></p>` : '');
 const nextLink = (next) => (next ? `<a class="next" href="${url(next)}"><span><span class="label">Next project</span><b>${esc(next.title)}</b></span><span class="big-arrow" aria-hidden="true">&rarr;</span></a>` : '');
 
 function projectPage(x, next) {
@@ -409,7 +430,7 @@ ${nav()}
   ${intro}
   ${r.sections}
   <div class="rx-w rx-end">
-  ${cadBlock(x)}
+  ${cadLink(x)}
   ${nextLink(next)}
   ${footer()}
   </div>

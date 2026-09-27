@@ -156,7 +156,9 @@
       note(b, 'Interactive 3D needs WebGL, which this browser has turned off.');
       return;
     }
-    if (slow && !st.consent) {
+    // on a slow or data-saving connection a 3D block waits for the reader's go; 2D ones (webgl: false,
+    // SVG and photos) cost next to nothing and load as usual
+    if (slow && !st.consent && b.dataset.webgl !== 'false') {
       status(b, 'ask');
       return;
     }

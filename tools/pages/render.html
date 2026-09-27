@@ -13,7 +13,9 @@ if (q.get('bg')) document.body.style.background = q.get('bg');
 const stage = createStage(el, { controls: false, hint: false, shadow: q.get('shadow') !== '0', background: q.get('bg') || 'transparent', pixelRatio: 1 });
 const model = await stage.load(q.get('src'));
 for (const re of (q.get('hide') || '').split(',').filter(Boolean)) for (const p of stage.part(new RegExp(re))) p.visible = false;
-stage.frame(model, { azimuth: +q.get('az') || 35, elevation: +q.get('el') || 22, pad: +q.get('pad') || 1.1 });
+// 0 is a real angle: only a missing (or non-numeric) value takes the default
+const num = (k, d) => (q.has(k) && q.get(k) !== '' && Number.isFinite(+q.get(k)) ? +q.get(k) : d);
+stage.frame(model, { azimuth: num('az', 35), elevation: num('el', 22), pad: num('pad', 1.1) || 1.1 });
 stage.invalidate();
 setTimeout(() => { document.body.dataset.ready = '1'; }, 1500);
 </script>

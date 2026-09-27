@@ -50,6 +50,15 @@ Shared files (do not edit them for one page; ask for a framework change instead)
    (`python3 -m http.server 8123` from the repo root). Read the build's `! <slug>:` warnings.
 5. Check it at 1440x900 and 390x844 (see Checking) before handing it in.
 
+A rich page ends with a plain link to the project's `cad` (the Fusion 360 share, opened in Autodesk
+Viewer; no click-to-load embed) and the next project.
+
+Small prints and models (`kind: 'object'` in `src/projects.mjs`) sit near the bottom of the landing
+page as a collage of tilted photo prints at their own aspect ratio, in the order of their `order`
+field (1, 2, ...; entries without one follow, newest first). Each print is
+`assets/thumbs/collage/<slug>.webp` (about 520 to 720 px on the long edge, any aspect), else the
+card thumbnail `assets/thumbs/<slug>.webp`, else a blank print with the title.
+
 No page module means the project keeps its simple page. A module that fails to import or render
 is reported and the project falls back to the simple page, so a broken page never breaks the build.
 Pages whose file name starts with `_` are built in preview only, at `/projects/_name`, and take their
@@ -309,17 +318,19 @@ nothing until the next change.
 
 | member | |
 |---|---|
-| `await load(url, { add, pbr, shadows, detail, carbon, rubber })` | loads a GLB (meshopt, hashed URL), adds it to `stage.root`, gives STEP colours real finishes and returns its scene. `carbon` / `rubber`: regexes on part names that get those finishes (parts named `*carbon*`, `cf_*`, or wheel, tire, belt get them anyway). `add: false` to add it yourself, `pbr: false` to keep the file's materials |
+| `await load(url, { add, pbr, shadows, detail, finish, carbon, rubber, printed, moulded, anodized, metal, plain })` | loads a GLB (meshopt, hashed URL), adds it to `stage.root`, gives STEP colours real finishes and returns its scene. The finish names take a regex on part names; matching parts get that finish (see Finishes below). `finish: 'printed'` sets it for every other part of the model. `add: false` to add it yourself (then `stage.add(obj)`), `pbr: false` to keep the file's materials |
 | `part(regex, within?)` | top-most nodes whose name matches (a mesh, or a group for a multi-material part). Moving parts keep their CAD names (`anim_<kind>_<n>_<Name>`, see the `KEEP` list in `tools/optimize-cad.mjs`); static parts are merged and unnamed |
 | `pivot(parts, point, dir)` | a `Group` that turns the parts about an axis: `point` and `dir` in the model's frame (metres, Y up), or `point: 'center'` for the parts' bounding-box centre (only for parts round about the axis, like wheels and gears). Returns the group with `setAngle(rad)`, `.angle`, `.axis` |
 | `frame(obj?, { azimuth, elevation, dir, pad, offset, duration, apply })` | fits `obj` (an object, an array of parts, or all models) in view. `azimuth` 0 looks from +Z, 90 from +X (degrees). `apply: false` only returns `{ pos, target }`: frame once at rest, cache, then `setView` |
 | `setView({ pos, target })` | place the camera now (scrollies blend cached views and call this) |
 | `setShift(fx, fy)` | move the picture on the canvas (fractions; +y up) without moving the camera; pass `...ctx.shift()` |
-| `sectionPlane(normal, constant)` | a cut through all models, in world metres: keeps points where `dot(normal, p) + constant >= 0` (normal `[-1, 0, 0]`, constant `0.3` keeps x ≤ 0.3). Cut faces get a clean hatched cap tinted by each part's colour. Returns `{ plane, set(constant), setNormal(n), enable(bool), remove() }` |
+| `sectionPlane(normal, constant, { enabled })` | a cut through all models, in world metres: keeps points where `dot(normal, p) + constant >= 0` (normal `[-1, 0, 0]`, constant `0.3` keeps x ≤ 0.3). Cut faces get a clean hatched cap tinted by each part's colour. Returns `{ plane, set(constant), setNormal(n), enable(bool), remove() }`. `enabled: false` creates it switched off, materials untouched. With no plane on, every part is single-sided again (no stray hatching). To sweep a cut in, create it at mount parked outside the model and move it with `set()`: switching planes on and off mid-scroll recompiles shaders |
+| `noClip(objs, yes = true)` | keeps objects (and everything under them) whole in every cut, e.g. balls inside a cut robot; or set `obj.userData.rxNoClip = true` before the cut exists |
+| `add(obj)` | adds a model loaded with `{ add: false }` (or anything else) to `stage.root`, cut like the rest, and re-fits the ground |
 | `highlight(parts, color = '#ff6b35', { intensity })` | tints parts; returns a function that restores them |
-| `cloneMaterial(m)` | a copy of a material that keeps the section caps working (use it instead of `m.clone()` when a cut may exist) |
+| `cloneMaterial(m)` | a copy of a material that keeps the stage's shader changes (layer-line fading, section caps); use it instead of `m.clone()` |
 | `invalidate(scene = true)` | ask for a redraw after changing the scene yourself; `false` when only the camera moved (pivots, sections, frame, setView and highlight do it for you) |
-| `bounds(obj?)` | `{ box, center, radius }` (cached per object) |
+| `bounds(obj?)` | `{ box, center, radius }` (cached per object). Exact boxes: a part under a rotated node is measured by its vertices, so framing is tight and the ground sits under the model |
 | `fitGround()` | re-fit the ground, shadows and contact shadow to the models; call it after adding or removing a model yourself (`load` does it) |
 | `onFrame(fn(dt, t))` | legacy demos only: a per-frame callback. Scrollies never use it |
 | `setCapColor(a, b)` | colours of the section hatch |
@@ -329,6 +340,29 @@ nothing until the next change.
 Also exported: `cad.point([x, y, z])` and `cad.dir([x, y, z])` (STEP millimetres, Z up, to model
 metres, Y up) and `assetUrl(path)`.
 
+### Finishes
+
+STEP exports carry only a colour, so by default the colour picks the finish: light greys are
+brushed aluminium or steel, dark greens are PCB soldermask, gold is gold, everything else is
+printed plastic with faint layer lines. The layer lines and the carbon weave fade out where one of
+them is under about two pixels on screen, so large plates never alias into a woven or dithered look. Parts named like a wheel, tire,
+tread, o-ring or belt are rubber; `*carbon*` and `cf_*` are carbon fibre. When that guess is wrong,
+name the finish (first match wins: page options, then the GLB's own `extras.finish` from
+`tools/optimize-cad.mjs`, then the name guesses, then the model's `finish`, then the colour):
+
+| finish | |
+|---|---|
+| `printed` | printed plastic in any colour (green PLA is not a PCB, grey PLA is not aluminium) |
+| `moulded` (or `smooth`) | injection-moulded plastic: smooth, slightly glossy, no layer lines (props, housings) |
+| `anodized` | anodized metal in the part's colour, smooth (motor bells) |
+| `metal` | brushed metal in the part's colour |
+| `rubber`, `carbon` | as the name guesses |
+| `plain` | the finish the colour picks, without the fine surface texture |
+
+```js
+await stage.load(url, { finish: 'printed', moulded: /DALPROP|prop/i, anodized: /bell/i, rubber: /T61P/ });
+```
+
 ## `labels.js`
 
 HTML labels pinned to the model and small cards on the stage:
@@ -337,6 +371,7 @@ HTML labels pinned to the model and small cards on the stage:
 import { labelLayer } from '/assets/js/lib/labels.js';
 const ov = labelLayer(stage);
 const l = ov.label('72T pulley', [x, y, z], { color: '#fff1e2', side: 'l', minW: 520 }); // or an Object3D
+// empty text ('') draws the dot alone; l.setText('...') changes the text later
 l.a = 1;                // 0..1, set in setProgress
 ov.update();            // after the camera moved; it only writes styles that changed
 const card = ov.card({ corner: 'tr' }); card.append(ov.chip('#ff6b35', 'Printed spacers'));
@@ -389,7 +424,9 @@ steps: [
 
 Each step blends in from the one before over its first 45 % and then turns slowly (`data.drift`
 degrees per step, default 14). Per model: `src`, `label`, `hide` (regex: parts left out),
-`ghost` (regex: see-through), `highlight`, `carbon` (regex: parts with the carbon finish),
+`ghost` (regex: see-through), `highlight`, finishes by part name (`carbon`, `rubber`, `printed`,
+`moulded`, `anodized`, `metal`, `plain`: regex strings; `finish: 'printed'` for the rest of that
+model, `data.finish` for every model; see Finishes),
 `azimuth`, `elevation`, `pad`. `data.explode: [{ parts: regex, dir: [x, y, z], dist: metres, cad: true? }]`:
 directions in the model frame (metres, Y up), or STEP directions with `cad: true`, read from the
 CAD with `tools/cad-axes.py` (real axes, never guessed). A `demo` section with `module: '@viewer'`
@@ -403,7 +440,13 @@ is built as a wide turntable with no steps, so old pages convert without changes
   `python3 tools/cad-axes.py file.step "PartName"` and convert with `cad.point` / `cad.dir`.
   `'center'` is only for parts that are round about their axis.
 - Keep a part separate (so it can move) by adding it to the `KEEP` list when running
-  `tools/optimize-cad.mjs`; everything else is merged by material.
+  `tools/optimize-cad.mjs`; everything else is merged by material, with each static part's
+  placement baked into its vertices (the merged mesh sits under an identity node). Moving parts
+  keep their CAD nodes as they are.
+- The config also takes `split` (cut one node's mesh into named nodes by primitive index ranges:
+  one CAD part exported with several bodies), `colors` (`{ "regex": "#hex" }` for exports without
+  colours) and `finish` (`{ "regex": "moulded" }`, written into the GLB for `stage.js`); see the
+  comment at the top of `tools/optimize-cad.mjs`. They run first, on the input's node names.
 - Models must stay small: meshopt-compressed GLBs, a few MB at most per page.
 
 ## Checking
@@ -414,6 +457,8 @@ is built as a wide turntable with no steps, so old pages convert without changes
   `node tools/pages/shoot.mjs http://localhost:8123/projects/<slug>.html /tmp/shots/<slug>` and
   `node tools/pages/shoot.mjs http://localhost:8123/projects/<slug>.html /tmp/shots/<slug>-phone 390 844`.
   It also prints console errors, missing files, blocks that did not go live, and sideways scrolling.
+  Its Chromium has no H.264, so videos show their posters; add `--video` to have each mp4 served as
+  a WebM copy (made once with ffmpeg) when a shot needs the video playing.
   (Software WebGL is slow here: a page with several demos takes a few minutes.)
 - No horizontal scrolling at 390 px, captions on every item, nothing moving on its own with
   reduced motion, and the poster looks right if the 3D never loads.

@@ -1,7 +1,7 @@
 // Scroll a rich page in headless Chromium and measure what the 3D costs: frames rendered, WebGL
 // draw calls per frame, script time per frame, long frames, and whether anything keeps rendering
 // or requesting animation frames once the page is idle.
-//   node tools/pages/perf.mjs http://localhost:8123/projects/<slug>.html [#section-id ...] [--w=1440 --h=900]
+//   node tools/pages/perf.mjs http://localhost:8123/projects/<slug>.html [#section-id ...] [--w=1440 --h=900 --quiet=3000]
 // With section ids it scrolls through each of those sections (top to bottom, in wheel steps);
 // without, through the whole page. Then it parks inside each section and watches for 5 s of idle.
 // Software WebGL (SwiftShader) is far slower than a real GPU: compare runs with each other, not
@@ -74,9 +74,20 @@ const read = () => page.evaluate(() => {
     canvases: document.querySelectorAll('canvas').length,
   };
 });
+// wait for blocks to finish mounting, then until nothing has drawn for QUIET ms (the last live frame
+// and the refined frame after it can take several seconds each under software WebGL), at most 120 s
+const QUIET = +(opt.quiet || 3000);
 const settle = async () => {
   await page.waitForFunction(() => ![...document.querySelectorAll('[data-rx-block]')].some((b) => b.dataset.state === 'loading'), null, { timeout: 180000 }).catch(() => {});
-  await page.waitForTimeout(1500);
+  const draws = () => page.evaluate(() => window.__perf.draws);
+  const t0 = Date.now();
+  let last = await draws(), since = Date.now();
+  while (Date.now() - t0 < 120000) {
+    await page.waitForTimeout(400);
+    const d = await draws();
+    if (d !== last) { last = d; since = Date.now(); } else if (Date.now() - since >= QUIET) return;
+  }
+  console.log('note: still drawing after 120 s of settling');
 };
 
 const report = {};
