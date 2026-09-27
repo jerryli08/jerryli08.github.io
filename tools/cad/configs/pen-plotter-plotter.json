@@ -1,0 +1,13 @@
+{
+  "prefix": "pp",
+  "remove": [],
+  "keep": [
+    "^left base arm",
+    "^right base arm",
+    "^left pencil forearm",
+    "^right forearm",
+    "^spacer",
+    "^5mm id befenybay mounting hub"
+  ],
+  "keepIndices": [2, 5, 15]
+}

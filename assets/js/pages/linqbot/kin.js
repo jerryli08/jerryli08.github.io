@@ -33,6 +33,10 @@ export function gripAngleFor(width) {
   return 95;
 }
 
+export const ROLL = 90; // wrist roll held fixed; at 90 the jaws close sideways around a standing can
+export const SEEDS = [[0, 60, -90, 20, ROLL], [0, 90, -90, 0, ROLL], [0, 40, -120, 60, ROLL], [0, 20, -60, 70, ROLL], [0, 80, -140, 60, ROLL]];
+export const CAN = { r: 0.029, h: 0.13 }; // a prop, about the size of the cans in our footage
+
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
@@ -50,6 +54,11 @@ function rot(p, o, a, t) {
 /** Any point of link `from` (CAD pose coordinates) carried through joints 0..from-1. */
 export function carry(q, p, from = 5) {
   for (let i = Math.min(from, 5) - 1; i >= 0; i--) p = rot(p, JOINTS[i].origin, JOINTS[i].axis, (q[i] || 0) * DEG);
+  return p;
+}
+/** The inverse of carry(q, p, 5): a point in the arm frame back into the CAD pose of the gripper link. */
+export function uncarry(q, p) {
+  for (let i = 0; i < 5; i++) p = rot(p, JOINTS[i].origin, JOINTS[i].axis, -(q[i] || 0) * DEG);
   return p;
 }
 /** Tool point in the arm frame for joint angles q (degrees). */

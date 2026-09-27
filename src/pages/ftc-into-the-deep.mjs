@@ -1,8 +1,11 @@
 // FTC INTO THE DEEP robot (S.T.A.T.I.C., FTC 18996), 2024-25. Rich page.
 // There is no CAD for this season (Jerry's checklist: "CAD (dont have at the moment)"), so there is
-// no 3D model and no stand-in geometry. Every interactive block is built from real media only
-// (webgl: false): a season timeline, a before/after switch between the Sep 12 and Sep 17 renders,
-// a stepper through the five intake versions, and two hand off tests played in sync.
+// no 3D model and no stand-in geometry. Jerry, Sept 27: projects without CAD are scroll-based too, and
+// scrolling advances a slideshow of the real media. So the four animated blocks are 2D scrollies
+// (webgl: false) driven only by the scroll: the season timeline advancing photo by photo, the Sep 12
+// and Sep 17 renders with the width marks drawing in, the five intake versions (three stills from each
+// version's clip per step), and the clean and failed hand off stepping frame by frame. The clip stills
+// (versions-*, handoff-*, still-lift-at-basket) were cut from the page's own clips.
 // Copy uses only what Jerry stated (checklist, projects.mjs), what the media plainly shows, and the
 // 18996 results on the official FIRST event pages (an award winner is listed there without a place,
 // so the Think Award is the 1st place award, as projects.mjs says).
@@ -11,8 +14,9 @@
 // driven on the robot, what the January rework changed and which approach angle won, which parts
 // besides the extension he designed, what went wrong at the first event, whether he wrote any of the
 // code, and every "next time" item. No teammate faces; no other team of Jerry's is mentioned.
-// The stepper's last clip starts at 1 s (start: 1): its first second is a wide shot with a person
-// in the background, and its poster is that frame.
+// Version 5's pick-up clip (intake-v5-pick-close) is not on the page as a clip: its first second is a
+// wide shot with a person in the background, so only three stills from after 1 s are used
+// (versions-5a to 5c) and the clip file was removed.
 export default {
   summary: {
     stats: [
@@ -39,9 +43,9 @@ export default {
       'In INTO THE DEEP, game pieces called samples start in a pile inside the submersible, a metal frame in the middle of the field. Robots reach in under its rails, pull samples out, and either score them in the baskets or bring them to the human player, who turns them into specimens that the robot clips onto the chambers.',
       'I was the team captain. On the robot, my part was the horizontal extension: the slide that pushes the intake out across the floor and in under the submersible rail. This page follows that slide and the intake at its tip through the season, using our photos, renders and videos from kickoff on Sep 7, 2024 to the Chesapeake Championship on Mar 2, 2025.',
     ] },
-    { type: 'demo', id: 'season', module: 'season', webgl: false, height: 'clamp(400px, min(62vh, 110vw), 600px)', poster: 'cad-sep12-two-rail-extension.webp',
+    { type: 'scrolly', id: 'season', module: 'season', webgl: false, length: '520vh', poster: 'cad-sep12-two-rail-extension.webp',
       h: 'The season at a glance',
-      p: ['The dated photos, renders and clips from this page, on one timeline. Drag the date or step through it to watch the robot change: the extension in the top lane, the intake in the middle (the number is its version), and our three events at the bottom.'],
+      p: ['The dated photos, renders and clips from this page, on one timeline from kickoff to the championship. Scroll, and the season plays forward one picture at a time: the extension in the top lane, the intake in the middle (the number is its version), and our three events at the bottom.'],
       caption: 'Dates come from the files themselves and from the official FIRST event pages. Clips show a still here; they play further down the page.',
       data: {
         from: '2024-09-07', to: '2025-03-02', fromLabel: 'Kickoff',
@@ -69,33 +73,31 @@ export default {
       } },
 
     // ------------------------------------------------------------------ the extension
-    { type: 'prose', id: 'extension', h: 'The horizontal extension: 15 in to 3 in', p: [
-      'The samples start inside the submersible, so the robot parks beside it and pushes its intake in under the rail on a horizontal slide. That slide was my part of the robot.',
-      { h: 'First design: a slide on each side' },
-      'In the first CAD of the robot, on Sep 12, 2024, the extension ran on two slides, one on top of each side of the chassis. Across the two slides it was 15 in wide.',
-      { h: 'Five days later: one slide, 3 in wide' },
-      'By Sep 17 it was a single slide inside the chassis, between the drive pods: 3 in wide instead of 15. From then on the extension stayed one narrow slide for the rest of the season, through every intake that rode on it.',
-    ] },
-    { type: 'demo', id: 'width', module: 'width', webgl: false, height: 'clamp(340px, min(54vh, 64vw), 560px)', poster: 'cad-sep12-two-rail-front.webp',
-      caption: 'Two real renders of the robot from my CAD, five days apart; switch between them, or tap the picture. They are from different camera angles, so this is a switch, not an overlay. The orange marks are drawn over the renders to pick out the extension; the widths are mine.',
+    { type: 'scrolly', id: 'extension', module: 'width', webgl: false, width: 'wide', stepHeight: '85vh', poster: 'cad-sep12-two-rail-extension.webp',
+      h: 'The horizontal extension: 15 in to 3 in',
+      steps: [
+        { h: 'My part of the robot', p: ['The samples start inside the submersible, so the robot parks beside it and pushes its intake in under the rail on a horizontal slide. That slide was my part of the robot.'] },
+        { h: 'First design: a slide on each side', p: ['In the first CAD of the robot, on Sep 12, 2024, the extension ran on two slides, one on top of each side of the chassis. Across the two slides it was **15 in** wide.'] },
+        { h: 'Five days later: one slide, 3 in wide', p: ['By Sep 17 it was a single slide inside the chassis, between the drive pods: **3 in** wide instead of 15.'] },
+        { h: 'One narrow slide from then on', p: ['Up close, the new slide sits inside the chassis beside a drive pod. From then on the extension stayed one narrow slide for the rest of the season, through every intake that rode on it.'] },
+      ],
+      caption: 'Four real renders of the robot from my CAD, five days apart; they are from different camera angles, so they follow each other rather than line up. The orange marks are drawn over the renders to pick out the extension; the widths are mine.',
       data: {
-        aria: 'The extension on Sep 12 (two slides) and Sep 17 (one slide)',
-        switchLabel: 'Render', marksLabel: 'Mark the extension', meterTitle: 'Extension width',
-        states: [
-          { label: 'Sep 12: two slides', short: 'Sep 12', date: 'Sep 12, 2024', dateNote: 'first CAD', img: 'cad-sep12-two-rail-front.webp', w: 1600, h: 1040,
-            alt: 'Render of the chassis from the front with a slide on top of each side', inches: 15, width: '15 in', chipText: 'Two slides, one on each side',
+        aria: 'Renders of the extension: two slides on Sep 12, 2024, then one slide on Sep 17, 2024',
+        meterTitle: 'Extension width',
+        slides: [
+          { img: 'cad-sep12-two-rail-extension.webp', w: 1600, h: 856, date: 'Sep 12, 2024', note: 'first CAD, shown extended' },
+          { img: 'cad-sep12-two-rail-front.webp', w: 1600, h: 1040, date: 'Sep 12, 2024', note: 'first CAD', short: 'Sep 12',
+            inches: 15, width: '15 in', chipText: 'Two slides, one on each side',
             marks: [{ pts: [[150, 388], [332, 512]], w: 30 }, { pts: [[614, 372], [1150, 486]], w: 26 }],
             chip: [700, 250], leads: [[240, 450], [880, 429]] },
-          { label: 'Sep 17: one slide', short: 'Sep 17', date: 'Sep 17, 2024', dateNote: 'five days later', img: 'cad-sep17-center-slide.webp', w: 1600, h: 828,
-            alt: 'Render of the chassis from above with one slide inside it, extended far out', inches: 3, width: '3 in', chipText: 'One slide inside the chassis',
+          { img: 'cad-sep17-center-slide.webp', w: 1600, h: 828, date: 'Sep 17, 2024', note: 'five days later', short: 'Sep 17',
+            inches: 3, width: '3 in', chipText: 'One slide inside the chassis',
             marks: [{ pts: [[388, 404], [700, 474], [1488, 648]], w: 30 }],
             chip: [1090, 330], leads: [[1060, 553]] },
+          { img: 'cad-sep17-slide-closeup.webp', w: 1600, h: 1055, date: 'Sep 17, 2024', note: 'the new slide up close, beside a drive pod' },
         ],
       } },
-    { type: 'media', layout: 'row', items: [
-      { i: 'cad-sep12-two-rail-extension.webp', c: 'Sep 12, 2024: the first extension, one slide on top of each side of the chassis, shown extended' },
-      { i: 'cad-sep17-slide-closeup.webp', c: 'Sep 17, 2024: the new single slide up close, inside the chassis beside a drive pod' },
-    ] },
     { type: 'prose', id: 'extension-built', h: 'From CAD to the robot', p: [
       'By Oct 20 the first full robot was in CAD. The slide reaches out of the front of the chassis with the intake at its tip, and a long link from the back of the chassis stretches out along it. Pulled in, the intake sits right beside the blue transfer bucket at the bottom of the lift.',
       'On the built robot the slide has a timing belt along its rails and runs beside a cable carrier, the plastic chain that keeps the intake\'s wires from tangling as it moves in and out. In early November we filmed one of its first full cycles on the robot: reach out, grab a sample, pull back and drop it into the transfer bucket.',
@@ -121,33 +123,39 @@ export default {
 
     // ------------------------------------------------------------------ the intake
     { type: 'prose', id: 'intake', h: 'The intake: five versions', p: [
-      'The intake rides at the tip of the extension. It has to pick a sample up off the floor, often out of a pile under the submersible rail, and hold on to it while the extension pulls back. We went through five versions in one season. Step through them here with their clips, then read each one below.',
+      'The intake rides at the tip of the extension. It has to pick a sample up off the floor, often out of a pile under the submersible rail, and hold on to it while the extension pulls back. We went through five versions in one season. Scroll through them here, three stills from each version\'s clip, then read each one below.',
     ] },
-    { type: 'demo', id: 'steps', module: 'steps', webgl: false, height: 'clamp(560px, 70vh, 640px)', poster: 'intake-v1-drill-test.jpg',
-      caption: 'Nothing plays until you press play; after that, each version plays its own clip. Arrow keys and swipes move between versions.',
+    { type: 'scrolly', id: 'steps', module: 'steps', webgl: false, stepHeight: '95vh', poster: 'versions-1a.webp',
+      steps: [
+        { h: 'Version 1: two sideways spinners', p: [
+          '**Sep to Nov 2024.** Two star-shaped spinners on the sides of a funnel, geared so they turn at different speeds and the difference turns the sample as it comes in.',
+          { problem: 'Picky about how the sample was lying: "because it\'s side roller; if it wasn\'t side rollers you\'d be good."' },
+        ] },
+        { h: 'Version 2: vertical spinners', p: [
+          '**Dec 2024.** Rollers with surgical-tubing flaps grab the sample, then the intake flips back and hands it to the bucket on the lift.',
+          { problem: 'In bench tests some hand offs dropped the sample, and the bucket arm and the intake ran into each other.' },
+        ] },
+        { h: 'Step 3: competing with it', p: [
+          '**Dec 15, 2024.** We ran version 2 at our first event, the Glen Allen VA #2 Qualifier: **5-0** in qualification matches, **2nd of 34**, captain of the finalist alliance, and the **Innovate Award**.',
+        ] },
+        { h: 'Version 4: reworked vertical spinners', p: [
+          '**Jan to early Feb 2025.** Still vertical spinners, rebuilt: new side plates by the January qualifier, then a bench test of approach angles in February.',
+          { problem: 'The list after a Feb 7 test session: "intake belt skip" and "rejecting less powerful".' },
+        ] },
+        { h: 'Version 5: two top-down spinners', p: [
+          '**Feb 12 to Mar 2025.** Two star wheels come down on the sample from above and pull it up between them. This is the intake we finished the season with.',
+          { fix: 'Fed a wrong-color sample on purpose, it spits it straight back out.' },
+        ] },
+      ],
+      caption: 'Three stills from each version\'s own clip, in order. Dates come from the files.',
       data: {
-        aria: 'The five intake versions', kicker: 'Step',
-        foot: 'Clips are muted. Dates come from the files.',
-        steps: [
-          { name: 'Two sideways spinners', short: 'Side', dates: 'Sep to Nov 2024', v: 'intake-v1-drill-test.mp4',
-            c: 'Sep 2024: the first prototype, spun by a cordless drill',
-            line: 'Two star-shaped spinners on the sides of a funnel, geared so they turn at different speeds and **the difference turns the sample** as it comes in.',
-            flag: { type: 'problem', text: 'Picky about how the sample was lying: "because it\'s side roller; if it wasn\'t side rollers you\'d be good."' } },
-          { name: 'Vertical spinners', short: 'Vertical', dates: 'Dec 2024', v: 'intake-v2-vertical-spinners.mp4',
-            c: 'Rollers with surgical-tubing flaps spinning in front of a sample',
-            line: 'Rollers with **surgical-tubing flaps** grab the sample, then the intake **flips back** and hands it to the bucket on the lift.',
-            flag: { type: 'problem', text: 'In bench tests some hand offs dropped the sample, and the bucket arm and the intake ran into each other.' } },
-          { name: 'Competing with it', short: 'Event', dates: 'Dec 15, 2024', v: 'hero-sample-auto-dec.mp4',
-            c: 'Dec 2024: the sample autonomous with version 2: extend, grab, hand off, lift and score, then go again',
-            line: 'We ran version 2 at our first event, the Glen Allen VA #2 Qualifier: **5-0** in qualification matches, **2nd of 34**, captain of the finalist alliance, and the **Innovate Award**.' },
-          { name: 'Reworked vertical spinners', short: 'Rework', dates: 'Jan to early Feb 2025', v: 'intake-v4-angle-test.mp4',
-            c: 'Feb 2025: holding a new prototype over a sample at different angles',
-            line: 'Still vertical spinners, rebuilt: new side plates by the January qualifier, then a **bench test of approach angles** in February.',
-            flag: { type: 'problem', text: 'The list after a Feb 7 test session: "intake belt skip" and "rejecting less powerful".' } },
-          { name: 'Two top-down spinners', short: 'Top-down', dates: 'Feb 12 to Mar 2025', v: 'intake-v5-pick-close.mp4', start: 1,
-            c: 'Mar 2025: at the end of the extension, the head drops onto a sample, picks it and swings to release it',
-            line: 'Two star wheels come down on the sample **from above** and pull it up between them. This is the intake we finished the season with.',
-            flag: { type: 'fix', text: 'Fed a wrong-color sample on purpose, it spits it straight back out.' } },
+        aria: 'The five intake versions, three stills from each one\'s clip',
+        versions: [
+          { short: 'Side', dates: 'Sep 2024', c: 'The first prototype, spun by a cordless drill, pulls a sample in', frames: ['versions-1a.webp', 'versions-1b.webp', 'versions-1c.webp'] },
+          { short: 'Vertical', dates: 'Dec 2024', c: 'Rollers with surgical-tubing flaps spinning in front of a sample, then pressed onto it', frames: ['versions-2a.webp', 'versions-2b.webp', 'versions-2c.webp'] },
+          { short: 'Event', dates: 'Dec 2024', c: 'The sample autonomous with version 2: extend, grab a sample and pull it back into the robot', frames: ['versions-3a.webp', 'versions-3b.webp', 'versions-3c.webp'] },
+          { short: 'Rework', dates: 'Feb 2025', c: 'Holding a new prototype over a sample at different angles', frames: ['versions-4a.webp', 'versions-4b.webp', 'versions-4c.webp'] },
+          { short: 'Top-down', dates: 'Mar 2025', c: 'At the end of the extension, the head drops onto a sample, picks it and swings to release it', frames: ['versions-5a.webp', 'versions-5b.webp', 'versions-5c.webp'] },
         ],
       } },
     { type: 'iterations', id: 'versions', items: [
@@ -158,36 +166,47 @@ export default {
       ], media: [
         { i: 'sketch-intake-v1-jam.webp', c: 'Sep 14, 2024: a small gear and a big gear, so the "difference in speed will turn the sample", and a red note where a sample "can get stuck"' },
         { i: 'intake-v1-printed.webp', c: 'Oct 12, 2024: version 1 printed, with two servos wired in and a star spinner on each side' },
+        { v: 'intake-v1-drill-test.mp4', c: 'Sep 2024: the first prototype, spun by a cordless drill' },
       ] },
       { label: 'Version 2 · Dec 2024', title: 'Vertical spinners', p: [
         'Version 2 grabs with spinning rollers that carry flaps of surgical tubing. Once it has the sample, the intake flips back and hands it to the bucket at the bottom of the lift.',
         { problem: 'In bench tests in the days before our first event, some samples flipped and fell out during the hand off, and the bucket arm and the intake ran into each other ("this is colliding again").', title: 'The hand off dropped samples, and parts collided' },
-        { fix: 'We ran the hand off on the bench over and over: more than a dozen tests filmed from the same spot over those days. Within days the robot was running the whole sample autonomous: extend, grab, hand off, lift, score, and go again (step 3 in the stepper above).', title: 'Test the hand off until it holds' },
+        { fix: 'We ran the hand off on the bench over and over: more than a dozen tests filmed from the same spot over those days. Within days the robot was running the whole sample autonomous: extend, grab, hand off, lift, score, and go again (the clip under [Software on the robot](#software)).', title: 'Test the hand off until it holds' },
       ], media: [
         { i: 'intake-v2-compliant-wheels.webp', c: 'Dec 13, 2024, two days before our first event: version 2 up close, with surgical-tubing flaps on the roller' },
+        { v: 'intake-v2-vertical-spinners.mp4', c: 'Dec 2024: rollers with surgical-tubing flaps spinning in front of a sample' },
       ] },
     ] },
-    { type: 'demo', id: 'handoff', module: 'handoff', webgl: false, height: 'clamp(400px, 30vw, 460px)', poster: 'transfer-test-clean.jpg',
-      h: 'The hand off, in sync',
-      p: [
-        'Two of those bench tests, filmed from the same spot: one clean, one failed. They are lined up in time on the moment the intake starts to flip back, so one clock runs both. Drag the time or play them at quarter speed, and watch the failed sample: it ends up lying flat across the top instead of dropping into the bucket, then tips and falls out.',
+    { type: 'scrolly', id: 'handoff', module: 'handoff', webgl: false, width: 'wide', side: 'right', stepHeight: '80vh', poster: 'handoff-clean-1.webp',
+      h: 'The hand off, frame by frame',
+      p: ['Two of those bench tests, filmed from the same spot: one clean, one failed. Their stills are lined up in time on the moment the intake starts to flip back, so one clock runs both. Watch the failed sample: it ends up lying flat across the top instead of dropping into the bucket, then tips and falls out.'],
+      steps: [
+        { h: 'The sample sits in the intake', p: ['In both tests the sample starts in the intake, with the bucket beside it.'] },
+        { h: 'The intake starts to flip back', p: ['At 3.4 s on the shared clock the intake starts to flip back toward the bucket, carrying the sample.'] },
+        { h: 'The sample goes over the top', p: ['By 4.8 s the sample is going over the top. In the failed test it is already lying flat across the top of the bucket.'] },
+        { h: 'Into the bucket, or tipping out', p: ['From 6.0 s the clean sample drops into the bucket. The failed one tips and falls out.'] },
       ],
-      caption: 'Real clips, only shifted in time (lined up by eye, frame by frame). Nothing loads until you press play, drag the time or pick a moment.',
+      caption: 'Stills from two real clips, only shifted in time (lined up by eye, frame by frame); the times are on the shared clock. Both clips play in full below.',
       data: {
-        aria: 'A clean and a failed hand off, played in sync',
-        span: 8,
+        aria: 'A clean and a failed hand off, frame by frame',
+        span: 8.5,
+        times: [1.2, 3.4, 4.1, 4.8, 5.4, 6.0, 6.8, 8.3],
+        groups: [[0], [1, 2], [3, 4], [5, 6, 7]],
         clips: [
-          { v: 'transfer-test-clean.mp4', label: 'Clean hand off', off: 3.4 },
-          { v: 'transfer-test-fail.mp4', label: 'Failed hand off', off: 1.0, bad: true },
+          { label: 'Clean hand off', frames: [1, 2, 3, 4, 5, 6, 7, 8].map((k) => `handoff-clean-${k}.webp`) },
+          { label: 'Failed hand off', bad: true, frames: [1, 2, 3, 4, 5, 6, 7, 8].map((k) => `handoff-fail-${k}.webp`) },
         ],
         before: 'The sample sits in the intake',
         marks: [
-          { t: 3.4, label: 'The intake starts to flip back', short: 'Flip starts' },
-          { t: 4.8, label: 'The sample goes over the top', short: 'Over the top' },
-          { t: 6.0, label: 'Into the bucket, or tipping out', short: 'Result' },
+          { t: 3.4, label: 'The intake starts to flip back' },
+          { t: 4.8, label: 'The sample goes over the top' },
+          { t: 6.0, label: 'Into the bucket, or tipping out' },
         ],
-        startLabel: 'Load both clips',
       } },
+    { type: 'media', layout: 'row', items: [
+      { v: 'transfer-test-clean.mp4', c: 'The clean hand off in full: the sample goes over the top and drops into the bucket' },
+      { v: 'transfer-test-fail.mp4', c: 'The failed hand off in full: the sample ends up lying flat across the top, then tips and falls out' },
+    ] },
     { type: 'iterations', id: 'versions-2', items: [
       { label: 'Step 3 · Dec 15, 2024', title: 'Competing with it', p: [
         'Version 2 is the intake we ran at our first event, the Glen Allen VA #2 Qualifier. The robot went 5-0 in qualification matches and ranked 2nd of 34, we captained the finalist alliance, and we won the Innovate Award sponsored by RTX. One playoff match we won 150 to 149.',
@@ -201,6 +220,7 @@ export default {
       ], media: [
         { i: 'intake-v4-at-moorefield.webp', c: 'Jan 25, 2025, at the Moorefield qualifier: the reworked intake, with green side plates and surgical-tubing flaps' },
         { i: 'whiteboard-problem-list.webp', c: 'Feb 7, 2025: the to do list after testing, next to the loop we worked in: integration and system tests, then continuous improvement' },
+        { v: 'intake-v4-angle-test.mp4', c: 'Feb 2025: holding a new prototype over a sample at different angles' },
       ] },
       { label: 'Version 5 · Feb 12 to Mar 2025', title: 'Two top-down spinners', p: [
         'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. Up close:',
@@ -239,15 +259,19 @@ export default {
         '**Specimens.** A claw on a truss arm clips specimens onto the high chamber.',
         '**Climb.** In December the robot hooked the low rung and lifted itself off the floor ("this is historic", on the video). At Glen Allen the livestream called a level two climb.',
       ] },
+    ], media: [
+      { i: 'still-lift-at-basket.webp', c: 'Dec 2024, in the sample autonomous: the lift raised at the high basket' },
     ] },
     { type: 'prose', id: 'software', h: 'Software on the robot', p: [
       'The robot\'s code is not in a public repository, so there is nothing to link. What the footage shows it doing:',
       { ul: [
-        '**A sample autonomous** (December, step 3 in the stepper): reach out to each yellow sample on the spike marks, hand it off, lift and score in the high basket, then go again. At Glen Allen the livestream commentator counted all four samples in the high basket in one autonomous period.',
+        '**A sample autonomous** (December, in this clip): reach out to each yellow sample on the spike marks, hand it off, lift and score in the high basket, then go again. At Glen Allen the livestream commentator counted all four samples in the high basket in one autonomous period.',
         '**A specimen autonomous** (February and March): the robot works from the chamber and sends the extension across the field to fetch samples for the human player.',
         '**Color sensing.** A color sensor sits at the intake. On a test day we read its raw red, green, blue and alpha values on the Driver Hub against each sample color, and the final intake throws a sample of the wrong color back out.',
       ] },
-    ] },
+    ], media: [
+      { v: 'hero-sample-auto-dec.mp4', c: 'Dec 2024: the sample autonomous with version 2: extend, grab, hand off, lift and score, then go again' },
+    ], side: 'left' },
 
     // ------------------------------------------------------------------ results
     { type: 'prose', id: 'results', h: 'Results', p: [

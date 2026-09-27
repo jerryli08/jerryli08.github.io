@@ -1,0 +1,32 @@
+{
+ "prefix": "rtg",
+ "remove": [
+  "^2802-0004-0006",
+  "^2800-0003-00",
+  "^DDJ-STDLOW-LUOSI"
+ ],
+ "keep": [
+  "^Frame:1$",
+  "^1106-00",
+  "^Arduino_Mega",
+  "^193--3DModel",
+  "^pololu-ball-caster",
+  "^sparkfun otos",
+  "dowel",
+  "^DDJ-STDLOW2-",
+  "^DDJ-STDLOW-ZHOUCHENG",
+  "^DDJ-XT-22-3P",
+  "^DDJ-STDLOW-GEAR6",
+  "^22mm servo mount spacers",
+  "^1910-0025-0816 \\(1\\):1$",
+  "^3217-2701-2501",
+  "^Hub disc",
+  "^Spur Gear",
+  "^2101-0006-0070",
+  "T61P-14NBN",
+  "^T61H-RM61",
+  "^wheel spacer",
+  "^1mm spacer",
+  "^1601-0412-0006"
+ ]
+}

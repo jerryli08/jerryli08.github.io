@@ -2,6 +2,8 @@
 // (/home/claude/work/scioly-ev-2026/writeup.md), checked against Jerry's checklist, answers.md,
 // his CAD and his public code (github.com/jerryli08/sciolyev2026). Numbers marked "computed" come
 // from the rules' track layout and the CAD geometry (assets/js/pages/electric-vehicle-2026/geom.js).
+// Every animation is driven by the scroll only: the CAD as a @turntable, the path comparison
+// (servo-play.js, 2D) and the caliper travel sweep (caliper.js).
 // Held back until Jerry answers (see projects-patch.md in the phase A folder): results and
 // placements, the servo's actual play, which caliper reading meant straight, why the wheelbase
 // grew, the cause of the long runs, and any "next time" items he has not stated.
@@ -36,7 +38,11 @@ export default {
       ] },
       'The other rules that shaped the car: a target distance of 7 to 10 m, a Distance Score of 2 points for every centimeter the car stops from the target, at most eight AA batteries, no more than 70 cm from the front of the front wheel to the back of the rear wheels, no wider than 35 cm, and a start by pressing the car with an unsharpened pencil.',
       'My car is 13 cm wide (in my CAD). Through a 20 cm gap the bonus is worth 45 points, the same as stopping 22.5 cm closer to the target (computed from the rules).',
-    ] },
+    ],
+      media: [
+        { i: 'photo-2025-car.webp', c: 'My 2024-25 car, built for speed, on January 6' },
+        { i: 'still-v2-at-cans.webp', c: 'Version 2 at the can line during a competition run' },
+      ] },
 
     { type: 'prose', id: 'curve', h: 'Why a curve needs precise steering', p: [
       'The car sets its steering once before a run and holds it, so it drives a circular arc. To swing out between the cans and still finish on the target, the arc has to pass the bonus line at the right distance off the line and come back. That fixes its radius, and the wheelbase turns the radius into a steering angle: steering angle = atan(wheelbase ÷ radius).',
@@ -52,10 +58,35 @@ export default {
       'Every setting the can bonus needs is a few degrees at most. On version 1 it is about a degree, and it has to be right to a few hundredths of a degree.',
     ] },
 
-    { type: 'demo', id: 'cad', module: 'versions', h: 'Both versions in my CAD', poster: `${M}/poster-cad.webp`,
-      height: 'clamp(300px, 34vw, 480px)',
+    { type: 'scrolly', id: 'cad', module: '@turntable', width: 'full', stepHeight: '90vh', poster: `${M}/poster-cad.webp`,
+      h: 'Both versions in my CAD',
       p: ['The rear drive, electronics and battery are the same in both. The front end is where they differ: a servo right on the fork in version 1, and a bearing, a link and a digital caliper on a long aluminum spine in version 2.'],
-      caption: 'My CAD of both versions, with only the four motor screws left out. Version 1 still has the two slotted sight plates standing at the back, the ones that never went on the car ([Aiming](#aiming)). Drag to turn it.' },
+      data: {
+        models: [
+          { label: 'Version 1', src: `${M}/v1-servo.glb` },
+          { label: 'Version 2', src: `${M}/v2-caliper.glb` },
+        ],
+        drift: 10,
+      },
+      steps: [
+        { h: 'Version 1: servo steering',
+          view: { version: 0, azimuth: 328, elevation: 24, pad: 1.12 },
+          p: ['Two modules on a short 3D printed chassis: the brushless motor and the driven rear axle at the back, a printed fork holding one wheel at the front, and the eight AA batteries on top. The two slotted sight plates still stand at the back in this CAD; they never went on the car ([Aiming](#aiming)).'] },
+        { h: 'The servo is the steering axis',
+          view: { version: 0, focus: 'Ass_servo|front_wheel_holder|Wheel_4', azimuth: 296, elevation: 26, pad: 2.5,
+            highlight: [{ parts: 'Ass_servo', color: '#ff6b35', intensity: 0.45 }],
+            labels: [{ text: 'Servo horn', part: 'Ass_servo' }, { text: 'Printed fork', part: 'front_wheel_holder', side: 'l' }] },
+          p: ['The fork bolts straight to the horn of a 25 kg servo, so the servo’s output shaft is the steering axis. Any play in the servo’s gears is play in the steering.'] },
+        { h: 'Version 2: caliper steering',
+          view: { version: 1, azimuth: 330, elevation: 24, pad: 1.3 },
+          p: ['The same rear drive, electronics and battery. The front wheel moved about 310 mm forward onto a spine of two 2020 aluminum extrusions, for a 452 mm wheelbase, and a digital caliper lies along the spine.'] },
+        { h: 'Bearing, link and caliper',
+          view: { version: 1, focus: 'front_wheel_bearing_holder|caliper_linkage|dynamic_caliper_end|front_wheel_holder|Wheel_4', azimuth: 306, elevation: 40, pad: 1.3,
+            highlight: [{ parts: 'front_wheel_bearing_holder|caliper_linkage|dynamic_caliper_end', color: '#ff6b35', intensity: 0.45 }],
+            labels: [{ text: 'Bearing holder and arm', part: 'front_wheel_bearing_holder', side: 'l' }, { text: 'Printed link', part: 'caliper_linkage' }, { text: 'Clamp on the sliding jaw', part: 'top_dynamic_caliper_end' }] },
+          p: ['The fork turns on a 6202 ball bearing now instead of the servo’s gearbox. An arm on the bearing holder, a printed link and a clamp on the caliper’s sliding jaw set the angle ([how it works](#version-2)).'] },
+      ],
+      caption: 'My CAD of both versions, with only the four motor screws, and a circlip and a pin inside the motor, left out.' },
 
     { type: 'prose', id: 'version-1', h: 'Version 1: servo steering', p: [
       'I designed version 1 in less than a day, just to have something for the competition. It is two modules on a short 3D printed chassis. The rear module carries the brushless motor and the driven rear axle. The front module is a printed fork holding one wheel, and the fork bolts straight to the horn of a 25 kg servo (a DS3225MG in my CAD), so the servo’s output shaft is the steering axis. The eight AA batteries ride on top. Wheelbase 142 mm, width 130 mm (in my CAD).',
@@ -70,13 +101,17 @@ export default {
       { i: 'still-v1-top.webp', c: 'Version 1 finished, from above' },
     ] },
 
-    { type: 'demo', id: 'servo-play', module: 'servo-play', webgl: false, h: 'Set a steering angle',
-      height: 'clamp(380px, calc(610px - 12.5vw), 580px)',
-      p: [
-        'Pick a car, a track length and a can gap, set the steering, and press **Run**. The dashed arc is where that setting should take the car. The shaded band is everywhere it can end up if the steering is off by the play, and each run picks an error inside the play.',
-        'The play is an assumption: set it yourself. Even a quarter of a degree either way moves version 1’s stop about a meter on an 8 m track, and version 2’s about 30 cm (computed). Switch version 1 to **Whole degrees** to see the other half of the problem: the setting my code could send often cannot put the arc through the gap at all.',
+    { type: 'scrolly', id: 'servo-play', module: 'servo-play', webgl: false, width: 'wide', side: 'right', stepHeight: '85vh',
+      h: 'What the play does to a run',
+      p: ['One track, to scale, and the same small error in the steering on both cars.'],
+      steps: [
+        { h: 'The plan', p: ['An 8 m track with the inner can 30 cm inside the outer one. To pass through the middle of that gap and still finish on the target, version 1 steers 0.83° and holds it: an arc of 9.8 m radius, aimed 24° out at the start (computed).'] },
+        { h: 'A quarter of a degree of play', p: ['This picture assumes just ±0.25° of play in the steering, a guess and not a measurement. The shaded band is everywhere the car can go: at the cans it runs from 60 to 111 cm off the line, wider than the whole gap, and the stop moves by up to about a meter (computed).'] },
+        { h: 'Three runs', p: ['Three runs with errors inside that play: −0.18°, +0.07° and +0.22°. Only the middle one passes between the cans, and the three stop 74, 29 and 89 cm from the target. At 2 points of Distance Score per centimeter, that is 148, 57 and 179 points (computed).'] },
+        { h: 'Whole degrees', p: ['My code wrote the steering as a whole number of degrees. The nearest settings to 0.83° are 0° and 1°: 0° drives straight down the line, and 1° is an 8.1 m arc that passes 105 cm out, outside the outer can. Neither goes through the gap, even with no play at all (computed).'] },
+        { h: 'Version 2, same play', p: ['The same track and the same assumed play on version 2. Its 452 mm wheelbase needs 2.63° for the same arc, 1.21 mm of caliper travel, so the same error bends its path about 3.2 times less. The whole band passes between the cans, the same three errors stop 23, 9 and 28 cm from the target, and the worst case is 32 cm (computed).'] },
       ],
-      caption: 'Top view of a track, to scale. Computed from the rules’ track layout and the wheelbases in my CAD, with a simple model: the steering is set once and held, the car is aimed so the planned arc ends on the target and drives the planned arc length, and the wheels do not slip. **Aim for the gap** sets the steering for the middle of the gap (whole degrees on version 1 when that is on, 0.01 mm steps on the caliper).' },
+      caption: 'Top view of a track, to scale, from the rules’ track layout and the wheelbases in my CAD. The model: the steering is set once and held, the car is aimed so the planned arc ends on the target and drives the planned arc length, and the wheels do not slip. The ±0.25° of play is an assumption, not a measurement, and the three errors are picked inside it.' },
 
     { type: 'media', id: 'version-1-runs', layout: 'row', p: ['Version 1 did run at competition before version 2 existed.'], items: [
       { v: 'v1-competition-hallway.mp4', c: 'Version 1 at a competition, heading down the lane toward the cans' },
@@ -92,26 +127,28 @@ export default {
         '**A longer car.** The front wheel moved about 310 mm forward onto a spine of two 2020 T-slot aluminum extrusions (184.5 mm and 88.5 mm long), for a 452 mm wheelbase. The rear drive, electronics and battery stayed where they were. The car is 525 mm from the front of the front wheel to the back of the rear wheels, inside the 70 cm limit.',
       ] },
       'The longer wheelbase changes the math on its own: the same arc needs a bigger steering angle, so a fixed error in the angle moves the car about 3.2 times less than on version 1 (computed).',
-    ] },
-
-    { type: 'demo', id: 'caliper-steering', module: 'caliper', aside: 'left', h: 'Caliper in, steering out', poster: `${M}/poster-caliper.webp`,
-      height: 'clamp(360px, 64vh, 600px)',
-      p: [
-        'Drag the slider to move the caliper’s jaw, measured from where the wheel points straight ahead. The link and the fork turn about the real pivot axes in my CAD, and the readout is the geometry of those pivots.',
-        'The linkage is a slider and crank. Around straight ahead its response is close to linear, about 2.0° per millimeter, and it gets steeper as the link and the arm come into line, which in my CAD happens at about 4.5 mm of opening (computed). The settings a track needs, about 1 to 2 mm either way, sit in the gentle part. Nudge it by 0.01 mm, one count on the caliper, and the wheel turns about 0.02°. The table above gives version 2 between ±0.07° and ±0.14° of room, so several counts.',
-      ],
-      caption: 'My CAD of version 2. The slider moves the caliper’s jaw; the link and the fork follow the real pivot axes. Angles and radii are computed from the linkage in my CAD (50 mm arm, 89.4 mm link, 44.2 mm offset) and the 452 mm wheelbase, with zero at the CAD pose.' },
-
-    { type: 'media', id: 'version-2-media', layout: 'row',
-      p: [
-        { problem: 'The linkage bar was 3D printed, so it was not that accurate.', title: 'A printed link' },
-        'It was still way better than the servo.',
-      ],
-      items: [
+    ],
+      media: [
         { i: 'photo-v2-caliper-link.webp', c: 'The caliper, with the printed link bar hanging from its jaw' },
         { i: 'still-v2-linkage-top.webp', c: 'The front end from above: fork, bearing holder arm, link and caliper clamp' },
         { i: 'photo-v2-finished.webp', c: 'Version 2 finished' },
       ] },
+
+    { type: 'scrolly', id: 'caliper-steering', module: 'caliper', width: 'full', stepHeight: '85vh', poster: `${M}/poster-caliper.webp`,
+      h: 'Caliper in, steering out',
+      p: ['Version 2’s front end in my CAD. As you scroll, the caliper’s jaw slides, and the link and the fork turn about the real pivot axes in my CAD. The readout is the geometry of those pivots.'],
+      steps: [
+        { h: 'Straight ahead', p: ['The linkage is a slider and crank. The clamp on the caliper’s sliding jaw carries the link’s rear pin along a line 44.2 mm to one side of the steering axis, and the link’s front pin turns a 50 mm arm on the bearing holder. The orange line on the floor follows the wheel’s heading.'] },
+        { h: 'Opening steers right', p: ['Sliding the jaw back pulls the link and swings the arm, which steers the wheel right. 1.21 mm is the setting for the track above: 2.63° and a 9.8 m arc (computed).'] },
+        { h: 'Closing steers left', p: ['Sliding it forward steers left: 2 mm of closing is 3.65° and a 7.1 m arc (computed). Around straight ahead the response is close to linear, about 2.0° per millimeter.'] },
+        { h: 'Steeper near the end', p: ['It gets steeper as the link and the arm come into line, which in my CAD happens at about 4.5 mm of opening; at 4.2 mm, one millimeter is already about 8° (computed). The settings a track needs, about 1 to 2 mm either way, sit in the gentle part.'] },
+        { h: 'One count on the caliper', p: ['Back at 1.21 mm, then five counts of 0.01 mm, one count on the caliper each. Each turns the wheel about 0.024°. The table above gives version 2 between ±0.07° and ±0.14° of room, so several counts (computed).'] },
+        { h: 'A printed link', p: [
+          { problem: 'The linkage bar was 3D printed, so it was not that accurate.', title: 'A printed link' },
+          'It was still way better than the servo.',
+        ] },
+      ],
+      caption: 'My CAD of version 2. The link and the fork follow the real pivot axes. Angles and radii are computed from the linkage in my CAD (50 mm arm, 89.4 mm link, 44.2 mm offset) and the 452 mm wheelbase, with zero at the CAD pose. The orange line on the floor is an annotation that follows the wheel’s heading; the pale one is straight ahead.' },
 
     { type: 'media', id: 'tuning', layout: 'row', h: 'Tuning it',
       p: ['I tuned it on the floor at home: set the caliper, line the car up against a tape measure on the floor, press start, see where it stops, change the setting, and go again.'],
@@ -151,11 +188,11 @@ export default {
       'The settings that change for each track sit together at the top of the file under ADJUSTABLE PARAMETERS (EASY ACCESS): the target distance, the target time and, for version 1, the steering angle. In `finalCompCode.ino` a comment says the servo isn’t used anymore; on version 2 the caliper sets the steering.',
       { problem: 'Set to 15 s, a run might take 16. In the final code I left a note that the timing did not work that well, and that maybe our battery was just low at Penn.', title: 'Runs came out long' },
       { fix: 'We corrected by hand: if a layout needed 15 s, enter 14. I also suggested keeping a spreadsheet of track layouts, each with the can’s sideways offset and the distance, and the settings that worked.' },
-    ] },
-    { type: 'media', id: 'code-media', layout: 'row', items: [
-      { i: 'still-code-parameters.webp', c: 'The settings block at the top of the competition code' },
-      { v: 'v1-target-time-test-2x.mp4', c: 'A slow target-time test run with version 1 on carpet (2x speed)' },
-    ] },
+    ],
+      media: [
+        { v: 'v1-target-time-test-2x.mp4', c: 'A slow target-time test run with version 1 on carpet (2x speed)' },
+        { i: 'still-code-parameters.webp', c: 'The settings block at the top of the competition code' },
+      ] },
 
     { type: 'prose', id: 'competition', h: 'Running it at competition', p: [
       'I filmed short how-to videos for running the car at a competition: loading the batteries, fitting the pack, uploading the code from the Arduino IDE, changing the settings, impound, and starting a run with a pencil.',
@@ -180,8 +217,7 @@ export default {
 
     { type: 'iterations', id: 'timeline', h: 'Timeline', items: [
       { label: 'Jan 6, 2026', title: 'Starting from the 2025 car',
-        p: ['The evening I started designing version 1. The drive, the encoder mount and the electronics came from my 2024-25 car.'],
-        media: [{ i: 'photo-2025-car.webp', c: 'My 2025 car, January 6' }] },
+        p: ['The evening I started designing version 1. The drive, the encoder mount and the electronics came from my 2024-25 car.'] },
       { label: 'Jan 7 to 8', title: 'Version 1 in CAD, then printed and wired',
         p: ['The finished CAD by the evening of January 7; soldering, the printed chassis and the servo on January 8.'],
         media: [
@@ -194,8 +230,7 @@ export default {
       { label: 'Feb 13 to 14', title: 'Version 2: caliper steering, then tuning',
         p: ['The caliper and the printed link on February 13, the finished car that night, and tuning runs on the floor right after.'] },
       { label: 'Later', title: 'Version 2 at a competition',
-        p: ['Started with a pencil and out to the cans on the bonus line (the first video at the top of this page).'],
-        media: [{ i: 'still-v2-at-cans.webp', c: 'Version 2 at the can line during a competition run' }] },
+        p: ['Started with a pencil and out to the cans on the bonus line (the first video at the top of this page).'] },
     ] },
 
     { type: 'prose', id: 'from-2025', h: 'From the 2025 car', p: [

@@ -1,149 +1,161 @@
-// Version 1 (CAD only) against version 2 (built), both from Jerry's CAD at the same scale. The
-// dimension marks and the numbers in the readout are measured on his two STEP files: plate to
-// plate, how far the wheels stand past the plates, the frame parts, fasteners and the blades.
-// "What changed" steps through the differences and lights up the parts involved.
+// Version 1 (CAD only) against version 2 (built), scroll-driven, both from Jerry's CAD at the same
+// scale, version 1 always above (or on the left on a very wide stage). Four steps, one per change: the
+// height (dimension marks), the frame (five parts to one), the blade (the two blades alone, from
+// above, with their 112 mm swing) and the power switch (version 2 alone, from the back). The
+// dimensions are measured on his two STEP files. Views are framed once with the robots at rest and
+// blended by the scroll; every picture is a pure function of the scroll position.
 import { createStage } from '/assets/js/lib/stage.js';
-import { readout, segmented, button } from '/assets/js/lib/ui.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
 import { loadRobot, LIFT, TIP_R } from './rig.js';
-import { createLabels } from './labels.js';
+import { clamp, smooth, lerp, toSph, blend, viewCache } from './views.js';
 
-const GAP = 0.125;            // each robot's centre from the middle when both are shown
-const WHEEL_TOP = 0.048575;   // wheel radius 28.575 mm about the axle at 20 mm (GLB y, before the lift)
-const DIMS = {                // measured on the STEP files (GLB y of the outer plate faces, before the lift)
-  v1: { bot: -0.004, top: 0.044, stack: '48.0 mm', proud: '4.6 mm', bladeY: 0.021 },
-  v2: { bot: 0.0014, top: 0.0386, stack: '37.2 mm', proud: '10.0 mm', bladeY: 0.019 },
+const ACCENT = '#ff6b35';
+const GAP = 0.14;             // each robot's centre from the middle, side by side
+const WHEEL_TOP = 0.048575;   // wheel radius 28.575 mm about the axle at 20 mm (model y, before the lift)
+const DIMS = {                // measured on the STEP files (model y of the outer plate faces, before the lift)
+  v1: { bot: -0.004, top: 0.044, stack: '48.0 mm', proud: '4.6 mm', bladeY: 0.021, blade: 'Two teeth, 18 mm thick', name: 'Version 1 (CAD only)' },
+  v2: { bot: 0.0014, top: 0.0386, stack: '37.2 mm', proud: '10.0 mm', bladeY: 0.019, blade: 'One tooth, 16 mm thick', name: 'Version 2 (built)' },
 };
+// per step: what is lit and how strongly, which camera, whether the dimensions (dims) or the blades
+// alone (blades) show, whether version 1 shows (v1), and where version 1 sits relative to version 2
+// when they are stacked (up: above it; back: behind it, for the view from above). Cameras look from
+// the front half, so side by side version 1 (at +X) stays on the left; the switch step shows
+// version 2 alone, from the back.
 const STEPS = [
-  { h: 'Frame', t: 'Version 1 held its plates with five parts: a centre frame, two wheel guards and two motor clamps. Version 2 replaces all five with one TPU part.', parts: (a, b) => [...a.center, ...a.guards, ...a.clamps, ...b.tpu] },
-  { h: 'Height', t: 'Version 1 stacked its plates on the frame; version 2 sets them into it. Plate to plate drops from 48.0 to 37.2 mm with the same 57 mm wheels.', parts: (a, b) => [...a.top, ...a.bottom, ...b.top, ...b.bottom] },
-  { h: 'Blade', t: 'Two teeth and 18 mm thick became one tooth with a counterweight, 16 mm thick. Both sweep the same 112 mm circle.', parts: (a, b) => [...a.blade, ...b.blade] },
-  { h: 'Switch', t: 'Version 2 adds a REV power switch at the back of the frame.', parts: (a, b) => [...b.switch] },
+  { lit: (a, b) => [...a.top, ...a.bottom, ...b.top, ...b.bottom], glow: 0.3, cam: { azimuth: 180, elevation: 9 }, dims: 1, blades: 0, v1: 1, up: 0.085 },
+  { lit: (a, b) => [...a.center, ...a.guards, ...a.clamps, ...b.tpu], glow: 0.35, cam: { azimuth: 146, elevation: 24 }, dims: 0, blades: 0, v1: 1, up: 0.16 },
+  { lit: (a, b) => [...a.blade, ...b.blade], glow: 0.22, cam: { azimuth: 180, elevation: 88 }, dims: 0, blades: 1, v1: 1, back: 0.17 },
+  { lit: (a, b) => [...b.switch], glow: 0.5, cam: { azimuth: 24, elevation: 20 }, dims: 0, blades: 0, v1: 0, up: 0.16 },
 ];
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, {});
+  const stage = createStage(el, { controls: false, hint: false });
   const T = stage.THREE;
+  const reduced = ctx.reducedMotion;
   const g1 = new T.Group(), g2 = new T.Group();
-  g1.position.y = LIFT; g2.position.y = LIFT;
+  g1.position.set(GAP, LIFT, 0); g2.position.set(-GAP, LIFT, 0);
   stage.root.add(g1, g2);
   const [r1, r2] = await Promise.all([loadRobot(stage, 'v1', { add: false }), loadRobot(stage, 'v2', { add: false })]);
   g1.add(r1.model); g2.add(r2.model);
   stage.fitGround();
   const a = r1.p, b = r2.p;
 
-  // ------------------------------------------------------------ dimension marks (annotations)
-  const lineMat = new T.LineBasicMaterial({ color: '#ff6b35', depthTest: false, transparent: true });
-  const ringMat = new T.LineBasicMaterial({ color: '#ff6b35', depthTest: false, transparent: true, opacity: 0.8 });
-  const marks = new T.Group(); stage.scene.add(marks);
-  const labels = createLabels(el);
-  function seg(pts, mat = lineMat) {
-    const l = new T.Line(new T.BufferGeometry().setFromPoints(pts.map((q) => new T.Vector3(...q))), mat);
-    l.renderOrder = 10; marks.add(l); return l;
+  // one material per mesh, so each part can fade and glow on its own
+  const meshes = [];
+  for (const g of [g1, g2]) g.traverse((m) => {
+    if (!m.isMesh) return;
+    m.material = Array.isArray(m.material) ? m.material.map(stage.cloneMaterial) : stage.cloneMaterial(m.material);
+    meshes.push(m);
+  });
+  const meshSet = (objs) => { const s = new Set(); for (const o of objs) o.traverse((m) => { if (m.isMesh) s.add(m); }); return s; };
+  const bladeMeshes = meshSet([...a.blade, ...b.blade]);
+  const v1Meshes = meshSet([g1]);
+  const litSets = STEPS.map((s) => meshSet(s.lit(a, b)));
+  const accent = new T.Color(ACCENT);
+
+  // where each robot sits: side by side on a very wide stage, otherwise stacked (version 1 above;
+  // for the blades seen from above, version 1 behind, which is the top of the picture)
+  const isStacked = () => el.clientWidth < el.clientHeight * 1.8;
+  function layout(step, stacked) {
+    if (!stacked) return [[GAP, LIFT, 0], [-GAP, LIFT, 0]];
+    const s = STEPS[step];
+    return [[0, LIFT + (s.up || 0), (s.back || 0) / 2], [0, LIFT, -(s.back || 0) / 2]];
   }
-  function ring(x, y, z) {
+  const place = (P) => { g1.position.set(...P[0]); g2.position.set(...P[1]); };
+
+  // ------------------------------------------------------------ marks (annotations), in each robot's own frame
+  const marksMat = new T.LineBasicMaterial({ color: ACCENT, depthTest: false, transparent: true, opacity: 0 });
+  const ringMat = new T.LineBasicMaterial({ color: ACCENT, depthTest: false, transparent: true, opacity: 0 });
+  const geos = [];
+  function seg(parent, pts, mat) {
+    const g = new T.BufferGeometry().setFromPoints(pts.map((q) => new T.Vector3(...q)));
+    const l = new T.Line(g, mat); l.renderOrder = 10; parent.add(l); geos.push(g); return l;
+  }
+  const ov = labelLayer(stage);
+  const labs = []; // { l, grp, at: [x, y, z] local, kind: 'dims' | 'name' | 'blade', text, short }; version 1's fade with it
+  const lab = (grp, text, at, kind, o, short = text) => labs.push({ l: ov.label(text, [0, 0, 0], o), grp, at, kind, text, short, pv: new T.Vector3() });
+  const narrowNow = () => el.clientWidth < 620; // a phone: shorter labels and more room round the robots
+  let narrow = null;
+  // side: +1 puts the marks on the robot's +X side (the left of the screen from the front)
+  for (const [v, grp, side] of [['v1', g1, 1], ['v2', g2, -1]]) {
+    const d = DIMS[v];
+    const x = side * 0.112, z = -0.045, tk = 0.006 * side;
+    seg(grp, [[x, d.bot, z], [x, d.top, z]], marksMat);
+    seg(grp, [[x - tk, d.bot, z], [x + tk, d.bot, z]], marksMat); seg(grp, [[x - tk, d.top, z], [x + tk, d.top, z]], marksMat);
+    lab(grp, d.stack, [x + side * 0.004, (d.bot + d.top) / 2, z], 'dims', { side: side > 0 ? 'l' : 'r', color: ACCENT });
+    const wx = side * 0.0711, wz = -0.03;
+    seg(grp, [[wx, d.top, wz], [wx, WHEEL_TOP, wz]], marksMat);
+    seg(grp, [[wx - 0.012, d.top, wz], [wx + 0.012, d.top, wz]], marksMat); seg(grp, [[wx - 0.006, WHEEL_TOP, wz], [wx + 0.006, WHEEL_TOP, wz]], marksMat);
+    lab(grp, `Wheel +${d.proud}`, [wx, WHEEL_TOP + 0.004, wz], 'dims', { side: side > 0 ? 'l' : 'r', color: ACCENT }, `+${d.proud}`);
+    lab(grp, d.name, [-side * 0.118, 0.02, -0.045], 'name', { color: '#fff1e2', side: side > 0 ? 'r' : 'l' }, d.name.replace(/ \(.*\)$/, ''));
+    // the blade's swing circle
     const pts = [];
-    for (let i = 0; i <= 96; i++) { const t = (i / 96) * Math.PI * 2; pts.push([x + TIP_R * Math.cos(t), y, z + TIP_R * Math.sin(t)]); }
-    return seg(pts, ringMat);
+    for (let i = 0; i <= 96; i++) { const t = (i / 96) * Math.PI * 2; pts.push([TIP_R * Math.cos(t), d.bladeY, -0.076 + TIP_R * Math.sin(t)]); }
+    seg(grp, pts, ringMat);
+    lab(grp, d.blade, [0, d.bladeY, -0.076 + TIP_R], 'blade', { color: ACCENT });
+    lab(grp, v === 'v1' ? 'Version 1: 112 mm swing' : 'Version 2: 112 mm swing', [0, d.bladeY, -0.076 - TIP_R], 'blade', { color: '#fff1e2' });
   }
 
-  // ------------------------------------------------------------ state
-  let mode = 'both', show = 'robot', stepI = -1, restore = null;
-  const isPortrait = () => el.clientHeight > el.clientWidth * 1.05;
-  let wasPortrait = isPortrait();
-  function layout() {
-    const blades = show === 'blades', portrait = isPortrait();
-    wasPortrait = portrait;
-    g1.visible = mode !== 'v2'; g2.visible = mode !== 'v1';
-    // side by side on a wide stage; stacked on a tall one (blades: one above the other as seen from the top)
-    g1.position.set(0, LIFT, 0); g2.position.set(0, LIFT, 0);
-    if (mode === 'both') {
-      if (!portrait) { g1.position.x = GAP; g2.position.x = -GAP; }
-      else if (blades) { g1.position.z = -0.09; g2.position.z = 0.09; }
-      else g1.position.y = LIFT + 0.09;
-    }
-    for (const [grp, p] of [[g1, a], [g2, b]]) {
-      grp.traverse((o) => { if (o.isMesh) o.visible = !blades; });
-      for (const x of p.blade) x.traverse((o) => { if (o.isMesh) o.visible = true; });
-    }
-    // marks and labels
-    for (const c of [...marks.children]) { c.geometry.dispose(); marks.remove(c); }
-    const lab = [];
-    for (const [v, grp] of [['v1', g1], ['v2', g2]]) {
-      if (!grp.visible) continue;
-      const d = DIMS[v], { x: ox, y: oy, z: oz } = grp.position, name = v === 'v1' ? 'Version 1' : 'Version 2';
-      if (blades) {
-        ring(ox, d.bladeY + oy, -0.076 + oz);
-        lab.push({ text: v === 'v1' ? 'Two teeth, 18 mm thick' : 'One tooth, 16 mm thick', p: [ox, d.bladeY + oy, -0.076 + oz + TIP_R + 0.012], plain: true });
-        lab.push({ text: `${name}: 112 mm swing`, p: [ox, d.bladeY + oy, -0.076 + oz - TIP_R - 0.012], plain: true });
-        continue;
+  // ------------------------------------------------------------ views: framed once per step, robots at rest in that step's layout
+  const views = viewCache(el, (aspect) => {
+    const stacked = aspect < 1.8, portrait = aspect < 1;
+    const keep = [g1.position.clone(), g2.position.clone()];
+    const out = STEPS.map((s, i) => {
+      place(layout(i, stacked));
+      const objs = s.blades ? [...a.blade, ...b.blade] : s.v1 ? [g1, g2] : [g2];
+      const pad = s.blades ? 1.5 : narrowNow() ? (s.v1 ? 1.65 : 1.5) : !s.v1 ? 1.4 : portrait ? 1.3 : 1.2;
+      return toSph(T, stage.frame(objs, { ...s.cam, pad, apply: false, refresh: true }));
+    });
+    g1.position.copy(keep[0]); g2.position.copy(keep[1]);
+    return out;
+  });
+
+  let sig = '';
+  function setProgress(prog, step = 0, stepP = 0) {
+    step = clamp(step | 0, 0, STEPS.length - 1);
+    const i0 = Math.max(0, step - 1), A = STEPS[i0], B = STEPS[step];
+    const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+    const stacked = isStacked();
+    const [fx, fy] = ctx.shift();
+    stage.setShift(fx, fy);
+    // stacked, version 1 moves between the steps' layouts (views are framed with it at rest in each)
+    const PA = layout(i0, stacked), PB = layout(step, stacked);
+    place(PA.map((q, j) => q.map((c, n) => lerp(c, PB[j][n], k))));
+    // fades and glows: write materials only when they change
+    const fade = lerp(A.blades, B.blades, k), v1a = lerp(A.v1, B.v1, k), q = (x) => Math.round(x * 100) / 100;
+    const s = `${step}|${q(k)}|${q(fade)}|${q(v1a)}`;
+    if (s !== sig) {
+      sig = s;
+      for (const m of meshes) {
+        const op = (bladeMeshes.has(m) ? 1 : 1 - fade) * (v1Meshes.has(m) ? v1a : 1);
+        const glow = (litSets[i0].has(m) && step !== i0 ? (1 - k) * A.glow : 0) + (litSets[step].has(m) ? k * B.glow : 0);
+        for (const mat of [].concat(m.material)) {
+          mat.transparent = op < 0.999; mat.opacity = op; mat.depthWrite = op > 0.5;
+          if (mat.emissive) { mat.emissive.copy(accent); mat.emissiveIntensity = glow; }
+        }
+        m.visible = op > 0.02;
+        m.castShadow = op > 0.5;
       }
-      // seen from the front, +X is on the left of the screen
-      const side = mode === 'both' && !portrait ? (v === 'v1' ? 1 : -1) : portrait ? -1 : 1;
-      const labSide = mode === 'both' && !portrait ? (v === 'v1' ? 'l' : 'r') : portrait ? 'l' : 'r';
-      const x = ox + side * 0.112, z = -0.045 + oz, y0 = d.bot + oy, y1 = d.top + oy, tk = 0.006 * side;
-      seg([[x, y0, z], [x, y1, z]]);
-      seg([[x - tk, y0, z], [x + tk, y0, z]]); seg([[x - tk, y1, z], [x + tk, y1, z]]);
-      lab.push({ text: d.stack, p: [x + (labSide === 'l' ? 0.004 : -0.004), (y0 + y1) / 2, z], side: labSide });
-      // how far the outer wheel stands past the top plate
-      const wx = ox + side * 0.0711, wz = -0.03 + oz, wy = WHEEL_TOP + oy;
-      seg([[wx, y1, wz], [wx, wy, wz]]);
-      seg([[wx - 0.012, y1, wz], [wx + 0.012, y1, wz]]); seg([[wx - 0.006, wy, wz], [wx + 0.006, wy, wz]]);
-      lab.push({ text: `Wheel +${d.proud}`, p: [wx, wy + 0.012, wz], plain: true });
-      lab.push({ text: v === 'v1' ? 'Version 1 (CAD only)' : 'Version 2 (built)', p: [ox, oy - LIFT, -0.13 + oz], plain: true });
+      stage.invalidate();
     }
-    labels.set(lab);
-    stage.fitGround();
-    frame();
+    const dims = lerp(A.dims, B.dims, k), rings = fade;
+    marksMat.opacity = 0.95 * dims; ringMat.opacity = 0.85 * rings; // version 1 is always shown while these are
+    marksMat.visible = dims > 0.01; ringMat.visible = rings > 0.01;
+    if (narrow !== narrowNow()) {
+      narrow = narrowNow();
+      for (const x of labs) x.l.el.lastChild.textContent = narrow ? x.short : x.text;
+    }
+    for (const x of labs) {
+      x.l.a = (x.kind === 'dims' ? dims : x.kind === 'blade' ? rings : 1 - rings) * (x.grp === g1 ? v1a : 1);
+      x.grp.localToWorld(x.pv.set(...x.at)); x.l.p.copy(x.pv);
+    }
+    const v = views();
+    blend(stage, v[i0], v[step], k, reduced ? 0 : 0.02 * (step + stepP - 2));
+    ov.update();
   }
-  function frame() {
-    const objs = show === 'blades' ? [...(g1.visible ? a.blade : []), ...(g2.visible ? b.blade : [])] : [g1.visible && g1, g2.visible && g2].filter(Boolean);
-    const portrait = isPortrait();
-    if (show === 'blades') stage.frame(objs, { azimuth: 0, elevation: 88, pad: 1.45, refresh: true });
-    else if (mode === 'both') stage.frame(objs, { azimuth: 172, elevation: 10, pad: portrait ? 1.3 : 1.22, refresh: true });
-    else stage.frame(objs, { azimuth: 145, elevation: 22, pad: 1.3, refresh: true });
-    sync();
-  }
-  const sync = () => labels.update(stage.camera);
-  stage.controls?.addEventListener('change', sync);
-  const ro = new ResizeObserver(() => requestAnimationFrame(() => { if (isPortrait() !== wasPortrait) layout(); else sync(); }));
-  ro.observe(el);
-
-  // ------------------------------------------------------------ controls
-  segmented(ctx.panel, { label: 'Version', options: [{ value: 'v1', label: 'Version 1' }, { value: 'v2', label: 'Version 2' }, { value: 'both', label: 'Both' }], value: mode,
-    onChange: (v) => { mode = v; layout(); } });
-  segmented(ctx.panel, { label: 'Show', options: [{ value: 'robot', label: 'Robot' }, { value: 'blades', label: 'Blades only' }], value: show,
-    onChange: (v) => { show = v; layout(); } });
-  const stepBtn = button(ctx.panel, { label: 'What changed (1 of 4)', onClick: () => {
-    restore?.(); restore = null;
-    stepI = stepI + 1 >= STEPS.length ? -1 : stepI + 1;
-    if (stepI >= 0) {
-      const s = STEPS[stepI];
-      if (s.h === 'Blade' && show !== 'blades') { /* blades read fine in the robot view too */ }
-      restore = stage.highlight(s.parts(a, b), '#ff6b35', { intensity: 0.55 });
-      note.innerHTML = '';
-      const strong = document.createElement('strong'); strong.textContent = `${s.h}. `;
-      note.append(strong, document.createTextNode(s.t));
-    } else note.textContent = 'Step through the four changes, or turn the models to compare them.';
-    stepBtn.textContent = stepI + 1 >= STEPS.length ? 'Clear' : `What changed (${stepI + 2} of 4)`;
-  } });
-  const cols = document.createElement('div');
-  cols.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px 28px;flex-basis:100%';
-  const rows = [
-    { key: 'stack', label: 'Plate to plate' }, { key: 'proud', label: 'Wheels past each plate' }, { key: 'frame', label: 'Frame parts' },
-    { key: 'fast', label: 'Screws, nuts' }, { key: 'blade', label: 'Blade' },
-  ];
-  const ro1 = readout(cols, { title: 'Version 1 (CAD only)', rows });
-  const ro2 = readout(cols, { title: 'Version 2 (built)', rows });
-  ro1.set({ stack: '48.0 mm', proud: '4.6 mm', frame: '5', fast: '22, 14', blade: '2 teeth, 18 mm' });
-  ro2.set({ stack: '37.2 mm', proud: '10.0 mm', frame: '1 (TPU)', fast: '12, 4', blade: '1 tooth, 16 mm' });
-  const note = document.createElement('p');
-  note.className = 'rx-cap';
-  note.style.cssText = 'flex-basis:100%;margin:0;min-height:2.9em';
-  note.textContent = 'Step through the four changes, or turn the models to compare them.';
-  note.setAttribute('aria-live', 'polite');
-  ctx.panel.append(note, cols);
-
-  layout();
-  requestAnimationFrame(sync);
-  return { dispose() { ro.disconnect(); labels.dispose(); for (const c of marks.children) c.geometry.dispose(); stage.dispose(); } };
+  setProgress(0, 0, 0);
+  return {
+    setProgress,
+    dispose() { ov.dispose(); for (const g of geos) g.dispose(); marksMat.dispose(); ringMat.dispose(); stage.dispose(); },
+  };
 }

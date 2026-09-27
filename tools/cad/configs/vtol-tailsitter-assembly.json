@@ -1,0 +1,3 @@
+{ "prefix": "vtol",
+  "remove": [],
+  "keep": ["^elevon_[LR]$", "^prop_[LR]$", "^motor_[LR]_(rotor|stator)$", "^outer_[LR]$", "^inner_[LR]$", "^centre$"] }

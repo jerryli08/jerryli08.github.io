@@ -1,7 +1,10 @@
-// The small physics model behind the arena demo: a kinematic two-wheel robot (tank steering,
+// The small physics model behind the arena scrolly: a kinematic two-wheel robot (tank steering,
 // arcade mix) with a spinning blade, and cardboard boxes as rigid bodies (gravity, corner contacts
 // against the floor, walls and ceiling with friction, a simple push-apart between boxes). Written
 // for the page and illustrative only; it is not a simulation of the real robot's hits.
+// record() runs it once, ahead of time, on a fixed script (drive, turn, weapon speed) and keeps
+// every pose, so the page can show any moment of the run as a pure function of the scroll.
+// There is nothing random in it: the same script always gives the same run.
 // It takes THREE as an argument so it has no imports (and can be tested outside the browser).
 //
 // Robot frame: forward is -Z at yaw 0, yaw is about +Y (counter-clockwise from above).
@@ -28,25 +31,25 @@ export const BOX_SPEC = [
 ];
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-/** First-order spin-up (0.8 s) and coast-down (1.5 s) toward a target speed. */
+/** First-order spin-up (0.6 s) and coast-down (1.5 s) toward a target speed; it settles on the target. */
 export function spinTo(w, target, dt) {
-  const tau = target > w ? 0.8 : 1.5;
+  const tau = target > w ? 0.6 : 1.5;
   w += (target - w) * (1 - Math.exp(-dt / tau));
-  if (target === 0 && w < 0.5) w = 0;
+  if (Math.abs(target - w) < 0.01 * Math.max(target, 50)) w = target; // within 1 % it is there
   return w;
 }
 /** Drawn blade speed: true speed when slow, capped near 26 rad/s so the blade stays readable. */
 export const drawnSpeed = (w) => 26 * Math.tanh(w / 26);
 
-export function createSim(T, { onHit } = {}) {
+export function createSim(T, { onHit, boxes: SPEC = BOX_SPEC, start: START0 = START } = {}) {
   const V3 = T.Vector3;
   const HX = ARENA.hx, HZ = ARENA.hz, CEIL = ARENA.ceil;
-  const st = { x: START.x, z: START.z, yaw: START.yaw, vL: 0, vR: 0, ex: 0, ez: 0, ew: 0, aL: 0, aR: 0, aW: 0, w: 0, target: 0, hits: 0 };
-  const input = { keys: new Set(), jf: 0, jt: 0 };
+  const st = { x: START0.x, z: START0.z, yaw: START0.yaw, vL: 0, vR: 0, ex: 0, ez: 0, ew: 0, aL: 0, aR: 0, aW: 0, w: 0, target: 0, hits: 0 };
+  const input = { jf: 0, jt: 0 }; // forward and turn, -1..1 (arcade mix)
 
-  const vols = BOX_SPEC.map((b) => b.s[0] * b.s[1] * b.s[2]);
+  const vols = SPEC.map((b) => b.s[0] * b.s[1] * b.s[2]);
   const vMin = Math.min(...vols), vMax = Math.max(...vols);
-  const boxes = BOX_SPEC.map((spec, i) => {
+  const boxes = SPEC.map((spec, i) => {
     const [w, h, d] = spec.s.map((v) => v / 1000);
     const m = 0.03 + (0.05 * (vols[i] - vMin)) / (vMax - vMin || 1);
     const k = (m / 12) * 1.4; // thin-walled box: a little more inertia than a solid one
@@ -61,13 +64,12 @@ export function createSim(T, { onHit } = {}) {
     boxes.forEach((b, i) => {
       const s = from?.[i];
       if (s) { b.x.fromArray(s.x); b.q.fromArray(s.q); } else {
-        const [x, z, yaw] = BOX_SPEC[i].p;
+        const [x, z, yaw] = SPEC[i].p;
         b.x.set(x, b.hy, z); b.q.setFromAxisAngle(new V3(0, 1, 0), yaw);
       }
       b.v.set(0, 0, 0); b.w3.set(0, 0, 0); b.sleep = true; b.still = 0; b.cool = 0;
     });
   }
-  function resetRobot() { Object.assign(st, { x: START.x, z: START.z, yaw: START.yaw, vL: 0, vR: 0, ex: 0, ez: 0, ew: 0 }); }
   resetBoxes();
 
   // ------------------------------------------------------------ rigid-body helpers
@@ -271,9 +273,8 @@ export function createSim(T, { onHit } = {}) {
   // ------------------------------------------------------------ one fixed step
   function step(h) {
     st.w = spinTo(st.w, st.target, h);
-    const k = input.keys;
-    const f = clamp((k.has('f') ? 1 : 0) - (k.has('b') ? 1 : 0) + input.jf, -1, 1);
-    const t = clamp((k.has('r') ? 1 : 0) - (k.has('l') ? 1 : 0) + input.jt, -1, 1) * TURN;
+    const f = clamp(input.jf, -1, 1);
+    const t = clamp(input.jt, -1, 1) * TURN;
     const tl = clamp(f + t, -1, 1) * V_MAX, tr = clamp(f - t, -1, 1) * V_MAX;
     st.vL += clamp(tl - st.vL, -ACCEL * h, ACCEL * h);
     st.vR += clamp(tr - st.vR, -ACCEL * h, ACCEL * h);
@@ -313,7 +314,46 @@ export function createSim(T, { onHit } = {}) {
       if (b.still > 0.3 && onFloor >= 3) { b.sleep = true; b.v.set(0, 0, 0); b.w3.set(0, 0, 0); }
     }
   }
-  const busy = () => input.keys.size || input.jf || input.jt || st.vL || st.vR || st.ex || st.ez || st.ew
-    || st.w > 0 || st.target > 0 || boxes.some((b) => !b.sleep);
-  return { st, input, boxes, step, busy, resetBoxes, resetRobot };
+  return { st, input, boxes, step, resetBoxes };
+}
+
+/**
+ * Run the model once on a script and keep every pose. script(t, st, boxes) returns { f, turn, weapon }
+ * at sim time t (it may steer by the robot's state st and the boxes): forward and turn commands
+ * (-1..1) and the weapon's target speed (rad/s).
+ * Returns { rate, n, duration, robot: [x, z, yaw, left wheel, right wheel, weapon angle] per frame,
+ * w: weapon speed (rad/s) per frame, boxes: [x, y, z, qx, qy, qz, qw] per box per frame, hits: [t] }.
+ */
+export function record(T, opts) {
+  const it = recording(T, opts);
+  let r;
+  while (!(r = it.next()).done);
+  return r.value;
+}
+/** The same run as a generator: it yields now and then (the fraction done), so a page can spread it over several frames. */
+export function* recording(T, { script, duration, rate = 120, boxes: SPEC = BOX_SPEC, start = START }) {
+  const DT = 1 / 240, sub = Math.round(1 / (rate * DT));
+  const hits = [];
+  let t = 0;
+  const sim = createSim(T, { boxes: SPEC, start, onHit: () => hits.push(+t.toFixed(4)) });
+  const { st, input, boxes } = sim;
+  const n = Math.round(duration * rate) + 1, nb = boxes.length;
+  const R = new Float32Array(n * 6), W = new Float32Array(n), B = new Float32Array(n * nb * 7);
+  const keep = (i) => {
+    R.set([st.x, st.z, st.yaw, st.aL, st.aR, st.aW], i * 6);
+    W[i] = st.w;
+    boxes.forEach((b, j) => { const o = (i * nb + j) * 7; B.set([b.x.x, b.x.y, b.x.z, b.q.x, b.q.y, b.q.z, b.q.w], o); });
+  };
+  keep(0);
+  for (let i = 1; i < n; i++) {
+    for (let k = 0; k < sub; k++) {
+      const c = script(t, st, boxes);
+      input.jf = c.f || 0; input.jt = c.turn || 0; st.target = c.weapon || 0;
+      sim.step(DT);
+      t += DT;
+    }
+    keep(i);
+    if (i % 30 === 0) yield i / n;
+  }
+  return { rate, n, duration, nb, robot: R, w: W, boxes: B, hits, sizes: boxes.map((b) => [b.w, b.h, b.d]) };
 }

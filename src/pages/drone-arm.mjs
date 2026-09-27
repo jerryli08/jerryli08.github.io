@@ -5,7 +5,7 @@
 // questions.md: the servo model (the CAD and Jerry disagree, so no model is named), who designed the
 // claw, whether the joint hubs and bearings were parts from his other robots, any powered test,
 // the camera, and what he would change.
-// Demos: assets/js/pages/drone-arm/ (rig.js has the axes from the STEP and the IK).
+// Scrollies: assets/js/pages/drone-arm/ (rig.js has the axes from the STEP and the IK).
 const M = '/assets/models/drone-arm';
 
 export default {
@@ -35,14 +35,19 @@ export default {
       { fix: 'Drones with propeller guards already exist, so it could be made safe. And the idea is not limited to senior homes: a drone that can carry household items generalizes to other jobs.', label: 'Answer' },
     ] },
 
-    { type: 'demo', id: 'cad', module: '@viewer', h: 'The drone and the arm, in CAD', aside: 'right',
-      poster: `${M}/poster-cad.webp`, height: 'clamp(340px, min(62vh, 105vw), 600px)',
-      data: { src: `${M}/drone.glb`, azimuth: 38, elevation: 16, pad: 0.86 },
-      p: [
-        'The arm hangs under the center of an X500 quadcopter and swings in the drone’s center plane, between the landing gear legs. In the CAD it is folded up, holding a 500 ml bottle of water.',
-        'Three joints move: the shoulder and the elbow, each a servo, and the claw, whose two jaws turn together.',
+    { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', stepHeight: '90vh',
+      poster: `${M}/poster-cad.webp`, h: 'The drone and the arm, in CAD',
+      data: { models: [{ label: 'CAD', src: `${M}/drone.glb` }] },
+      steps: [
+        { h: 'Under an X500', view: { azimuth: 38, elevation: 16, pad: 0.86 }, p: [
+          'The arm hangs under the center of an X500 quadcopter and swings in the drone’s center plane, between the landing gear legs. In the CAD it is folded up, holding a 500 ml bottle of water.',
+        ] },
+        { h: 'Three joints', view: { focus: '^anim_arm_(?!1[2-5]_)', azimuth: 20, elevation: 4, pad: 1.3,
+          labels: [{ text: 'Shoulder', at: [0.3815, -0.0662, -0.1115] }, { text: 'Elbow', at: [0.5627, -0.2165, -0.1115] }, { text: 'Claw', at: [0.284, -0.207, -0.1115], side: 'l' }] }, p: [
+          'Three joints move: the shoulder and the elbow, each a servo, and the claw, whose two jaws turn together.',
+        ] },
       ],
-      caption: 'Drag to turn it. Screws and the drone’s power board are left out of the model; nothing else is changed.' },
+      caption: 'Screws and the drone’s power board are left out of the model; nothing else is changed.' },
 
     { type: 'prose', id: 'arm', h: 'The arm', p: [
       { h: 'Links from spare drone arms' },
@@ -55,33 +60,35 @@ export default {
       'A printed wedge bolts under the drone’s center plate and carries the shoulder. Folded as in the CAD, the arm holds the bottle under the middle of the drone.',
     ] },
 
-    { type: 'demo', id: 'grab', module: 'grab', h: 'How it would pick up a bottle',
-      poster: `${M}/poster-grab.webp`, height: 'clamp(400px, min(72vh, 125vw), 700px)',
-      p: [
-        'This is the plan for a grab, animated on the real CAD:',
-        { ol: [
-          'A camera on the end of the arm finds the bottle and works out where it is relative to the drone.',
-          'The drone flies closer and holds its position.',
-          'The arm uses inverse kinematics to move the claw to the bottle, and the claw closes.',
-          'The drone lifts off with it.',
-        ] },
+    { type: 'scrolly', id: 'grab', module: 'grab', width: 'full', stepHeight: '90vh',
+      poster: `${M}/poster-grab.webp`, h: 'How it would pick up a bottle',
+      p: ['This is the plan for a grab, animated on the real CAD. None of it ran: we pivoted before the arm went on the drone.'],
+      steps: [
+        { h: '1. Find the bottle', p: ['The drone flies in with the arm raised. A camera on the end of the arm finds the bottle and works out where it is relative to the drone.'] },
+        { h: '2. Close in and hold position', p: ['The drone flies closer and holds its position.'] },
+        { h: '3. Reach it with inverse kinematics', p: ['The claw opens, and the arm uses inverse kinematics to move it to the bottle: the IK target in orange, the two links in blue.'] },
+        { h: '4. Close the claw', p: ['The claw closes around the bottle. One servo turns both jaws, geared to each other at their pivots.'] },
+        { h: '5. Lift off with it', p: ['The drone lifts off with it, and the arm folds back to its pose in the CAD, holding the bottle under the middle of the drone.'] },
       ],
-      caption: 'The plan, animated: none of it ran, because we pivoted before the arm went on the drone. The table, the camera and its view are drawn in; they are not in the CAD. The hover point, the path and the 25° jaw opening are choices for this animation.' },
+      caption: 'The plan, animated: none of it ran, because we pivoted before the arm went on the drone. The table, the camera, its view and the detection box are drawn in; they are not in the CAD. The hover point, the path and the 25° jaw opening are choices for this animation.' },
 
     { type: 'prose', id: 'ik-math', h: 'The inverse kinematics', p: [
       'The arm moves in one vertical plane under the drone, so finding the joint angles for a target is the classic two-link problem. Put the shoulder at the origin, call the link lengths L1 = 235.4 mm (shoulder to elbow) and L2 = 278.9 mm (elbow to the middle of the claw), both measured in the CAD, and aim the claw at a target (u, v):',
       { pre: 'd  = sqrt(u^2 + v^2)\nq2 = -acos((d^2 - L1^2 - L2^2) / (2 L1 L2))\nq1 = atan2(v, u)\n     - atan2(L2 sin q2, L1 + L2 cos q2)' },
       'q1 is the shoulder angle and q2 the elbow angle, both measured counterclockwise in the arm’s plane.',
       'The minus sign on q2 picks the elbow-out solution the CAD is drawn in. Plugging in the claw’s position from the CAD gives back the CAD’s own joint angles, q1 = -39.7° and q2 = -142.3°, which checks the geometry. The claw can reach anywhere from 43.5 mm to 514.3 mm from the shoulder.',
-      { h: 'No wrist' },
-      'The claw is fixed to the forearm, so its angle is whatever q1 + q2 makes it. It is level, as in the CAD, only along one arc: a circle of radius L1 around a point L2 behind the shoulder. In the animation above, the drone holds where the bottle sits on that arc, so the drone’s position does the job a wrist joint would.',
     ] },
 
-    { type: 'demo', id: 'ik', module: 'ik', h: 'Drive the arm yourself',
-      poster: `${M}/poster-ik.webp`, height: 'clamp(380px, min(66vh, 100vw), 640px)',
-      p: [
-        'Drag the orange target, or click where you want the claw, and the shoulder and elbow turn about their real axes to put the claw on it.',
-        'The shaded ring is everywhere the claw can reach. Along the dashed arc it stays level.',
+    { type: 'scrolly', id: 'ik', module: 'ik', width: 'wide', side: 'left', stepHeight: '90vh',
+      poster: `${M}/poster-ik.webp`, h: 'Reaching with two joints',
+      steps: [
+        { h: 'Two joints, one plane', p: ['The shoulder and the elbow turn about their real axes in the CAD. Here the arm is in its CAD pose: q1 = -39.7° and q2 = -142.3°, with L1 = 235.4 mm and L2 = 278.9 mm.'] },
+        { h: 'Out to full reach', p: ['The orange target moves out, and the inverse kinematics turns the shoulder and the elbow to keep the claw on it. Almost straight, the arm reaches just over 500 mm here; the full reach is L1 + L2 = 514.3 mm.'] },
+        { h: 'Everywhere it can reach', p: ['The shaded ring is everywhere the claw can reach, from 43.5 mm to 514.3 mm from the shoulder. The target runs around its edge under the drone.'] },
+        { h: 'No wrist', p: [
+          'The claw is fixed to the forearm, so its angle is whatever q1 + q2 makes it. It is level, as in the CAD, only along one arc: a circle of radius L1 around a point L2 behind the shoulder. Along the dashed arc the claw’s tilt stays at 0°, all the way back to the pose in the CAD.',
+          'In the grab above, the drone holds where the bottle sits on that arc, so the drone’s position does the job a wrist joint would.',
+        ] },
       ],
       caption: 'The planned control, worked out on the CAD; it never ran on the arm. The joint limits here only keep the arm under the drone; the real ones are not in the CAD. The near half of the drone is cut away so the arm reads in profile.' },
 

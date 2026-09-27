@@ -1,4 +1,4 @@
-// Shared rig for the Science Olympiad Machines page: Jerry's CAD of the device
+// Shared rig for the Science Olympiad Machines page's two scrollies: Jerry's CAD of the device
 // (assets/models/scioly-machines/device.glb, from "umbc machines build.step"), with the two levers
 // turned about their real fulcrums and the rigid link carried between their real link pins.
 //
@@ -63,23 +63,35 @@ export async function loadRig(stage) {
   const pick = (list) => list.flatMap((re) => stage.part(re, model));
   const parts = { upper: pick(NAMES.upper), lower: pick(NAMES.lower), link: pick(NAMES.link) };
   // own materials, so a group can be lit up without lighting the rest
-  for (const p of [...parts.upper, ...parts.lower, ...parts.link]) p.traverse((m) => { if (m.isMesh) m.material = m.material.clone(); });
+  for (const p of [...parts.upper, ...parts.lower, ...parts.link]) p.traverse((m) => { if (m.isMesh) m.material = stage.cloneMaterial(m.material); });
   const upper = stage.pivot(parts.upper, [X_UP, P1[0], P1[1]], [1, 0, 0]);
   const lower = stage.pivot(parts.lower, [X_LO, P2[0], P2[1]], [1, 0, 0]);
   const link = stage.pivot(parts.link, [0.05, L[0], L[1]], [1, 0, 0]);
   const base = link.position.clone();
-  let a1 = 0, a2 = 0;
+  let a1 = 0, a2 = 0, placed = false;
+  const tints = {}, tc = new THREE.Color();
   const rig = {
     model, parts, upper, lower, link,
     get a1() { return a1; }, get a2() { return a2; },
     /** tip the upper lever by a (radians about +x; negative = its load side goes down) */
     set(a) {
+      if (a === a1 && placed) return; // nothing moved: no redraw, no shadow update
+      placed = true;
       a1 = a; a2 = lowerAngle(a);
       upper.setAngle(a1); lower.setAngle(a2);
       const u = turn(P1, U, a1), l = turn(P2, L, a2);
       link.position.set(base.x, base.y + (l[0] - L[0]), base.z + (l[1] - L[1]));
       link.setAngle(Math.atan2(u[1] - l[1], u[0] - l[0]));
-      rig.onChange?.();
+      stage.invalidate();
+    },
+    /** light a group ('upper', 'lower', 'link') with color at strength k (0..1); writes only on change */
+    tint(group, color, k) {
+      const key = `${color}|${k.toFixed(3)}`;
+      if (tints[group] === key) return;
+      tints[group] = key;
+      tc.set(color).multiplyScalar(0.5 * k);
+      for (const p of parts[group]) p.traverse((m) => { if (m.isMesh && m.material.emissive) { m.material.emissive.copy(tc); m.material.emissiveIntensity = 1; } });
+      stage.invalidate(false);
     },
     /** world point on the upper lever, d mm from its fulcrum toward the load side, dy below the beam axis */
     upperPoint(d, dy = 0) { const p = turn(P1, [P1[0] - dy, P1[1] - d / 1000], a1); return new THREE.Vector3(X_UP, p[0], p[1]); },
@@ -92,36 +104,35 @@ export async function loadRig(stage) {
 }
 
 // ------------------------------------------------------------------ screen labels (annotations only)
+// Tags pinned to 3D points. Each has an alpha `a` (0..1) that the scroll sets; sizes are measured
+// only when the text changes, and styles are written only when they change.
 const CSS = `
 .sm-labs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
 .sm-lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;
-  font: 550 12px/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; transition: opacity .2s; }
+  font: 550 12px/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; opacity: 0; }
 .sm-lab i { width: 7px; height: 7px; border-radius: 50%; background: #eee9e3; box-shadow: 0 0 0 2px rgba(11,10,9,.7); flex: none; }
 .sm-lab b { font-weight: 550; padding: 3px 7px; border-radius: 6px; background: rgba(11,10,9,.8); border: 1px solid rgba(237,232,226,.18); }
 .sm-lab.l { flex-direction: row-reverse; }
 .sm-lab.c { flex-direction: column; gap: 4px; }
 .sm-lab.c i { order: 2; }
 .sm-lab.c.u i { order: 0; }
-.sm-lab.mass b { cursor: grab; pointer-events: auto; touch-action: none; padding: 5px 9px; font-weight: 650; }
-.sm-lab.mass.drag b { cursor: grabbing; }
+.sm-lab.mass b { padding: 5px 9px; font-weight: 650; }
 .sm-lab.a b { background: rgba(255,107,53,.92); border-color: rgba(255,255,255,.35); color: #140a05; }
 .sm-lab.b b { background: rgba(88,176,255,.92); border-color: rgba(255,255,255,.35); color: #04101c; }
-.sm-lab.a i { background: #ff6b35; } .sm-lab.b i { background: #58b0ff; }
-.sm-lab.dim b { color: #b8b0a7; background: rgba(11,10,9,.62); }
-@media (max-width: 600px) { .sm-lab { font-size: 11px; } .sm-lab b { padding: 2px 6px; } .sm-lab.mass b { padding: 5px 8px; } }
-@media (prefers-reduced-motion: reduce) { .sm-lab { transition: none; } }
-.sm-status { position: absolute; left: 12px; top: 12px; z-index: 3; max-width: calc(100% - 24px); padding: 6px 10px; border-radius: 8px;
-  font: 600 12.5px/1.3 var(--font, system-ui, sans-serif); color: #eee9e3; background: rgba(11,10,9,.82); border: 1px solid rgba(237,232,226,.16); pointer-events: none; }
-.sm-status.ok { color: #9be39b; } .sm-status.warn { color: #ffb38a; }
+.sm-lab.k b { background: rgba(242,193,78,.92); border-color: rgba(255,255,255,.35); color: #171003; }
+.sm-lab.a i { background: #ff6b35; } .sm-lab.b i { background: #58b0ff; } .sm-lab.k i { background: #f2c14e; }
+.sm-lab.dimtag i { display: none; }
+@media (max-width: 600px) { .sm-lab { font-size: 11px; } .sm-lab b { padding: 2px 6px; } .sm-lab.mass b { padding: 4px 8px; } }
 `;
 let styled = false;
 function style() { if (styled) return; const s = document.createElement('style'); s.textContent = CSS; document.head.append(s); styled = true; }
 
-/** labels(el): screen-space tags on 3D points. set([{ id, text, p: Vector3, side, cls }]); update(camera) */
+/** labels(el): tags on 3D points. add(id, { text, side: 'l'|'r'|'c'|'u', cls }); set it.a; update(camera) */
 export function labels(el) {
   style();
   const box = document.createElement('div');
   box.className = 'sm-labs';
+  box.setAttribute('aria-hidden', 'true');
   el.append(box);
   const items = new Map();
   const v = new THREE.Vector3();
@@ -131,44 +142,41 @@ export function labels(el) {
       const d = document.createElement('span');
       d.className = `sm-lab${o.side === 'l' ? ' l' : o.side === 'c' ? ' c' : o.side === 'u' ? ' c u' : ''}${o.cls ? ` ${o.cls}` : ''}`;
       d.innerHTML = '<i></i><b></b>';
-      d.querySelector('b').textContent = o.text;
-      if (!o.interactive) d.setAttribute('aria-hidden', 'true');
+      const b = d.querySelector('b');
+      b.textContent = o.text;
       box.append(d);
-      const it = { ...o, d, on: o.on !== false };
+      const it = { ...o, d, b, t: o.text, a: 0, p: null, w: 0, h: 0, sized: false, shown: -1, tr: '' };
       items.set(id, it);
       return it;
     },
-    text(id, t) { const it = items.get(id); if (it && it.t !== t) { it.t = t; it.d.querySelector('b').textContent = t; } },
-    show(id, on) { const it = items.get(id); if (it) it.on = on; },
+    get(id) { return items.get(id); },
+    text(id, t) { const it = items.get(id); if (it && it.t !== t) { it.t = t; it.b.textContent = t; it.sized = false; } },
+    alpha(id, a) { const it = items.get(id); if (it) it.a = a; },
     point(id, p) { const it = items.get(id); if (it) it.p = p; },
     update(camera) {
       const w = el.clientWidth, h = el.clientHeight;
       camera.updateMatrixWorld();
       for (const it of items.values()) {
-        if (!it.p) continue;
-        v.copy(it.p).project(camera);
-        const x = ((v.x + 1) / 2) * w, y = ((1 - v.y) / 2) * h;
-        const dw = it.d.offsetWidth, dh = it.d.offsetHeight;
+        let a = it.p ? Math.round(Math.min(1, Math.max(0, it.a)) * 100) / 100 : 0;
+        let x = 0, y = 0;
+        if (a > 0) {
+          v.copy(it.p).project(camera);
+          x = ((v.x + 1) / 2) * w; y = ((1 - v.y) / 2) * h;
+          if (v.z > 1 || x < -20 || x > w + 20 || y < -20 || y > h + 20) a = 0;
+        }
+        if (a !== it.shown) { it.d.style.opacity = String(a); it.shown = a; }
+        if (!a) continue;
+        if (!it.sized) { it.w = it.d.offsetWidth; it.h = it.d.offsetHeight; it.sized = true; }
         let tx, ty;
-        if (it.side === 'c') { tx = x - dw / 2; ty = y - dh + 3.5; }
-        else if (it.side === 'u') { tx = x - dw / 2; ty = y - 3.5; }
-        else { tx = it.side === 'l' ? x - dw + 3.5 : x - 3.5; ty = y - dh / 2; }
-        it.d.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
-        const off = v.z > 1 || x < -20 || x > w + 20 || y < -20 || y > h + 20;
-        it.d.style.opacity = !it.on || off ? '0' : '1';
-        it.d.style.visibility = !it.on ? 'hidden' : '';
+        if (it.side === 'c') { tx = x - it.w / 2; ty = y - it.h + 3.5; }
+        else if (it.side === 'u') { tx = x - it.w / 2; ty = y - 3.5; }
+        else { tx = it.side === 'l' ? x - it.w + 3.5 : x - 3.5; ty = y - it.h / 2; }
+        const tr = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
+        if (tr !== it.tr) { it.d.style.transform = tr; it.tr = tr; }
       }
     },
+    /** re-measure every tag (after a resize changes the font size) */
+    resize() { for (const it of items.values()) it.sized = false; },
     dispose() { box.remove(); },
   };
-}
-
-/** a status line in the top left of the canvas */
-export function status(el) {
-  style();
-  const d = document.createElement('div');
-  d.className = 'sm-status';
-  d.setAttribute('role', 'status');
-  el.append(d);
-  return { set(t, cls = '') { if (d.textContent !== t) d.textContent = t; d.className = `sm-status${cls ? ` ${cls}` : ''}`; }, dispose() { d.remove(); } };
 }

@@ -1,0 +1,7 @@
+{
+  "prefix": "md",
+  "remove": [],
+  "keep": ["^md_"],
+  "carbon": ["_md_arms$"],
+  "simplify": 0.0002
+}

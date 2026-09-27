@@ -22,7 +22,6 @@ export const TIP_R = (BLADE_IN * 0.0254) / 2;           // 0.0560 m, the swing r
 export const tipOf = (w) => ({ rpm: (w * 60) / (2 * Math.PI), fts: (w * TIP_R) / 0.3048, mph: w * TIP_R * 2.2369363 });
 export const fmtInt = (v) => Math.round(v).toLocaleString('en-US');
 
-export { spinTo, drawnSpeed } from './physics.js';
 
 /** Load one version and paint it. Returns { model, p: parts }. */
 export async function loadRobot(stage, version, opts = {}) {

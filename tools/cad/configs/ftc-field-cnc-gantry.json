@@ -1,0 +1,6 @@
+{
+  "prefix": "cnc",
+  "remove": ["^pan head cross recess screw", "^M5x"],
+  "keep": ["^cnc_"],
+  "simplify": 0.0002
+}

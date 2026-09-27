@@ -3,9 +3,11 @@
 // all goes back together and rolls upside down about the axle height, which shows why the robot
 // drives either way up. Plates, weapon, switch and frame move along the weapon axis (+Y); the
 // wheels and drive motors slide out along the axle axis (X) and the wheels turn about it.
+// Views are framed once with the robot assembled and at rest, then blended by the scroll.
 // The picture is a pure function of the scroll position.
 import { createStage } from '/assets/js/lib/stage.js';
 import { loadRobot, AXLE_X, AXLE_Y, LIFT } from './rig.js';
+import { toSph, blend, viewCache, coverOf, frameFree } from './views.js';
 
 const DEG = Math.PI / 180;
 const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
@@ -25,7 +27,7 @@ const S = [
 const CAM = [[145, 22, 1.1], [150, 32, 1.3], [152, 24, 1.3], [122, 26, 1.6], [18, 16, 1.4], [35, 30, 1.35], [160, 62, 1.25], [180, 5, 1.2]];
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { controls: false });
+  const stage = createStage(el, { controls: false, hint: false });
   const T = stage.THREE;
   const { model, p } = await loadRobot(stage, 'v2', { add: false });
   // roll about a line along the robot's forward axis at axle height
@@ -91,6 +93,14 @@ export async function mount(el, ctx) {
     grid.visible = gridA > 0.01; grid.material.opacity = 0.35 * gridA;
   }
 
+  // one view per step, framed once on the assembled robot at rest (its bounds are cached), into the
+  // part of the stage the step cards leave free on a full-width desktop
+  let cover = 0;
+  const views = viewCache(el, (aspect) => frameFree(stage, (cover = coverOf(el, ctx)), () => CAM.map(([az, elev, pad]) => toSph(T, stage.frame(model, {
+    azimuth: az, elevation: elev, pad: pad * (aspect < 1 ? 1.3 : 0.8), offset: [0, 0.018, 0], apply: false,
+  })))));
+  views();
+
   function setProgress(prog, step = 0, stepP = 0) {
     const i = Math.max(0, Math.min(S.length - 1, step));
     const prev = S[Math.max(0, i - 1)], cur = S[i];
@@ -106,10 +116,10 @@ export async function mount(el, ctx) {
       s = Object.fromEntries(Object.keys(Z).map((key) => [key, lerp(prev[key], cur[key], k)]));
     }
     apply(s, flipT, gridA);
-    const c0 = CAM[Math.max(0, i - 1)], c1 = CAM[i], kc = ease(stepP * 1.4);
-    const portrait = el.clientHeight > el.clientWidth;
-    stage.setShift(portrait ? 0 : 0.15, portrait ? 0.2 : 0);
-    stage.frame(model, { azimuth: lerp(c0[0], c1[0], kc), elevation: lerp(c0[1], c1[1], kc), pad: lerp(c0[2], c1[2], kc) * (portrait ? 1.3 : 1), offset: [0, 0.018, 0] });
+    const kc = ctx.reducedMotion ? 1 : ease(stepP * 1.4);
+    const v = views();
+    stage.setShift(cover / 2, 0);
+    blend(stage, v[Math.max(0, i - 1)], v[i], i === 0 ? 1 : kc);
     stage.invalidate();
   }
   setProgress(0, 0, 0);

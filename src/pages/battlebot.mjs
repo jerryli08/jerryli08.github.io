@@ -4,7 +4,9 @@
 // Held back until Jerry answers (see /home/claude/work/battlebot/questions.md): the robot's name,
 // which blade fought, whether anything mechanical broke at the event, what he fixed in the pits,
 // the unlabelled donor motors, the computed blade moment of inertia, and every next-time idea.
-// No livestream or event-floor footage: every clip of the matches shows spectators' faces.
+// No livestream or event-floor footage: every clip of the matches shows spectators' faces (a
+// floor-only recut is requested in /home/claude/work/battlebot/media-requests.md).
+// Every demo is scroll-driven (Jerry, Sept 26): arena, weapon, versions and teardown are scrollies.
 const M = '/assets/models/battlebot';
 
 export default {
@@ -25,17 +27,21 @@ export default {
     items: [
       { v: 'hero-table-spin.mp4', c: 'Finished, Jul 11: weapon spinning, then turning in place on a table' },
       { v: 'hero-weapon-first-spin.mp4', c: 'The first weapon spin test, in a cardboard box the night the parts came off the printer' },
-      { v: 'test-drive-mat.mp4', c: 'The first drive test, on a foam mat' },
     ],
   },
   sections: [
-    // ---------------------------------------------------------------- 1. drive it
-    { type: 'demo', id: 'arena', module: 'arena', h: 'Drive it yourself', height: 'clamp(430px, 70vh, 720px)', poster: `${M}/poster-arena.webp`,
-      p: [
-        'This is my CAD of the finished robot. Click the arena and drive with **W A S D** or the arrow keys (or the stick), set the weapon with the slider on the right, and run into the boxes. **Space** turns the weapon on and off.',
-        'The slider goes from stopped to the full no-load speed, **8,214 rpm**. The readout is the same math as my weapon calculator: 740 rpm per volt times 11.1 V, on a 4.409 in (112 mm) blade whose tip then moves at 158 ft/s. It shows the live speed, so you can watch the blade spin up and lose speed on every hit.',
+    // ---------------------------------------------------------------- 1. the arena
+    { type: 'scrolly', id: 'arena', module: 'arena', stepHeight: '90vh', poster: `${M}/poster-arena.webp`,
+      h: 'In the arena',
+      p: ['My CAD of the finished robot in a small prop arena. As you scroll it spins the weapon up, drives in and hits three cardboard boxes, and the readout follows the blade.'],
+      steps: [
+        { h: 'The robot and the arena', p: ['This is my CAD of the finished robot. The blade, the motor\'s bell and both wheels turn about their real axes from the STEP. The arena and the cardboard boxes are props for this page.'] },
+        { h: 'Spin up', p: ['The weapon comes up to its full no-load speed, **8,214 rpm**. That is the same math as my weapon calculator: 740 rpm per volt times 11.1 V, with the blade bolted straight to the motor. On the 4.409 in (112 mm) blade the tip then moves at **158 ft/s** (107.7 mph).'] },
+        { h: 'Drive in', p: ['It drives straight at the first box. The hit throws the box, takes speed off the blade, and the motor has to bring it back up.'] },
+        { h: 'Turn in place', p: ['Two wheels and tank steering: driving them in opposite directions turns the robot on the spot, so it can point the blade at the next box and go again.'] },
+        { h: 'And again', p: ['A third box. The readout shows the modelled blade speed at each moment: the drop on every hit, then the climb back toward 8,214 rpm.'] },
       ],
-      caption: 'The robot, blade and wheels are my CAD, turning about their real axes. The arena and the boxes are props, and their physics is a simple model written for this page, so the flips are illustrative. The blade is drawn far slower than it really turns: 8,214 rpm is 137 turns a second.' },
+      caption: 'The robot, blade and wheels are my CAD, turning about their real axes. The arena and the boxes are props, and the run is a simple physics model written for this page and worked out ahead of time, so the hits, the flips and the spin-up times are illustrative; the speeds come from my weapon calculator. The blade is drawn far slower than it really turns: 8,214 rpm is 137 turns a second.' },
 
     // ---------------------------------------------------------------- 2. at a glance
     { type: 'prose', id: 'glance', h: 'The robot at a glance', p: [
@@ -81,16 +87,26 @@ export default {
       } },
       'These are no-load numbers; every hit takes speed off the blade and the motor has to bring it back up.',
     ] }] },
-    { type: 'demo', id: 'weapon', module: 'weapon', h: 'Between the plates', height: 'clamp(260px, min(50vh, 58vw), 500px)', poster: `${M}/poster-weapon.webp`,
-      p: [
-        'The motor sits between the two plates instead of hanging off one of them. Its stator bolts to the bottom plate with four M3 screws, and the top plate carries a 4 mm bore bearing on the spin axis, over the end of the shaft, with a small spacer in between.',
-        'This is my CAD cut through the spin axis. Press **Spin up** to run the parts that turn (blade, bell and blade screws) about the motor\'s real axis, and **Show what spins** to pick them out from the stator, bearings and plates that stay still.',
+    { type: 'scrolly', id: 'weapon', module: 'weapon', width: 'wide', stepHeight: '85vh', poster: `${M}/poster-weapon.webp`,
+      h: 'Between the plates',
+      steps: [
+        { h: 'The motor between the plates', p: ['The motor sits between the two plates instead of hanging off one of them. Its stator bolts to the bottom plate with four M3 screws.'] },
+        { h: 'Cut through the spin axis', p: ['My CAD, cut through the weapon\'s spin axis. The top plate carries a 4 mm bore bearing on that axis, over the end of the motor shaft, with a small spacer in between.'] },
+        { h: 'What spins', p: ['The blade, the motor\'s bell and the four M3 x 6 mm button-head screws that hold the blade to the bell turn together, lit orange. The stator, the bearings and the plates stay still.'] },
+        { h: 'Spin up', p: ['With no reduction the blade turns at motor speed, up to **8,214 rpm** with no load. At that speed the tip of the 112 mm blade moves at **158 ft/s**.'] },
       ],
-      caption: 'Section through the weapon axis of my CAD. The spin speed readout uses my calculator\'s numbers; the blade is drawn slower than it really turns.' },
+      caption: 'Section through the weapon axis of my CAD. The readout uses my calculator\'s numbers; the spin-up is illustrative, and the blade is drawn far slower than it really turns.' },
 
     // ---------------------------------------------------------------- 4. two versions
-    { type: 'demo', id: 'versions', module: 'versions', h: 'Two versions in four days', height: 'clamp(360px, min(62vh, 110vw), 620px)', poster: `${M}/poster-versions.webp`,
-      p: ['Both versions of my CAD at the same scale. Version 1 is shown in the blue of my own render; version 2 in the colours it was printed in. Pick a version, compare the blades alone, or step through what changed.'],
+    { type: 'scrolly', id: 'versions', module: 'versions', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-versions.webp`,
+      h: 'Two versions in four days',
+      p: ['Both versions of my CAD at the same scale: version 1 in the blue of my own render, version 2 in the colours it was printed in.'],
+      steps: [
+        { h: 'Thinner', p: ['Version 2 drops the plates into the frame instead of stacking them on it. With the same 57 mm wheels, plate to plate goes from **48.0 mm** to **37.2 mm**, and the wheels now stand 10 mm past both plates instead of 4.6 mm.'] },
+        { h: 'One frame part', p: ['The TPU frame is a single print that wraps the whole robot. It replaces version 1\'s centre frame, both wheel guards, both motor clamps and the eight 35 mm bolts that held the guards on. The drive motors now sit in cradles printed into the bottom plate.'] },
+        { h: 'Asymmetrical blade', p: ['I made the weapon asymmetrical to increase its moment of inertia: one long tooth, balanced by a wide fan-shaped counterweight on the other side, in place of two teeth. It is 16 mm thick instead of 18 and sweeps the same 112 mm circle, and its centre of mass sits on the spin axis (from the CAD), so it runs balanced with one tooth.'] },
+        { h: 'A power switch', p: ['Version 2 adds a REV power switch at the back of the frame.'] },
+      ],
       caption: 'Dimensions and part counts measured on my two STEP files.' },
     { type: 'prose', id: 'versions-text', p: [
       { problem: 'Version 1 was thick: 48.0 mm from plate to plate, with the plates stacked on top of and under a frame made of five parts, and a symmetrical two-tooth blade. I never built it.', title: 'Version 1 was thick' },
@@ -109,17 +125,11 @@ export default {
         ],
         caption: 'Measured on my two STEP files.',
       } },
-      { ul: [
-        '**Thinner.** Version 2 drops the plates into the frame instead of stacking them on it. With the same 57 mm wheels, the stack loses 10.8 mm and the wheels now stand 10 mm past both plates instead of 4.6 mm.',
-        '**One frame part.** The TPU frame is a single print that wraps the whole robot. It replaces the centre frame, both wheel guards, both motor clamps and the eight 35 mm bolts that held the guards on. The drive motors now sit in cradles printed into the bottom plate.',
-        '**Asymmetrical blade.** I made the weapon asymmetrical to increase its moment of inertia: one long tooth, balanced by a wide fan-shaped counterweight on the other side. It sweeps the same 112 mm circle as the two-tooth blade, and its centre of mass sits on the spin axis (from the CAD), so it runs balanced with one tooth.',
+    ],
+      media: [
+        { i: 'review-markup.webp', c: 'A marked-up render of version 1, Jul 10' },
+        [{ i: 'blade-two-tooth-printed.webp', c: 'The first blade off the printer, Jul 10: two teeth' }, { i: 'blade-one-tooth-fan.webp', c: 'Jul 12: the grey one-tooth blade, its counterweight showing under the plate' }],
       ] },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'review-markup.webp', c: 'A marked-up render of version 1, Jul 10' },
-      { i: 'blade-two-tooth-printed.webp', c: 'The first blade off the printer, Jul 10: two teeth' },
-      { i: 'blade-one-tooth-fan.webp', c: 'Jul 12: the grey one-tooth blade, its counterweight showing under the plate' },
-    ] },
 
     // ---------------------------------------------------------------- 5. frame and drive
     { type: 'prose', id: 'frame', h: 'Frame and drive', p: [
@@ -140,7 +150,7 @@ export default {
     ] },
     { type: 'scrolly', id: 'teardown', module: 'teardown', stepHeight: '85vh', poster: `${M}/poster-teardown.webp`,
       h: 'Taking it apart',
-      p: ['Scroll to take my CAD of the finished robot apart one layer at a time, then put it back together and turn it over.'],
+      p: ['My CAD of the finished robot, taken apart one layer at a time, then put back together and turned over.'],
       steps: [
         { h: 'The finished robot', p: ['196 mm wide, 37.2 mm from plate to plate, and under a pound with the battery.'] },
         { h: 'Top plate', p: ['It carries a 4 mm bore bearing on the weapon\'s spin axis, over the end of the motor shaft, with a small spacer under it.'] },
@@ -167,6 +177,7 @@ export default {
         'I printed the TPU frame, packed the electronics, closed it up, and drove it on a foam mat and on the table.',
       ], media: [
         { i: 'frame-test-fit.webp', c: 'First test fit of the TPU frame on a plate, with the two-tooth blade' },
+        { v: 'test-drive-mat.mp4', c: 'The first drive test, on a foam mat' },
       ] },
       { label: 'Jul 12', title: 'New blade, rewiring', p: [
         'The one-tooth blade shows up in my photos. That evening and into the night I rewired the electronics.',

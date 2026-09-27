@@ -1,6 +1,10 @@
 {
  "prefix": "ev1",
- "remove": ["screw"],
+ "remove": [
+  "screw",
+  "^Circlip",
+  "^Goupille"
+ ],
  "keep": [
   "^front wheel holder:1$",
   "^Ass servo:2$",
