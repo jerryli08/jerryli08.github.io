@@ -195,6 +195,10 @@ export default {
     // ---------------------------------------------------------------- 7. the event
     { type: 'prose', id: 'event', h: 'Ides of July', p: [
       'MACRO, the Maryland Area Combat Robotics Organization, ran Ides of July in Severn, Maryland on July 13, 2024. My robot fought in the plastic antweight class.',
+      { fig: [
+        { v: 'match-floor-launch.mp4', c: 'Ides of July, from the livestream: trading hits, then launched' },
+        { v: 'match-floor-stood-on-end.mp4', c: 'Stood on end, dropped back down, still driving' },
+      ] },
       { problem: 'My robot was knocked out by its electronics. The Pololu N20 drive motors have small tabs on the back for their leads, and I had crammed all of the wiring into the frame around them. A contact broke off inside one of the motors.', title: 'A contact broke inside a drive motor' },
       'I placed in the middle. For my first event, with a robot I designed and built in four days, I am happy with that.',
     ] },
