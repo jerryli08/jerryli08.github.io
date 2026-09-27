@@ -1,6 +1,7 @@
 // 5-Bar Pen Plotter: rich page. Facts are Jerry's (src/projects.mjs, his checklist, /home/claude/work/
 // answers.md), his public code (github.com/jerryli08/5bar) and CAD, or what the media plainly shows.
-// Numbers computed from the CAD's link lengths and the code's constants say so on the page.
+// Numbers computed from the CAD's link lengths and the code's constants say so on the page. The three
+// { calc } blocks (Sept 27) were worked with a Python copy of the sketch's IK and solution choice.
 // Held back until Jerry answers (/home/claude/work/5-bar/questions.md): whether the filmed square
 // ran cartesianTest (Q1), what caused and fixed the missed corner in IMG_5340 (Q2), why the arms
 // went from slots to trusses (Q3), the second perfboard (Q4), IMG_0009 (Q5), every "next time"
@@ -147,6 +148,33 @@ export default {
       ] },
       'A path is an array of x, y and a duration in ms for each move. The final loop, in order:',
       { pre: 'progress = elapsed / duration                    (0 to 1 along this segment)\nx = start.x + (end.x - start.x) * progress\ny = start.y + (end.y - start.y) * progress\ncomputeAll5BarSolutions(x, y)                    both solutions, degrees\nidx = selectBestSolution(sols)                   legal, arms spread widest; none: hold\nleftMotor.moveTo(degToSteps(left))               degrees to microsteps\nrightMotor.moveTo(degToSteps(right))\nleftMotor.run(); rightMotor.run()                AccelStepper steps toward the targets\nelapsed >= duration: next segment' },
+      { calc: 'How far does the first program bow the top edge?',
+        given: [
+          ['Top edge of the test square, left end', '(12.5, 150) mm', 'my `cartesianTest`'],
+          ['Top edge, right end', '(87.5, 150) mm', 'my `cartesianTest`'],
+          ['Links and motor spacing', '100 mm', 'my CAD and my code'],
+        ],
+        work: [
+          'Inverse kinematics at the corners, arms spread widest: left 126.42° and right 90.52° at (12.5, 150); left 89.48° and right 53.58° at (87.5, 150)',
+          'Halfway in motor angles: left 107.95°, right 72.05°',
+          'Elbows there: (100 cos 107.95°, 100 sin 107.95°) = (-30.8, 95.1) and (100 + 100 cos 72.05°, 100 sin 72.05°) = (130.8, 95.1), 161.6 mm apart',
+          'Pen: midway between the elbows and √(100² - 80.8²) = 58.9 mm beyond them: (50, 154.0)',
+        ],
+        result: 'Halfway along, moving the motor angles in a straight line puts the pen 4.0 mm off the edge it should be drawing. Solving the inverse kinematics on every pass keeps it on the line.' },
+      { calc: 'Can the motors keep up with 200 ms strokes?',
+        given: [
+          ['Time per stroke of the name', '200 ms', 'my `cartesianPathing` path'],
+          ['Longest stroke, the tail of the y', '50 mm', 'my path'],
+          ['Speed limit per motor', '4,000 microsteps/s', 'my code'],
+        ],
+        work: [
+          'Pen speed on the longest stroke: 50 mm / 0.2 s = 250 mm/s',
+          'Motor speed that stroke asks for, from the inverse kinematics every 0.5 ms along it: at most 805 microsteps/s',
+          'Fastest anywhere in the name: 2,317 microsteps/s, on the right motor at the start of the J\'s top stroke, (-30, 150). There the right arm and forearm span 198.5 of their 200 mm, almost straight, so a little pen travel takes a lot of turning',
+          '2,317 / 4,000 = 58 % of the limit',
+        ],
+        result: 'No stroke of the name asks either motor for more than 58 % of the speed limit.',
+        note: 'Speed only: the 8,000 steps/s² acceleration limit is not modelled here. Computed from my path and code, not measured.' },
     ],
       media: [
         { v: 'motor-test-joint-moves.mp4', c: 'An early motor test: the arms start straight out and one swings wide' },
@@ -216,6 +244,21 @@ export default {
 
     { type: 'prose', id: 'electronics', h: 'Electronics', p: [
       'An Arduino Nano and two TMC2209 stepper drivers sit on a perfboard, with screw terminals for the motor leads. Each driver takes step, direction and enable from the Nano: pins 9, 8 and 10 for the left motor, and 3, 2 and 4 for the right. The drivers run 1/16 microstepping, which turns the motors\' 200 full steps per revolution into 3,200. Both drivers are enabled (EN held low) from the start of the program to the end.',
+      { calc: 'How far does one microstep move the arm?',
+        given: [
+          ['Microsteps per motor turn', '3,200', 'my code (`STEPS_PER_REV`): 200 full steps at 1/16'],
+          ['Motor to elbow', '100 mm', 'my CAD and my code'],
+          ['Speed limit', '4,000 steps/s', 'my code (AccelStepper)'],
+          ['Acceleration limit', '8,000 steps/s²', 'my code (AccelStepper)'],
+        ],
+        work: [
+          'Angle per microstep: 360° / 3,200 = 0.1125°',
+          'Elbow travel per microstep: 100 mm × 0.1125° × π / 180 = 0.196 mm',
+          'Top speed at the arm: 4,000 × 0.1125° = 450°/s = 7.85 rad/s, so the elbow can move up to 100 mm × 7.85 = 785 mm/s',
+          'Acceleration at the arm: 8,000 × 0.1125° = 900°/s²',
+        ],
+        result: 'With direct drive at 1/16 microstepping one step moves the elbow about 0.2 mm, and in the stiff middle of the workspace, where the name is written, the pen moves 0.14 to 0.27 mm per step (the map above).',
+        note: 'Computed from my code and my CAD\'s link lengths, not measured.' },
     ],
       media: [
         [{ i: 'perfboard-nano-drivers.webp', c: 'The Arduino Nano and two stepper drivers on perfboard' }, { i: 'perfboard-wiring.webp', c: 'Wired up, with screw terminals for the motors' }],

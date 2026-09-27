@@ -31,12 +31,12 @@ export async function mount(el, ctx) {
     const key = `${el.clientWidth}x${el.clientHeight}|${ctx.shift()[0]}`;
     if (views && key === vkey) return views;
     vkey = key;
-    const portrait = el.clientHeight > el.clientWidth * 1.05, full = ctx.shift()[0] > 0;
+    const portrait = el.clientHeight > el.clientWidth * 1.05; // the fits leave the step cards' part out themselves
     const f = (box, pad) => orbit(stage.frame(box, { dir: SEC_DIR, pad, apply: false, track: false, refresh: true }));
     views = {
-      whole: orbit(shape.fit({ azimuth: 58, elevation: 22 }, full ? 1.8 : portrait ? 1.1 : 1.3)),
-      sec: f(secBox, full ? 1.5 : portrait ? 1.04 : 1.14),
-      up: f(upBox, full ? 1.4 : portrait ? 1.04 : 1.08),
+      whole: orbit(shape.fit({ azimuth: 58, elevation: 22 }, portrait ? 1.1 : 1.3)),
+      sec: f(secBox, portrait ? 1.04 : 1.14),
+      up: f(upBox, portrait ? 1.04 : 1.08),
     };
     return views;
   }

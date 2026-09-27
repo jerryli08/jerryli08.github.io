@@ -2,21 +2,23 @@
 // links and seen straight down the robot's length. Scrolling swings it from the transfer position
 // (the CAD pose) out to its right endstop, all the way across to its left endstop, and back to
 // transfer. The driven link turns about A; the passive link and the coupler follow from the pin
-// positions in the CAD (rig.js solve()). The endstops are the first contacts found by sweeping the
-// linkage against every static part in the CAD (rig.js THETA_RIGHT / THETA_LEFT): the back end of
-// the coupler lands on the last 48 mm wheel along that side. The picture is a pure function of the
-// scroll: the angle is a function of the step and the progress through it.
+// positions in the CAD (rig.js solve()). The endstops are where the linkage lands on the carbon
+// fiber floor plate (Jerry, Sept 27; measured from the CAD, rig.js THETA_RIGHT / THETA_LEFT): the
+// end of the linkage around the outboard coupler pin comes down on the plate's top. The picture is
+// a pure function of the scroll: the angle is a function of the step and the progress through it.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
 import * as THREE from 'three';
 import { loadRobot, rigRobot, looks, mm, AX, DEG, THETA0, THETA_LEFT, THETA_RIGHT, smooth, lerp, clamp, frameBox, hud } from './rig.js';
 
 const BALL_R = 63.5; // 5 in DECODE ball, mm
-const ORANGE = '#ff6b35', GREEN = '#3fb96a';
+const ORANGE = '#ff6b35', GREEN = '#3fb96a', PLATE = '#ffc440';
 // where each step ends: transfer, right endstop, left endstop, transfer
 const ENDS = [THETA0, THETA_RIGHT, THETA_LEFT, THETA0];
-// the two contacts that stop it (model mm): the back of the coupler on the last side wheel
-const STOP_R = [409.7, 163.6, -416.4], STOP_L = [47.0, 163.7, -421.2];
+// where the linkage lands on the floor plate (model mm): under the outboard coupler pin, D on the
+// right and C on the left, on the plate's top (y 10.0), just behind the section
+const STOP_R = [352.98, 10.0, -124], STOP_L = [104.22, 10.0, -124];
+const RANGE = `${(THETA_RIGHT / DEG).toFixed(1)}° to ${(THETA_LEFT / DEG).toFixed(1)}° (${((THETA_LEFT - THETA_RIGHT) / DEG).toFixed(0)}°)`;
 
 export async function mount(el, ctx) {
   const stage = createStage(el, { controls: false, hint: false, fov: 16 });
@@ -25,10 +27,15 @@ export async function mount(el, ctx) {
   const look = looks(stage);
   const reduced = ctx.reducedMotion;
   look([P.shell, P.plates, P.turret, P.ring, P.top], 0);
+  // the side walls and the two outer rows of 48 mm wheels (fixed to the chassis), see-through: in the
+  // CAD pose the coupler's back end passes through the last wheel of each outer row on its way down
+  // to the floor plate (Jerry: the wheel is not the endstop)
   look([P.walls], 0.3);
-  // the tray arms stay in their CAD pose on the coupler; see-through, so the linkage reads
-  look([P.armL, P.armR], 0.28);
+  look([P.sideL, P.sideR, P.sideplates], 0.22);
+  // the tray arms and their roller shafts stay in their CAD pose on the coupler; see-through, so the linkage reads
+  look([P.armL, P.armR, P.rollL, P.rollR], 0.28);
   look([P.linkA, P.linkP], 1, ORANGE, 0.34);
+  look(P.cplr, 1, ORANGE, 0.12); // the coupler, the bar across the top of the linkage
 
   // game pieces for scale (not robot CAD): three balls along each side, on the floor outside the frame
   const balls = new THREE.Group();
@@ -56,7 +63,7 @@ export async function mount(el, ctx) {
     const k = `${a}|${shift}`;
     if (view && k === key) return view;
     key = k;
-    const box = shift > 0 ? frameBox([0.9, 0.3, 0.05], [0.21, 0.15, -0.13])
+    const box = shift > 0 ? frameBox([0.7, 0.27, 0.05], [0.2286, 0.135, -0.13])
       : a < 1.3 ? frameBox([0.5, 0.3, 0.05], [0.2286, 0.15, -0.13]) : frameBox([0.76, 0.3, 0.05], [0.2286, 0.15, -0.13]);
     view = stage.frame(box, { azimuth: 0, elevation: 4, pad: a < 1.3 ? 1.02 : 1.05, apply: false, refresh: true });
     return view;
@@ -69,11 +76,14 @@ export async function mount(el, ctx) {
     B: ov.label('B', mm(...AX.B, -118), { color: ORANGE }),
     C: ov.label('C', mm(...AX.C0, -118), { color: ORANGE, side: 'l' }),
     D: ov.label('D', mm(...AX.D0, -118), { color: ORANGE }),
-    stopR: ov.label('Endstop: the last 48 mm wheel', mm(...STOP_R), { side: 'l', minW: 520 }),
-    stopL: ov.label('Endstop: the last 48 mm wheel', mm(...STOP_L), { minW: 520 }),
+    stopR: ov.label('Endstop: the carbon fiber floor plate', mm(...STOP_R), { color: PLATE, side: 'l', minW: 520 }),
+    stopL: ov.label('Endstop: the carbon fiber floor plate', mm(...STOP_L), { color: PLATE, minW: 520 }),
     balls: ov.label('Game pieces, for scale', mm(457.2 + BALL_R + 12, 2 * BALL_R + 8, -150), { color: GREEN, side: 'l', minW: 700 }),
   };
-  const H = hud(ov.layer, [['th', 'Driven link'], ['dx', 'Coupler sideways'], ['dy', 'Coupler height', true], ['tilt', 'Coupler tilt', true]], true);
+  // the endstop labels sit under their dot, below the plate, clear of the linkage
+  for (const l of [L.stopR, L.stopL]) l.pill.style.top = '9px';
+  const H = hud(ov.layer, [['th', 'Driven link'], ['dx', 'Coupler sideways'], ['dy', 'Coupler height', true], ['tilt', 'Coupler tilt', true], ['range', 'Range, stop to stop']], true);
+  H.put('range', RANGE);
   const mid0 = [(AX.C0[0] + AX.D0[0]) / 2, (AX.C0[1] + AX.D0[1]) / 2];
   const sgn = (v, d = 0) => { const t = Math.abs(v).toFixed(d); return `${+t === 0 ? '' : v > 0 ? '+' : '−'}${t}`; };
 
@@ -91,16 +101,18 @@ export async function mount(el, ctx) {
     L.D.p.set(...mm(...kin.D, 0)).setZ(pinZ);
     for (const n of ['A', 'B', 'C', 'D']) L[n].a = 1;
     // an endstop label shows while the linkage sits on it
-    L.stopR.a = smooth(0.4, 0.05, Math.abs(th - THETA_RIGHT) / DEG / 10);
-    L.stopL.a = smooth(0.4, 0.05, Math.abs(th - THETA_LEFT) / DEG / 10);
-    L.balls.a = step === 0 ? 1 : 0.6;
+    const onR = smooth(0.4, 0.05, Math.abs(th - THETA_RIGHT) / DEG / 10), onL = smooth(0.4, 0.05, Math.abs(th - THETA_LEFT) / DEG / 10);
+    L.stopR.a = onR; L.stopL.a = onL;
+    // the floor plate lights up while the linkage sits on it
+    look(P.bottom, 1, PLATE, 0.3 * Math.max(onR, onL));
+    L.balls.a = step === 0 ? 1 - smooth(0.6, 1, stepP) : 0;
     const mid = [(kin.C[0] + kin.D[0]) / 2, (kin.C[1] + kin.D[1]) / 2];
     const dx = mid[0] - mid0[0], dy = mid[1] - mid0[1];
     H.put('th', `${(th / DEG).toFixed(1)}° from horizontal`);
     H.put('dx', `${sgn(dx)} mm ${Math.abs(dx) < 0.5 ? '' : dx > 0 ? 'right' : 'left'}`.trim());
     H.put('dy', `${sgn(dy)} mm`);
     H.put('tilt', `${sgn(kin.phi / DEG, 1)}°`);
-    H.put('mini', `Driven link ${(th / DEG).toFixed(0)}°, coupler ${sgn(dx)} mm, ${sgn(dy)} mm`);
+    H.put('mini', `Driven link ${(th / DEG).toFixed(0)}° (stops at ${(THETA_RIGHT / DEG).toFixed(1)}° and ${(THETA_LEFT / DEG).toFixed(1)}°)`);
     ov.update();
   }
   setProgress(0, 0, 0);

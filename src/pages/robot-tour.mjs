@@ -83,7 +83,7 @@ export default {
         { i: 'photo-arduino-shield.webp', c: 'The Arduino Mega and my soldered perfboard shield, Dec 29' },
       ] },
 
-    { type: 'scrolly', id: 'drive', module: 'drive', width: 'wide', side: 'right', stepHeight: '90vh', poster: `${M}/poster-drive.webp`,
+    { type: 'scrolly', id: 'drive', module: 'drive', stepHeight: '90vh', poster: `${M}/poster-drive.webp`,
       h: 'How the drive works',
       p: ['My final CAD, with every gear, axle and wheel turning about its real axis as you scroll.'],
       steps: [
@@ -144,7 +144,7 @@ export default {
       ],
       caption: 'Both versions are my CAD, drawn in the same place. Wheel turns and distances follow from the tooth counts and the 1-3/8 in wheel.' },
 
-    { type: 'scrolly', id: 'sensors', module: 'sensors', width: 'wide', side: 'right', stepHeight: '95vh', poster: `${M}/poster-sensors.webp`,
+    { type: 'scrolly', id: 'sensors', module: 'sensors', stepHeight: '95vh', poster: `${M}/poster-sensors.webp`,
       h: 'What the robot knows',
       p: ['How the robot measured where it was: first by counting wheel turns, then with an optical sensor looking at the floor.'],
       steps: [
@@ -169,6 +169,20 @@ export default {
       'A continuous-rotation servo does not move until its command is a little way past stop, and each of mine needed a different amount in each direction. The code adds an offset per wheel and per direction to every non-zero command: in the final version 2.1% and 4.3% of full command for the left servo forward and backward, 0% and 6.5% for the right.',
       { problem: 'Every move ends a little off, up to the code\'s tolerances of 1.5 mm and 0.5°. If each move just started from wherever the last one stopped, those errors would add up over 45 moves.', title: 'Small errors add up' },
       { fix: 'When a move finishes, the code works out where the robot is relative to where it should have ended: the sideways error, the along-track error and the heading error. It resets the OTOS so that its origin is the point where the robot should be, and its reading is the robot\'s error from that point. The next forward move aims straight at its ideal end point from wherever the robot actually is: its distance target is the straight-line distance there, and its heading target is the direction to it. Every waypoint is measured from where the robot should be, not from where it happened to stop.', title: 'Carry the error into the next move' },
+      { calc: 'How big could the errors get if they were not carried forward?',
+        given: [
+          ['Turn done within', '0.5°', 'my code'],
+          ['Straight move done within', '1.5 mm', 'my code'],
+          ['Final route', '45 moves: 23 turns and 22 straight moves', 'my code'],
+          ['Distance Score', '2 points per cm', 'the 2025 Robot Tour C rules'],
+        ],
+        work: [
+          'Worst case, every turn off the same way: 23 × 0.5° = 11.5° of heading error by the end',
+          'One 50 cm leg driven 11.5° off: 50 cm × sin 11.5° = 10 cm to the side',
+          'Every straight move short the same way: 22 × 1.5 mm = 3.3 cm along the route',
+        ],
+        result: 'Left alone, errors the code accepts as done could stack to about 10 cm to the side over a single 50 cm leg, 20 points. Carrying each error into the next move keeps them from stacking.',
+        note: 'Worst case with every error the same way; real errors partly cancel.' },
       { h: 'Forward only' },
       'My first route, on the angle-signal code, backed out of gate zones and drove some legs in reverse: 8 of its 38 moves were reversing. The final route never reverses. It turns around in place instead, and the backward move is marked "DO NOT USE" in the final code.',
     ], media: [
@@ -217,6 +231,19 @@ export default {
     { type: 'prose', id: 'drift', h: 'The drift', p: [
       { problem: 'The OTOS was not accurate enough. Its readings drifted over time, and the accumulated error pulled the robot\'s position estimate away from where it actually was. Carrying the error forward could not help with that: it cancels the robot\'s own mistakes only as well as the sensor sees them. A sensor that drifts sends the robot, confidently, to the wrong place.', title: 'The OTOS drifted' },
       'In my recording of the robot sitting still, the position holds at 0.19 and -0.06 inches while the heading reading creeps from -9.41° to -9.53° over 21 seconds.',
+      { calc: 'What does the OTOS\'s rated error cost on a track?',
+        given: [
+          ['OTOS error', 'typically 3 to 5 % out of the box, under 1 % calibrated', '[SparkFun OTOS](https://www.sparkfun.com/sparkfun-optical-tracking-odometry-sensor-paa5160e1-qwiic.html)'],
+          ['Start point to target point, example track', '175 cm across, 50 cm up', 'the 2025 Robot Tour C rules'],
+          ['Distance Score', '2 points per cm', 'the 2025 Robot Tour C rules'],
+        ],
+        work: [
+          'A sensor that reads every distance a fixed fraction long or short puts the end point off by that fraction of the straight line from start to finish, however long the route: √(175² + 50²) = 182 cm',
+          '3 to 5 %: 5.5 to 9.1 cm off, 11 to 18 points',
+          'Under 1 %: under 1.8 cm, under 4 points',
+        ],
+        result: 'A scale error alone costs 11 to 18 points on this track out of the box, and under 4 once calibrated; heading drift adds to it, and its cost grows with every leg driven.',
+        note: 'Estimate: a uniform scale error with the heading exact. The rated figures are SparkFun\'s, not measured on this robot.' },
       { next: 'The OTOS sensor was bad and caused a lot of drift. It is the part of this robot I would improve.', title: 'Future improvement: the sensor' },
     ], media: [{ v: 'clip-heading-drift.mp4', c: 'Sitting still, the heading reading creeps while the position holds' }] },
 

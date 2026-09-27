@@ -1,11 +1,15 @@
 // Drone Grabber Arm (concept, Jul 2025). Page text from the phase A write-up for this project,
 // trimmed to what Jerry has stated, what the
-// photos plainly show and what is measured or computed from his CAD. Framed like Drone on Wheels
-// (MIT Lincoln Laboratory); the summer program is never named. Held back until Jerry answers
+// photos plainly show and what is measured or computed from his CAD. Framed as part of MIT Beaver
+// Works Summer Institute (Jerry, Sept 27: full name, never the abbreviation); Drone on Wheels, linked
+// from here, stays MIT Lincoln Laboratory research and is not re-framed. Held back until Jerry answers
 // questions.md: the servo model (the CAD and Jerry disagree, so no model is named), who designed the
 // claw, whether the joint hubs and bearings were parts from his other robots, any powered test,
 // the camera, and what he would change.
 // Scrollies: assets/js/pages/drone-arm/ (rig.js has the axes from the STEP and the IK).
+// The servo-load calculation uses rig.js's axis points (S, E, G) and the CAD's 500 ml bottle; no
+// servo rating is compared because the servo model is held back. cad-side-bottle.webp is a render of
+// the real CAD (tools/pages/render.mjs, azimuth 0).
 const M = '/assets/models/drone-arm';
 
 export default {
@@ -18,7 +22,7 @@ export default {
     ],
     text: [
       'An arm that hangs under a quadcopter and grabs things, like a bottle of water off a table. The idea was a drone that could fetch household items in a place like a senior home, because a drone is so much more flexible than a ground robot.',
-      'I designed it in CAD and built the whole arm: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted, and the same team at MIT Lincoln Laboratory went on to build [Drone on Wheels](/projects/hybrid-vehicle).',
+      'I designed it in CAD and built the whole arm as part of the MIT Beaver Works Summer Institute: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted, and the same team went on to build [Drone on Wheels](/projects/hybrid-vehicle).',
     ],
   },
   hero: {
@@ -30,7 +34,7 @@ export default {
   },
   sections: [
     { type: 'prose', id: 'idea', h: 'The idea', p: [
-      'That summer at MIT Lincoln Laboratory our main objective was software only, and I wanted to do an additional hardware project with my team. I already had the idea of an arm on a drone that could grab things. My teammates took it further: a drone that could work in a place like a senior home and fetch household items, because a drone is so much more flexible than a ground robot.',
+      'That summer at the MIT Beaver Works Summer Institute, our main objective was software only, and I wanted to do an additional hardware project with my team. I already had the idea of an arm on a drone that could grab things. My teammates took it further: a drone that could work in a place like a senior home and fetch household items, because a drone is so much more flexible than a ground robot.',
       { problem: 'A drone with spinning propellers flying around people is an obvious safety concern.', title: 'Safety' },
       { fix: 'Drones with propeller guards already exist, so it could be made safe. And the idea is not limited to senior homes: a drone that can carry household items generalizes to other jobs.', label: 'Answer' },
     ] },
@@ -59,6 +63,27 @@ export default {
       { h: 'Mounting it' },
       'A printed wedge bolts under the drone’s center plate and carries the shoulder. Folded as in the CAD, the arm holds the bottle under the middle of the drone.',
     ] },
+
+    { type: 'prose', id: 'loads', p: [
+      { calc: 'What the servos hold with a bottle',
+        given: [
+          ['A 500 ml bottle of water', 'about 0.5 kg', 'the bottle in the CAD; water is 1 g per ml ([USGS](https://www.usgs.gov/water-science-school/science/water-density))'],
+          ['Shoulder axis to grip point, across', '97.5 mm', 'measured from the CAD, in its pose'],
+          ['Elbow axis to grip point, across', '278.7 mm', 'measured from the CAD, in its pose'],
+          ['Full reach, L1 + L2', '514.3 mm', 'measured from the CAD'],
+        ],
+        work: [
+          'Weight: 0.5 kg × 9.81 m/s² = 4.9 N',
+          'Shoulder, folded as in the CAD: 4.9 N × 0.0975 m = 0.48 N·m (4.9 kg·cm)',
+          'Shoulder, reaching straight out level: 4.9 N × 0.5143 m = 2.5 N·m (25.7 kg·cm)',
+          'Elbow, folded as in the CAD: 4.9 N × 0.2787 m = 1.37 N·m (13.9 kg·cm). The forearm is almost level in that pose, so this is close to the most the bottle can ever ask of the elbow',
+        ],
+        result: 'Folded, the shoulder carries about a fifth of the load it would with the bottle straight out. The elbow is the busier joint: with the forearm almost level it holds about 14 kg·cm, folded or reaching out.',
+        note: 'Estimate: static, with the bottle as 0.5 kg at the grip point. The links, the claw and the bottle itself are left out, so the real loads are higher. Nothing here was measured on the arm.' },
+    ],
+      media: [
+        { i: 'cad-side-bottle.webp', c: 'The CAD from the side, in the pose it was saved in: the arm folded under the drone with the bottle in the claw, 97.5 mm across from the shoulder axis' },
+      ] },
 
     { type: 'scrolly', id: 'grab', module: 'grab', width: 'full', stepHeight: '90vh',
       poster: `${M}/poster-grab.webp`, h: 'How it would pick up a bottle',

@@ -12,6 +12,11 @@
 // fix; how far the V1 gate and flap swing (the animated swings are illustrative).
 const M = '/assets/models/ftc-decode';
 
+// datasheets and sources linked from the worked calculations
+const YJ435 = '[goBILDA 435 rpm Yellow Jacket](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-13-7-1-ratio-24mm-length-8mm-rex-shaft-435-rpm-3-3-5v-encoder/)';
+const YJ6000 = '[goBILDA 6,000 rpm Yellow Jacket](https://www.gobilda.com/5203-series-yellow-jacket-motor-1-1-ratio-24mm-length-8mm-rex-shaft-6000-rpm-3-3-5v-encoder/)';
+const MITER = '[goBILDA miter gears](https://www.gobilda.com/clamping-steel-miter-gear-8mm-rex-bore-24-tooth-mod-1/)';
+
 export default {
   summary: {
     stats: [
@@ -97,7 +102,7 @@ export default {
         { i: 'v1-dual-motor-flywheel.webp', c: 'Wiring V1: the flywheel pair with a motor on each end of the axle' },
         { i: 'v1-cad-render.webp', c: 'V1 in CAD: carbon fiber plates, teal printed parts and the curved hood over the flywheel' },
       ] },
-    { type: 'scrolly', id: 'v1-demo', module: 'v1', width: 'wide', stepHeight: '95vh', poster: `${M}/poster-v1.webp`,
+    { type: 'scrolly', id: 'v1-demo', module: 'v1', stepHeight: '95vh', poster: `${M}/poster-v1.webp`,
       h: 'A ball through V1',
       p: ['The V1 CAD cut down the middle, with its moving parts rigged about their real axes: the intake shaft, the gate and flap servos, the two feed wheel servos and the flywheel axle. A ball travels the whole path as you scroll.'],
       steps: [
@@ -141,7 +146,7 @@ export default {
         { i: 'v2-top-down-turret.webp', c: 'V2 from straight above on April 30, during the World Championship' },
         [{ i: 'still-v2-turret-gear-mesh.webp', c: 'A black 90-tooth gear on the chassis against the turret\'s ring gear' }, { v: 'v2-turret-turned-by-hand.mp4', c: 'The turret mounted on the chassis, turned by hand on its bearing' }],
         [{ v: 'v2-turret-closeup-orbit.mp4', c: 'Around the turret up close: the flywheel shroud, the hood and the motors' }, { i: 'v2-transfer-spinners-top.webp', c: 'The ramp from above, marked up in yellow and blue: TPU spinners sit on both sides of the ball path' }],
-        { i: 'v2-front.webp', c: 'V2 from the front: the Limelight rides on the turret, above the intake' },
+        { i: 'v2-front.webp', c: 'V2 from the front: the Limelight rides on the turret to track the AprilTag' },
       ] },
     { type: 'scrolly', id: 'turret', module: 'turret-rig', stepHeight: '95vh', poster: `${M}/poster-turret.webp`,
       h: 'The turret, in the Worlds CAD',
@@ -163,11 +168,23 @@ export default {
         '**Flywheel.** A PIDF loop on the average speed of the two motors\' encoders, with a feedforward term proportional to the target speed. The output is multiplied by 13 V over the measured battery voltage, so the wheel gets the same drive as the battery sags, and the voltage is only read every half second to keep the loop fast. The driver switches between two speed presets with the bumpers.',
         '**Turret (V2).** It aims from the odometry pose, as above. A centering routine on the Driver Hub sets the servo position for a centered turret.',
       ] },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { v: 'hero-v1-autonomous.mp4', c: 'V1 running a full autonomous routine on our practice field, December 21, 2025' },
-      { i: 'still-v1-flywheel-telemetry.webp', c: 'The Driver Hub readout: presets of 2,300 and 4,000 rpm, the wheel at 4,071 rpm against a 4,000 rpm target, 28 shots counted' },
-    ] },
+      { calc: 'What do the two flywheel presets mean at the ball?',
+        given: [
+          ['V1 flywheel', '96 mm, driven directly by two 6,000 rpm motors', `measured from the CAD; ${YJ6000}`],
+          ['Presets', '2,300 and 4,000 rpm', 'our Driver Hub readout'],
+        ],
+        work: [
+          'Wheel surface speed: π × 0.096 m × 2,300 / 60 = 11.6 m/s, and π × 0.096 m × 4,000 / 60 = 20.1 m/s',
+          'The ball rolls between the moving wheel and the still hood, so with no slip its centre moves at half the surface speed: about 5.8 and 10 m/s',
+          'Headroom: 4,000 rpm is 4,000 / 6,000 = 67 % of the motors\' free speed, 2,300 rpm is 38 %',
+        ],
+        result: 'The presets launch a ball at roughly 6 and 10 m/s, and even the high one leaves the motors a third of their free speed to pull the wheel back up to speed after each shot.',
+        note: 'Estimate: no slip and no squeeze losses, so real launch speeds are lower.' },
+    ],
+      media: [
+        { v: 'hero-v1-autonomous.mp4', c: 'V1 running a full autonomous routine on our practice field, December 21, 2025' },
+        { i: 'still-v1-flywheel-telemetry.webp', c: 'The Driver Hub readout: presets of 2,300 and 4,000 rpm, the wheel at 4,071 rpm against a 4,000 rpm target, 28 shots counted' },
+      ] },
 
     // ------------------------------------------------------------------ timeline
     { type: 'iterations', id: 'timeline', h: 'How the season went', items: [
@@ -190,15 +207,25 @@ export default {
     { type: 'prose', id: 'failures', h: 'Failures and fixes', p: [
       { h: 'An intake that would not take a ball' },
       { problem: 'On the first intake test, on November 8, 2025, a ball pushed into the roller row stalled against the spinning wheels and did not come in.', title: 'Intake stall' },
-      { fix: [
-        'I changed the intake gearing from 1,620 rpm to 1,150 rpm. A week later, on November 15, the intake swallowed two balls side by side and sent them up the ramp.',
-        'Gearing down trades speed for torque: 1,620 / 1,150 = 1.41 times the torque at the roller, for about 29% less speed. With the 48 mm wheels in the CAD, the roller\'s surface speed drops from about 4.1 m/s to 2.9 m/s.',
+      { fix: 'I changed the intake gearing from 1,620 rpm to 1,150 rpm. A week later, on November 15, the intake swallowed two balls side by side and sent them up the ramp.' },
+      { calc: 'What did gearing down cost?',
+        given: [
+          ['Intake speed, before and after', '1,620 rpm, then 1,150 rpm', 'the gearing I changed'],
+          ['Intake wheels', '48 mm, on the intake shaft through a 36 to 36 tooth belt', 'measured from the CAD'],
+          ['Drive motors and wheels', '435 rpm through 1 : 1 miter gears to 104 mm mecanum wheels', `${YJ435}, ${MITER}, CAD`],
+        ],
+        work: [
+          'Torque at the roller: 1,620 / 1,150 = 1.41 times as much, for 29 % less speed',
+          'Roller surface speed: π × 0.048 m × 1,620 / 60 = 4.1 m/s before, π × 0.048 m × 1,150 / 60 = 2.9 m/s after',
+          'Chassis top speed, driving straight: π × 0.104 m × 435 / 60 = 2.4 m/s',
+        ],
+        result: 'Geared down, the roller has 41 % more torque and its surface still runs about 1.2 times the chassis\'s top speed (it was 1.7 times): it still outruns the robot driving into a ball.',
+        note: 'Free speeds from the datasheets, no load; a loaded motor runs slower.' },
+    ],
+      media: [
+        { v: 'v1-intake-ball-stalls.mp4', c: 'November 8: the ball stalls at the rollers' },
+        { v: 'v1-intake-swallows-two.mp4', c: 'November 15, geared down: a green and a purple ball taken in together' },
       ] },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { v: 'v1-intake-ball-stalls.mp4', c: 'November 8: the ball stalls at the rollers' },
-      { v: 'v1-intake-swallows-two.mp4', c: 'November 15, geared down: a green and a purple ball taken in together' },
-    ] },
     { type: 'prose', id: 'shots', p: [
       { h: 'Inconsistent shots' },
       { problem: [
@@ -234,7 +261,7 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ drive scrolly
-    { type: 'scrolly', id: 'drive', module: 'drive', width: 'wide', side: 'right', stepHeight: '95vh', poster: `${M}/poster-drive.webp`,
+    { type: 'scrolly', id: 'drive', module: 'drive', stepHeight: '95vh', poster: `${M}/poster-drive.webp`,
       h: 'Aiming from the pose',
       p: ['The Worlds robot on a field, driving a scripted path. Like the real turret, it aims from the robot\'s pose alone: where the robot is and which way it points. The magenta arc is the ball\'s path.'],
       steps: [

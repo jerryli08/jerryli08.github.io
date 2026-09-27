@@ -80,12 +80,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .section-head .count { color: var(--muted); font-weight: 500; margin-left: 8px; }
 .section-note { font-size: 14px; color: var(--muted); }
 
-/* about */
-.about-grid { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 28px; align-items: start; }
-.about-grid p + p { margin-top: 14px; }
-.about-grid p { color: var(--text-2); font-size: 16px; }
-.portrait { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4 / 5; background: var(--bg-raise); }
-.portrait img { width: 100%; height: 100%; object-fit: cover; }
+/* contact card (the landing's about section is further down) */
 .contact-card {
   margin-top: 36px; padding: 28px; border-radius: var(--radius-lg);
   background: var(--bg-raise); border: 1px solid var(--line);
@@ -134,6 +129,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .chips li { display: inline-flex; align-items: baseline; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); font-size: 13px; color: var(--text-2); }
 .chips b { font-weight: 700; font-stretch: 110%; color: var(--text); }
+.chips li:has(> a) { padding: 0; }
+.chips a { display: inline-flex; align-items: baseline; gap: 8px; padding: 6px 12px; border-radius: inherit; color: inherit; text-decoration: none; transition: background 0.15s, color 0.15s; }
+.chips li:has(> a):hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.22); }
+.chips a:hover { color: var(--text); }
+.chips a::after { content: '\2192'; margin-left: -2px; opacity: 0.5; font-size: 12px; }
+.chips a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* two columns, the right one dropped by a fifth of its width so the cards zig-zag */
 .featured { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; align-items: start; }
 .f-col { display: grid; gap: 18px; min-width: 0; }
@@ -244,6 +245,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .card-img > img { transition: transform 0.8s var(--ease), filter 0.4s; }
 .card-body { display: grid; gap: 3px; margin-top: 11px; }
 .card-k { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+/* when it was made (months, else the year); on small cards it gets its own line */
+.nw { white-space: nowrap; }
+@media (max-width: 899px) { .card-d { display: block; margin-top: 1px; } .card-dot { display: none; } }
 .card-body b { font-size: 16.5px; font-weight: 700; font-stretch: 106%; letter-spacing: -0.01em; line-height: 1.2; transition: color 0.2s; }
 .card-s { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card:hover .card-img, .card:focus-visible .card-img { border-color: rgba(255, 107, 53, 0.75); transform: translateY(-3px); box-shadow: 0 18px 40px -18px rgba(255, 107, 53, 0.5); }
@@ -280,6 +284,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .pcard-img > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pcard-none { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, #ddd5cb 0 9px, #d4cbc0 9px 18px); }
 .pcard-t { display: block; padding: 8px 4px 11px; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; text-wrap: balance; }
+.pcard-d { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: #7d7267; font-variant-numeric: tabular-nums; }
 .pcard:hover, .pcard:focus-visible { transform: translateY(calc(var(--dy, 0px) - 5px)) rotate(0deg) scale(1.04); box-shadow: 0 30px 44px -24px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(255, 107, 53, 0.7); }
 .pcard:focus-visible { outline: none; }
 @media (max-width: 640px) {
@@ -288,7 +293,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .pcard-t { font-size: 12px; padding: 6px 2px 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .pcard { transition: none; } }
-.about { padding: 72px var(--gutter) 20px; }
+.about { margin: 80px var(--gutter) 0; padding: 56px 0 20px; border-top: 1px solid var(--line-strong); }
 .home .footer { padding: 36px var(--gutter) 32px; }
 
 .hud-go {
@@ -306,13 +311,22 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .chip a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px; }
 a.chip:hover { color: var(--text); border-color: var(--text-2); }
 
-/* about */
-.about-grid { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 28px; align-items: start; max-width: 860px; }
-.about-grid p + p { margin-top: 14px; }
-.about-grid p { color: var(--text-2); font-size: 16px; }
-.portrait { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4 / 5; background: var(--bg-raise); }
+/* about (landing): the full width of the page (Jerry, Sept 27). A big title; the first paragraph as
+   a lede across the text column, the rest in two columns; the contact card under the text; the
+   portrait beside both */
+.about-title { font-size: clamp(40px, 5.2vw, 76px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.035em; line-height: 0.95; }
+.about-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(220px, 23vw, 420px); grid-template-areas: "text photo" "contact photo";
+  grid-template-rows: auto 1fr; gap: 0 clamp(28px, 4.5vw, 72px); align-items: start; margin-top: clamp(24px, 3vw, 40px);
+}
+.about-text { grid-area: text; columns: 2 280px; column-gap: clamp(28px, 3.6vw, 56px); orphans: 3; widows: 3; }
+.about-text p { color: var(--text-2); font-size: clamp(16px, 1.2vw, 18px); line-height: 1.65; }
+.about-text p + p { margin-top: 14px; }
+.about-text p:first-child { column-span: all; margin-bottom: 22px; font-size: clamp(20px, 1.9vw, 28px); line-height: 1.3; font-weight: 550; letter-spacing: -0.01em; color: var(--text); max-width: 46ch; }
+.about-text p:nth-child(2) { margin-top: 0; }
+.portrait { grid-area: photo; border-radius: var(--radius-lg); overflow: hidden; aspect-ratio: 4 / 5; background: var(--bg-raise); }
 .portrait img { width: 100%; height: 100%; object-fit: cover; }
-.contact-card { margin-top: 32px; padding: 26px; border-radius: var(--radius-lg); background: rgba(20, 18, 16, 0.8); border: 1px solid var(--line); max-width: 860px; }
+.contact-card { grid-area: contact; margin-top: 36px; padding: 26px 28px; border-radius: var(--radius-lg); background: rgba(20, 18, 16, 0.8); border: 1px solid var(--line); }
 .contact-card h3 { font-size: clamp(22px, 2.2vw, 32px); font-weight: 750; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.05; }
 .links-inline { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 16px; font-size: 15px; color: var(--text-2); }
 .links-inline a { display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s; }
@@ -530,8 +544,9 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .filter-row { justify-content: flex-start; }
   .card-cta { display: none; }
   .archive { margin-top: 48px; padding-top: 32px; }
-  .about-grid { grid-template-columns: 1fr; }
-  .portrait { max-width: 200px; }
+  .about-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "photo" "contact"; }
+  .portrait { aspect-ratio: 1; margin-top: 26px; } /* the full width, square: head to the rover he holds */
+  .contact-card { margin-top: 28px; padding: 22px; }
   .gallery { columns: 1; }
   .next .big-arrow { display: none; }
   .chips li { font-size: 12.5px; }
@@ -597,6 +612,32 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
 /* problem (red) / fix (green) / next time (blue) markers in the engineering story */
 .rx-flag { --flag: 255, 92, 92; margin: 16px 0 0; padding: 12px 16px 13px; border-radius: 12px; border: 1px solid rgba(var(--flag), 0.38); border-left-width: 4px; background: rgba(var(--flag), 0.08); }
 .rx-flag-fix { --flag: 52, 199, 110; }
+/* worked calculations */
+.rx-calc { container-type: inline-size; margin: 16px 0 0; padding: 13px 16px 14px; border-radius: 12px; border: 1px solid rgba(255, 196, 64, 0.34); border-left-width: 4px; background: rgba(255, 196, 64, 0.06); }
+.rx-text .rx-calc p { margin: 0; font-size: 16px; }
+.rx-text .rx-calc .rx-calc-label { margin-bottom: 8px; font-size: 14.5px; color: var(--text); }
+.rx-calc-label span { display: inline-block; margin-right: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgb(255, 196, 64); background: rgba(255, 196, 64, 0.14); border: 1px solid rgba(255, 196, 64, 0.4); vertical-align: 1px; }
+.rx-calc-given { overflow-x: auto; }
+.rx-calc-given table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.rx-calc-given th, .rx-calc-given td { padding: 4px 10px 4px 0; text-align: left; vertical-align: top; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.rx-calc-given th { width: 32%; font-weight: 500; color: var(--text-2); }
+.rx-calc-given td { color: var(--text); font-variant-numeric: tabular-nums; }
+.rx-calc-given td.rx-calc-src { width: 28%; color: var(--muted); font-size: 13px; }
+/* in a narrow box (beside a picture, in a split row or a step card, on a phone) each input is the
+   name beside its value, with the source under the value */
+@container (max-width: 560px) {
+  .rx-calc-given table, .rx-calc-given tbody { display: block; }
+  .rx-calc-given tr { display: grid; grid-template-columns: minmax(7.5em, 40%) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  .rx-calc-given th, .rx-calc-given td { width: auto; padding: 0; border: 0; }
+  .rx-calc-given th { grid-row: span 2; }
+  .rx-calc-given td.rx-calc-src { grid-column: 2; width: auto; padding-top: 1px; }
+  .rx-calc-given td:empty { display: none; }
+}
+.rx-calc-work { margin: 10px 0 0; padding-left: 20px; font-variant-numeric: tabular-nums; }
+.rx-text .rx-calc-work li { margin: 3px 0; font-size: 15px; line-height: 1.5; color: var(--text-2); }
+.rx-text .rx-calc .rx-calc-result { margin-top: 10px; font-weight: 600; color: var(--text); }
+.rx-text .rx-calc .rx-calc-note { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
+
 .rx-flag-next { --flag: 72, 150, 255; }
 .rx-flag + .rx-flag { margin-top: 8px; }
 .rx-text .rx-flag p { margin: 0; font-size: 16px; }
@@ -623,6 +664,7 @@ a.rx-m:hover > img { transform: scale(1.02); }
 .rx-hero-single .rx-m { border-radius: var(--radius-lg); max-height: 78vh; aspect-ratio: auto; background: var(--bg-sunk); }
 .rx-hero-single .rx-m > video, .rx-hero-single .rx-m > img { height: auto; max-height: 78vh; aspect-ratio: var(--ar); object-fit: contain; }
 .rx-hero-row .rx-m { border-radius: var(--radius-lg); }
+.rx-hero-row .rx-row { margin-inline: auto; }
 /* one row, equal heights: each item grows in proportion to its aspect ratio (scaled up, since
    grow factors that sum below 1 would leave the row part empty); --sum, the row's total aspect
    ratio, caps the row so it is never taller than about three quarters of the screen */
@@ -680,52 +722,49 @@ a.rx-m:hover > img { transform: scale(1.02); }
 .rx-aside-right .rx-aside-txt { order: 2; }
 .rx-aside .rx-demo { margin-top: 0; }
 
-/* scrolly: a sticky full-width stage; the step cards scroll over it. A step is active once the top
-   of its text has come up past --rx-line (0..1 down the screen); read by project.js */
-.rx-scrolly { margin-top: 28px; --rx-line: 0.7; }
+/* scrolly: a sticky stage the full width of the screen (Jerry, Sept 27: every scroll animation is
+   full width). Each step owns a slot of scrolling (the li, --step-h tall): its card rises into
+   place over the left of the stage, stays pinned (sticky) while its part of the animation runs,
+   then leaves as the next card arrives and pins. project.js writes each card's pinned top, a
+   longer slot for a tall card and the list's padding (so the first card is in place when the stage
+   pins and the last lets go with it), and computes the progress from the same numbers. */
+.rx-scrolly {
+  margin-top: 28px;
+  --rx-gap: 10vh;                                          /* between one card and the next */
+  --rx-card-l: max(var(--gutter), calc((100vw - 1640px) / 2));  /* the cards' left edge */
+  --rx-card-w: clamp(360px, 37vw, 540px);
+}
 .rx-scrolly-body { position: relative; }
 .rx-scrolly-stage { position: sticky; top: var(--nav-h); height: calc(100vh - var(--nav-h)); height: calc(100svh - var(--nav-h)); }
 .rx-scrolly .rx-stage { height: 100%; border-radius: 0; border-width: 1px 0; }
-.rx-steps { position: relative; z-index: 5; margin: calc(-100vh + var(--nav-h)) 0 0; margin-top: calc(-100svh + var(--nav-h)); padding: 0 var(--gutter) 30vh; list-style: none; pointer-events: none; }
-.rx-step { display: flex; align-items: center; min-height: var(--step-h, 80vh); max-width: 1180px; margin: 0 auto; }
-.rx-step:first-child { min-height: calc(var(--step-h, 80vh) + 10vh); }
+.rx-steps { position: relative; z-index: 5; margin: calc(-100vh + var(--nav-h)) 0 0; margin-top: calc(-100svh + var(--nav-h)); padding: 0 var(--gutter) 0 var(--rx-card-l); list-style: none; pointer-events: none; }
+.rx-step { height: var(--step-h, 80vh); padding-bottom: var(--rx-gap); }
+.rx-step:last-child { padding-bottom: 0; }
 .rx-step-card {
-  pointer-events: auto; width: min(540px, 100%); padding: 24px 28px; border-radius: 16px;
-  background: rgba(12, 10, 9, 0.76); border: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky; top: calc(var(--nav-h) + 14vh);
+  pointer-events: auto; width: min(var(--rx-card-w), 100%); padding: 24px 28px; border-radius: 16px;
+  background: rgba(12, 10, 9, 0.78); border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.9);
   opacity: 0.5; transition: opacity 0.35s var(--ease);
 }
 .rx-step.is-active .rx-step-card { opacity: 1; }
+/* a card whose step has not come yet: hidden until the step before it has played out (project.js) */
+.rx-steps .rx-step .rx-step-card.is-later { opacity: 0; pointer-events: none; }
 .rx-step-card p, .rx-step-card li { font-size: 22px; line-height: 1.5; } /* 1.4x, Jerry Sept 26 */
 .rx-step-card h3 { font-size: 25px; }
 .rx-step-card .rx-h2 { font-size: clamp(26px, 2.4vw, 34px); }
 .rx-step-card .rx-cap { margin-top: 16px; }
+/* blocks inside a card keep their own sizes (the card's 22 px is for its paragraphs) */
+.rx-step-card .rx-calc p { font-size: 17px; line-height: 1.5; }
+.rx-step-card .rx-calc-given table { font-size: 15px; }
+.rx-step-card .rx-calc-work li { font-size: 15.5px; }
+.rx-step-card .rx-calc .rx-calc-note { font-size: 14px; }
+/* a 2D scrolly draws in the part of the stage the cards leave free (project.js) */
+.rx-free { position: absolute; top: 0; right: 0; bottom: 0; left: var(--rx-cover, 0px); }
+/* the stage's own notes (WebGL off, could not load) sit clear of the cards */
+@media (min-width: 901px) { .rx-scrolly:not(.rx-stepless) .rx-note { left: auto; right: 12px; } }
 /* a scrolly without steps: the stage stays pinned for --len of scrolling */
 .rx-stepless .rx-scrolly-body { min-height: var(--len, 180vh); }
-.rx-stepless .rx-steps { padding-bottom: 0; }
-
-/* wide scrolly (about 3/4 of the screen) with the text beside it, not over it */
-@media (min-width: 900px) {
-  .rx-scrolly-wide { --rx-tw: clamp(330px, 27vw, 440px); }
-  .rx-scrolly-wide .rx-scrolly-body {
-    display: grid; grid-template-columns: var(--rx-tw) minmax(0, 1fr); column-gap: clamp(28px, 3.4vw, 56px);
-    padding-left: max(var(--gutter), calc((100vw - 1700px) / 2));
-  }
-  .rx-scrolly-wide.rx-side-right .rx-scrolly-body { grid-template-columns: minmax(0, 1fr) var(--rx-tw); padding-left: 0; padding-right: max(var(--gutter), calc((100vw - 1700px) / 2)); }
-  .rx-scrolly-wide .rx-scrolly-stage { grid-column: 2; grid-row: 1; align-self: start; }
-  .rx-scrolly-wide.rx-side-right .rx-scrolly-stage { grid-column: 1; }
-  .rx-scrolly-wide .rx-stage { border-radius: var(--radius-lg) 0 0 var(--radius-lg); border-width: 1px 0 1px 1px; }
-  .rx-scrolly-wide.rx-side-right .rx-stage { border-radius: 0 var(--radius-lg) var(--radius-lg) 0; border-width: 1px 1px 1px 0; }
-  .rx-scrolly-wide .rx-steps { grid-column: 1; grid-row: 1; margin: 0; padding: 0 0 34vh; }
-  .rx-scrolly-wide.rx-side-right .rx-steps { grid-column: 2; }
-  .rx-scrolly-wide .rx-step { max-width: none; margin: 0; }
-  .rx-scrolly-wide .rx-step-card { width: 100%; padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; opacity: 0.35; }
-  .rx-scrolly-wide .rx-step.is-active .rx-step-card { opacity: 1; }
-  .rx-scrolly-wide.rx-stepless .rx-steps { padding: 0; }
-  .rx-scrolly-wide .rx-step-pin { position: sticky; top: calc(var(--nav-h) + 9vh); min-height: 0; padding-top: 4vh; }
-  .rx-scrolly-wide .rx-step-pin .rx-step-card { opacity: 1; }
-  .rx-scrolly-wide .rx-step-pin p, .rx-scrolly-wide .rx-step-pin li { font-size: 18px; line-height: 1.6; }
-}
 
 /* a small instrument panel over a scroll-driven stage (numbers that follow the scroll) */
 .rx-hud {
@@ -834,24 +873,19 @@ a.rx-m:hover > img { transform: scale(1.02); }
 html.rx-lb-open { overflow: hidden; }
 
 @media (max-width: 900px) {
-  /* phones and small tablets: the stage pins in the top half and the step text scrolls below it,
-     never over the model (ctx.shift() is then [0, 0]) */
-  .rx-scrolly { --rx-line: 0.84; }
+  /* phones and small tablets: the stage pins in the top half and each card pins just under it,
+     never over the model (ctx.shift() is then [0, 0]); a card taller than the room there pins
+     with its bottom at the screen's bottom, its top passing under the stage */
+  .rx-scrolly { --rx-gap: 6svh; }
   .rx-scrolly-stage { z-index: 6; height: min(52svh, 520px); }
-  .rx-steps { margin-top: 0; padding: 14px var(--gutter) 34svh; }
-  .rx-step, .rx-step:first-child { display: block; min-height: var(--step-h-sm, 60svh); max-width: 640px; }
-  .rx-step-card { width: 100%; padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; opacity: 0.3; }
+  .rx-steps { margin-top: 0; padding: 12px var(--gutter) 0; }
+  .rx-step-card { top: calc(var(--nav-h) + min(52svh, 520px) + 12px); width: 100%; max-width: 640px; padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; opacity: 0.3; }
   .rx-step.is-active .rx-step-card { opacity: 1; }
   .rx-aside, .rx-aside-right, .rx-split-row, .rx-split-row.rx-flip { grid-template-columns: minmax(0, 1fr); }
   .rx-pm-row, .rx-pm-left .rx-pm-row { grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .rx-pm-fig { position: static; }
   .rx-pm-left .rx-pm-fig { order: 0; }
   .rx-stepless .rx-scrolly-stage { height: min(64svh, 600px); }
-  .rx-stepless .rx-scrolly-body { display: flex; flex-direction: column; }
-  .rx-stepless .rx-steps { order: -1; margin: 0; padding: 0 var(--gutter) 20px; pointer-events: auto; }
-  .rx-stepless .rx-step { min-height: 0; display: block; }
-  .rx-stepless .rx-step-card { position: static; opacity: 1; padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .rx-stepless .rx-step-card p, .rx-stepless .rx-step-card li { font-size: 17px; }
   .rx-aside-right .rx-aside-txt, .rx-flip .rx-split-vis { order: 0; }
   .rx-intro .facts { position: static; }
 }

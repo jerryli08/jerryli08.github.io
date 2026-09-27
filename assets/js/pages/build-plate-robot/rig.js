@@ -25,8 +25,11 @@
 //     grasper centre sits at z -1 mm when retracted; the printer plate centre is at z -356 mm and
 //     both holder plates are 435 mm from the turntable axis, so one 355 mm stroke reaches all three.
 //   NEMA 23 pulley: vertical through x 0, z 362.8 mm; extension pulleys: vertical through
-//     x -49.5 / +49.5, z 242.5 mm.
+//     x -49.18 / +49.17, z 242.5 mm (the centre of each pulley's hub and bore in the CAD mesh).
+// The extension belts are not bodies in the CAD; belt.js draws them along the path their pulleys,
+// idlers and clamps set, and set({ s }) moves them with the carriage.
 import * as THREE from 'three';
+import { extensionBelts } from './belt.js';
 
 export const MODEL = '/assets/models/build-plate-robot/final.glb';
 export const BOARDS = '/assets/models/build-plate-robot/electronics.glb';
@@ -68,8 +71,22 @@ export async function loadRig(stage, { electronics = false } = {}) {
   const thrLo = group(turret, 'thrust-lo', [P.THR_LO]);
   const ring = group(turret, 'ring', [P.RING]);
   const drive = group(model, 'drive', [P.BELT, P.TPUL]);
-  const epulL = stage.pivot(P.EPUL_L, [-0.0495, 0.05, 0.2425], [0, 1, 0]);
-  const epulR = stage.pivot(P.EPUL_R, [0.0495, 0.05, 0.2425], [0, 1, 0]);
+  const epulL = stage.pivot(P.EPUL_L, [-0.04918, 0.05, 0.2425], [0, 1, 0]);
+  const epulR = stage.pivot(P.EPUL_R, [0.04917, 0.05, 0.2425], [0, 1, 0]);
+
+  // the two extension belts, in the model's frame, riding the part of the arm that turns
+  const beltMesh = [P.BELT].concat(P.BELT.children || []).find((o) => o.isMesh);
+  const beltMat = new THREE.MeshStandardMaterial({ color: beltMesh?.material?.color?.clone() ?? new THREE.Color(0x0a0a0a), roughness: 0.86, metalness: 0 });
+  beltMat.name = 'extension-belt';
+  const belts = extensionBelts(beltMat);
+  model.add(belts.group);
+  model.updateMatrixWorld(true);
+  upper.attach(belts.group);
+  // label anchors on the belts (Object3Ds that turn with the arm: labels read their world position)
+  const beltAnchor = {};
+  for (const [k, v] of Object.entries(belts.anchors)) {
+    const o = new THREE.Object3D(); o.position.set(...v); belts.group.add(o); beltAnchor[k] = o;
+  }
   const tpul = stage.pivot(P.TPUL, [0, -0.04, 0.3628], [0, 1, 0]);
 
   const state = { theta: 0, s: 0, explode: 0 };
@@ -81,6 +98,7 @@ export async function loadRig(stage, { electronics = false } = {}) {
     mid.position.z = -s / 2;          // the middle member floats between stops; drawn at half travel
     ballsIn.position.z = -0.75 * s;   // a ball row rolls at the mean speed of the two members it sits between
     ballsOut.position.z = -0.25 * s;
+    if (belts.set(s)) { beltAnchor.run.position.set(...belts.anchors.run); }
     epulL.setAngle(s / EXT_PITCH_R);
     epulR.setAngle(-s / EXT_PITCH_R); // the two belts are mirror images
     tpul.setAngle(RATIO * theta * DEG); // open belt: motor pulley turns the same way, 3.6 times as far
@@ -140,7 +158,8 @@ export async function loadRig(stage, { electronics = false } = {}) {
   }
 
   set({});
-  return { model, boards, P, turret, upper, ext, mid, ballsIn, ballsOut, thrUp, radial, thrLo, ring, drive, set, state, fade, carrier };
+  return { model, boards, P, turret, upper, ext, mid, ballsIn, ballsOut, thrUp, radial, thrLo, ring, drive, set, state, fade, carrier,
+    belts: belts.meshes, beltAnchor, disposeBelts: () => { belts.dispose(); beltMat.dispose(); } };
 }
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -157,6 +176,49 @@ export function glow(stage, parts, color = '#ff7a2f', max = 0.55) {
     if (k <= 0) { off?.(); off = null; return; }
     off = stage.highlight(parts, color, { intensity: max * k });
   };
+}
+
+/**
+ * On a phone-width stage, lay out the shown labels so none runs off an edge or over another: each
+ * keeps the side it was made with if that fits, else flips, else moves its text a row up or down
+ * beside its dot. keepClear: elements (the readout) the labels stay off. Wider stages keep the side each
+ * label was made with. Call after ov.update().
+ */
+const clearBoxes = new WeakMap();
+export function inward(el, labels, keepClear = []) {
+  const W = el.clientWidth, narrow = W < 640, placed = [];
+  if (narrow && keepClear.length) {
+    // boxes the labels stay off (the readout across the top), in the stage's pixels, measured once
+    // per stage size
+    const H = el.clientHeight;
+    let c = clearBoxes.get(el);
+    if (!c || c.W !== W || c.H !== H) {
+      const b = el.getBoundingClientRect();
+      c = { W, H, boxes: keepClear.map((k) => k.getBoundingClientRect()).filter((r) => r.width).map((r) => [r.left - b.left, r.top - b.top, r.right - b.left, r.bottom - b.top]) };
+      clearBoxes.set(el, c);
+    }
+    placed.push(...c.boxes);
+  }
+  for (const l of labels) {
+    if (l.side0 === undefined) l.side0 = l.pill.style.right ? 'l' : 'r';
+    if (!(l.shown > 0)) continue;
+    let side = l.side0, dy = 0;
+    if (narrow) {
+      const w = l.pw || (l.pw = l.pill.offsetWidth);
+      const rect = (s, d) => (s === 'l' ? [l.x - 10 - w, l.y - 12 + d, l.x - 10, l.y + 12 + d] : [l.x + 10, l.y - 12 + d, l.x + 10 + w, l.y + 12 + d]);
+      const inside = (r) => r[0] >= 2 && r[2] <= W - 2;
+      const free = (r) => placed.every((q) => r[2] <= q[0] || r[0] >= q[2] || r[3] <= q[1] || r[1] >= q[3]);
+      const other = l.side0 === 'l' ? 'r' : 'l', tries = [];
+      for (const d of [0, -26, 26, -52, 52]) tries.push([l.side0, d], [other, d]);
+      [side, dy] = tries.find(([s, d]) => inside(rect(s, d)) && free(rect(s, d))) || tries.find(([s, d]) => d === 0 && inside(rect(s, d))) || [l.side0, 0];
+      placed.push(rect(side, dy));
+    }
+    if (l.side !== side || l.dy !== dy) {
+      l.side = side; l.dy = dy;
+      l.pill.style.left = side === 'l' ? '' : '10px'; l.pill.style.right = side === 'l' ? '10px' : '';
+      l.pill.style.top = `${dy - 11}px`;
+    }
+  }
 }
 
 /** An .rx-hud readout in the label layer: html with data-k cells; put(k, text) and bar(k, 0..1) write only on change. */

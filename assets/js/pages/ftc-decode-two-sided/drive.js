@@ -1,4 +1,4 @@
-// The drivetrain from underneath (scroll-driven): four goBILDA 104 mm mecanum wheels on one line
+// The collinear mecanum drivetrain from underneath (scroll-driven): four goBILDA 104 mm mecanum wheels on one line
 // down the middle, each on its own 5203 motor through a 30T to 120T belt. The wheel axles run along
 // the robot's length, so plain driving moves the robot sideways, toward the two intakes.
 // Wheel directions come from the rollers in the CAD: at the floor, the rollers of the
@@ -27,7 +27,7 @@ export async function mount(el, ctx) {
   const look = looks(stage);
   const reduced = ctx.reducedMotion;
   // only the chassis: everything above the drive pods is hidden, and the floor plates, to see the wheels
-  look([P.bottom, P.ramps, P.shell, P.walls, P.top, P.turret, P.ring, P.sidewheels, P.armL, P.armR, P.cplr, P.belt4, P.belt5, P.Dpul, P.Epul, P.Fpul, P.linkA, P.linkP], 0);
+  look([P.bottom, P.ramps, P.shell, P.walls, P.top, P.turret, P.ring, P.sideL, P.sideR, P.sideplates, P.armL, P.armR, P.rollL, P.rollR, P.cplr, P.belt4, P.belt5, P.Dpul, P.Epul, P.Fpul, P.linkA, P.linkP], 0);
   look([P.wheel0, P.wheel1, P.wheel2, P.wheel3], 1, '#ff2bd6', 0.12);
   let view = null, aspect = 0;
   function frameNow() {

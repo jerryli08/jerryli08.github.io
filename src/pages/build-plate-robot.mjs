@@ -3,7 +3,10 @@
 // README, build log and final firmware) and his CAD. Numbers marked as CAD come from his Fusion
 // assembly; the swap time was measured from the full-cycle video. Every animation is a scrolly driven
 // only by the scroll (assets/js/pages/build-plate-robot/); the CAD is final.glb (no circuit boards,
-// no fasteners) plus electronics.glb (the boards), which only the electronics section loads.
+// no fasteners) plus electronics.glb (the boards), which only the electronics section loads. The
+// extension belts are not bodies in the CAD; belt.js draws them along the path its pulleys, idlers and
+// clamps set (see the comment there). Calculations use only stated facts, the CAD, the final sketch
+// and the linked datasheets.
 const M = '/assets/models/build-plate-robot';
 const GH = 'https://github.com/jerryli08/replac3d';
 
@@ -23,24 +26,11 @@ export default {
   hero: {
     layout: 'row',
     items: [
-      { v: 'hero-pull-used-plate.mp4', c: 'Reaching into the printer for the used plate' },
-      { v: 'hero-load-printer.mp4', c: 'Driving the fresh plate into the printer' },
+      { v: 'full-cycle-4x.mp4', c: 'The complete swap in one take, at 4x speed (late August 2024)' },
+      { v: 'hero-grab-fresh-plate.mp4', c: 'Turning to the holder with the fresh plate and reaching over it' },
     ],
   },
   sections: [
-    { type: 'prose', id: 'problem', h: 'Why take the whole plate out', p: [
-      'We could only run the printer from 3 to 10 PM, because someone had to take each finished plate off and start the next job. A print that finished in the evening left the printer idle until the next afternoon. I wanted a machine that does that one human step.',
-      { fig: { v: 'removal-side-view-2x.mp4', c: 'Pulling a custom plate out of the printer and setting it down beside the machine, at 2x (August 2024)' }, wide: true },
-      'I researched how other people automate a printer, and none of the approaches fit mine, a Bambu Lab P1S:',
-      { table: { head: ['Approach', 'Why I passed on it'], rows: [
-        ['Push the print off with the toolhead', 'Fails on short prints, can damage the part and the toolhead, and the part has to be caught out of the air'],
-        ['A conveyor of build plates', 'Only works on printers a plate can pass through, which rules out the P1S, and the plate still falls'],
-        ['Scrape the print off', 'Can damage the print and the plate, large prints can tip over, and small things like brims get missed'],
-        ['A plate changer that grips the plate at its edge', 'The one I found was far too large, and a plate held at its edge can bend under a heavy print and drop it'],
-      ] } },
-      'So Replac3d lifts the whole plate out, print and all, and puts a fresh one in. It holds the plate from above with four electromagnets, strong enough to beat the magnet in the printer’s bed.',
-    ] },
-
     { type: 'scrolly', id: 'swap', module: 'swap', h: 'One swap, step by step', poster: 'cad-render-final-system.webp',
       p: ['Scroll to run a full swap on my CAD. Everything happens on two axes: a turntable, and an arm that rides on it and reaches out.'],
       steps: [
@@ -55,25 +45,31 @@ export default {
         { h: 'Turn back', p: ['90° back to the printer.'] },
         { h: 'Load it', p: ['The arm reaches in, sets the fresh plate on the bed, lets go and pulls back. The printer is ready for the next job.'] },
       ],
-      caption: 'My CAD. The printer’s bed is not modeled, so only the plate moves with it. The readout names the function of my final sketch that each move belongs to.' },
+      caption: 'My CAD, without its screws and nuts. The printer’s bed is not modeled, so only the plate moves with it. The belts are not in the CAD either: they are drawn along the path its pulleys, idlers and clamps set, and glow while they drive the arm. The readout names the function of my final sketch that each move belongs to.' },
 
-    { type: 'media', id: 'video', layout: 'row', h: 'The real thing', items: [
-      { v: 'full-cycle-4x.mp4', c: 'The complete swap in one take, at 4x speed (late August 2024)' },
-      { v: 'hero-grab-fresh-plate.mp4', c: 'Turning to the holder with the fresh plate and reaching over it' },
+    { type: 'prose', id: 'problem', h: 'Why take the whole plate out', p: [
+      'We could only run the printer from 3 to 10 PM, because someone had to take each finished plate off and start the next job. A print that finished in the evening left the printer idle until the next afternoon. I wanted a machine that does that one human step.',
+      { fig: { v: 'removal-side-view-2x.mp4', c: 'Pulling a custom plate out of the printer and setting it down beside the machine, at 2x (August 2024)' }, wide: true },
+      'I researched how other people automate a printer, and none of the approaches fit mine, a Bambu Lab P1S:',
+      { table: { head: ['Approach', 'Why I passed on it'], rows: [
+        ['Push the print off with the toolhead', 'Fails on short prints, can damage the part and the toolhead, and the part has to be caught out of the air'],
+        ['A conveyor of build plates', 'Only works on printers a plate can pass through, which rules out the P1S, and the plate still falls'],
+        ['Scrape the print off', 'Can damage the print and the plate, large prints can tip over, and small things like brims get missed'],
+        ['A plate changer that grips the plate at its edge', 'The one I found was far too large, and a plate held at its edge can bend under a heavy print and drop it'],
+      ] } },
+      'So Replac3d lifts the whole plate out, print and all, and puts a fresh one in. It holds the plate from above with four electromagnets, strong enough to beat the magnet in the printer’s bed.',
     ] },
+
     { type: 'callout', id: 'layout', h: 'One reach, three stations', p: [
       'In my CAD the printer plate and both holder plates sit on one circle, 435 mm from the turntable axis. So a single 355 mm stroke of the arm reaches all three, and the turntable only ever stops at three angles: 0° and ±90°. Two simple axes do the whole job.',
-      'A full swap takes about 70 seconds. I timed it from the video above: from flipping the power switch to the arm resting at home with the fresh plate loaded.',
+      'A full swap takes about 70 seconds. I timed it from the full-cycle video at the top of the page: from flipping the power switch to the arm resting at home with the fresh plate loaded.',
     ] },
 
-    { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', length: '170vh', poster: 'cad-render-final-system.webp',
-      h: 'The CAD',
-      p: [
-        'My full Fusion 360 assembly, turning as you scroll: the robot, the printer and both plate holders, laid out the way they stand.',
-        'I also measured and modeled every board; they are in the electronics section below. Screws and nuts are left out to keep it light, and my first concept from February 2024 comes next.',
-      ],
-      data: { models: [{ label: 'Final machine (Aug 2024)', src: `${M}/final.glb` }], azimuth: 38, elevation: 30, pad: 0.84, spin: 240 } },
-
+    { type: 'media', layout: 'grid', cols: 3, items: [
+      { i: 'concept-four-magnets.webp', c: 'The first CAD: four electromagnets over a stock build plate (Feb 8, 2024)' },
+      { i: 'fea-grasper-0-063mm.webp', c: 'FEA on the U-shaped grasper plate in Fusion 360: 0.063 mm peak deflection (Feb 11, 2024)' },
+      { i: 'fea-grasper-1-42mm.webp', c: 'FEA on a pocketed version: 1.42 mm peak deflection (Feb 11, 2024)' },
+    ] },
     { type: 'prose', id: 'rails', h: 'From linear rails to drawer slides', p: [
       'My first concept in February put the magnet plate on two MGN12 linear rails. The plate was bolted to the rails’ carriage blocks at its back end and reached forward over the printer plate. I ran FEA on the grasper plate in Fusion 360 before cutting anything.',
       { problem: 'Reach, footprint and cost. In the concept CAD, 450 mm rails carry the magnet plate 405 mm forward, and at full reach the plate hangs about 400 mm past the ends of the rails, held only at its back by two small blocks. Precision rails also cost a lot for accuracy this job does not need.', title: 'The rail concept' },
@@ -83,33 +79,61 @@ export default {
       steps: [
         { h: 'Side by side', p: ['My February concept on the left and the final arm on the right, both from my CAD at the same scale. The concept bolts the magnet plate to the carriage blocks of two 450 mm MGN12 rails. The final carriage rides a 400 mm telescoping slide on each side.'] },
         { h: 'The same job', p: ['Both reach out over the printer plate. The concept’s blocks and plate slide the full length of its rails, 405 mm; the final carriage runs its 355 mm stroke.'] },
-        { h: 'Held at one end, or along both sides', p: ['At full reach the concept’s plate hangs about 400 mm past the ends of the rails, held only at its back by two small blocks (orange). The final carriage is carried by a slide on each side along its whole length (the slides’ middle members, blue).'] },
+        { h: 'Held only at one end', p: ['From the side: at full reach the concept’s plate hangs about 400 mm past the ends of its rails, held only at its back by the two small carriage blocks (orange).'] },
+        { h: 'Carried along both sides', p: ['The final carriage is carried by a slide on each side along its whole length (the slides’ middle members, blue).'] },
         { h: 'Folded back in', p: ['Pulled back, the final arm folds its whole reach into the frame, so it can turn between the printer and the two holders.'] },
       ],
       caption: 'Both from my CAD, at the same scale, run through their reach by the scroll.' },
-    { type: 'media', layout: 'grid', cols: 3, items: [
-      { i: 'concept-four-magnets.webp', c: 'The first CAD: four electromagnets over a stock build plate (Feb 8, 2024)' },
-      { i: 'fea-grasper-0-063mm.webp', c: 'FEA on the U-shaped grasper plate in Fusion 360: 0.063 mm peak deflection (Feb 11, 2024)' },
-      { i: 'fea-grasper-1-42mm.webp', c: 'FEA on a pocketed version: 1.42 mm peak deflection (Feb 11, 2024)' },
-    ] },
 
-    { type: 'scrolly', id: 'arm', module: 'extension', width: 'wide', side: 'left', stepHeight: '85vh', poster: `${M}/poster-arm.webp`,
+    { type: 'scrolly', id: 'arm', module: 'extension', stepHeight: '85vh', poster: `${M}/poster-arm.webp`,
       h: 'The telescoping arm',
       p: ['The arm has to reach 355 mm into the printer and fold back into a 400 mm frame so it can turn.'],
       steps: [
         { h: 'Folded into the frame', p: ['Each side of the carriage runs on a 400 mm, three-member telescoping ball slide (SAR340 in my CAD). The outer member is bolted to the side plate, the inner member to the carriage’s 2020 extrusion, and the middle member rides between them, so the carriage is carried on both sides at any reach.'] },
         { h: 'Inside a slide', p: ['Cut through the upper rows of balls, all three members show. Each row of balls rolls at the average speed of the two members it sits between: as the carriage moves out, the middle member goes half as far, and the two rows of balls three quarters and a quarter as far.'] },
-        { h: 'Out to 355 mm on two belts', p: [
-          'Each side has its own NEMA 17 on a motor plate at the back of the frame. Its belt runs over GoBILDA idlers at the front and back of the frame and is clamped to the back end of the carriage extrusion, so turning the motor drags the carriage in or out.',
-          'In the CAD each motor has an 80-tooth GT2 pulley, which moves 160 mm of belt per turn: the full 355 mm stroke is about 2.2 motor turns.',
-        ] },
+        { h: 'Two open belts', p: ['Each side has its own NEMA 17 at the back of the frame and its own GT2 belt. The belt is open: both ends are clamped to the back of the carriage. As the motor turns, one run gets shorter and the other longer, so the belt drags the carriage in or out.'] },
+        { h: 'Out to 355 mm', p: ['In the CAD each motor has an 80-tooth GT2 pulley, which moves 160 mm of belt per turn: the full 355 mm stroke is about 2.2 motor turns.'] },
         { h: 'Back in', p: ['The motors turn back and pull the carriage home, and the slides fold back into the frame.'] },
       ],
-      caption: 'From my CAD. In a real slide the middle member floats between its stops; here it is drawn at half travel.' },
-    { type: 'media', layout: 'row', items: [
-      { v: 'extension-belt-by-hand.mp4', c: 'Turning the motor pulley by hand drags the belt and the carriage along (March 2024)' },
-      { i: 'extension-belt-path.webp', c: 'The belt, printed clamps and idlers at the motor end (July 2024)' },
-    ] },
+      caption: 'From my CAD. In a real slide the middle member floats between its stops; here it is drawn at half travel. Each belt runs from one clamp forward to a GoBILDA idler at the front of the frame, back along the outside of the slides, across the back, round the motor pulley and the two idlers beside it, and forward to the other clamp. The belts are not in the CAD: they are drawn along the path its pulleys, idlers and clamps set, with GT2 teeth at a 2 mm pitch.' },
+    { type: 'prose', id: 'belt-numbers', h: 'Speed, and which pulley', p: [
+      `My final sketch drives the arm 14,000 steps for the full stroke, at up to 3,000 steps/s and 1,000 steps/s². Those numbers say how fast the arm moves, and which pulley they fit.`,
+      { calc: 'How fast does the arm reach out?',
+        given: [
+          ['Full stroke', '355 mm', 'measured from the CAD'],
+          ['Steps for the stroke', '14,000', `[my final sketch](${GH})`],
+          ['Top speed', '3,000 steps/s', 'my final sketch'],
+          ['Acceleration', '1,000 steps/s²', 'my final sketch'],
+        ],
+        work: [
+          'Travel per step: 355 mm / 14,000 = 0.0254 mm',
+          'Top speed: 3,000 × 0.0254 = 76 mm/s. Acceleration: 1,000 × 0.0254 = 25 mm/s²',
+          'Reaching top speed takes 3,000 / 1,000 = 3 s and 3,000² / (2 × 1,000) = 4,500 steps; speeding up and slowing down use 9,000 of the 14,000 steps',
+          'One stroke: 14,000 / 3,000 + 3,000 / 1,000 = 4.7 s + 3.0 s = 7.7 s',
+        ],
+        result: 'About 7.7 s for each 355 mm stroke, and about two thirds of the steps are spent speeding up or slowing down. That gentle profile is on purpose: nothing re-homes the arm, so I kept speeds and accelerations low enough that the steppers would never skip and lose count.',
+        note: 'Estimate for an ideal move at the sketch’s limits (a trapezoidal speed profile).' },
+      { calc: 'Which pulley do the step counts fit?',
+        given: [
+          ['Turntable to a holder', '1,440 steps for 90°', 'my final sketch'],
+          ['Turntable reduction', '288 : 80 = 3.6', 'tooth counts from the CAD'],
+          ['Full steps per motor turn', '200 (1.8° a step)', '[23HS30-2804S, the NEMA 23 in my CAD](https://www.omc-stepperonline.com/nema-23-bipolar-1-8deg-1-9nm-269oz-in-2-8a-3-2v-57x57x76mm-4-wires-23hs30-2804s)'],
+          ['TMC2209 microsteps', '8 with MS1 and MS2 low; 16, 32 or 64 otherwise', '[TMC2209 datasheet, 3.4](https://www.analog.com/media/en/technical-documentation/data-sheets/tmc2209_datasheet_rev1.09.pdf)'],
+          ['Belt per pulley turn', '80 teeth: 160 mm; 20 teeth: 40 mm', 'teeth × 2 mm GT2 pitch'],
+        ],
+        work: [
+          'Turntable: 90° of the arm is 0.25 × 3.6 = 0.9 motor turns, so 1,440 / 0.9 = 1,600 steps a turn: 200 full steps × 8 microsteps',
+          'Extension at the same 1,600 steps a turn: 14,000 / 1,600 = 8.75 motor turns',
+          'With the CAD’s 80-tooth pulley: 8.75 × 160 mm = 1,400 mm, four times the stroke',
+          'With a 20-tooth pulley: 8.75 × 40 mm = 350 mm, within 5 mm of the 355 mm stroke',
+        ],
+        result: `At the turntable’s setting, 14,000 steps only fits a 20-tooth pulley: the change my [build log](${GH}/tree/main/Code) says I planned “due to torque issues and sufficient speed”, and the photo beside this shows a small pulley on the motor. For the same motor torque a 20-tooth pulley pulls four times as hard on the belt (pitch radius 6.4 mm instead of 25.5 mm). The 80-tooth pulley would only fit if its drivers were set to 32 microsteps.`,
+        note: 'Assumes 1.8° extension motors and the same microstep setting on every TMC2209 on my perfboard. The CAD and the animations keep the 80-tooth pulleys.' },
+    ],
+      media: [
+        { v: 'extension-belt-by-hand.mp4', c: 'Turning the motor pulley by hand drags the belt and the carriage along (March 2024)' },
+        { i: 'extension-belt-path.webp', c: 'The belt, printed clamps and idlers at the motor end (July 2024)' },
+      ] },
 
     { type: 'prose', id: 'turntable', h: 'The turntable', p: [
       'The turntable carries the whole arm, both extension motors and a plate held up to 355 mm out, so its bearing takes a large tipping load as well as the weight. I designed it from small off-the-shelf bearings, shown below from my CAD.',
@@ -135,11 +159,11 @@ export default {
       { v: 'turntable-drive-underside.mp4', c: 'The turntable belt and motor pulley from below' },
     ] },
 
-    { type: 'scrolly', id: 'electronics', module: 'electronics', width: 'wide', side: 'right', stepHeight: '75vh', poster: `${M}/poster-electronics.webp`,
+    { type: 'scrolly', id: 'electronics', module: 'electronics', stepHeight: '75vh', poster: `${M}/poster-electronics.webp`,
       h: 'Electronics',
       p: ['Everything lives in two printed bays at the back of the base. I measured every board and the power supply with a ruler, modeled them in the CAD, and designed the bays around those models.'],
       steps: [
-        { h: 'Two printed bays', p: ['The Arduino Uno, my driver perfboard and the Raspberry Pi sit in the left bay; the buck converter, the terminal block and the two MOSFET modules in the right one.'] },
+        { h: 'Two printed bays', p: ['Seen from the printer’s side. The Arduino Uno, my driver perfboard and the Raspberry Pi sit in one bay; the buck converter, the terminal block and the two MOSFET modules in the other.'] },
         { h: 'Power', p: ['A 24 V, 250 W supply for the steppers and a 24 V to 5 V, 16 A buck converter for the 5 V side, shared out through a screw terminal block. One red rocker switch turns it all on.'] },
         { h: 'Magnets', p: ['Two MOSFET modules, each switching two of the four 5 V electromagnets on the carriage.'] },
         { h: 'Motion', p: ['An Arduino Uno and my own perfboard of TMC2209 stepper drivers: one for the turntable’s NEMA 23 and one for each extension NEMA 17.'] },
@@ -166,7 +190,7 @@ export default {
       `The sketch that ran the swap in the video is one Arduino file, \`finalWorking08-23-2024.ino\`, [on GitHub](${GH}). It uses the AccelStepper library for two axes: \`panning\` for the turntable (up to 1,000 steps/s, 1,000 steps/s²) and \`extension\` for the arm (up to 3,000 steps/s, 1,000 steps/s²). A swap is four functions that follow one pattern: pull the arm in, turn, reach out, wait half a second, switch the magnets, wait, pull back.`,
       'The stations are hard-coded step targets: the turntable goes to -1,450, 0 or 1,440 steps and the arm to 0 or -14,000. `runToNewPosition()` blocks until each move is done, so only one axis moves at a time. That kept the code simple. It is also why the two extension motors are handled in hardware: both of their drivers listen to the same step and direction pins, and the sketch only switches their enable pins. The magnets are one output pin. In this version the whole sequence runs once from `setup()` when the board powers up.',
     ] },
-    { type: 'scrolly', id: 'firmware-run', module: 'firmware', webgl: false, width: 'wide', side: 'left', stepHeight: '80vh',
+    { type: 'scrolly', id: 'firmware-run', module: 'firmware', webgl: false, stepHeight: '80vh',
       steps: [
         { h: 'Knowing when to start', p: [
           { problem: 'The printer knows when a print is done. My plan was for it to publish that over MQTT, with the Raspberry Pi subscribed and telling the Uno to start. I never finished it.', title: 'MQTT' },
@@ -190,14 +214,28 @@ export default {
       'Getting the magnets to hold the plate every time was the hardest problem in the project. From the first magnet test in March to August, the grab was the weak point.',
       { problem: 'The stock Bambu plates were too thin, and their PEI coating sits between the steel and the magnets. An electromagnet’s rated pull (10 kg for each of mine) assumes thick steel pressed right against its face, and a thin sheet behind a plastic coating is far from that.', title: 'Stock plates' },
       { fix: 'I made my own build plates: 3 mm steel, laser cut by Fabworks in the same outline as the stock plate, so they fit the printer and my holders. The printer prints straight onto them, and pickup became 100% reliable.' },
+      { calc: 'Four 10 kg magnets for one steel plate',
+        given: [
+          ['Plate volume', '207.6 cm³ (258 × 276 mm, 3 mm thick)', 'measured from the CAD'],
+          ['Steel density', '7.87 g/cm³', '[MatWeb, AISI 1008 sheet](https://www.matweb.com/search/datasheet.aspx?MatGUID=145867c159894de286d4803a0fc0fe0f)'],
+          ['Magnets', '4, rated 10 kg holding force each', '[Adafruit 3874](https://www.adafruit.com/product/3874)'],
+          ['Holding force to what it can pick up', 'divide by 5 to 10', '[Adafruit 3874](https://www.adafruit.com/product/3874)'],
+        ],
+        work: [
+          'Plate: 207.6 cm³ × 7.87 g/cm³ = 1,630 g, about 1.6 kg',
+          'Rated holding force: 4 × 10 kg = 40 kg, 25 times the plate',
+          'What they can pick up by Adafruit’s rule: 40 kg / 10 to 40 kg / 5 = 4 to 8 kg, 2.5 to 5 times the plate',
+        ],
+        result: 'Even on ideal steel the margin is only 2.5 to 5 times, before the print adds its weight. Adafruit’s figures assume flat steel in full contact with the magnet; the stock plate’s steel is 0.65 mm thick in my CAD and sits under a PEI coating, which is why it would not hold reliably and the 3 mm plates did.',
+        note: 'Estimate. The steel grade is unknown; plain carbon steels are all about 7.85 to 7.87 g/cm³. The plate alone, without a print.' },
       { problem: 'Once the magnets held, the steppers could not pull the plate out of the printer. They skipped.', title: 'Too much friction' },
       { fix: 'Thick, clear, rubbery tape under each plate, about 3 mm of it, cut the friction enough for the steppers to pull it out.' },
-    ] },
-    { type: 'media', layout: 'grid', cols: 3, items: [
-      { i: 'custom-steel-plates.webp', c: 'One of my 3 mm steel build plates (Aug 14, 2024)' },
-      { i: 'custom-plate-in-printer.webp', c: 'A custom plate on the printer’s bed' },
-      { i: 'printing-on-custom-plate.webp', c: 'Printing on a custom plate: the printer at temperature, the bare steel plate on the bed (Aug 26, 2024)' },
-    ] },
+    ],
+      media: [
+        { i: 'custom-steel-plates.webp', c: 'One of my 3 mm steel build plates (Aug 14, 2024)' },
+        { i: 'custom-plate-in-printer.webp', c: 'A custom plate on the printer’s bed' },
+        { i: 'printing-on-custom-plate.webp', c: 'Printing on a custom plate: the printer at temperature, the bare steel plate on the bed (Aug 26, 2024)' },
+      ] },
 
     { type: 'iterations', id: 'timeline', h: 'How it got here', items: [
       { label: 'Feb 2024', title: 'Concept', p: [

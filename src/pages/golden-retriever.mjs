@@ -7,6 +7,8 @@
 // whether the item rode in the clear bin on the way back, and the take that ends with the bottle on the floor.
 // Every animation is a scrolly driven by the scroll (Sept 26 direction): the fetch, the drive, the
 // lift and the arm, each on the rigged CAD (assets/js/pages/golden-retriever/).
+// Worked calculations (Sept 27): drive speed from the Axon MAX MK2 rating (a labelled estimate), the
+// turning radius the drive readout shows, and the winch drum's turns against torque.
 const M = '/assets/models/golden-retriever';
 const REPO = 'https://github.com/jerryli08/corgi-hackathon';
 
@@ -83,7 +85,6 @@ export default {
       ],
       media: [
         { i: 'build-frame-bin-arm.webp', c: '9:44 pm: frame done, clear bin on the top deck, arm on the side' },
-        { i: 'still-overhead-at-shelf.webp', c: 'Parked alongside the shelf with the bottle beside the arm' },
       ],
     },
     {
@@ -102,6 +103,40 @@ export default {
       caption: 'Wheel speed is taken as proportional to the pulse\'s offset from 1,500 µs, and the floor moves at an illustrative pace: the robot\'s real top speed is not known. The wheels turn about their axles in the CAD by the distance each side rolls.',
     },
     {
+      type: 'prose', id: 'drive-numbers',
+      p: [
+        { calc: 'How fast could it drive?',
+          given: [
+            ['Axon MAX MK2 rated speed at 4.8 V', '0.140 s per 60°', '[Axon Robotics](https://docs.axon-robotics.com/servos/max)'],
+            ['at 8.4 V', '0.085 s per 60°', 'Axon Robotics'],
+            ['Wheel travel per turn (72 mm wheel)', '226 mm', 'measured from our CAD'],
+            ['Pulse cap in our drive code, either side of stop', '300 of 500 µs', 'our code'],
+          ],
+          work: [
+            'Servo top speed: 60° / 0.140 s = 429°/s = 71 rpm, up to 60° / 0.085 s = 706°/s = 118 rpm',
+            'At full pulse: 71 to 118 rpm is 1.19 to 1.96 turns a second, x 0.226 m = 0.27 to 0.44 m/s',
+            'At our cap: 300 / 500 = 60 % of that, 0.16 to 0.27 m/s',
+          ],
+          result: 'Capped, the robot would roll at about 0.2 m/s, and under half a metre a second even at full pulse.',
+          note: 'Estimate, not measured: the rated speed taken as the top speed in continuous rotation, speed proportional to the pulse (as in the drive above), no load and no slip. The supply voltage is not recorded, hence the range.' },
+        { calc: 'How tight is the curve at 1,650 µs?',
+          given: [
+            ['Track', '397 mm', 'measured from our CAD'],
+            ['Pulse, far side', '1,800 µs', 'the drive above'],
+            ['Pulse, arm side', '1,650 µs', 'the drive above'],
+          ],
+          work: [
+            'Wheel speeds, proportional to the offset from 1,500 µs: 300 and 150, a ratio of 2 to 1',
+            'Radius of the robot\'s centre: R = (397 mm / 2) x (300 + 150) / (300 - 150) = 198.5 mm x 3 = 0.60 m',
+            'Inner wheel: 0.60 - 0.20 = 0.40 m, one track width; outer wheel: 0.79 m',
+          ],
+          result: 'Halving one side\'s speed turns the robot on a 0.6 m radius, the figure in the readout above.' },
+      ],
+      media: [
+        { i: 'still-overhead-at-shelf.webp', c: 'Parked alongside the shelf with the bottle beside the arm' },
+      ],
+    },
+    {
       type: 'scrolly', id: 'lift', module: 'lift', stepHeight: '90vh', poster: `${M}/poster-lift.webp`,
       h: 'The lift: a winch on the mast',
       p: ['The carriage runs on its rails in our CAD as you scroll, the winch pulley turns by the line it winds, and the line shortens with it.'],
@@ -114,6 +149,24 @@ export default {
         ] },
       ],
       caption: 'The carriage stops where its blocks reach the ends of the rails in the CAD. The servo\'s real speed is not known, so the lift moves with your scroll, not in real time.',
+    },
+    {
+      type: 'prose', id: 'winch-numbers',
+      p: [
+        { calc: 'The winch: turns against torque',
+          given: [
+            ['Winch pulley, line per turn', '112 mm', 'measured from our CAD'],
+            ['Carriage travel', 'about 56 cm', 'measured from our CAD'],
+          ],
+          work: [
+            'Drum radius: 112 mm / 2π = 17.8 mm',
+            'Full stroke: 560 mm / 112 mm per turn = 5.0 turns',
+            'Each kilogram on the line pulls 9.81 N, so it asks the servo for 9.81 N x 0.0178 m = 0.175 N·m, 1.8 kg·cm',
+            'A drum twice the size would need 2.5 turns for the stroke, but 3.6 kg·cm per kilogram',
+          ],
+          result: 'The small drum trades speed for torque: each kilogram of arm and carriage costs the servo only about 1.8 kg·cm, and the price is five turns for the full stroke.',
+          note: 'Static, ignoring friction in the rails and the line. The weight of the arm and carriage and the winch servo\'s rating are not recorded, so there is no margin to show.' },
+      ],
     },
     {
       type: 'media', id: 'build', layout: 'row', h: 'Built in one night',

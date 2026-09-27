@@ -8,6 +8,10 @@
 // floor-only recut is requested in /home/claude/work/battlebot/media-requests.md).
 // Every demo is scroll-driven (Jerry, Sept 26): arena, weapon, versions and teardown are scrollies.
 const M = '/assets/models/battlebot';
+// Worked calculations (Sept 27): tip speed from his calculator's inputs; blade energy from the final
+// blade's volume and radius of gyration measured on the STEP mesh, with PLA density as a labelled
+// assumption (the V1 against V2 inertia comparison stays held back, question 4); the weigh-in margin.
+const PLA = 'https://prusament.com/wp-content/uploads/2022/10/PLA_Prusament_TDS_2021_10_EN.pdf';
 
 export default {
   summary: {
@@ -77,14 +81,19 @@ export default {
     ] },
     { type: 'split', id: 'speed', items: [{ h: 'How fast', media: { i: 'weapon-calculator.webp', c: 'My weapon calculator: 11.1 V, a 4.409 in blade, 740 KV, no reduction' }, p: [
       'A brushless motor\'s no-load speed is its KV times the voltage, and with no reduction the blade turns at that speed. I checked the numbers in a weapon calculator:',
-      { table: {
-        head: ['', ''],
-        rows: [
-          ['No-load speed', '740 KV x 11.1 V = **8,214 rpm**'],
-          ['Blade diameter', '4.409 in (112 mm), the swing of both blades in my CAD'],
-          ['Tip speed', '**158 ft/s** (107.7 mph)'],
+      { calc: 'How fast is the tip?',
+        given: [
+          ['Weapon motor', '740 KV', 'SunnySky V4006; my weapon calculator'],
+          ['Battery', '11.1 V', 'my weapon calculator'],
+          ['Blade diameter', '4.409 in (112 mm)', 'the swing of both blades in my CAD'],
+          ['Reduction', 'none', 'the blade bolts to the bell'],
         ],
-      } },
+        work: [
+          'No-load speed: 740 KV x 11.1 V = **8,214 rpm**, or 137 turns a second',
+          'Tip path per turn: π x 0.112 m = 0.352 m',
+          'Tip speed: 136.9 turns/s x 0.352 m = 48.2 m/s = **158 ft/s** (107.7 mph)',
+        ],
+        result: 'With no load the tip moves at 158 ft/s, the same as my calculator.' },
       'These are no-load numbers; every hit takes speed off the blade and the motor has to bring it back up.',
     ] }] },
     { type: 'scrolly', id: 'weapon', module: 'weapon', width: 'wide', stepHeight: '85vh', poster: `${M}/poster-weapon.webp`,
@@ -125,6 +134,21 @@ export default {
         ],
         caption: 'Measured on my two STEP files.',
       } },
+      { calc: 'How much energy does the blade store?',
+        given: [
+          ['Blade volume', '38.6 cm³', 'measured from my CAD (the one-tooth blade)'],
+          ['Radius of gyration about the spin axis', '34.4 mm', 'measured from my CAD'],
+          ['Density, if printed solid in PLA', '1.24 g/cm³', `[Prusament PLA datasheet](${PLA}); the material is assumed`],
+          ['No-load speed', '8,214 rpm', 'my weapon calculator'],
+        ],
+        work: [
+          'Mass: 38.6 cm³ x 1.24 g/cm³ = 48 g',
+          'Moment of inertia: I = m k² = 0.048 kg x (0.0344 m)² = 5.7 x 10⁻⁵ kg·m²',
+          'Spin: ω = 8,214 rpm x 2π / 60 = 860 rad/s',
+          'Energy: E = ½ I ω² = ½ x 5.7 x 10⁻⁵ x 860² = **about 21 J**',
+        ],
+        result: 'About 21 J at full speed. The stored energy grows in step with the moment of inertia, which is what the asymmetrical blade was drawn to increase, and with the square of the speed.',
+        note: 'Estimate: the blade alone, as if printed solid in PLA; its real material and infill are not recorded, and infill lowers it. The motor\'s spinning bell adds some, and every hit takes speed off.' },
     ],
       media: [
         { i: 'review-markup.webp', c: 'A marked-up render of version 1, Jul 10' },
@@ -187,6 +211,10 @@ export default {
       ] },
       { label: 'Jul 13, 2 AM', title: 'Weigh-in', p: [
         '15.5 oz on my scale with the battery sitting on top: half an ounce under the 1 lb limit.',
+        { calc: 'How much room was left?',
+          given: [['On my scale, battery included', '15.5 oz', 'the weigh-in photo'], ['Class limit', '1 lb = 16 oz', 'the plastic antweight class'], ['One printed plate on the same scale', '38 g', 'my photo, Jul 10']],
+          work: ['16 oz - 15.5 oz = 0.5 oz', 'In grams: 15.5 oz x 28.35 g/oz = 439 g against 454 g, so 14 g to spare', '14 g / 454 g = 3 % of the limit, a bit over a third of one printed plate'],
+          result: 'The robot came in 14 g, 3 %, under the limit.' },
       ], media: [
         { i: 'weigh-in-15-5-oz.webp', c: 'The scale reads 0 lb 15.5 oz with the LiPo on top' },
       ] },

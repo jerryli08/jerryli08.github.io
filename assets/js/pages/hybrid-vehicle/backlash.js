@@ -50,7 +50,7 @@ export async function mount(el, ctx) {
     if (view && key === vkey) return view;
     vkey = key;
     const portrait = el.clientHeight > el.clientWidth * 1.05;
-    view = stage.frame(box, { dir: [1, 0.08, 0.1], pad: ctx.shift()[0] > 0 ? 1.75 : portrait ? 1.04 : 1.06, apply: false, track: false, refresh: true });
+    view = stage.frame(box, { dir: [1, 0.08, 0.1], pad: portrait ? 1.04 : 1.06, apply: false, track: false, refresh: true });
     return view;
   }
 

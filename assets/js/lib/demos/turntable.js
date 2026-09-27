@@ -1,8 +1,8 @@
 // Built-in scroll module "@turntable": the reader scrolls and the camera turns around the real CAD.
 // It replaces the old drag-to-rotate "@viewer": a page converts with data only (a `demo` section
-// with module '@viewer' is turned into one of these by the build, pinned beside its text).
+// with module '@viewer' is turned into one of these by the build, with its text above it).
 //
-//   { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', h: 'The CAD', p: [...],
+//   { type: 'scrolly', id: 'cad', module: '@turntable', h: 'The CAD', p: [...],
 //     data: { models: [{ label: 'V1', src: '/assets/models/<slug>/v1.glb' }, { label: 'V2', src: '...' }] } }
 //
 // Without steps the whole scroll is one slow orbit (data.spin degrees, default 300) and the versions
@@ -189,9 +189,10 @@ export async function mount(el, ctx) {
   }
   const stills = (steps || []).map((s) => {
     if (!s.image) return null;
-    // shown like a print laid over the stage, centred, at its own aspect ratio
+    // shown like a print laid over the stage, at its own aspect ratio, centred in the part of the
+    // stage the step cards leave free (--rx-cover, written by the page runtime)
     const wrap = document.createElement('div');
-    Object.assign(wrap.style, { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', padding: 'clamp(16px, 5%, 48px)', opacity: '0', zIndex: '1', pointerEvents: 'none', background: 'rgba(14, 11, 9, 0.82)' });
+    Object.assign(wrap.style, { position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', padding: 'clamp(16px, 5%, 48px)', paddingLeft: 'calc(var(--rx-cover, 0px) + clamp(16px, 5%, 48px))', opacity: '0', zIndex: '1', pointerEvents: 'none', background: 'rgba(14, 11, 9, 0.82)' });
     const img = document.createElement('img');
     img.alt = s.alt || '';
     img.decoding = 'async';

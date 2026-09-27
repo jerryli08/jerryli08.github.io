@@ -2,9 +2,10 @@
 // Jerry's checklist: "Just show the videos and stuff, mainly i think you should just explain the
 // mechanisms and stuff because the videos are already pretty isolated in terms of mechanisms".
 // There is no CAD (checklist: "CAD (N/A)"; none in cad_src or cad_glb), so no 3D and no stand-in
-// geometry. The `mechanisms` scrolly (reel.js) is a slideshow of the real clips: each step is one
-// mechanism, and its clip is scrubbed by the scroll (it never plays), with the clip's own stills
-// standing in until the video can show a frame.
+// geometry. Jerry, Sept 27: a scroll slideshow of separate clips is awkward, so each mechanism's
+// clips are normal pictures beside its text.
+// Calculation: the light and heavy box weights from REV's game elements page, as the friction the
+// jaws must supply.
 // Copy uses projects.mjs (not finished in time, did not compete), the official FIRST page for team
 // 18996 in the 2021 season (no events), the game itself, and what the clips plainly show. Credit is
 // "we" (who designed and built what is not stated).
@@ -30,56 +31,42 @@ export default {
     { v: 'hero-grab-lift.mp4', c: 'The claw closes on a freight box and lifts it clear of the floor' },
   ] },
   sections: [
-    { type: 'scrolly', id: 'mechanisms', module: 'reel', webgl: false, width: 'full', stepHeight: '90vh', poster: 'claw-holding-box.webp',
-      h: 'The mechanisms, one at a time',
-      p: ['Each step is one of our clips. Scroll, and the clip moves with you: grip, linkage, lift, then the carousel spinner.'],
-      caption: 'Our clips, advanced by the scroll instead of playing on their own. Scrolling back plays them backwards.',
-      steps: [
-        { h: 'Grip', p: [
-          'The claw grips a box from the sides. The jaw you see here is a perforated aluminum plate with **green rubber bands** stretched across it in an X, so the bands are what touch the box.',
-        ], view: { short: 'Grip', shots: [
-          { v: 'claw-closeup.mp4', from: 0, to: 3, size: [1280, 960], stills: [{ i: 'claw-closeup.jpg', at: 0 }], c: 'Up close: the banded jaw squeezes the box' },
-        ] } },
-        { h: 'One servo, one linkage', p: [
-          'A **servo** sits on top of the claw. As it turns, a short linkage swings the moving jaw in against the box.',
-        ], view: { short: 'Linkage', shots: [
-          { v: 'claw-servo-linkage.mp4', from: 0, to: 3, size: [1280, 960], stills: [{ i: 'claw-servo-linkage.jpg', at: 0 }, { i: 'still-claw-servo.webp', at: 2 }], c: 'The servo at the top turns, and its linkage swings the jaw' },
-        ] } },
-        { h: 'Lift', p: [
-          'With the box held, the claw lifts it clear of the floor. The boxes are not all the same: some carry metal weights in their cells, so the same grip has to hold a light box and a heavy one.',
-        ], view: { short: 'Lift', shots: [
-          { v: 'hero-grab-lift.mp4', from: 0, to: 5.5, size: [1280, 960], stills: [{ i: 'hero-grab-lift.jpg', at: 0 }, { i: 'still-box-lifted.webp', at: 5 }], c: 'From the front, at floor level: grip, then lift' },
-        ] } },
-        { h: 'The carousel spinner', p: [
-          'Ducks score when the carousel is turned and they drop off it onto the field, in autonomous and in the end game. Our spinner is a **sprocket ringed with strips**: the strips press on the carousel\'s rim, and spinning the wheel turns the carousel.',
-        ], view: { short: 'Spinner', shots: [
-          { v: 'carousel-wheel-spin.mp4', from: 0, to: 3, size: [1280, 960], stills: [{ i: 'still-carousel-wheel.webp', at: 0 }], c: 'The spinner: a sprocket ringed with strips, from rest to spinning' },
-        ] } },
-        { h: 'Ducks off', p: [
-          'From above, the wheel sits against the carousel\'s rim. Turned fast, the carousel carries the ducks round until they come off it.',
-        ], view: { short: 'Ducks', shots: [
-          { i: 'still-carousel-top.webp', size: [1080, 1440], zoom: [1, 1.05], focus: [0.62, 0.12], until: 0.4, c: 'From above: the strip wheel against the carousel\'s rim, at the top' },
-          { v: 'carousel-ducks-spin.mp4', from: 0, to: 2, size: [1280, 960], stills: [{ i: 'carousel-ducks-spin.jpg', at: 0 }], c: 'The carousel spinning: the ducks ride round and drop off' },
-        ] } },
-      ],
-      data: { aria: 'The FREIGHT FRENZY robot\'s mechanisms in our clips: the claw gripping and lifting a box, then the carousel spinner' } },
-
     { type: 'prose', id: 'claw', h: 'The claw', media: [
-      { v: 'claw-grab-side.mp4', c: 'From the side, at floor level: the banded jaw grips the box, then the claw lifts it' },
+      { v: 'claw-closeup.mp4', c: 'Up close: the banded jaw squeezes the box' },
+      { v: 'claw-servo-linkage.mp4', c: 'The servo at the top turns, and its linkage swings the jaw' },
+      { i: 'claw-holding-box.webp', c: 'Holding a weighted box: the rubber bands grip its side' },
       [
-        { i: 'claw-holding-box.webp', c: 'Holding a weighted box: the rubber bands grip its side' },
+        { v: 'claw-grab-side.mp4', c: 'From the side, at floor level: the banded jaw grips the box, then the claw lifts it' },
         { i: 'still-box-lifted.webp', c: 'From the front, lifted clear of the floor' },
       ],
     ], p: [
-      'The claw hangs from the front of the robot and closes on a box from both sides. The rubber bands on the jaw are what touch the box, and a servo on top of the claw closes it through a short linkage.',
-      'Freight is not all one weight: some boxes carry metal weights in their cells. With the box held, the claw lifts it clear of the floor.',
+      'The claw hangs from the front of the robot and closes on a box from both sides. The jaw is a perforated aluminum plate with **green rubber bands** stretched across it in an X, so the bands are what touch the box.',
+      'A **servo** sits on top of the claw. As it turns, a short linkage swings the moving jaw in against the box.',
+      'Freight is not all one weight: some boxes carry metal weights in their cells, so the same grip has to hold a light box and a heavy one.',
+      { calc: 'How much more does a heavy box ask of the grip?',
+        given: [
+          ['Box size', '2 x 2 x 2 in, polypropylene', '[REV, FREIGHT FRENZY game elements](https://docs.revrobotics.com/ftc-kickoff-concepts/freight-frenzy-2021-2022/game-piece)'],
+          ['Light box', '0.9 oz', 'same page'],
+          ['Heavy box', '4.8 oz', 'same page'],
+        ],
+        work: [
+          'Heavy box: 4.8 oz x 28.35 g/oz = 136 g, and 0.136 kg x 9.81 m/s² = 1.33 N',
+          'Light box: 0.9 oz = 26 g, 0.25 N',
+          'Held from the sides, the box stays up only by friction at the jaws, so the jaws must supply 1.33 N of friction for a heavy box and 0.25 N for a light one',
+          'Heavy / light: 4.8 / 0.9 = 5.3',
+        ],
+        result: 'The grip has to be set for the heavy box: that one needs 5.3 times the friction of a light box, which the same squeeze then holds with plenty to spare. That is the job of the rubber bands on the jaw.',
+        note: 'Static hold only; lifting and driving add to it. Rounded.' },
+      'With the box held, the claw lifts it clear of the floor.',
     ] },
     { type: 'prose', id: 'spinner', h: 'The carousel spinner', side: 'left', media: [
-      { v: 'carousel-wheel-spin.mp4', c: 'The spinner at rest, then spinning' },
+      { v: 'carousel-wheel-spin.mp4', c: 'The spinner: a sprocket ringed with strips, from rest to spinning' },
+      { i: 'still-carousel-top.webp', c: 'From above: the strip wheel against the carousel\'s rim, at the top' },
       { v: 'carousel-ducks-spin.mp4', c: 'The carousel spinning under the wheel: the ducks ride round and drop off' },
     ], p: [
       'The carousel is a turntable at the edge of the field loaded with rubber ducks. Turn it, and the ducks come off onto the field, where they score, in autonomous and in the end game.',
-      'Our spinner is a sprocket with a ring of strips around it. The strips press on the carousel\'s rim, and spinning the wheel turns the carousel.',
+      'Our spinner is a **sprocket ringed with strips**. From above, the wheel sits against the carousel\'s rim: the strips press on it, and spinning the wheel turns the carousel.',
+      'Turned fast, the carousel carries the ducks round until they come off it.',
     ] },
     { type: 'prose', id: 'season', h: 'How the season went', media: [
       { i: 'freight-on-field.webp', c: 'FREIGHT FRENZY freight: boxes, some with metal weights in their cells, and balls' },

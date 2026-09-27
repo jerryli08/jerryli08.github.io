@@ -8,9 +8,13 @@
 //    its slides, and calls the rest "the robot";
 //  - when he designed it (Q3), what drives the slides, rollers and fold (Q5), whether the CAD pose
 //    is the folded-up position and how far the arm folds (Q6), what he would change (Q7);
-//  - the travel and the retracted position (Q1): the animation retracts the intake 960.6 mm, where
-//    the CAD shows it was modelled, but the page states no travel number and does not raise the
-//    slide lengths; "all the teams that won Worlds had one" (his hedge, Q4) is left out.
+//  - the slide lengths (Q1): the page does not raise that the 700 mm members stick out behind the
+//    robot when closed; "all the teams that won Worlds had one" (his hedge, Q4) is left out.
+// Retracted pose (Jerry, Sept 27: "the slides ends should all be aligned with each other"): closed,
+// the front ends of all three slide members line up with the front of the robot, and fully out
+// every part is where the CAD has it. Measured on the CAD, that is 960.6 mm of travel for the
+// intake (the same 960.6 mm where the CAD's in-place copies put the retracted intake), 560.6 mm for
+// the middle member and 160.6 mm for the outer one (rig.js).
 const M = '/assets/models/cryptic-extendo/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff';
 const INTAKE = '^anim_cx_(carriage|ramp|omni|arm|rollF|rollP|rollR|rollC|gear40)$';
@@ -46,12 +50,12 @@ export default {
       h: 'One intake cycle',
       p: ['The real CAD, moved by your scroll. The slides, the fold-down arm and every roller move along or about their own axes in the model.'],
       steps: [
-        { h: 'Stowed', p: ['The intake sits inside the front of the robot. Two pixels lie on the tiles about a metre ahead.'] },
+        { h: 'Stowed', p: ['The slides are closed: the front ends of all three members of each slide line up with the front of the robot, and the intake sits inside it. Two pixels lie on the tiles about a metre ahead.'] },
         { h: 'Extend', p: ['A two-stage slide on each side of the robot pushes the whole intake forward, about a metre past the front of the drivetrain.'] },
         { h: 'Fold down', p: ['The three front star rollers ride on a 114 mm arm that pivots on the intake\'s main hex shaft. The arm folds down, bringing them down to the tiles.'] },
         { h: 'Roll in', p: ['The star rollers sweep the pixels back. The counter roller at the lip of the ramp turns the other way and lifts each one onto the ramp, and they ride up until the first sits on top, under the rear rollers.'] },
         { h: 'Fold up', p: ['The arm folds back up with both pixels on board.'] },
-        { h: 'Retract', p: ['The slides pull the intake back inside the robot.'] },
+        { h: 'Retract', p: ['The slides pull the intake back inside the robot and close up, their front ends back in line.'] },
         { h: 'Transfer', p: ['Pulled in, the top of the ramp sits just in front of the robot\'s 4-bar dumper, on the same centreline and at about the same width. The rollers push the pixels off the back of the ramp and into the dumper.'] },
       ],
       caption: 'Seen whole, then cut through the ramp (cut faces are hatched). The pixels are added to show the path; they are not part of the CAD. The rollers are slowed down, and their speeds are not from the CAD, which does not include the motors and servos that would drive the slides, the rollers and the fold.' },
@@ -59,7 +63,23 @@ export default {
     // ------------------------------------------------------------------ how it works
     { type: 'prose', id: 'how', h: 'How the intake works', p: [
       { h: 'Slides and frame' },
-      'The intake rides on two Misumi SAR330 two-stage slides, one on each side of the robot, bolted to two triangular side plates that hang down to just above the tiles. Fully out, the front of the intake is about a metre past the front of the drivetrain. Two 1.5 in omni wheels sit under it, a few millimetres off the tiles.',
+      'The intake rides on two Misumi SAR330 two-stage slides, one on each side of the robot, bolted to two triangular side plates that hang down to just above the tiles. Fully out, the front of the intake is about a metre past the front of the drivetrain. Two 1.5 in omni wheels sit under it, a few millimetres off the tiles. Closed, the front ends of all three members of each slide line up with the front of the robot.',
+      { calc: 'How far do the slides carry the intake?',
+        given: [
+          ['Slide members (Misumi SAR330)', '460.6, 700 and 700 mm', 'measured from the CAD'],
+          ['Fully out: inner front end past the middle one', '400 mm', 'measured from the CAD'],
+          ['Middle past the outer', '400 mm', 'measured from the CAD'],
+          ['Outer past its block at the front of the robot', '160.6 mm', 'measured from the CAD'],
+          ['Closed', 'all front ends in line', 'Jerry'],
+        ],
+        work: [
+          'Inner member, which carries the intake: 400 + 400 + 160.6 = **960.6 mm** of travel',
+          'Middle member: 400 + 160.6 = 560.6 mm. Outer member: 160.6 mm',
+          'Fully out, each 700 mm member still overlaps the one below it by 700 − 400 = **300 mm**, 43 % of its length',
+          'The front rollers then sit 999 mm past the front of the drivetrain (measured from the CAD)',
+        ],
+        result: 'About 0.96 m of travel each way, which puts the front rollers about a metre out in front of the robot, with each moving member still 300 mm inside the one below it.' },
+      { note: 'Measured along the slide axis on the levelled CAD. The CAD has no motor or string for the slides, so there is no speed to work out.' },
       { h: 'Rollers' },
       'Three TPU star rollers, 103 mm across, sit on the intake\'s 312 mm hex shaft, and three more on a front shaft that the fold-down arm carries 114 mm ahead of it. Both shafts carry the same sprocket on one side, for a chain between them (the chain is not in the CAD), so the front and middle rollers turn together.',
       'Behind them, two 60 mm TPU rollers sit over the flat top of the ramp. Their tips come within about 10 mm of it, less than a pixel\'s 12.7 mm, so a pixel on top is pinched between them and the ramp.',
@@ -67,6 +87,18 @@ export default {
       { fix: 'The front star rollers are on an arm that folds down, so they come down to a pixel on the tiles and sweep it back. At the lip of the ramp a 16 mm counter roller, turning the other way, lifts the pixel\'s edge onto the ramp, and the middle star rollers carry it up to the rear rollers.' },
       { h: 'The counter roller drive' },
       'A 40-tooth servo gear drives the counter roller through a 15-tooth gear on its shaft, so the roller spins 2.67 times as fast as the servo (40 / 15). The two gears sit 22.0 mm apart, exactly right for module 0.8 gears.',
+      { calc: 'Do the counter roller gears mesh?',
+        given: [
+          ['Servo gear (goBILDA 2305-0025-0040)', '40 teeth, module 0.8', 'part number in the CAD; [goBILDA](https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-40-tooth/)'],
+          ['Gear on the counter roller', '15 teeth', 'counted in the CAD'],
+          ['Shaft centres apart', '22.0 mm', 'measured from the CAD'],
+        ],
+        work: [
+          'Speed: 40 / 15 = **2.67** turns of the counter roller for every turn of the servo',
+          'Centre distance for a module 0.8 pair: 0.8 × (40 + 15) / 2 = **22.0 mm**',
+        ],
+        result: 'The spacing in the CAD is exactly the centre distance of a module 0.8 pair, so the two gears mesh as modelled, and the counter roller runs 2.67 times as fast as the servo.' },
+      { note: 'Spur gears: centre distance = module × (teeth on both gears) / 2.' },
       { problem: 'Once the intake is back inside the robot, the pixels still have to get from the intake into the outtake.', title: 'The handoff' },
       { fix: 'Pulled in, the top of the ramp sits just in front of the robot\'s 4-bar dumper, on the same centreline, at the same width (102 mm for the ramp, 106 mm for the dumper\'s tray) and about 25 mm above the tray\'s front edge. The rollers push the pixels off the back of the ramp straight into the dumper.' },
       { note: 'Every dimension here is measured on the CAD: roller sizes from their meshes, the gear spacing between the shaft centres, the ramp and tray widths and heights with the model levelled on its wheels.' },

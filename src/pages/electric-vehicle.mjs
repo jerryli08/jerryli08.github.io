@@ -15,6 +15,9 @@
 const M = '/assets/models/electric-vehicle';
 const REPO = 'https://github.com/jerryli08/sciolyEv';
 
+// datasheets and sources linked from the worked calculations
+const MT = '[MagnTek MT6701 datasheet](https://www.magntek.com.cn/upload/pdf/202407/MT6701_Rev.1.8.pdf)';
+
 export default {
   summary: {
     stats: [
@@ -68,7 +71,7 @@ export default {
       { i: 'still-buttons.webp', c: 'Through the top plate: the gearbox, the 48T gear and the two buttons' },
     ] },
 
-    { type: 'scrolly', id: 'encoder', module: 'encoder-loop', webgl: false, width: 'wide', stepHeight: '85vh',
+    { type: 'scrolly', id: 'encoder', module: 'encoder-loop', webgl: false, stepHeight: '85vh',
       h: 'Why the encoder had to be geared down',
       p: ['The Arduino reads the MT6701\'s absolute angle once per loop and adds the change since the last read to a running distance. It decides which way the magnet moved by taking the shorter way around the circle, which only works if the magnet turned less than half a turn between two reads.'],
       steps: [
@@ -104,11 +107,22 @@ export default {
         'I used Fusion 360 FEA to design a lattice into 1.5 mm G10 fiberglass plates that gives the chassis torsional flexibility, so the car passively absorbs bumps in the floor. The wide ends of each plate are open, irregular cells; the narrow spine between them is a row of hexagons between two rails, tied across.',
         'Each G10 plate weighs 99 g. The two main plates went from 738 g to 198 g, **73% lighter**, and the run time dropped from about 15 s to 2.9 s.',
       ], title: 'An FEA-designed G10 lattice' },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'photo-hdf-plate-scale.webp', c: 'One HDF plate from version one: 369 g' },
-      { i: 'photo-g10-plate-scale.webp', c: 'One G10 lattice plate on the same scale: 99 g' },
-    ] },
+      { calc: 'What does the lighter car buy?',
+        given: [
+          ['Whole car on my scale, version one', '1,645 g', 'my scale photo'],
+          ['Whole car on my scale, version two', '1,394 g', 'my scale photo'],
+        ],
+        work: [
+          '1,645 g - 1,394 g = 251 g lighter, 15 %',
+          'For the same drive force, acceleration goes as 1 / mass: 1,645 / 1,394 = 1.18',
+        ],
+        result: 'With the same push from the motor, version two would accelerate about 18 % harder, with 15 % less mass to stop at the target.',
+        note: 'Same force assumed; version two also changed its motors and drivetrain, so this is only the weight\'s share.' },
+    ],
+      media: [
+        { i: 'photo-hdf-plate-scale.webp', c: 'One HDF plate from version one: 369 g' },
+        { i: 'photo-g10-plate-scale.webp', c: 'One G10 lattice plate on the same scale: 99 g' },
+      ] },
     { type: 'scrolly', id: 'versions-cad', module: 'versions', stepHeight: '90vh', poster: `${M}/poster-versions.webp`,
       h: 'Both versions in CAD',
       p: ['My two CAD files, one after the other. Version one\'s plates are tinted brown like the real HDF. Screws are left out of both models, and so is version one\'s STM32 board.'],
@@ -135,7 +149,7 @@ export default {
       } },
     ] },
 
-    { type: 'scrolly', id: 'torsion', module: 'torsion', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-torsion.webp`,
+    { type: 'scrolly', id: 'torsion', module: 'torsion', stepHeight: '85vh', poster: `${M}/poster-torsion.webp`,
       h: 'The torsion FEA, re-run',
       p: ['A new run of the torsion study, on the plate from my final CAD, next to a solid plate with the same outline.'],
       steps: [
@@ -180,12 +194,30 @@ export default {
         'sends it to the ESC as a servo pulse: 1500 µs is neutral, 2000 µs is full forward and below 1500 µs is reverse, so the same number can drive or brake;',
         'prints power, distance and target over serial at 500,000 baud, which I plotted live while tuning.',
       ] },
+      { calc: 'How fine is one count of the encoder?',
+        given: [
+          ['MT6701 angle over I2C', '14 bits: 16,384 steps per turn', MT],
+          ['Wheel', '2.875 in: 229.4 mm around', 'BaneBots wheel, in the CAD'],
+          ['Encoder turns per wheel turn', '1.2', 'the CAD and my code'],
+          ['The run', '8.3 m in 2.97 s, stopped 1.1 cm from the target', 'my result'],
+        ],
+        work: [
+          'Travel per encoder turn: 229.4 mm / 1.2 = 191.2 mm',
+          'Travel per step: 191.2 mm / 16,384 = 0.012 mm',
+          'The 1.1 cm stop error is 11 / 0.012 = about 940 steps',
+          'At the run\'s average speed, 8.3 m / 2.97 s = 2.8 m/s, the car covers 1.1 cm in 11 mm / 2.8 m/s = 4 ms',
+        ],
+        result: 'The encoder resolves about a hundredth of a millimetre, a thousand times finer than the stop, so its resolution is not what sets the stop. At full speed the car crosses 1.1 cm in about 4 ms, and every sketch slows the car before the target.',
+        note: 'Resolution only: wheel slip and tyre squash change how far the car really goes per wheel turn.' },
       { h: 'The speed profile is scheduled on distance, not time' },
       'In `SOUPCode` and `PUSOCode` the car ramps power up over the first 1.8 m, runs at full power, and 3 m before the target hands over to a PID controller (ArduPID) whose setpoint is the target distance. It only uses the proportional term, 0.002 per cm of distance left, plus a constant feedforward of 0.08 while the command is positive. Its output can go negative: if the car passes the target, the motor reverses and pulls it back.',
       '`regionalsCode` ramps the power down on a fixed schedule over the last 3 m instead, and creeps the final 20 cm at a constant 0.08. In every sketch the target is a single constant at the top of the file.',
     ],
-      media: [{ i: 'photo-pid-code.webp', c: 'Tuning the PID: the serial monitor prints power, distance and target on every loop' }] },
-    { type: 'scrolly', id: 'stop-profile', module: 'stop-profile', webgl: false, width: 'wide', stepHeight: '80vh',
+      media: [
+        { i: 'photo-v1-encoder-on-motor.webp', c: 'Version one: the MT6701 board facing the end of the motor shaft, on the D2830 850KV' },
+        { i: 'photo-pid-code.webp', c: 'Tuning the PID: the serial monitor prints power, distance and target on every loop' },
+      ] },
+    { type: 'scrolly', id: 'stop-profile', module: 'stop-profile', webgl: false, stepHeight: '80vh',
       h: 'How each sketch brings the car in',
       p: ['The power command each sketch sends, against the distance the encoder has counted, over the last 4 m before its target, oldest sketch first. The car runs in as you scroll, and the readout shows the command and the ESC pulse where it is.'],
       steps: [
@@ -217,7 +249,6 @@ export default {
     { type: 'media', layout: 'row', items: [
       { i: 'photo-esc.webp', c: 'The AIKON AK32 35A ESC next to the perfboard' },
       { i: 'still-perfboard.webp', c: 'The perfboard, wired into the chassis' },
-      { i: 'photo-v1-encoder-on-motor.webp', c: 'Version one: the MT6701 board facing the end of the motor shaft, on the D2830 850KV' },
     ] },
 
     { type: 'prose', id: 'testing', h: 'Testing', p: [

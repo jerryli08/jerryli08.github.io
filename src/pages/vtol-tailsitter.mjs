@@ -34,6 +34,18 @@ export default {
       'I made this project to learn SolidWorks. I based it on the tailsitter aircraft from MIT\'s 2023 work on planning fast, acrobatic flight for tailsitters ([MIT News](https://news.mit.edu/2023/planning-algorithm-tailsitter-aircraft-0823)), and in my repo\'s README I called it "a VTOL Tailsitter I plan on 3D Printing".',
       'A tailsitter is one of the simplest ways to get a plane that takes off and lands vertically. There is no runway, no landing gear and no motor that tilts. The whole aircraft points its nose at the sky to take off and land, and tips over to fly forward. The same two props lift it in a hover and push it in forward flight, and the same two elevons steer it in both.',
       'The catch is that one airframe has to work in two very different regimes: hanging on its props at zero airspeed, and flying on its wing. In this layout the elevons sit directly behind the props, where there is moving air over them even in a hover.',
+      { calc: 'How much of each elevon is behind its prop?',
+        given: [
+          ['Right prop disc, out from the centreline', '38.9 to 114.6 mm', 'measured from the CAD'],
+          ['Right elevon, out from the centreline', '29.5 to 119.5 mm', 'measured from the CAD'],
+        ],
+        work: [
+          'The disc lies inside the elevon\'s span: 29.5 < 38.9 and 114.6 < 119.5 mm',
+          'Disc: 114.6 − 38.9 = 75.7 mm across. Elevon: 119.5 − 29.5 = 90.0 mm',
+          'Share of the elevon\'s span straight behind the disc: 75.7 / 90.0 = **0.84**',
+        ],
+        result: 'About 84 % of each elevon\'s span sits straight behind its prop, so most of the surface that steers in a hover is in the propwash.' },
+      { note: 'Geometry only: behind a real prop the wash narrows and swirls, so this is the share in line with the disc, not a measured airflow.' },
     ],
       media: [{ i: 'solidworks-render-aug-2024.webp', c: 'The assembly in SolidWorks, Aug 2024 (the image in my repo\'s README), with the colours I gave the motors and props there' }] },
 
@@ -45,7 +57,10 @@ export default {
           'A tailsitter has no landing gear and no tilting motors. It stands nose up, props pointing at the sky.',
           'In my CAD the trailing edges of both fins and of the wing root end on one flat plane, so the aircraft can stand on them.',
         ] },
-        { h: 'Straight up', p: ['Both props spin up and lift the whole aircraft like a two-rotor drone. It climbs with its nose at the sky and its wing edge-on to the ground.'] },
+        { h: 'Straight up', p: [
+          'Both props spin up and lift the whole aircraft like a two-rotor drone. It climbs with its nose at the sky and its wing edge-on to the ground.',
+          'The two props turn in opposite directions (the arrows), so the reaction torques they put on the airframe cancel and it does not start to spin about its vertical axis.',
+        ] },
         { h: 'Hovering: where the control comes from', p: [
           'In a hover there is no airspeed, so the only air moving over the wing is the propwash. Each elevon sits right behind a prop.',
           'The right prop disc covers 39 to 115 mm out from the centreline and the right elevon 30 to 120 mm (measured in the CAD), so the elevon sits in the wash across the whole disc. Swinging it bends that wash, which is how a tailsitter steers before it has any speed.',
@@ -53,7 +68,7 @@ export default {
         { h: 'Pitching over', p: ['At 4 seconds in this illustration the transition starts. The elevons go trailing edge down and the nose tips toward the horizon. As it gains speed, the wing starts to carry the weight instead of the props.'] },
         { h: 'Flying on the wing', p: ['Now it is a flying wing. The wing carries the weight, the props only push it forward, and the same two elevons steer it.'] },
       ],
-      caption: 'An illustration on my real CAD: the aircraft, its props, motor rotors and elevon hinges are the model, and each turns about its real axis. The flight itself (times, heights, speeds, angles and elevon deflections) is scripted to show the sequence. It is not flight data: this aircraft was never built or flown. The prop discs, the air column and the span bars are drawn in.' },
+      caption: 'An illustration on my real CAD: the aircraft, its props, motor rotors and elevon hinges are the model, and each turns about its real axis. The flight itself (times, heights, speeds, angles and elevon deflections) is scripted to show the sequence. It is not flight data: this aircraft was never built or flown. The prop discs, the spin arrows, the air column and the span bars are drawn in. My CAD puts the same prop on both motors; here the left one is drawn mirrored, as the opposite-hand prop, so the two can turn opposite ways and still both push air back over the wing.' },
 
     { type: 'scrolly', id: 'airframe', module: '@turntable', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-airframe.webp`,
       h: 'The airframe',
@@ -104,10 +119,26 @@ export default {
           ] } },
       ] },
 
-    { type: 'media', layout: 'row', items: [
-      { i: 'solidworks-top-hinge-lines.webp', c: 'In SolidWorks, Feb 2025: the split lines between the bodies and the two elevon hinge lines, seen from behind the wing' },
-      { i: 'solidworks-nacelle-fillets.webp', c: 'In SolidWorks, Feb 2025: close-up of the fillets that blend a motor nacelle into the wing' },
-    ] },
+    { type: 'prose', id: 'wing', h: 'The wing in numbers', p: [
+      'Measured from above in the CAD, the outline gives the numbers a wing is usually described by: its area, its aspect ratio (how long and slender it is) and how much of it is control surface.',
+      { calc: 'How big is the wing?',
+        given: [
+          ['Span', '360 mm', 'measured from the CAD'],
+          ['Area seen from above (fuselage and nacelles in)', '35,970 mm²', 'measured from the CAD'],
+          ['Both elevons, seen from above', '7,870 mm²', 'measured from the CAD'],
+        ],
+        work: [
+          'Mean chord = area / span = 35,970 / 360 = **100 mm**',
+          'Aspect ratio = span² / area = 360² / 35,970 = **3.6**',
+          'Elevon share = 7,870 / 35,970 = **22 %** of the wing',
+        ],
+        result: 'A short, broad wing: aspect ratio about 3.6 and a mean chord of about 100 mm, with about a fifth of its area in the two elevons that steer it both in a hover and in forward flight.' },
+      { note: 'Areas from the top-view outline of the airframe in the CAD, props and motors left out. The fins are edge-on from above and add nothing.' },
+    ],
+      media: [
+        { i: 'solidworks-top-hinge-lines.webp', c: 'In SolidWorks, Feb 2025: the split lines between the bodies and the two elevon hinge lines, seen from behind the wing' },
+        { i: 'solidworks-nacelle-fillets.webp', c: 'In SolidWorks, Feb 2025: close-up of the fillets that blend a motor nacelle into the wing' },
+      ] },
 
     { type: 'scrolly', id: 'motor', module: '@turntable', stepHeight: '85vh', poster: `${M}/poster-motor.webp`,
       h: 'Motors and props',

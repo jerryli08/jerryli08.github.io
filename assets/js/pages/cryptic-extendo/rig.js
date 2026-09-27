@@ -15,11 +15,20 @@
 //   S  the 40T servo gear that drives it (22.0 mm from C: 40T + 15T at module 0.8)
 //   O  the two 1.5 in omni wheels under the intake
 //   D  the wheel of the robot's 4-bar dumper (on the robot, not on the slides)
-// The slides run exactly along +Z. The carriage is at its CAD position (fully extended) at
-// ext = 1 and 960.6 mm back at ext = 0: seven robot parts were copied into the intake component,
-// and four of them sit exactly 960.6 mm along the slide axis from the robot's own copies, so the
-// intake was modelled in place there. At that position the ramp lines up with the 4-bar dumper
-// (same width, same centreline). The middle slide stages move half as far as the carriage.
+// The slides run exactly along +Z. Every part is at its CAD position (fully extended) at ext = 1.
+// Retracted (ext = 0) the slides are closed the way a telescoping slide closes: the front ends of
+// all three stages line up (Jerry, Sept 27: "the slides ends should all be aligned with each
+// other"). Measured along the slide axis on the CAD (Misumi SAR330 members; model z):
+//   V-groove block ":18", fixed to the robot's side plate, front face at z = 196.9 mm
+//   outer stage (460.6 mm) front end at 357.5 -> travel 160.6 mm to come flush with that block
+//   middle stage (700 mm)  front end at 757.5 -> travel 560.6 mm
+//   inner stage (700 mm), with the intake, front end at 1157.5 -> travel 960.6 mm
+// So each moving stage is 400 mm out past the one below it in the CAD, and the outer stage 160.6 mm
+// out through the fixed block. The same 960.6 mm is where seven robot parts copied into the
+// intake component sit relative to the robot's own copies (four of them exactly 960.6 mm along the
+// slide axis), so the intake was modelled in place there; at that position the ramp lines up with
+// the 4-bar dumper (same width, same centreline). All three stages move in proportion to the
+// carriage.
 // Fold: +30 degrees about P brings the tips of the front star rollers (51.6 mm radius) down to
 // 11.7 mm above the floor (the mecanum wheels' contact plane), under a pixel's 12.7 mm, while
 // their swept circle still clears the counter roller by 0.7 mm; at 31 degrees it would touch it.
@@ -34,7 +43,8 @@ export const AX = {
   D: [0, 0.09735, -0.09326],
 };
 export const RADII = { star: 0.0516, rear: 0.0301, counter: 0.00817, omni: 0.019, dumper: 0.0333 };
-export const TRAVEL = 0.9606; // m of carriage travel along the slides
+export const TRAVEL = 0.9606; // m of carriage (inner stage) travel along the slides
+export const STAGE_TRAVEL = { outer: 0.1606, middle: 0.5606, inner: 0.9606 }; // m, from the CAD (above)
 export const FOLD = (30 * Math.PI) / 180;
 export const MODEL = '/assets/models/cryptic-extendo/robot.glb';
 export const INTAKE = /^anim_cx_(carriage|ramp|omni|arm|rollF|rollP|rollR|rollC|gear40)$/;
@@ -56,11 +66,14 @@ export async function rigRobot(stage) {
   const gS = stage.pivot(part('gear40'), AX.S, X);
   const gO = stage.pivot(part('omni'), AX.O, X);
   const gD = stage.pivot(part('dwheel'), AX.D, X);
-  // the carriage slides along +Z with everything on it; the middle stages follow at half travel
+  // the carriage slides along +Z with everything on it; the middle and outer stages follow in
+  // proportion (STAGE_TRAVEL), so that closed, all three front ends line up with the fixed block
   const car = new THREE.Group(); car.name = 'cx-carriage'; model.add(car);
   for (const o of [...part('carriage'), ...part('slide3'), ...part('ramp'), gArm, gP, gR, gC, gS, gO]) car.attach(o);
   const mid = new THREE.Group(); mid.name = 'cx-stage2'; model.add(mid);
   for (const o of part('stage2')) mid.attach(o);
+  const outer = new THREE.Group(); outer.name = 'cx-stage1'; model.add(outer);
+  for (const o of part('stage1')) outer.attach(o);
 
   // pixels: plain annotations, a white one and a yellow one
   const hex = (r) => { const s = new THREE.Shape(); for (let i = 0; i < 6; i++) { const a = (i * Math.PI) / 3 + Math.PI / 6; s[i ? 'lineTo' : 'moveTo'](r * Math.cos(a), r * Math.sin(a)); } s.closePath(); return s; };
@@ -85,7 +98,8 @@ export async function rigRobot(stage) {
     last = key;
     const dz = -TRAVEL * (1 - ext);
     car.position.z = dz;
-    mid.position.z = dz / 2;
+    mid.position.z = -STAGE_TRAVEL.middle * (1 - ext);
+    outer.position.z = -STAGE_TRAVEL.outer * (1 - ext);
     gO.setAngle(dz / RADII.omni); // rolling on the floor
     gArm.setAngle(fold);
     gF.setAngle(spin); gP.setAngle(spin); // identical sprockets on the two shafts in the CAD: 1:1
@@ -98,5 +112,5 @@ export async function rigRobot(stage) {
   }
   // carriage-frame point -> model point for the current pose (for labels and pixels)
   const toModel = (p, out = new THREE.Vector3()) => out.set(p[0], p[1], p[2] + car.position.z);
-  return { model, car, mid, pixels, pose, toModel, groups: { gF, gArm, gP, gR, gC, gS, gO, gD }, part };
+  return { model, car, mid, outer, pixels, pose, toModel, groups: { gF, gArm, gP, gR, gC, gS, gO, gD }, part };
 }

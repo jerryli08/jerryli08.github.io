@@ -38,7 +38,7 @@ export async function mount(el, ctx) {
     if (view && key === vkey) return view;
     vkey = key;
     const portrait = el.clientHeight > el.clientWidth * 1.05;
-    view = stage.frame(box, { dir: [1, 0.1, 0.12], pad: ctx.shift()[0] > 0 ? 1.65 : portrait ? 1.22 : 1.08, apply: false, track: false, refresh: true });
+    view = stage.frame(box, { dir: [1, 0.1, 0.12], pad: portrait ? 1.22 : 1.08, apply: false, track: false, refresh: true });
     return view;
   }
 

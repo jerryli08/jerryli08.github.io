@@ -8,6 +8,9 @@
 // code mirrored each line, how the floss loop was wound, why the die groups cells in threes, the
 // pin's reach, and anything he would change next time.
 const M = '/assets/models/braille-printer';
+// Worked calculations (Sept 27): the pin's arc from rig.js's CAD points, and the die against NLS
+// Specification 800 as the Braille Authority of North America publishes it.
+const NLS = '[NLS Spec. 800 (BANA)](https://www.brailleauthority.org/size-and-spacing-braille-characters)';
 
 export default {
   summary: {
@@ -20,6 +23,7 @@ export default {
     text: [
       'In 36 hours at PennApps XXV, my team of four built a prototype braille printer. I designed the gantry: a frame of 2020 aluminum extrusion with stepper-driven X and Y axes. The X axis runs on a GT2 timing belt. We ran out of belt for the Y axis, so I rigged it with dental floss wound on spools.',
       'A servo on the X carriage swings a round-nosed pin down onto paper lying on a die plate with 4,050 dimples, one for every dot position on the page. The pin presses the paper into a dimple, and the dot stands up on the other side.',
+      'The printer was not completely finished, so it stays a concept: the writing below is animated on our CAD.',
     ],
   },
   hero: {
@@ -129,9 +133,44 @@ export default {
       ],
       caption: 'My team\'s CAD, cut through the pin\'s plane; the arm turns about the servo\'s real shaft axis. The orange arc, the dimension lines and the labels are drawn, and every number is computed from the CAD.' },
 
+    { type: 'prose', id: 'arc', p: [
+      { calc: 'Why the pin parks 4 mm short of the dot',
+        given: [
+          ['Servo shaft to the centre of the pin\'s nose, across', '52.5 mm', 'measured from our CAD'],
+          ['and down', '68.1 mm', 'measured from our CAD'],
+          ['Nose above the die, as the CAD is posed', '2.34 mm', 'measured from our CAD'],
+          ['Dimple depth', '0.6 mm', 'measured from our CAD'],
+        ],
+        work: [
+          'Arm: √(52.5² + 68.1²) = 86.0 mm, leaning atan(52.5 / 68.1) = 37.6° off vertical',
+          'The nose moves at right angles to the arm, so near this pose it goes 68.1 / 52.5 = 1.3 mm sideways for every 1 mm down',
+          'Down to the bottom of a dimple: 2.34 + 0.6 = 2.94 mm, which the arc reaches at a 3.3° turn',
+          'Sideways on the way down that arc: 4.05 mm (1.3 × 2.94 = 3.8 mm by the straight-line estimate, which leaves out the arc\'s curve)',
+        ],
+        result: 'Each dot takes a 3.3° swing that also carries the pin about 4 mm along the line, so the carriage has to stop about 4 mm before every dot.',
+        note: 'Geometry of the CAD only, ignoring the paper\'s thickness.' },
+    ] },
+
     { type: 'prose', id: 'die', h: 'Laying out the die', p: [
       'Saturday night the die went into Fusion 360 under the gantry. The screenshots show the whole grid of dimples dimensioned to the frame on every side, with the gantry beam and the servo carriage plate over it.',
       'The grid in the CAD groups its cells in threes, 21 mm apart, which shows as the wider gaps between every third cell in the screenshots.',
+      { calc: 'Does the die match standard braille?',
+        given: [
+          ['Die: dots, cells (in a group), lines apart', '2.34, 6.22, 10 mm', 'measured from our CAD'],
+          ['Die: dimple across, deep', '1.6, 0.6 mm', 'measured from our CAD'],
+          ['Die: lines, cells per line', '25, 27', 'measured from our CAD'],
+          ['Standard: dots, cells, lines apart', '0.092, 0.245, 0.400 in', NLS],
+          ['Standard: dot across, high', '0.057, 0.019 in', NLS],
+        ],
+        work: [
+          'Dots: 0.092 in × 25.4 = 2.34 mm, the same as the die',
+          'Cells: 0.245 in × 25.4 = 6.22 mm, the same as the die inside each group of three',
+          'Lines: 0.400 in × 25.4 = 10.16 mm, 0.16 mm more than the die',
+          'Dot: 0.057 in × 25.4 = 1.45 mm across and 0.019 in × 25.4 = 0.48 mm high, so each dimple is 0.15 mm wider and 0.12 mm deeper than a standard dot',
+          'A full page: 25 lines × 27 cells = 675 cells, and 675 × 6 = 4,050 dimples',
+        ],
+        result: 'The die\'s dot and cell spacing match the braille standard to a hundredth of a millimetre, its lines are 0.16 mm closer, and every dimple has room for a full-size standard dot.',
+        note: 'Compares the die\'s layout in our CAD with the standard; no embossed page was measured.' },
     ],
       media: [
         [{ i: 'cad-screen-die-grid.webp', c: 'Saturday 10 p.m.: the die\'s dimple grid under the gantry in Fusion 360' }, { i: 'cad-screen-die-closeup.webp', c: 'Dimensioning the grid to the frame, 10:32 p.m.' }],

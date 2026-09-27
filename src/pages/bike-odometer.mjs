@@ -11,6 +11,8 @@
 // Held back pending Jerry (phase A questions.md): whether "going backwards" was the loop rate or the
 // sign (1: the page only repeats his commit message and shows what a slow loop does to the math),
 // what 13.81 and 29.37 in were measured from (2), what the printed cap on the axle nut holds (3),
+// (the two calculation blocks use only the code's constants, the MT6701 datasheet's 14-bit
+// resolution and unit conversions; the loop times in them are examples, not measurements)
 // how the tower is held and the Nano powered (4), clock times of the day (5: no times on the page),
 // the flat test print (6), and every "next time" item (7: none on the page yet).
 export default {
@@ -58,6 +60,21 @@ export default {
     ], p: [
       'The MT6701 is a magnetic angle sensor: it reports the angle of a magnet turning in front of it, from 0 to 360 degrees. So it has to sit on the axis of something that turns. The end of the flywheel\'s axle is exactly that: a point that stays put on the trainer and turns with the roller. The sensor board faces it, and a black printed cap sits over the bolt at the end of the axle.',
       'Reading the roller instead of the wheel also gives the sensor more to see. The roller is much smaller than the wheel, so it turns much faster: my code uses **13.81 roller turns per wheel turn** and a **29.37 in wheel**. From those two numbers, one roller turn is **6.68 in** of riding and a mile is about **9,490 roller turns**, almost 14 times more rotation than the wheel itself makes.',
+      { calc: 'How much riding is one step of the sensor?',
+        given: [
+          ['Wheel diameter', '29.37 in', '[my code](https://github.com/jerryli08/bikeOdometer/blob/main/finalCode.ino)'],
+          ['Roller turns per wheel turn', '13.81', 'my code'],
+          ['MT6701 angle resolution', '14 bits: 16,384 steps per turn', '[MagnTek MT6701 datasheet](https://uploadcdn.oneyac.com/attachments/files/brand_pdf/magntek/F3/CA/MT6701QT-STD.pdf)'],
+        ],
+        work: [
+          'Wheel circumference: π × 29.37 in = 92.27 in',
+          'One roller turn: 92.27 in / 13.81 = 6.68 in of riding',
+          'One mile: 63,360 in / 6.68 in = about 9,490 roller turns',
+          'One sensor step: 6.68 in / 16,384 = 0.00041 in (about 0.01 mm)',
+          'The last digit on the LCD, 0.001 mi = 63.4 in = about 155,000 sensor steps',
+        ],
+        result: 'One step of the sensor is about 0.0004 in of riding, so the sensor is never what limits the reading: one thousandth of a mile on the display is about 155,000 of its steps.',
+        note: 'From the constants in finalCode.ino and the datasheet\'s resolution; rounded.' },
     ] },
 
     // ------------------------------------------------------------------ the two printed parts
@@ -136,6 +153,19 @@ export default {
       { fix: [
         'The final code writes the LCD once a second instead of on every pass. In my commit message: "made LCD only update once per sec instead of per loop, decreasing loop times so the encoder can read properly". With a short loop the readings stay less than half a turn apart, which is what the wrap correction above needs.',
       ], title: 'LCD once a second' },
+      { calc: 'How short does the loop have to be?',
+        given: [
+          ['One roller turn', '6.68 in of riding', 'my code'],
+          ['Largest change the wrap correction counts the right way', 'half a turn (180 degrees) per reading', 'my code'],
+          ['1 mph', '17.6 in/s', '63,360 in / 3,600 s'],
+        ],
+        work: [
+          'At 1 mph the roller turns 17.6 / 6.68 = 2.63 turns a second = 949 degrees a second',
+          'Readings stay under half a turn apart while speed × 949 × loop time < 180, so the top speed it counts right is 180 / (949 × loop time) mph',
+          '10 ms loop: 180 / 9.49 = 19 mph. 20 ms: 9.5 mph. 50 ms: 3.8 mph',
+        ],
+        result: 'Every millisecond the loop spends on the LCD lowers the fastest riding it can count: with a 20 ms loop, anything over about 9.5 mph is miscounted, as in the drawing above.',
+        note: 'The math, not a measurement: I never timed the loop on the bike.' },
       'For testing, the display sat on the table while the wheel spun on the trainer; once the clamp was printed, it went on the handlebar and I rode.',
     ] },
 

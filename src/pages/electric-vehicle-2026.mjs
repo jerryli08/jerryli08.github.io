@@ -9,6 +9,9 @@
 // grew, the cause of the long runs, and any "next time" items he has not stated.
 const M = '/assets/models/electric-vehicle-2026';
 
+// datasheets and sources linked from the worked calculations
+const MT = '[MagnTek MT6701 datasheet](https://www.magntek.com.cn/upload/pdf/202407/MT6701_Rev.1.8.pdf)';
+
 export default {
   summary: {
     stats: [
@@ -37,7 +40,20 @@ export default {
         '**The can bonus.** Two cans stand on a bonus line halfway between the start and the target. The outer can’s inside edge is 100 cm from the straight line between them, and we place the inner can anywhere from 0 to 100 cm inside it. The bonus is −0.5 × (110 − the gap in cm), and it only counts if every part of the car passes between the cans. The closer the cans, the bigger the bonus.',
       ] },
       'The other rules that shaped the car: a target distance of 7 to 10 m, a Distance Score of 2 points for every centimeter the car stops from the target, at most eight AA batteries, no more than 70 cm from the front of the front wheel to the back of the rear wheels, no wider than 35 cm, and a start by pressing the car with an unsharpened pencil.',
-      'My car is 13 cm wide (in my CAD). Through a 20 cm gap the bonus is worth 45 points, the same as stopping 22.5 cm closer to the target (computed from the rules).',
+      'My car is 13 cm wide (in my CAD).',
+      { calc: 'What is the can bonus worth?',
+        given: [
+          ['Can bonus', '−0.5 × (110 − gap in cm) points', 'the 2025-26 rules'],
+          ['Distance Score', '2 points per cm from the target', 'the 2025-26 rules'],
+          ['Car width', '13 cm', 'measured from the CAD'],
+        ],
+        work: [
+          'Through a 20 cm gap: 0.5 × (110 − 20) = 45 points, and 45 / 2 = 22.5 cm of stopping distance',
+          'A gap only just wider than the car\'s 13 cm: at most 0.5 × (110 − 13) = 48.5 points, worth 24.3 cm',
+          'Each centimetre narrower: 0.5 points, the same as stopping 2.5 mm closer',
+        ],
+        result: 'Through a 20 cm gap the bonus is worth as much as stopping 22.5 cm closer to the target; from there, each centimetre tighter adds only as much as 2.5 mm of stopping.',
+        note: 'Lower scores win, so the bonus is subtracted. Rules as summarized above.' },
     ],
       media: [
         { i: 'photo-2025-car.webp', c: 'My 2024-25 car, built for speed, on January 6' },
@@ -101,7 +117,7 @@ export default {
       { i: 'still-v1-top.webp', c: 'Version 1 finished, from above' },
     ] },
 
-    { type: 'scrolly', id: 'servo-play', module: 'servo-play', webgl: false, width: 'wide', side: 'right', stepHeight: '85vh',
+    { type: 'scrolly', id: 'servo-play', module: 'servo-play', webgl: false, stepHeight: '85vh',
       h: 'What the play does to a run',
       p: ['One track, to scale, and the same small error in the steering on both cars.'],
       steps: [
@@ -167,11 +183,26 @@ export default {
         'Eight AA batteries in a removable pack (below).',
       ] },
       'The electronics module comes straight from my 2025 car (the CAD part is still named for 2024-25), and so do the motor, the encoder mount, the wheels and the pinion.',
-    ] },
-    { type: 'media', id: 'drive-media', layout: 'row', items: [
-      { i: 'render-drive-gears.webp', c: 'The rear drive in my CAD: brushless motor, pinion and the big gear on the rear axle' },
-      { i: 'photo-soldering.webp', c: 'Soldering the power leads' },
-    ] },
+      { calc: 'Can the encoder sit on the pinion shaft again?',
+        given: [
+          ['Encoder turns per wheel turn', '6', 'my code'],
+          ['Wheel', '2.875 in: 229.4 mm around', 'BaneBots wheel, in the CAD'],
+          ['MT6701 angle over I2C', '14 bits: 16,384 steps per turn', MT],
+          ['Target distance and time', '7 to 10 m, 10 to 20 s', 'the 2025-26 rules'],
+        ],
+        work: [
+          'Travel per encoder turn: 229.4 mm / 6 = 38.2 mm, and per step 38.2 / 16,384 = 0.002 mm',
+          'The code must read the magnet at least every half turn: 19.1 mm of travel',
+          'Fastest run the rules allow, 10 m in 10 s: 1.0 m/s, so 19.1 mm / 1.0 m/s = 19 ms per loop',
+          'On the 2025 car at 2.8 m/s the same ratio left 6.8 ms',
+        ],
+        result: 'A target-time car drives at most about 1 m/s, so even at 6 turns per wheel turn the loop has about 19 ms, nearly three times what that ratio left on the 2025 car.',
+        note: 'Constant speed assumed; the car speeds up to its target speed, so it can briefly run faster. See [the 2025 car](/projects/electric-vehicle) for why the encoder was geared down there.' },
+    ],
+      media: [
+        { i: 'render-drive-gears.webp', c: 'The rear drive in my CAD: brushless motor, pinion and the big gear on the rear axle' },
+        { i: 'photo-soldering.webp', c: 'Soldering the power leads' },
+      ] },
 
     { type: 'prose', id: 'code', h: 'The code', p: [
       'The code is on GitHub: [github.com/jerryli08/sciolyev2026](https://github.com/jerryli08/sciolyev2026). It is four Arduino sketches. `code.ino` is my 2025 car’s control loop with a steering servo added and the encoder ratio changed. `targetTimeCode.ino`, `fairfaxCompCode.ino` and `finalCompCode.ino` share one target-time loop and differ in their track settings and speed-controller gains.',

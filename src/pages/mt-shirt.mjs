@@ -1,6 +1,8 @@
 // Monkeytype Shirt: rich page. Facts are Jerry's (src/projects.mjs, his checklist entry in
 // /home/claude/work/checklist.txt) or plainly shown by the photos. Tooth counts, centre distances,
-// link lengths and sizes are measured from his CAD (monkeytype merch v22) and say so.
+// link lengths and sizes are measured from his CAD (monkeytype merch v22) and say so. The two
+// calculation blocks use only those CAD measurements (axes in assets/js/pages/mt-shirt/rig.js:
+// pulley axes 59.95 mm apart, spur axes 29.99 mm apart).
 // Held back until Jerry answers /home/claude/work/monkeytype-merch/questions.md:
 //  - what joins the carriage to the keycap (the export has no such part, so nothing shows one) and
 //    whether the keycap is pushed onto the switch or pressed like a key (Q1)
@@ -87,8 +89,37 @@ export default {
         ],
         caption: 'Measured from my CAD.',
       } },
+      { calc: 'Does the 80-tooth belt fit two 20-tooth pulleys 60 mm apart?',
+        given: [
+          ['Pulleys', '20 teeth each, 2 mm pitch', 'measured from the CAD'],
+          ['Distance between the pulley axes', '60 mm', 'measured from the CAD'],
+          ['Belt', '80 teeth, 2 mm pitch', 'measured from the CAD'],
+        ],
+        work: [
+          'Pitch diameter of each pulley: 20 × 2 mm / π = 12.73 mm',
+          'Equal pulleys, so the belt is two straight runs plus half a wrap round each: L = 2 × 60 mm + π × 12.73 mm = 120 mm + 40 mm = 160 mm',
+          'In teeth: 160 mm / 2 mm = 80',
+        ],
+        result: 'Exactly 80 teeth: the 60 mm between the pulley axes is the distance an 80-tooth, 2 mm pitch belt needs.',
+        note: 'Lengths along the belt\'s pitch line.' },
+      { calc: 'Why 30 mm between the spur gears, and what 3 : 1 does',
+        given: [
+          ['Gears', '36 and 12 teeth, module 1.25', 'measured from the CAD'],
+          ['Crank turn for one push, from the back end of the rail to the carriage\'s place in the CAD', '45 degrees', 'the linkage, measured from the CAD'],
+        ],
+        work: [
+          'Pitch diameters: 1.25 × 36 = 45 mm and 1.25 × 12 = 15 mm',
+          'Meshing distance: (45 mm + 15 mm) / 2 = 30 mm, the distance between the two gear axes in the CAD',
+          'Ratio: 36 / 12 = 3, so the 12-tooth gear and its crank turn 3 degrees for every degree of the 36-tooth gear, which turns with the servo (1 : 1 through the bevels and the belt)',
+          'Servo turn for one push: 45 / 3 = 15 degrees',
+        ],
+        result: 'Module 1.25 gears with 36 and 12 teeth mesh at exactly 30 mm, and the 3 : 1 step-up lets 15 degrees at the servo swing the crank the 45 degrees one push needs.',
+        note: 'Pitch circles; the backlash allowance in the CAD, if any, is left out.' },
     ],
-      media: [{ i: `${M}/still-top.webp`, c: 'The layout from above, with the lid, top frame and logo hidden: servo at the right, battery holder at the left, the belt and the gears between them, and the rail and keycap along the front' }] },
+      media: [
+        { i: `${M}/still-top.webp`, c: 'The layout from above, with the lid, top frame and logo hidden: servo at the right, battery holder at the left, the belt and the gears between them, and the rail and keycap along the front' },
+        { i: `${M}/poster-drivetrain.webp`, c: 'My CAD in the exploded pose, servo and battery holder lit: the bevel pair beside the servo, the belt across the box, and the spur gears under it' },
+      ] },
 
     { type: 'prose', id: 'shirt', h: 'From CAD to a shirt', p: [
       'The drawing on the shirt is the CAD itself: the same parts in the same exploded pose, seen from the front right and above. In the CAD every layer is lifted to its own height and the corner screws have guide lines down to their holes, so the whole mechanism reads in one white line drawing.',

@@ -9,7 +9,10 @@
 // how the drone handled the hoops, what caused the late-July runs that climbed into the cage net
 // (left out: the drone in those clips is not clearly ours either), whether the repo's script is the
 // version that raced, who wrote or designed which parts, and every "next time" item.
+// Worked calculations (Sept 27): inputs are the script's constants, the Camera Module 3 product brief
+// and the assumptions already named in the flight's caption (1.0 m height, full 66° lens).
 const M = '/assets/models/autonomous-drone-racing';
+const CAM3 = 'https://datasheets.raspberrypi.com/camera/camera-module-3-product-brief.pdf';
 
 export default {
   summary: {
@@ -178,6 +181,20 @@ export default {
       p: [
         'The fitted line becomes three numbers each control tick:',
         '**1. Pick a point to chase.** Turn the line’s direction so it points toward the nose, then take the point 100 px ahead along the line from the fitted point. Chasing a point ahead of the drone, not the nearest point, is what makes it turn into a bend.',
+        { calc: 'How far ahead is 100 px?',
+          given: [
+            ['Camera height over the floor', '1.0 m', 'the script’s take-off height, assumed held (as in the flight above)'],
+            ['Camera Module 3 field of view', '66° x 41°', `[Raspberry Pi product brief](${CAM3})`],
+            ['Frame', '640 x 360 px', 'our script'],
+          ],
+          work: [
+            'Floor in view: 2 × 1.0 m × tan(66° / 2) = 1.30 m across, and 2 × 1.0 m × tan(41° / 2) = 0.75 m from the nose side to the tail side',
+            'Scale: 1.30 m / 640 px = 2.0 mm per pixel (0.75 m / 360 px = 2.1 mm the other way)',
+            'Look-ahead: 100 px × 2.0 mm = 0.20 m along the line; the nose edge of the picture is 180 px = 0.37 m from the centre',
+            'Dilate 30 x 30: each bulb grows 15 px, 3 cm, each way, so any gap up to 30 px, about 6 cm of rope, closes',
+          ],
+          result: 'The drone chases a point about 20 cm ahead, a little over half way to the edge of the floor it can see, and the dilation bridges any gap between bulbs shorter than about 6 cm.',
+          note: 'Estimate: assumes the full field of view at 640 x 360 and the camera 1.0 m over a flat floor; at other heights every length scales with the height.' },
         '**2. Measure the error.** The pixel offset from the image centre to that point is the position error; the script treats the image centre as the drone’s centre. The angle between the line and the image’s forward axis is the heading error, zero when the line runs straight ahead.',
         '**3. PD control** on both, in the camera’s frame, with the derivatives taken over a fixed 0.1 s:',
         { pre: 'cx = 0.001 * ex + 0.00015 * (ex - ex_prev) / 0.1     # m/s per pixel\ncy = 0.001 * ey + 0.00015 * (ey - ey_prev) / 0.1\nwz = 0.2 * angle + 0.2 * (angle - angle_prev) / 0.1   # deg/s per deg' },
@@ -223,6 +240,19 @@ export default {
             ['Image', '640 x 380', '640 x 360'],
           ],
         } },
+        { calc: 'How far can it fly on one command?',
+          given: [
+            ['Earlier draft: speed limit, time between commands', '1.0 m/s, 1 s', 'our earlier draft'],
+            ['Line follower: speed limit, time between commands', '0.5 m/s, 0.5 s', 'our line-following script'],
+            ['Floor seen ahead of the image centre', '0.37 m', 'the look-ahead calculation above'],
+          ],
+          work: [
+            'Draft: 1.0 m/s × 1 s = up to 1.0 m between two looks at the floor',
+            'Line follower: 0.5 m/s × 0.5 s = up to 0.25 m',
+            'Against the floor in view: 1.0 / 0.37 = 2.7 times it; 0.25 / 0.37 = two thirds of it',
+          ],
+          result: 'At the draft’s limits one command could carry the drone almost three times past the floor the camera sees ahead of it before the next look; at the line follower’s limits it covers at most two thirds of it.',
+          note: 'Upper bounds at the speed limit, ignoring the flight controller’s lag; the camera height is assumed as above.' },
       ],
       media: [
         { i: 'photo-bench-with-transmitter.webp', c: 'Jul 11: on the kit’s tall landing legs beside the flight cage, with a laptop and the RC transmitter' },

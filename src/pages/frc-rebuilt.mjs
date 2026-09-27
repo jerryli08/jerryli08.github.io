@@ -8,6 +8,11 @@
 // axis and the top panel's fold, checked clear of the shooters and the transfer on the CAD).
 const M = '/assets/models/frc-rebuilt'; // the web model and the demo posters (stills of the live demos)
 
+// datasheets and sources linked from the worked calculations
+const NEO2 = '[REV NEO 2.0](https://www.revrobotics.com/rev-21-1653/)';
+const NEO = '[REV NEO](https://www.revrobotics.com/rev-21-1650/)';
+const TBE = '[REV Through Bore Encoder](https://www.revrobotics.com/rev-11-1271/)';
+
 export default {
   summary: {
     stats: [
@@ -58,7 +63,7 @@ export default {
       ] },
 
     {
-      type: 'scrolly', id: 'cad', module: 'tour', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-tour.webp`,
+      type: 'scrolly', id: 'cad', module: 'tour', stepHeight: '85vh', poster: `${M}/poster-tour.webp`,
       h: 'The CAD, mechanism by mechanism',
       p: ['The final robot, from my Fusion 360 model with the fasteners left out. Nothing changed between the Feb 18 model and this final CAD.'],
       caption: 'Polycarbonate is drawn clear, as on the real robot. Spin directions follow the fuel path; speeds are not to scale.',
@@ -100,14 +105,52 @@ export default {
       'The roller is a 22.6 in polycarbonate tube with a silicone sleeve, on a 1/2 in hex live axle. It sits at the end of an arm made of two 3/8 in polycarbonate plates, 12.0 in from the pivot.',
       { problem: 'The roller rides on a swinging arm, and it has to keep spinning at every arm angle.', title: 'Driving a roller on a moving arm' },
       { fix: 'The NEO 2.0 that spins the roller sits on the frame. Its belt climbs 12 to 24 teeth to a pulley on the pivot axis, and a second belt runs 24 to 24 teeth from that axis out to the roller, 2:1 overall. With the middle pulley on the pivot axis, both belts keep fixed centres wherever the arm is: 244.5 mm between the pulley centres in the CAD for the first (motor and pivot are both on the frame) and 305.0 mm for the second (pivot and roller are both on the arm).' },
+      { calc: 'How fast does the roller surface move?',
+        given: [
+          ['NEO 2.0 free speed', '5,676 rpm', NEO2],
+          ['Belts, motor to roller', '12 to 24, then 24 to 24 teeth: 2 : 1', 'counted from the CAD'],
+          ['Roller diameter over the silicone sleeve', '34.8 mm', 'measured from the CAD'],
+        ],
+        work: [
+          'Roller speed: 5,676 / 2 = 2,838 rpm',
+          'Surface speed: π × 0.0348 m × 2,838 / 60 s = 5.2 m/s (17 ft/s)',
+        ],
+        result: 'Even geared down 2 : 1, the roller surface moves at up to about 5.2 m/s where it grabs the fuel.',
+        note: 'Free speed, no load: the roller slows when it is pulling fuel in.' },
       'The arm is driven on the other side. A NEO on a 25:1 MAXPlanetary turns a 12 tooth sprocket, and #25 chain runs to a 40 tooth sprocket bolted to the arm, 83.3:1 in total. A REV Through Bore Encoder sits on a 24 tooth sprocket that rides on the same chain, so it turns 40/24 = 1.67 times as far as the arm. Tooth counts are from the CAD.',
+      { calc: 'What does 83.3 : 1 give the arm?',
+        given: [
+          ['NEO free speed and stall torque', '5,676 rpm, 2.6 N·m', NEO],
+          ['Reduction, motor to arm', '25 × 40 / 12 = 83.3 : 1', 'MAXPlanetary 25:1, sprockets counted from the CAD'],
+          ['Stow swing', '132°', 'computed from the CAD'],
+        ],
+        work: [
+          'Arm speed at free speed: 5,676 / 83.3 = 68 rpm = 409° per second',
+          'The whole 132° swing: 132 / 409 = 0.32 s',
+          'Stall torque at the arm: 2.6 N·m × 83.3 = 217 N·m',
+        ],
+        result: 'At best the arm swings from stowed to deployed in about a third of a second, and at stall the pivot can push with about 217 N·m.',
+        note: 'Upper bounds: no gearbox or chain losses, no time to speed up or slow down, and REV’s measured NEO numbers.' },
+      { calc: 'How finely does the encoder see the arm?',
+        given: [
+          ['Through Bore Encoder', '8,192 counts per turn (quadrature); 10-bit absolute output', TBE],
+          ['Encoder turns per arm turn', '40 / 24 = 1.67', 'counted from the CAD'],
+          ['Pivot to roller', '12.0 in (305 mm)', 'measured from the CAD'],
+        ],
+        work: [
+          'Counts per arm turn: 8,192 × 1.67 = 13,653, so one count is 360° / 13,653 = 0.026°',
+          'At the roller: 305 mm × 0.026° × π / 180 = 0.14 mm per count',
+          'The 132° stow swing is 132 × 1.67 = 220° at the encoder, less than one turn',
+        ],
+        result: 'One count is about a seventh of a millimetre at the roller, and because the whole swing is less than one encoder turn, its absolute reading can be zeroed so it never wraps around between stowed and deployed.',
+        note: 'Resolution only; chain slack between the arm and the encoder sprocket is not counted.' },
     ],
       media: [
         { i: 'cad-v1-roller-belts.webp', c: 'The same two-belt roller drive in my first model (Jan 31): a NEO, a belt up to a shared pulley, and a second belt down to the roller' },
         { i: 'cad-v1-sprocket-detail.webp', c: 'The first model’s large sprocket and chain beside a pre-drilled upright' },
       ] },
     {
-      type: 'scrolly', id: 'pivot', module: 'stow', width: 'wide', side: 'left', stepHeight: '90vh', poster: `${M}/poster-stow.webp`,
+      type: 'scrolly', id: 'pivot', module: 'stow', stepHeight: '90vh', poster: `${M}/poster-stow.webp`,
       h: 'Stowed for the start, deployed to play',
       p: ['A side view from the roller motor side, with the parts outside the belts cut away. The readout is measured on the CAD as the arm swings.'],
       caption: 'The arm turns about its real pivot axis from the CAD, and the dashed line is the inner face of the bumper wood. The belt centres are measured between the pulley centres at every angle; the distance past the bumper wood is measured on the CAD for every degree of swing.',

@@ -1,9 +1,11 @@
 // Electric Bike: rich page. Facts are Jerry's (src/projects.mjs, /home/claude/work/facts.md, his
 // checklist and his Sept 26 answers in /home/claude/work/answers.md) or plainly shown by the media;
 // tooth counts, ratios, wrap angles and belt pulls are computed from his CAD and say so.
+// The CAD version with the polycarbonate idler mount is his latest version (Sept 27): the timeline
+// is V1 (aluminum-mounted idler) and V2 (polycarbonate idler mount, latest).
 // Held back until Jerry answers (see /home/claude/work/ebike/): who rides in the ride clips (captions
-// name nobody), how the second-belt failure was finally fixed, what he would do differently next
-// time, and what changed in the V3 render (it is shown as a render only).
+// name nobody), how the second-belt failure was finally fixed, and what he would do differently next
+// time. The idler flange calculation is measured from the V1 STEP (notes in /home/claude/work/ebike/r3/).
 const M = '/assets/models/electric-bike';
 // the carbon fibre parts in the CAD (same list as assets/js/pages/electric-bike/bike.js)
 const CARBON = 'motor_mount|4mm_drive_side_bearing_plate|2mm_non_drive_side_bearing_plate|2mm_bearing_retaining_plate|battery_door|cf_CSK_battery_holder|drive_side_static_battery_plate';
@@ -90,6 +92,20 @@ export default {
     { type: 'prose', id: 'motors', h: 'Motors and controller', p: [
       'The motors are two [SKP 6465](https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW and 150 KV each, 5.3 kW together. They run on a 48 V, 16 Ah pack through a dual VESC. At 150 KV and 48 V their nominal no-load speed is 150 x 48 = 7,200 rpm, and the 16.2 : 1 reduction brings that down to about 444 rpm at the chain sprocket.',
       'I brought them up on the bench first, on their carbon fiber mount. I ran motor detection in VESC Tool for both controllers, and it measured the two motors almost the same: about 32 mΩ of resistance and a flux linkage of 4.73 and 4.82 mWb. Then I mapped the thumb throttle in the setup wizard.',
+      { calc: 'How long would the pack last flat out?',
+        given: [
+          ['Pack', '48 V, 16 Ah', 'my build'],
+          ['Motor power', '5.3 kW, two 2.6 kW motors', 'my build'],
+          ['Range', 'about 20 miles', 'my build'],
+        ],
+        work: [
+          'Energy: 48 V × 16 Ah = 768 Wh',
+          'Current at full power: 5,300 W / 48 V ≈ 110 A from the pack, split between the two controllers',
+          'Time at full power: 768 Wh / 5,300 W ≈ 0.145 h ≈ 9 minutes',
+          'Average over the range: 768 Wh / 20 miles ≈ 38 Wh per mile',
+        ],
+        result: 'Flat out, the pack would supply about 110 A and be empty in about 9 minutes. The 20 miles of range work out to about 38 Wh per mile.',
+        note: 'Estimate: nominal pack voltage, motor power taken as the draw from the pack with no losses, and the whole 16 Ah used.' },
     ],
       media: [
         [{ i: 'still-bench-motors.webp', c: 'Both motors on their carbon fiber mount during bench bring-up' }, { v: 'bench-first-spin.mp4', c: 'The first spin-up on the bench' }],
@@ -107,6 +123,24 @@ export default {
         ],
         caption: 'Tooth counts from the part names in my CAD, checked against the geometry.',
       } },
+      { calc: 'From 7,200 rpm at the motors to the road',
+        given: [
+          ['Motor speed, no load', '7,200 rpm', '150 KV × 48 V, nominal ([SKP 6465](https://skyartpower.com/products/skp-6465-motor))'],
+          ['Belt stages', '16T to 72T, 20T to 72T', 'counted in my CAD'],
+          ['Chain sprocket', '20T', 'counted in my CAD'],
+          ['Peak torque at the sprocket', '100 N·m', 'my build'],
+          ['Rear wheel', '694 mm across', 'my 27 in rim, with a 27 x 1-1/4 in tire (assumed)'],
+          ['Rear cogs', '11T to 32T', 'stock [Shimano HG31 11-32](https://99spokes.com/bikes/trek/2019/dual-sport-2) (assumed)'],
+        ],
+        work: [
+          'Reduction: (72 / 16) × (72 / 20) = 4.5 × 3.6 = 16.2',
+          'Chain sprocket: 7,200 rpm / 16.2 ≈ 444 rpm',
+          'Torque goes the other way: 100 N·m at the sprocket / 16.2 ≈ 6.2 N·m from the two motors together, about 3.1 N·m each',
+          'Rear wheel in a cog with N teeth: 444 × 20 / N rpm, and each turn rolls π × 0.694 m ≈ 2.18 m',
+          '18T cog: 444 × 20 / 18 ≈ 494 rpm × 2.18 m ≈ 1,077 m per minute ≈ 40 mph. 11T: about 66 mph; 32T: about 23 mph',
+        ],
+        result: 'The 16.2 : 1 reduction turns about 3 N·m per motor into 100 N·m at the sprocket. At the motors\' no-load speed that is about 40 mph in the 18T cog with the wheel off the ground; on the road the bike tops out at about 35 mph.',
+        note: 'Estimate: nominal no-load speed, no losses or slip. The cassette on my bike is not confirmed, so the cog sizes are those of the stock cassette of a 2019 Trek Dual Sport 2.' },
       'Belt 1 runs past two backside idlers, each a stack of four 626 bearings on a shoulder screw; they are what give it the serpentine path and the extra wrap on the small motor pulleys. Belt 2 has one backside idler, a stack of six 698 bearings.',
       { table: {
         head: ['Pulley', 'Wrap', 'Teeth in mesh'],
@@ -147,7 +181,7 @@ export default {
 
     { type: 'scrolly', id: 'iterations', module: '@turntable', width: 'wide', side: 'right', stepHeight: '105vh', poster: `${M}/poster-versions.webp`,
       h: 'Iteration: the chain idler',
-      p: ['Two versions of my CAD and a render of the third. Diffing every part between the two CAD files shows that only the chain idler changed. Jockey wheels in blue, the part that carries them in orange; the frame mockup in V2 is hidden so the two match.'],
+      p: ['The two versions of my CAD: V1 with the jockey wheels on an aluminum flange, and V2, my latest, with a polycarbonate idler mount. Diffing every part between the two files shows that only the chain idler changed. Jockey wheels in blue, the part that carries them in orange; the frame mockup in V2 is hidden so the two match.'],
       data: { models: [
         { label: 'V1', src: `${M}/v1.glb`, hide: 'rough_bike_frame_mockup', carbon: CARBON,
           highlight: [{ parts: 'seat_tube_mount', color: '#ff6b35', intensity: 0.6 }, { parts: 'Jockey_Wheel', color: '#3d8bff', intensity: 0.35 }] },
@@ -161,27 +195,59 @@ export default {
             'Two 11T jockey wheels on shoulder screws route the chain around the drive sprocket. The screws thread into a flange of the aluminum seat tube bracket, lit orange. One of the two was there to add chain wrap on the big pedaling chainring. The drive ran this way in the first tests on the stand.',
           ] },
         { h: 'The idler mount bent',
-          view: { version: 0, focus: 'Jockey_Wheel|seat_tube_mount', azimuth: 140, elevation: -8, pad: 1.15 },
+          view: { version: 0, focus: 'Jockey_Wheel|seat_tube_mount', azimuth: 140, elevation: -8, pad: 1.15,
+            labels: [{ text: 'Jockey: 4,300 N at peak', at: [0.0459, -0.1532, -0.0475] },
+                     { text: 'Bend: 4.75 mm 5052', at: [0.0603, -0.1573, -0.035], side: 'l' }] },
           p: [
             { problem: 'The flange was bent from a flat pattern on a press brake, and the drive\'s power, about 6 kW, easily bent it out of shape under the jockey wheels.', title: 'The idler mount bent' },
             { fix: 'V2 carries one jockey on a tall 3D-printed polycarbonate mount instead of the bent flange. I also realized the second jockey, the one adding chain wrap on the pedaling chainring, was not really needed.' },
+            'The [numbers](#idler-load) below show why the flange gave way.',
           ] },
-        { h: 'V2, as built: one jockey on a tall printed mount',
+        { h: 'V2, my latest: one jockey on a tall printed mount',
           view: { version: 1, focus: 'Jockey_Wheel|polycarb_idler_mount', azimuth: 156, elevation: -15, pad: 1.2 },
-          p: ['One jockey wheel, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube, lit orange and shown see-through so the jockey behind it reads. The same update added a polycarbonate battery plate adapter and moved the drive-side battery panel out 6 mm.'] },
+          p: ['V2 is the latest version of the drive, and the one on the bike. One jockey wheel, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube, lit orange and shown see-through so the jockey behind it reads. The same update added a polycarbonate battery plate adapter and moved the drive-side battery panel out 6 mm.'] },
         { h: 'Everything else stayed',
           view: { version: 1, azimuth: 200, elevation: 16, pad: 1.05 },
           p: ['The motors, both belts, every pulley and both axle stacks are identical in the two CAD files.'] },
-        { h: 'V3, latest: a render',
-          view: { version: 1, azimuth: 225, elevation: 18, pad: 1.05, image: 'render-v3-latest.webp', alt: 'V3, my latest version: a render of the drive unit and battery box with the frame see-through' },
-          p: ['My latest version of the drive unit, rendered in October 2025 with the frame shown see-through. It exists as a render only; there is no CAD file of it, so the 3D here shows V1 and V2.'] },
       ] },
-    { type: 'media', layout: 'grid', items: [
-      { i: 'v1-mockup-two-jockeys.webp', c: 'V1 mocked up in the frame: the 20T sprocket above the chainring and two blue jockey wheels' },
-      { i: 'v1-chain-wrap.webp', c: 'V1: the chain wrapped around the drive sprocket and past the two jockeys' },
-      { i: 'v2-idler-mount-print.webp', c: 'V2: the 3D-printed idler mount on the print bed' },
-      { i: 'still-v2-idler-mount.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube' },
-    ] },
+
+    { type: 'prose', id: 'idler-load', h: 'Why the aluminum flange bent', p: [
+      'About 6 kW goes through the drive, and all of it reaches the rear wheel through the chain. In V1 that chain wrapped a jockey on a shoulder screw, its center about 10 mm out from a 4.75 mm aluminum flange, right in the flange\'s top corner. A rough calculation from my V1 CAD shows why the flange gave way.',
+      { calc: 'How hard does the chain pull on the V1 idler?',
+        given: [
+          ['Peak torque at the sprocket', '100 N·m', 'my build'],
+          ['Chain sprocket', '20T, 1/2 in pitch', 'counted in my CAD'],
+          ['Chain wrap on the upper jockey (11T)', '122°', 'measured in my V1 CAD (tangent lines)'],
+          ['Jockey center to flange mid-plane', '10.4 mm', 'measured in my V1 CAD'],
+        ],
+        work: [
+          'Sprocket pitch radius: 12.7 mm / (2 sin(180° / 20)) ≈ 40.6 mm',
+          'Chain pull: T = 100 N·m / 0.0406 m ≈ 2,460 N. Under motor power it runs from the rear cog, under the upper jockey (the one V2 keeps) and onto the sprocket; the lower jockey sits on the slack side, toward the freewheeling chainring',
+          'Load on the upper jockey: F = 2 T sin(122° / 2) = 1.75 × 2,460 N ≈ 4,300 N, pointing 45° off the line of the flange\'s bend (both directions from my V1 CAD)',
+          'The part of F at right angles to the bend, 4,300 N × sin 45° ≈ 3,060 N, acts 10.4 mm out from the flange, so it tries to fold the flange about its bend: M = 3,060 N × 0.0104 m ≈ 32 N·m',
+        ],
+        result: 'At full torque the upper jockey carries about 4,300 N, and the flange under it feels about 32 N·m trying to fold it about its bend.',
+        note: 'Estimate: static peak torque, no losses. The rear wheel is not in the CAD, so the top run of the chain is taken as level; tilting it 10° either way changes the folding moment by about 5 %.' },
+      { calc: 'How much can the flange take?',
+        given: [
+          ['Flange thickness', '4.75 mm', 'measured in my V1 CAD'],
+          ['Length of its bend', '63.8 mm', 'measured in my V1 CAD'],
+          ['Upper jockey', '15 mm from the bend, 10 mm from its top end', 'measured in my V1 CAD'],
+          ['5052-H32 yield strength', '193 MPa', '[ASM / MatWeb](https://asm.matweb.com/search/specificmaterial.Asp?Bassnum=ma5052h32)'],
+        ],
+        work: [
+          'A strip of 5052 b wide and t thick starts to yield at M = σ b t² / 6 and folds right over at σ b t² / 4',
+          'To hold 32 N·m without yielding, the bend needs b = 6 × 32 N·m / (193 MPa × (4.75 mm)²) ≈ 44 mm working together; just to not fold over, 29 mm',
+          'The jockey sits in the flange\'s top corner. Spreading at about 45° across the 15 mm to the bend, its load reaches about 15 mm of bend below it but only the 10 mm above it: about 25 mm in all',
+          '25 mm of bend starts to yield at 193 MPa × 25 mm × (4.75 mm)² / 6 ≈ 18 N·m and folds over at about 27 N·m',
+        ],
+        result: 'The corner of the flange sees about 32 N·m, against 18 N·m to start bending it and 27 N·m to fold it over: about 1.2 times the folding moment, so no margin at all at full torque. It starts to yield from about 57 N·m at the sprocket, a bit over half of the peak.',
+        note: 'Estimate: no fatigue, and the H32 temper is assumed, the usual one for bent 5052 sheet. The same load also twists the flange by about as much again, which only makes it worse and is left out here. Even if the whole 63.8 mm bend shared the load evenly, it would start to yield at 46 N·m, only 1.5 times the load. The 45° spread is a rule of thumb.' },
+    ],
+      media: [
+        [{ i: 'v1-mockup-two-jockeys.webp', c: 'V1 mocked up in the frame: the 20T sprocket above the chainring and two blue jockey wheels' }, { i: 'v1-chain-wrap.webp', c: 'V1: the chain comes in under the upper jockey, wraps the drive sprocket and leaves past the lower jockey' }],
+        [{ i: 'v2-idler-mount-print.webp', c: 'V2: the 3D-printed idler mount on the print bed' }, { i: 'still-v2-idler-mount.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube' }],
+      ] },
 
     { type: 'prose', id: 'failures', h: 'What the first rides found', p: [
       'After the first rides I took the drive apart. The problems chained into each other, and the second belt took the hit.',

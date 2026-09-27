@@ -11,8 +11,13 @@ Pages are written independently: **a page writer only touches their own files**.
   actuates. No sliders, buttons, drag handles, text boxes or play toggles unless Jerry asks for one.
   Nothing animates on its own. `setProgress(p, step, stepP)` must be a pure function of those three
   numbers (scrolling back plays it backwards).
-- **Big.** Scrollies are `width: 'full'` (the whole screen, text cards over the left) or
-  `width: 'wide'` (about three quarters, text beside it). Alternate them down a page.
+- **Big: every scroll animation is full width** (Jerry, Sept 27). The stage fills the screen and
+  the step cards pin over its left side. Do not set `width` (an old `width: 'wide'` or `side` is
+  built exactly like full, so there are no three-quarter stages any more).
+- **The step text stays put while the animation runs** (Jerry, Sept 27): scrolling brings a card
+  in, continuing to scroll plays that step's animation while the card stays pinned, and once the
+  step is done the card scrolls away as the next one comes in and pins. The runtime does this;
+  your module only has to finish each step's motion by `stepP = 1`.
 - **Pictures spread evenly through the text.** No stretch of text longer than about a screen without
   a picture: give prose sections `media: [...]` (pictures beside the runs of text) or put a media
   section between. The build warns when a page breaks this.
@@ -92,8 +97,8 @@ export default {
 |---|---|
 | `prose` | `h`, `p`, `media?: [item or [items]]` (pictures beside the text), `side?: 'left'` (pictures on the left) |
 | `media` | `layout: 'grid' \| 'row' \| 'wide' \| 'collage'`, `items`, `h?`, `p?`, `cols?: 3` (grid only) |
-| `scrolly` | `id`, `module`, `steps?: [{ h, p, view? }]`, `width?: 'full' \| 'wide'`, `side?: 'left' \| 'right'` (wide: which side the text is on), `h?`, `p?`, `caption?`, `stepHeight?` (default `'80vh'`), `length?` (no steps: how long it stays pinned, default `'180vh'`), `poster?`, `data?` |
-| `demo` | legacy (interactive; do not add new ones): `id`, `module`, `h?`, `p?`, `caption?`, `height?`, `poster?`, `aside?`, `data?`, `webgl?: false`. A demo with `module: '@viewer'` is built as a wide `@turntable` scrolly |
+| `scrolly` | `id`, `module`, `steps?: [{ h, p, view? }]`, `h?`, `p?`, `caption?`, `stepHeight?` (each step's slot of scrolling, default `'80vh'`), `length?` (no steps: how long it stays pinned, default `'180vh'`), `poster?`, `data?`, `webgl?: false` (2D). `width` and `side` are ignored: every scrolly is full width |
+| `demo` | legacy (interactive; do not add new ones): `id`, `module`, `h?`, `p?`, `caption?`, `height?`, `poster?`, `aside?`, `data?`, `webgl?: false`, `interactive?: true` (only for a demo Jerry asked to keep interactive, like LinqBot's webcam demo; it silences the "convert to a scrolly" warning). A demo with `module: '@viewer'` is built as a full-width `@turntable` scrolly |
 | `split` | `items: [{ h, p, module? \| media?, data?, height?, poster?, caption?, id? }]`, `h?` |
 | `iterations` | `items: [{ label, title, p, media: [...] }]`, `h?` |
 | `callout` | `h`, `p` |
@@ -116,15 +121,21 @@ builds the broken section shows a yellow box, in production it is left out.
 - **demo** `height` is any CSS length (default about 62% of the screen). `aside: 'left'` puts the
   `h` and `p` to the left of the canvas, `'right'` to the right; on a phone the text comes first.
   `poster` is an image shown until the demo is live and kept if it fails (use one: a still of the model).
-- **scrolly** is a sticky stage driven by the scroll. `width: 'full'` (default): the stage fills the
-  screen and the step cards scroll over its left side. `width: 'wide'`: the stage takes about three
-  quarters of the screen, flush to one edge, with the step text beside it (`side`). Without `steps`
-  it stays pinned for `length` of scrolling and the module plays through progress 0 to 1; a wide one
-  pins its heading and text beside the stage. Up to 900 px wide (phones, small tablets) every
-  scrolly pins its stage in the top half of the screen and the step text scrolls below it, never
-  over the model (without steps: the text sits above the stage). A step becomes active when the top
-  of its text comes up to 70 % of the screen (84 % on a phone). The module gets the scroll progress;
-  a step's `view` object is passed to the module as `data.steps[i]` (for `@turntable`).
+- **scrolly** is a sticky stage the full width of the screen, driven by the scroll. The section's
+  `h` and `p` sit above it in the reading column. Each step owns a slot of `stepHeight` of
+  scrolling: its card rises into place over the left of the stage, **pins there while that step's
+  animation runs** (`stepP` 0 to 1), then scrolls away as the next card comes in and pins. The
+  next card stays hidden until the step before it has played out, then fades in just under the
+  leaving card. The pinned part is the slot minus the card's own height and the gap to the next card, and never less
+  than half the slot (a tall card makes its slot longer), so a longer `stepHeight` means more
+  scrolling for the animation, not a longer wait for the text. The first card is already in place
+  when the stage pins, and the last one lets go exactly when the stage does. Up to 900 px wide
+  (phones, small tablets) the stage pins in the top half of the screen and each card pins just
+  under it, never over the model (a card taller than the room left pins with its bottom at the
+  screen's bottom). Without `steps` it stays pinned for `length` of scrolling and the module plays
+  through progress 0 to 1. A step's `view` object is passed to the module as `data.steps[i]` (for
+  `@turntable`). Keep step cards short (one idea, two or three sentences): a long card means a long
+  hand-off, and on a phone its top slides under the stage.
 - **split** rows alternate sides; each has a demo (`module`) or `media` (one item, or an array for a row).
 
 ### Text
@@ -154,6 +165,26 @@ prose, iterations, split rows, scrolly steps and callouts.
 **Copy uses only facts Jerry has stated.** No invented numbers, dates, placements or reasons.
 Numbers a demo computes from the CAD (a wheel radius, a gear ratio from tooth counts) are fine; say so.
 
+**Worked calculations (Jerry, Sept 27: "add more numbers and calculations to everything").** Use a
+yellow `{ calc }` block wherever a number explains a design decision (is the bracket stiff enough,
+how fast does it go, why this gear ratio, how much margin):
+
+```js
+{ calc: 'Will the idler bracket bend?',                     // title
+  given: [['Motor peak torque', '4.5 N·m', '[motor datasheet](https://...)'],   // [input, value, source]
+          ['Bend line length', '40 mm', 'measured from the CAD'],
+          ['5052-H32 yield strength', '193 MPa', '[ASM / MatWeb](https://...)']],
+  work: ['Chain pull F = T / r = 4.5 N·m / 0.02 m = 225 N', 'M = F · d = 225 N × 0.03 m = 6.8 N·m', '...'],
+  result: 'The bend sees about a quarter of the moment it takes to yield: about 4x margin.',
+  note: 'Estimate: static load, no fatigue; rounded.' }
+```
+
+Every input must be one of: a fact Jerry stated, a dimension or count measured from his real CAD
+(say "measured from the CAD"), or a published datasheet or material value (link the source). Show the
+working so a reader can check it; round sensibly; call estimates estimates. Never present a
+calculation as a test result, and never invent a measurement he did not make. Two to four
+calculations on a big page, one or two on a small one, each next to the decision it explains.
+
 ### Media
 
 `v` is a video, `i` a photo. A bare file name resolves to `assets/media/<slug>/`; an absolute
@@ -179,8 +210,8 @@ export async function mount(el, ctx) {   // may be async
 
 | field | |
 |---|---|
-| `shift()` | `[fx, fy]` for `stage.setShift` that keeps the model clear of the step text on the current layout: `[0.15, 0]` on a full-width desktop scrolly (cards over the left), otherwise `[0, 0]` (wide: text beside; phone: text below). Call it in `setProgress` |
-| `width` | `'full'` or `'wide'` |
+| `shift()` | `[fx, fy]` for `stage.setShift` that centres the model in the part of the stage the step cards leave free: about `[0.2, 0]` on a desktop (cards over the left; exactly half the covered fraction), `[0, 0]` on a phone (text below the stage) and without steps. Call it in `setProgress`. The stage starts with it, and `stage.frame` fits views into the free part, so views framed at mount are right too: do not add your own allowance for the cards on top (a bigger `pad`, a narrowed camera aspect), or the model comes out too small. A 2D scrolly (`webgl: false`) with steps gets `el` already cut to the free part (right of the cards on a desktop, the whole stage on a phone), so its `shift()` is `[0, 0]`; lay it out in `el` as usual. The stage element also carries `--rx-cover`: the px the cards cover on the left (`0px` on a phone) |
+| `width` | always `'full'` |
 | `panel` | legacy demos only: element under the canvas for controls (`null` in a scrolly) |
 | `data` | the section's `data` object, as JSON |
 | `asset(path)` | content-hashed URL for any `/assets/...` path (`stage.load` does this for you) |
@@ -196,8 +227,11 @@ A stage made by `createStage` is freed automatically on unmount even without `di
 return `dispose()` anyway if you start anything else (timers, listeners on `window`).
 
 Scrolly: `setProgress(p, step, stepP)` is called every frame the scroll moves, only while the block
-is near the screen: `p` is 0 at the top of the section and 1 at the end, `step` is the active step
-index, `stepP` is 0..1 through that step (without steps, `stepP` is `p`). Make the picture a pure
+is near the screen: `p` runs 0 to 1 while the stage is pinned; `step` is the step whose card is
+pinned (during a hand-off, the nearer one); `stepP` is 0..1 through that step's pinned range, 0
+until its card pins and 1 once it lets go (without steps, `stepP` is `p`). Nothing moves during a
+hand-off: step `i` at `stepP = 1` and step `i + 1` at `stepP = 0` must draw the same picture (blend
+each step in from the one before, as below). Make the picture a pure
 function of these (so scrolling back works) and do not animate on your own: no `onFrame`, no
 timers, no CSS transitions on things the scroll drives. Right after `setProgress` the runtime draws
 the stage in the same frame, so HTML labels and the canvas move together.
@@ -229,7 +263,7 @@ A GLB loaded, one part rotated about its real axis by the scroll:
 
 ```js
 // assets/js/pages/hybrid-vehicle/latch.js
-// section: { type: 'scrolly', id: 'latch', module: 'latch', width: 'wide', poster: 'latch.webp',
+// section: { type: 'scrolly', id: 'latch', module: 'latch', poster: 'latch.webp',
 //            steps: [{ h: 'Open', p: ['...'] }, { h: 'Closing', p: ['...'] }, { h: 'Locked', p: ['...'] }] }
 import { createStage, cad } from '/assets/js/lib/stage.js';
 
@@ -270,8 +304,7 @@ export async function mount(el, ctx) {
   const { box } = stage.bounds(model);
   const cut = stage.sectionPlane([-1, 0, 0], box.max.x + 0.01);   // parked just outside: nothing cut yet
   function setProgress(p, step) {
-    const portrait = el.clientHeight > el.clientWidth;
-    stage.setShift(portrait ? 0 : 0.14, portrait ? 0.18 : 0);   // clear of the step cards
+    stage.setShift(...ctx.shift());   // clear of the step cards
     stage.frame(model, { azimuth: 30 + 300 * p, elevation: 20 });
     cut.set(box.max.x - (box.max.x - box.min.x) * 0.5 * Math.min(1, p * 2));
   }
@@ -321,9 +354,9 @@ nothing until the next change.
 | `await load(url, { add, pbr, shadows, detail, finish, carbon, rubber, printed, moulded, anodized, metal, plain })` | loads a GLB (meshopt, hashed URL), adds it to `stage.root`, gives STEP colours real finishes and returns its scene. The finish names take a regex on part names; matching parts get that finish (see Finishes below). `finish: 'printed'` sets it for every other part of the model. `add: false` to add it yourself (then `stage.add(obj)`), `pbr: false` to keep the file's materials |
 | `part(regex, within?)` | top-most nodes whose name matches (a mesh, or a group for a multi-material part). Moving parts keep their CAD names (`anim_<kind>_<n>_<Name>`, see the `KEEP` list in `tools/optimize-cad.mjs`); static parts are merged and unnamed |
 | `pivot(parts, point, dir)` | a `Group` that turns the parts about an axis: `point` and `dir` in the model's frame (metres, Y up), or `point: 'center'` for the parts' bounding-box centre (only for parts round about the axis, like wheels and gears). Returns the group with `setAngle(rad)`, `.angle`, `.axis` |
-| `frame(obj?, { azimuth, elevation, dir, pad, offset, duration, apply })` | fits `obj` (an object, an array of parts, or all models) in view. `azimuth` 0 looks from +Z, 90 from +X (degrees). `apply: false` only returns `{ pos, target }`: frame once at rest, cache, then `setView` |
+| `frame(obj?, { azimuth, elevation, dir, pad, offset, duration, apply })` | fits `obj` (an object, an array of parts, or all models) in view, inside the part of the canvas the current shift leaves free (with `setShift(0.2, 0)` it fits the right 60 %). `azimuth` 0 looks from +Z, 90 from +X (degrees). `apply: false` only returns `{ pos, target }`: frame once at rest, cache (per stage aspect), then `setView` |
 | `setView({ pos, target })` | place the camera now (scrollies blend cached views and call this) |
-| `setShift(fx, fy)` | move the picture on the canvas (fractions; +y up) without moving the camera; pass `...ctx.shift()` |
+| `setShift(fx, fy)` | move the picture on the canvas (fractions; +y up) without moving the camera; pass `...ctx.shift()`. A scrolly's stage starts with `ctx.shift()` already applied |
 | `sectionPlane(normal, constant, { enabled })` | a cut through all models, in world metres: keeps points where `dot(normal, p) + constant >= 0` (normal `[-1, 0, 0]`, constant `0.3` keeps x ≤ 0.3). Cut faces get a clean hatched cap tinted by each part's colour. Returns `{ plane, set(constant), setNormal(n), enable(bool), remove() }`. `enabled: false` creates it switched off, materials untouched. With no plane on, every part is single-sided again (no stray hatching). To sweep a cut in, create it at mount parked outside the model and move it with `set()`: switching planes on and off mid-scroll recompiles shaders |
 | `noClip(objs, yes = true)` | keeps objects (and everything under them) whole in every cut, e.g. balls inside a cut robot; or set `obj.userData.rxNoClip = true` before the cut exists |
 | `add(obj)` | adds a model loaded with `{ add: false }` (or anything else) to `stage.root`, cut like the rest, and re-fits the ground |
@@ -394,7 +427,7 @@ The CAD, turned by the scroll: data only, no JavaScript. Without steps it is one
 for an equal share, dissolving into the next:
 
 ```js
-{ type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', h: 'The CAD', p: ['...'], poster: 'cad.webp',
+{ type: 'scrolly', id: 'cad', module: '@turntable', h: 'The CAD', p: ['...'], poster: 'cad.webp',
   data: { models: [{ label: 'V1', src: '/assets/models/<slug>/v1.glb' }, { label: 'V2', src: '/assets/models/<slug>/v2.glb' }],
           azimuth: 35, elevation: 20 } }
 ```
@@ -430,7 +463,8 @@ model, `data.finish` for every model; see Finishes),
 `azimuth`, `elevation`, `pad`. `data.explode: [{ parts: regex, dir: [x, y, z], dist: metres, cad: true? }]`:
 directions in the model frame (metres, Y up), or STEP directions with `cad: true`, read from the
 CAD with `tools/cad-axes.py` (real axes, never guessed). A `demo` section with `module: '@viewer'`
-is built as a wide turntable with no steps, so old pages convert without changes.
+is built as a full-width turntable with no steps, so old pages convert without changes. A step's
+`image` still is centred in the part of the stage the cards leave free.
 
 ## CAD rules
 
@@ -460,11 +494,18 @@ is built as a wide turntable with no steps, so old pages convert without changes
   Its Chromium has no H.264, so videos show their posters; add `--video` to have each mp4 served as
   a WebM copy (made once with ffmpeg) when a shot needs the video playing.
   (Software WebGL is slow here: a page with several demos takes a few minutes.)
+- Whole site: `node tools/pages/smoke.mjs [slug ...] [--phone]` loads each page (default: all of
+  them and the landing), scrolls to the bottom and prints `ok` or `FAIL` with page errors, console
+  errors, failed requests and blocks that could not start.
 - No horizontal scrolling at 390 px, captions on every item, nothing moving on its own with
   reduced motion, and the poster looks right if the 3D never loads.
 - Models: `node tools/pages/models.mjs <slug>` lists size, triangles and draw calls and flags any
   model over 400k triangles, 4 MB or 400 draw calls. The fix is never a new shape: drop screws,
   nuts and PCBs, or merge more static parts (fewer names in `KEEP`).
+- Pinning: each scrolly element carries its live state as `rxState` (`progress`, `step`, `stepP`,
+  and `geom`: `p0`/`p1`, the scroll positions where the stage pins and lets go, and per step
+  `starts`/`ends`, where its card pins and lets go). A shot at the middle of step `i` is
+  `scrollTo(0, (g.starts[i] + g.ends[i]) / 2)`.
 - Smoothness: `node tools/pages/perf.mjs http://localhost:8123/projects/<slug>.html '#<scrolly-id>'`
   scrolls through a section and reports frames drawn, draw calls per frame, script time and long
   frames, plus the stage's own counters (`stage`: live frames, draw calls per live frame with the

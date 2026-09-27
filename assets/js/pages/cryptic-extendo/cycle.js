@@ -125,10 +125,9 @@ export async function mount(el, ctx) {
     if (views && a === aspect) return views;
     aspect = a;
     const portrait = a < 0.9;
-    // on a wide desktop stage the step cards cover the left: frame looser so the model sits right of them
-    const f = ctx.shift()[0] > 0 ? 1.3 : 1;
+    // stage.frame fits each view into the part of the stage the step cards leave free
     R.pose({ ext: 1 }); putPixels(state(0, 0, true)); // at rest, pixels at their start
-    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad: pad * f, apply: false, refresh: true }));
+    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad, apply: false, refresh: true }));
     views = {
       wide: fr(model, -55, 24, portrait ? 0.96 : 1.12),
       intake: fr([...intake, ...pixels], -48, 22, portrait ? 1.0 : 1.05),
@@ -190,10 +189,7 @@ export async function mount(el, ctx) {
     const k = reduced ? 1 : smooth(0, 0.45, stepP);
     const cur = vs[VIEW[step]], prev = vs[VIEW[Math.max(0, step - 1)]];
     blend(prev, cur, step === 0 ? 1 : k);
-    // desktop: the whole-robot view sits a little further right, clear of the step cards
-    const [sx, sy] = ctx.shift();
-    const extra = (v) => (sx > 0 && v === 'wide' ? 0.04 : 0);
-    stage.setShift(sx + lerp(extra(VIEW[Math.max(0, step - 1)]), extra(VIEW[step]), step === 0 ? 1 : k), sy);
+    stage.setShift(...ctx.shift()); // the model right of the step cards
     const isCut = (i) => VIEW[i] === 'side' || VIEW[i] === 'transfer';
     const cA = step > 0 && isCut(step - 1) ? 1 : 0, cB = isCut(step) ? 1 : 0;
     const tA = step > 0 && VIEW[step - 1] === 'transfer' ? 1 : 0, tB = VIEW[step] === 'transfer' ? 1 : 0;

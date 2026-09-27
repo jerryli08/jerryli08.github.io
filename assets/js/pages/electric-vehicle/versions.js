@@ -107,14 +107,20 @@ export async function mount(el, ctx) {
     if (views && a === aspect) return views;
     aspect = a;
     const V = (obj, o) => stage.frame(obj, { ...o, apply: false, refresh: true });
-    const top = V(v2, { azimuth: 90, elevation: 84, pad: 1.4 });
+    // stage.frame fits the box into the part of the stage the cards leave free, so the pads only
+    // leave room for the 8 degree drift and, in step 3, the wheelbase lines beside the car
+    const top = V(v2, { azimuth: 90, elevation: 84, pad: 1.3 });
     views = [
-      V(v1, { azimuth: 322, elevation: 24, pad: 0.96 }),
-      V(v1, { azimuth: 332, elevation: 34, pad: 0.98 }),
-      V(v1, { azimuth: 332, elevation: 34, pad: 0.98 }),
-      V(v1, { azimuth: 296, elevation: 34, pad: 1.0 }),
+      V(v1, { azimuth: 322, elevation: 24, pad: 1.15 }),
+      V(v1, { azimuth: 332, elevation: 34, pad: 1.15 }),
+      V(v1, { azimuth: 332, elevation: 34, pad: 1.15 }),
+      V(v1, { azimuth: 296, elevation: 34, pad: 1.2 }),
       top,
     ];
+    // on a phone the wheelbase labels are shortened so the left one stays on screen
+    const narrow = el.clientWidth < 560;
+    L[3][0].setText(narrow ? 'V1 623 mm' : 'V1 wheelbase 623 mm');
+    L[3][1].setText(narrow ? 'V2 523 mm' : 'V2 wheelbase 523 mm');
     return views;
   }
 

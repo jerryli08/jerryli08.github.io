@@ -5,7 +5,8 @@
 // fresh one) is ":1" on the -X holder; the +X holder starts empty. The same order as the firmware:
 // retrieve() at the printer, deposit() to the right-hand holder, pickup() from the left, replace().
 // The camera views are framed once per stage shape, each with the rig parked in its step's end pose,
-// and blended; nothing is framed on a moving part.
+// and blended; nothing is framed on a moving part. The two extension belts (belt.js, drawn along the
+// path the CAD's pulleys, idlers and clamps set) ride with the arm and glow while they drive it.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
 import { loadRig, STROKE, clamp, smooth, lerp, readout, glow, blendView } from './rig.js';
@@ -82,6 +83,9 @@ export async function mount(el, ctx) {
   }
 
   const magGlow = glow(stage, P.MAG, '#ff7a2f', 1);
+  const beltGlow = glow(stage, rig.belts, '#ff9a4a', 0.7);
+  const beltLab = ov.label('GT2 belt, open loop, one per side', [0, 0, 0], { color: '#fff1e2', minW: 420 });
+  const beltAt = new stage.THREE.Vector3();
   let lastA = '', lastB = '';
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, V.length - 1);
@@ -92,8 +96,14 @@ export async function mount(el, ctx) {
     const q = poseAt(t);
     rig.set({ theta: q.theta, s: q.s });
 
-    // magnets glow while they are on
+    // magnets glow while they are on; the belts while they drive the arm (by its speed along the timeline)
     magGlow(q.mag > 0.02 ? 0.25 + 0.75 * q.mag : 0);
+    const ds = ctx.reducedMotion ? 0 : Math.abs(poseAt(Math.min(9.999, t + 0.02)).s - poseAt(Math.max(0, t - 0.02)).s);
+    beltGlow(clamp(ds / 0.012, 0, 1));
+    rig.turret.updateMatrixWorld(true);
+    rig.beltAnchor.outerR.getWorldPosition(beltAt);
+    beltLab.p.copy(beltAt);
+    beltLab.a = ctx.reducedMotion ? (step === 1 ? 1 : 0) : smooth(1.1, 1.35, t) - smooth(3.6, 3.9, t);
 
     // plates: at rest where they were left, or riding the carriage while the magnets hold them
     if (q.a === 'printer') A.put(up(aPrinter, q.bed));

@@ -51,9 +51,8 @@ export async function mount(el, ctx) {
     if (views && key === vkey) return views;
     vkey = key;
     const portrait = el.clientHeight > el.clientWidth * 1.05;
-    // full-width desktop: the cards cover the left, so the model is framed smaller, right of centre
-    const pad = ctx.shift()[0] > 0 ? { home: 1.8, deck: 1.32, cut: 1.22, carry: 1.6, lift: 1.4, land: 1.62 }
-      : portrait ? { home: 1.08, deck: 1.0, cut: 1.0, carry: 1.06, lift: 1.06, land: 1.04 } : { home: 1.28, deck: 1.08, cut: 1.04, carry: 1.2, lift: 1.12, land: 1.2 };
+    // stage.frame and shape.fit fit the part of the stage the step cards leave free by themselves
+    const pad = portrait ? { home: 1.08, deck: 1.0, cut: 1.0, carry: 1.06, lift: 1.06, land: 1.04 } : { home: 1.28, deck: 1.08, cut: 1.04, carry: 1.2, lift: 1.12, land: 1.2 };
     const at = (hr, hd, dir, p) => {
       rover.position.y = hr; drone.position.y = hr + hd;
       rover.updateMatrixWorld(true); drone.updateMatrixWorld(true);

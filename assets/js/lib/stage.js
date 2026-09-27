@@ -872,7 +872,10 @@ export function createStage(el, opts = {}) {
   }
   // Move the picture on the canvas without moving the camera, e.g. up out of the way of text
   // cards that cover the bottom of a phone screen. Fractions of the canvas; +y moves it up.
+  // A scrolly's stage starts with the page runtime's shift (project.js sets el.rxShift to ctx.shift),
+  // so views framed at mount already fit the part of the stage the step cards leave free.
   const shift = { x: 0, y: 0 };
+  try { const s0 = el.rxShift?.(); if (s0) { shift.x = +s0[0] || 0; shift.y = +s0[1] || 0; } } catch { /* none */ }
   function applyShift() {
     const w = el.clientWidth, h = el.clientHeight;
     if (w && h && (shift.x || shift.y)) camera.setViewOffset(w, h, -shift.x * w, shift.y * h, w, h);
@@ -927,9 +930,11 @@ export function createStage(el, opts = {}) {
     }
     const center = s.center.clone();
     if (o.offset) center.add(v3(o.offset));
-    // tightest distance at which all eight corners of the bounding box fit the view
+    // tightest distance at which all eight corners of the bounding box fit the view; with the picture
+    // shifted (setShift, e.g. clear of the step cards) it fits the part of the canvas left free
     const pad = o.pad ?? 1.12;
-    const tv = Math.tan((camera.fov * DEG) / 2) / pad, th = (Math.tan((camera.fov * DEG) / 2) * camera.aspect) / pad;
+    const fx = 1 - 2 * Math.min(0.4, Math.abs(shift.x)), fy = 1 - 2 * Math.min(0.4, Math.abs(shift.y));
+    const tv = (Math.tan((camera.fov * DEG) / 2) * fy) / pad, th = (Math.tan((camera.fov * DEG) / 2) * camera.aspect * fx) / pad;
     const fwd = dir.clone().negate();
     const right = new THREE.Vector3().crossVectors(fwd, Math.abs(dir.y) > 0.999 ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(0, 1, 0)).normalize();
     const up = new THREE.Vector3().crossVectors(right, fwd);

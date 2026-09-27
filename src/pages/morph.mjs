@@ -1,7 +1,10 @@
 // Morph (Hack the North 2026). Sources: Jerry's checklist and answers (work/answers.md, Sep 26), facts.md,
 // projects.mjs, the team's summary (work/morph-htn-2026/PROJECT.md) and the public team repo
 // github.com/AydanLing/Hack-The-North (planner code, URDF, fold library, intent model, git history).
-// Numbers from the repo are named as such; nothing here is estimated.
+// Numbers from the repo are named as such. The three { calc } blocks (Sept 27) work from the repo's
+// machine config (config/machine-17.toml) and the Feetech STS3215 12 V page; the torque one is
+// labelled an estimate. The four webgl: false `flow` scrollies animate diagrams (a dot runs along the
+// arrows), not photo slideshows, so they stay scrollies.
 //
 // Held back: who wrote the fold planner (Jerry lists it in his role; the repo history shows Justin Rui
 // committing the planner core and Jerry adding the torque gate, path audit and 17-cube library), so the
@@ -154,6 +157,20 @@ export default {
         { h: 'Three positions, three directions', p: ['With the next cube on, -120, 0 and +120 degrees send it into three different neighboring cells, each 82 mm from this cube\'s center. That is why the chain always sits on a cubic grid.'] },
       ],
       caption: 'The dashed line is the joint axis; the blue arrow points to where the next cube mounts. Servo angle and counts follow from the 4:1 reduction; the reach is measured on the CAD as it turns.' },
+    { type: 'prose', id: 'words', p: [
+      { calc: 'How many joint words?',
+        given: [
+          ['Revolute joints in our URDF', '17, one in every cube', '`cubot_urdf/n17`'],
+          ['Positions per joint: -120, 0 and +120 degrees', '3', 'the contract the planner, URDF and servo driver share'],
+        ],
+        work: [
+          'The tip joint turns a half with nothing mounted on it, and a 120 degree turn maps a cube onto itself, so it never changes the shape: 17 - 1 = 16 joints count',
+          'Each of the 16 takes any of its 3 positions whatever the others do: 3 x 3 x ... x 3, sixteen times, = 3^16',
+          '3^4 = 81, 81^2 = 6,561, 6,561^2 = **43,046,721**',
+          'Counting the tip joint would give 3^17 = 129,140,163 words, but every shape would then appear three times over',
+        ],
+        result: '43,046,721 joint words for the 17-cube chain.' },
+    ] },
 
     { type: 'prose', id: 'roll', h: 'Why most drawings are impossible', media: [
       { i: 'chain-wave-floor.webp', c: 'The chain bent into a wave on the floor of our work room' },
@@ -218,6 +235,21 @@ export default {
       'I had called it A*. It is close, but not textbook A*. A* orders by moves made plus moves left, and since every step here changes the distance by exactly one, that sum is the starting distance plus twice the detours. Our planner orders by moves left first, which makes it a greedy best-first search with a detour budget: it finds a legal fold fast, then keeps collecting candidates and ships the shortest.',
       { problem: 'The planner started from the servo\'s numbers: 2.94 N·m at the motor, times 4 for the reduction, times 0.9, is a 10.6 N·m stall cap. The printed gears skip well below that, and a joint that is only holding its angle skips just like one that is moving.', title: 'The gears skip before the servos stall' },
       { fix: 'Torque limits in the planner. The working profile scores any demand above 5.8 N·m down and rejects anything above 10.6 N·m. I added a stricter profile for the 27-cube library that also hard-gates the load on holding joints, deep table digs and large overhangs, then re-planned the demo shapes under it. On the robot, the executor re-checks every joint after each move and re-drives any that sagged more than 150 encoder counts. The highest peak demand in the 20 public paths is 5.76 N·m, for the A.' },
+      { calc: 'How many cubes can one joint hold out?',
+        given: [
+          ['Stall cap: 2.94 N·m x 4 x 0.9', '10.6 N·m', 'our machine config (STS3215, 4:1, 0.9)'],
+          ['Working limit', '5.8 N·m', 'our working profile'],
+          ['Module mass, a parts-list estimate', '0.223 kg', 'our machine config'],
+          ['Cube centre to cube centre', '82 mm', 'our machine config'],
+        ],
+        work: [
+          'A straight row of n cubes held out level from a joint: cube k sits k x 82 mm out, so gravity pulls with a moment of 0.223 kg x 9.81 m/s² x 0.082 m x (1 + 2 + ... + n)',
+          'The joint turns about the cube\'s body diagonal, which leaves 1 / √3 of that moment on the joint when the row lies along the grid: 0.104 N·m x n(n + 1) / 2 (for 7 cubes this is the 2.9 N·m noted in our planner\'s config)',
+          '7 cubes: 0.104 x 28 = 2.9 N·m. 10 cubes: 0.104 x 55 = 5.7 N·m, just under the working limit. 13 cubes: 0.104 x 91 = 9.4 N·m, just under the stall cap',
+          'The middle joint of 27 cubes has 13 on its lighter side; of 17 cubes, 8: 0.104 x 36 = 3.7 N·m',
+        ],
+        result: 'The load grows with the square of the number of cubes held out. On 27 cubes even the lighter side of a middle joint can ask for 9.4 N·m; on 17 the worst straight arm is 3.7 N·m.',
+        note: 'Estimate: a static worst case for a straight level arm, from the planner\'s constants. The planner checks every real pose itself, and the printed gears skip well below the stall cap.' },
       { problem: 'Some planned paths thrashed: they spent far more moves than their goal needed, bending a joint only to bring it back to 0.', title: 'Paths that thrash' },
       { fix: 'I wrote an audit that rejects any path longer than 1.5 times the minimum number of steps its goal needs, or that bends a joint only to return it. Square, plus and C failed and came out of the booth library; C came back with a clean two-move path.' },
       { next: 'A better way to generate paths and shapes than drawing thousands of candidates and searching each one.' },
@@ -280,6 +312,20 @@ export default {
         h: 'The same plan, twice', p: [
           'Our MuJoCo replay plays any exported path with the real servo numbers: the 10.6 N·m stall as the force limit, and wall-clock pacing at about 65% of the commanded servo speed, which is how fast the chain really moved under load. The URDF is the first 17 modules of the 27-module design, with a free base and a floor, and in moves re-orient the base so standing shapes actually stand.',
           'Judges could watch every fold in the viewer, even when the bus was dark.',
+          { calc: 'One step, in counts and seconds',
+            given: [
+              ['One step at the joint, through a 4:1 reduction', '120°', 'our machine config'],
+              ['Servo encoder', '4,096 counts a turn', '[Feetech STS3215 12 V](https://www.feetechrc.com/525603.html)'],
+              ['Servo no-load speed at 12 V', '0.222 s per 60°', 'Feetech STS3215 12 V'],
+              ['Planned time per step', '2.0 s', 'our machine config'],
+            ],
+            work: [
+              'At the servo: 120° x 4 = 480°, and 480 / 360 x 4,096 = **5,461 counts**',
+              'Servo speed for a 2 s step: 480° / 2.0 s = 240°/s, against 60° / 0.222 s = 270°/s with no load: 89 %',
+              'The heart\'s 11 moves: 11 x 2.0 s = **22 s**, the "about 22s" in its reply',
+              'At the 65 % pace the chain really moved: 2.0 s / 0.65 = 3.1 s a step, about 34 s for the heart',
+            ],
+            result: 'A planned step asks the servo for 89 % of its no-load speed. The heart takes 22 s as planned and about 34 s at the pace the chain really moved.' },
         ] },
     ] },
 

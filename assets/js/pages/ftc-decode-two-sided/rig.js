@@ -21,6 +21,21 @@
 //    F (228.6, 228.9), G (331.7, 20.0)
 //  - drive wheels (228.6, 52.0), motor pulleys (156.1, 30.7) and (301.1, 30.7), along z
 //  - turret: vertical, through (x 228.6, z -302.5), the centre of the ring gear's bolt pattern
+//  - roller shafts, along z: (155.60, 228.85) and (301.60, 228.85), 73.0 mm either side of F, from
+//    circle fits to the wheel bores, the shaft and the flanged-bearing seats in the arm plates (all
+//    within 0.01 mm of each other)
+//  - the two arms turn about F (bearings on F in the coupler plates); each carries a 28T bevel on F
+//    (the left arm's at z -396.7, the right arm's at z -422.2)
+//  - arm servos (Jerry, Sept 27: "the 2 servos with bevels are for controlling the angles of the 2
+//    arms"): the two 14T bevels' bore axes (cad-axes.py, the six 1.5 mm holes around each bore) lie
+//    in the x-y plane through F at 45 degrees: along (1, 1, 0) at z -407.1 (servo on the +x side of
+//    F, meshing the left arm's 28T) and along (-1, 1, 0) at z -411.85 (servo on the -x side, meshing
+//    the right arm's 28T). Each servo's output gear and hub sit on the same axis
+//  - the outer rows of 48 mm wheels (Jerry, Sept 27: fixed to the chassis, driven by the same PTO):
+//    along z through (27.0, 145.0) and (430.2, 145.0), eight wheels each, held between end plates
+//    fixed to the frame. Their drive in the CAD is carrier 2's 52T pulley -> 12T at G, a 4 mm shaft,
+//    a shaft coupler and a 20T pulley at the front (331.7, 20.0, z +6.5); the belt from that 20T
+//    pulley to the rows is not modelled, so the rows are shown turning with it
 import * as THREE from 'three';
 
 export const MODEL = '/assets/models/ftc-decode-two-sided/robot.glb';
@@ -36,6 +51,13 @@ export const AX = {
   IDL: [260.7, 100.0], E: [267.9, 167.9], F: [228.6, 228.9], G: [331.7, 20.0],
   WHEEL: [228.6, 52.0], MP1: [156.1, 30.7], MP2: [301.1, 30.7],
   TURRET: [228.6, -302.5], // x, z
+  RL: [155.6, 228.85], RR: [301.6, 228.85],
+  SIDE_L: [27.0, 145.0], SIDE_R: [430.2, 145.0],
+};
+/** arm servo axes (x, y, z mm on the axis, direction) and each 14T bevel's turn per turn of its arm */
+export const SERVO = {
+  L: { at: [228.6, 228.9, -407.1], dir: [1, 1, 0], k: -2 }, // drives the left arm
+  R: { at: [228.6, 228.9, -411.85], dir: [-1, 1, 0], k: 2 }, // drives the right arm
 };
 export const SPIDER_Z = [-203.5, -209.5];
 export const WORM = { y: 36.0, z: -151.4 };
@@ -66,16 +88,18 @@ const LBD = Math.hypot(D0[0] - B[0], D0[1] - B[1]);
 const LCD = Math.hypot(D0[0] - C0[0], D0[1] - C0[1]);
 export const THETA0 = Math.atan2(C0[1] - A[1], C0[0] - A[0]); // 93.18 deg: the CAD pose (transfer)
 const PSI0 = Math.atan2(D0[1] - B[1], D0[0] - B[0]);
-// Endstops (Jerry, Sept 26: the 4-bar goes all the way to its endstops on either side). Found by
-// sweeping the linkage and everything it carries against every static part of the CAD in fine
-// steps (surface samples, /home/claude/work/ftc-decode-concept/cad/endstops*.py): on each side the
-// first thing the linkage lands on is the last 48 mm wheel in the row along that side of the robot,
-// under the back end of the coupler where the arm servos sit. Right: driven link at 21.4 deg
-// (coupler 86.9 mm out, 71.0 mm down, tilted 16.2 deg); left: 176.6 deg (86.8 mm, 70.8 mm, 16.1
-// deg). Nothing on the links or the coupler touches anything before that. The two tray arms are
-// held in their CAD pose on the coupler (their servo angles are not in the CAD): from about 33 deg
-// (right) and 159 deg (left) their roller wheels overlap the side wheel rows.
-export const THETA_RIGHT = 21.4 * DEG, THETA_LEFT = 176.6 * DEG;
+// Endstops (Jerry, Sept 27: "the carbon fiber floor plate is the endstop for the linkage bar"). The
+// floor plate is the 3 mm plate 7 to 10 mm above the floor (`bottom`). Found by sweeping the moving
+// linkage's surfaces (links, coupler, belts and pulleys on them) about the real pivots and testing
+// every sample against the plate's material (holes left open), then bisecting the first contact
+// (/home/claude/work/ftc-decode-concept/cad/r3/floorstop.py): on each side the outboard coupler pin
+// comes down to 17.5 mm, and the end of the linkage, rounded 7.5 mm about that pin, lands on the
+// plate's top at 10.0 mm. Right: driven link at 10.47 deg (D at 353.0, 17.5; coupler 84.0 mm out,
+// 103.0 mm down, tilted 36.1 deg). Left: 208.16 deg (C at 104.2, 17.5), the mirror image, since the
+// pins are symmetric about the robot's centre line. Travel 197.7 deg. On the way the coupler's back
+// end passes through the last 48 mm wheel of the side wheel rows (about 20 mm deep in the CAD
+// pose), which is why the pages draw those rows see-through; Jerry: the wheel is not the endstop.
+export const THETA_RIGHT = 10.474 * DEG, THETA_LEFT = 208.158 * DEG;
 /** driven link angle (rad, from +x) -> { C, D (mm), phi: coupler tilt, psi: passive link turn } */
 export function solve(th) {
   const C = [A[0] + LAC * Math.cos(th), A[1] + LAC * Math.sin(th)];
@@ -91,7 +115,8 @@ export function solve(th) {
 const GROUPS = ['wheel0', 'wheel1', 'wheel2', 'wheel3', 'mpul0', 'mpul1', 'mpul2', 'mpul3', 'omni0', 'omni1', 'omni2', 'omni3',
   'pin1', 'pin2', 'idl1', 'idl2', 'chA', 'chB', 'p1f', 'p1b', 'p2f', 'p2b', 'car1', 'spd1', 'car2', 'spd2', 'wormsh',
   'linkA', 'linkP', 'idler', 'Bpul', 'belt1', 'belt2', 'belt3', 'belt4', 'belt5', 'beltS', 'beltP', 'Gpul', 'Dpul', 'Epul', 'Fpul',
-  'armL', 'armR', 'cplr', 'turret', 'ring', 'shell', 'sidewheels', 'walls', 'plates', 'ramps', 'bottom', 'top'];
+  'armL', 'armR', 'rollL', 'rollR', 'bevL', 'bevR', 'cplr', 'turret', 'ring', 'shell', 'sideL', 'sideR', 'sideplates',
+  'walls', 'plates', 'ramps', 'bottom', 'top'];
 
 export async function loadRobot(stage) {
   const model = await stage.load(MODEL);
@@ -130,12 +155,23 @@ export function rigRobot(stage, P, which = {}) {
   piv.idler = stage.pivot(P.idler, mm(...AX.IDL, 0), Z);
   piv.linkP.attach(piv.idler);
   piv.linkP.attach(P.belt2); piv.linkP.attach(P.belt3);
-  piv.cplr = stage.pivot([P.cplr, P.armL, P.armR, P.belt4, P.belt5], mm(...AX.C0, 0), Z);
+  piv.cplr = stage.pivot([P.cplr, P.belt4, P.belt5], mm(...AX.C0, 0), Z);
   for (const [n, at] of [['Dpul', AX.D0], ['Epul', AX.E], ['Fpul', AX.F]]) {
     piv[n] = stage.pivot(P[n], mm(...at, 0), Z);
     piv.cplr.attach(piv[n]);
   }
+  // the two arms turn about F on the coupler, each set by its own servo through a 14T to 28T bevel;
+  // the roller shafts (with their wheels) turn on their own axes on the arms
+  for (const s of ['L', 'R']) {
+    piv[`arm${s}`] = stage.pivot(P[`arm${s}`], mm(...AX.F, 0), Z);
+    piv[`roll${s}`] = stage.pivot(P[`roll${s}`], mm(...AX[`R${s}`], 0), Z);
+    piv[`arm${s}`].attach(piv[`roll${s}`]);
+    piv.cplr.attach(piv[`arm${s}`]);
+    piv[`bev${s}`] = stage.pivot(P[`bev${s}`], mm(...SERVO[s].at), SERVO[s].dir);
+    piv.cplr.attach(piv[`bev${s}`]);
+  }
   piv.cplrHome = piv.cplr.position.clone();
+  if (which.side) { zAt('sideL', AX.SIDE_L); zAt('sideR', AX.SIDE_R); }
   if (which.drive) {
     for (let i = 0; i < 4; i++) {
       zAt(`wheel${i}`, AX.WHEEL);
@@ -169,8 +205,31 @@ export function rigRobot(stage, P, which = {}) {
       piv.idler.setAngle(b - psi);
       piv.Dpul.setAngle(b - phi);
       piv.Epul.setAngle(b - phi);
-      piv.Fpul.setAngle((12 / 38) * (b - phi));
-      piv.Gpul?.setAngle((52 / 12) * car2);
+      const f = (12 / 38) * (b - phi);
+      piv.Fpul.setAngle(f);
+      rig.f = f;
+      rig.setRolls();
+      // the side branch: 52T on carrier 2 -> 12T at G, the shaft and the 20T pulley at the front; the
+      // outer wheel rows (Jerry: driven by the same PTO) turn with that pulley, since the last belt
+      // from it to the rows is not in the CAD
+      const g = (52 / 12) * car2;
+      piv.Gpul?.setAngle(g);
+      piv.sideL?.setAngle(g); piv.sideR?.setAngle(g);
+    },
+    f: 0, arms: [0, 0],
+    // Jerry: the roller drive at F is split to both rollers. The split (and its ratio) is not in the
+    // CAD, so both roller shafts are shown turning with F (relative to the coupler, whatever the
+    // angle of the arm that carries them).
+    setRolls() {
+      piv.rollL.setAngle(rig.f - rig.arms[0]);
+      piv.rollR.setAngle(rig.f - rig.arms[1]);
+    },
+    /** arm angles about F (rad, + = counter-clockwise seen from the front), each servo's bevel with it */
+    setArms(aL, aR) {
+      rig.arms = [aL, aR];
+      piv.armL.setAngle(aL); piv.armR.setAngle(aR);
+      piv.bevL.setAngle(SERVO.L.k * aL); piv.bevR.setAngle(SERVO.R.k * aR);
+      rig.setRolls();
     },
   };
   return rig;

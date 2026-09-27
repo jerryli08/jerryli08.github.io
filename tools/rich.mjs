@@ -79,6 +79,13 @@ export function createRich(env) {
           const inner = items.length > 1 ? row(items, ctx, { width: b.wide ? 1140 : 720 }) : fig(items[0], ctx, { sizes: b.wide ? '(max-width: 1180px) 100vw, 1140px' : '(max-width: 760px) 100vw, 720px' });
           return `<div class="rx-inline-fig${b.wide ? ' rx-bleed' : ''}">${inner}</div>`;
         }
+        // a worked calculation: inputs (with where each number comes from), the working, the result
+        // (checked before `note`, which a calculation may carry)
+        if (b.calc != null) {
+          const given = arr(b.given).map((g) => { const [k, val, src] = arr(g); return `<tr><th scope="row">${md(k)}</th><td>${md(val)}</td>${src ? `<td class="rx-calc-src">${md(src)}</td>` : '<td></td>'}</tr>`; }).join('');
+          const work = arr(b.work).map((w) => `<li>${md(w)}</li>`).join('');
+          return `<div class="rx-calc"><p class="rx-calc-label"><span>${esc(b.label || 'Calculation')}</span>${b.calc ? ` <strong>${md(b.calc)}</strong>` : ''}</p>${given ? `<div class="rx-calc-given"><table><tbody>${given}</tbody></table></div>` : ''}${work ? `<ol class="rx-calc-work">${work}</ol>` : ''}${b.result ? `<p class="rx-calc-result">${md(b.result)}</p>` : ''}${arr(b.note).map((x) => `<p class="rx-calc-note">${md(x)}</p>`).join('')}</div>`;
+        }
         if (b.ul) return `<ul>${arr(b.ul).map((i) => `<li>${md(i)}</li>`).join('')}</ul>`;
         if (b.ol) return `<ol>${arr(b.ol).map((i) => `<li>${md(i)}</li>`).join('')}</ol>`;
         if (b.table) {
@@ -253,7 +260,7 @@ export function createRich(env) {
     demo(s, ctx) {
       // the built-in CAD viewer is now a scroll-driven turntable: same data, no JavaScript to change
       if (s.module === '@viewer') {
-        return SECTIONS.scrolly({ ...s, module: '@turntable', width: s.width || 'wide', side: s.aside === 'right' ? 'right' : 'left', steps: [], length: s.length }, ctx);
+        return SECTIONS.scrolly({ ...s, module: '@turntable', width: 'full', steps: [], length: s.length }, ctx);
       }
       const id = ctx.uid(s.id, 'demo');
       const b = block('demo', s, ctx, id);
@@ -264,17 +271,16 @@ export function createRich(env) {
       }
       return `<section class="rx-sec rx-demo-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}><div class="rx-w">${head(s, id, ctx)}${b}${cap}</div></section>`;
     },
-    // A sticky stage driven by the scroll. width 'full' (default): the stage spans the screen and the
-    // step cards scroll over its left side. 'wide': the stage takes about three quarters of the
-    // screen and the text runs beside it (side 'left' or 'right'). Without steps, the stage stays
-    // pinned for `length` of scrolling while the module plays through progress 0 to 1; a wide one
-    // keeps its heading and text pinned beside it. On a phone every scrolly is full width with the
-    // text over the bottom (or, without steps, above the stage).
+    // A sticky stage driven by the scroll, always the full width of the screen (Jerry, Sept 27:
+    // `width: 'wide'` and `side` are accepted and built exactly like full). Each step's card rises
+    // into place over the left of the stage, stays pinned while its part of the animation runs, then
+    // leaves as the next arrives (project.js). Without steps, the stage stays pinned for `length` of
+    // scrolling while the module plays through progress 0 to 1, with the heading and text above it.
+    // Up to 900 px wide the stage pins in the top half and the cards pin just under it.
     scrolly(s, ctx) {
       const id = ctx.uid(s.id, 'scrolly');
       const steps = arr(s.steps);
-      const wide = s.width === 'wide';
-      if (s.width != null && !['full', 'wide'].includes(s.width)) ctx.warn(`scrolly ${id}: width "${s.width}" (use full or wide)`);
+      if (s.width != null && !['full', 'wide'].includes(s.width)) ctx.warn(`scrolly ${id}: width "${s.width}" (every scrolly is full width; leave width out)`);
       const mod = resolveModule(s.module, ctx.slug);
       if (!mod) { ctx.warn(`scrolly ${id} has no module`); return ctx.err('scrolly needs a module'); }
       if (!mod.ok) ctx.warn(`scrolly ${id}: module ${mod.path} does not exist`);
@@ -285,21 +291,18 @@ export function createRich(env) {
       if (steps.some((st) => st && st.view)) data = { ...(data || {}), steps: steps.map((st) => st.view || {}) };
       const dataAttr = data != null ? ` data-rx-data="${esc(JSON.stringify(data))}"` : '';
       ctx.modules = true;
-      const beside = wide && !steps.length; // the section's own text is the pinned column
       const cap = s.caption ? `<p class="rx-cap">${md(s.caption)}</p>` : '';
-      const list = steps.length
-        ? steps.map((st, i) => `<li class="rx-step${i === 0 ? ' is-active' : ''}" data-step="${i}"><div class="rx-step-card rx-text">${st.h ? `<h3>${md(st.h)}</h3>` : ''}${blocks(st.p, ctx)}</div></li>`).join('')
-        : beside && (s.h || s.p) ? `<li class="rx-step rx-step-pin is-active"><div class="rx-step-card rx-text">${H2(s.h, id)}${blocks(s.p, ctx)}${cap}</div></li>` : '';
+      const list = steps.map((st, i) => `<li class="rx-step${i === 0 ? ' is-active' : ''}" data-step="${i}"><div class="rx-step-card rx-text">${st.h ? `<h3>${md(st.h)}</h3>` : ''}${blocks(st.p, ctx)}</div></li>`).join('');
       const style = [stepH ? `--step-h:${esc(stepH)}` : '', len ? `--len:${esc(len)}` : ''].filter(Boolean).join(';');
-      const cls = `rx-scrolly${wide ? ` rx-scrolly-wide rx-side-${s.side === 'right' ? 'right' : 'left'}` : ''}${steps.length ? '' : ' rx-stepless'}`;
+      const cls = `rx-scrolly${steps.length ? '' : ' rx-stepless'}`;
       return `<section class="rx-sec rx-scrolly-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}>
-    ${beside ? '' : `<div class="rx-w">${head(s, id, ctx)}</div>`}
+    <div class="rx-w">${head(s, id, ctx)}</div>
     <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${dataAttr}${s.webgl === false ? ' data-webgl="false"' : ''}${style ? ` style="${style}"` : ''}>
       <div class="rx-scrolly-body">
         <div class="rx-scrolly-stage"><div class="rx-stage" data-rx-stage>${stageInner(s, ctx)}</div></div>
-        <ol class="rx-steps">${list}</ol>
+        ${list ? `<ol class="rx-steps">${list}</ol>` : ''}
       </div>
-    </div>${!beside && cap ? `<div class="rx-w"><div class="rx-col">${cap}</div></div>` : ''}
+    </div>${cap ? `<div class="rx-w"><div class="rx-col">${cap}</div></div>` : ''}
   </section>`;
     },
     split(s, ctx) {
@@ -404,8 +407,9 @@ export function createRich(env) {
         return ctx.err(`${where} failed: ${e.message}`);
       }
     }).join('\n');
-    // Jerry's rule (Sept 26): every demo is a scroll-driven animation. Interactive ones still to convert:
-    const todo = arr(page.sections).flatMap((s) => (s?.type === 'demo' && s.module !== '@viewer' ? [s.id || s.module]
+    // Jerry's rule (Sept 26): every demo is a scroll-driven animation. Interactive ones still to convert
+    // (`interactive: true` marks a demo Jerry asked to keep interactive: LinqBot's webcam demo, Sept 27):
+    const todo = arr(page.sections).flatMap((s) => (s?.type === 'demo' && s.module !== '@viewer' && s.interactive !== true ? [s.id || s.module]
       : s?.type === 'split' ? arr(s.items).filter((it) => it?.module).map((it) => it.id || it.module) : []));
     if (todo.length) warnings.push(`${todo.length} interactive demo${todo.length > 1 ? 's' : ''} to convert to scroll-driven scrollies: ${todo.join(', ')}`);
     // Jerry's rule: no long stretch of text without a picture. Text-only sections in a row are

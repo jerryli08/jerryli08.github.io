@@ -106,7 +106,6 @@ function nav({ home = false } = {}) {
   <div class="nav-links">
     <a href="${pre}#work">Work</a>
     <a href="${pre}#about">About</a>
-    ${home ? '' : '<a class="nav-drive keep" href="/drive">Drive the rover</a>'}
     <a class="nav-cta" href="mailto:${site.email}">Contact</a>
   </div>
 </nav>`;
@@ -116,12 +115,22 @@ const scripts = (extra = '') => `<script src="${v('/assets/js/site.js')}" defer>
 
 // ---------------------------------------------------------------- landing
 const statLine = (x) => (x.kind === 'hackathon' ? (x.place || x.event) : (x.stats?.[0] ? `${x.stats[0].v} ${x.stats[0].l}` : x.org));
+// when the project was made, for cards: the months ("Jul to Aug 2025", "Sep 2025 to May 2026",
+// "Jun 2024", or a season like "Summer 2024"), else the year. Never a dash: a range reads "to".
+const MONTH_RE = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\b|\b(spring|summer|fall|autumn|winter)\b/i;
+function when(x) {
+  const d = String(x.date || '').trim();
+  if (MONTH_RE.test(d)) return d.replace(/\s*[\u2013\u2014-]\s*/g, ' to ').replace(/\s+/g, ' ');
+  return String(x.year || (d.match(/\d{4}/g) || []).pop() || '');
+}
+// the same, with a cross-year range split into two lines' worth: [first half, 'to ...'] for small cards
+const whenHtml = (x) => { const w = when(x); const m = w.match(/^(.*?\d{4}) to (.+\d{4})$/); return m ? `${esc(m[1])} <span class="nw">to ${esc(m[2])}</span>` : esc(w); };
 // featured cards on the first screen, staggered in two columns
 function fcard(x) {
   const t = thumb(x);
   return `<a class="fcard" href="${url(x)}">
   <div class="fcard-img">${t ? `<img src="${v(t)}" alt="" fetchpriority="high" decoding="async">` : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta"><span class="yr">${esc(x.year)}</span><span>${esc(statLine(x))}</span></p></div>
+  <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta">${when(x) ? `<span class="yr">${esc(when(x))}</span>` : ''}<span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
 // newest first, by when the project ended ("Sep 2025 to May 2026" ends May 2026)
@@ -147,7 +156,7 @@ function card(x) {
   const s0 = statLine(x) || '', sub = s0 === KIND_LABEL[x.kind] ? '' : s0; // no "Concept" under a card already labelled Concept
   return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
   <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${x.year ? ` · ${esc(x.year)}` : ''}</span><b>${esc(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
+  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${when(x) ? `<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>${whenHtml(x)}</span>` : ''}</span><b>${esc(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
 </a>`;
 }
 // Prints and small models: a collage of photo prints, each at its own aspect ratio, tilted a little.
@@ -161,7 +170,7 @@ function printCard(x, i) {
   const ar = d ? d.w / d.h : 4 / 3;
   const img = src ? `<img src="${v(src)}" alt=""${d ? ` width="${d.w}" height="${d.h}"` : ''} loading="lazy" decoding="async">` : '<span class="pcard-none" aria-hidden="true"></span>';
   return `<a class="pcard" href="${url(x)}" style="--ar:${+ar.toFixed(4)};--tilt:${TILTS[i % TILTS.length]}deg;--dy:${DROPS[i % DROPS.length]}px">
-  <span class="pcard-img">${img}${x.draft ? '<span class="badge draft">Draft</span>' : ''}</span><span class="pcard-t">${esc(x.title)}</span>
+  <span class="pcard-img">${img}${x.draft ? '<span class="badge draft">Draft</span>' : ''}</span><span class="pcard-t">${esc(x.title)}${when(x) ? `<small class="pcard-d">${esc(when(x))}</small>` : ''}</span>
 </a>`;
 }
 // the project the live scene is showing
@@ -169,7 +178,7 @@ function heroCard(x) {
   return `<aside class="scene-card" aria-labelledby="scene-card-h">
   <p class="sc-k"><span class="sc-feat">${PIN_ICON}Featured project</span><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD</span></p>
   <div class="sc-head">
-    <div><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)} · ${esc(x.year)}</p></div>
+    <div><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)}${when(x) ? ` · <span class="nw">${esc(when(x))}</span>` : ''}</p></div>
     <div class="sc-actions"><a class="nav-drive sc-drive" href="/drive">Drive the rover</a><a class="sc-go" href="${url(x)}">See more ${arrow}</a></div>
   </div>
   <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
@@ -229,9 +238,9 @@ ${nav({ home: true })}
         <h1 class="name">Jerry Li</h1>
         <p class="lede">Mechanical engineering at UIUC. I design and build robots, drones and electric vehicles, from the first CAD sketch to the last wire.</p>
         <ul class="chips">
-          <li><b>First author</b>MIT Lincoln Laboratory research</li>
-          <li><b>1st place</b>FIRST World Championship award</li>
-          <li><b>5+</b>hackathons</li>
+          <li><a href="/projects/hybrid-vehicle"><b>First author</b>MIT Lincoln Laboratory research</a></li>
+          <li><a href="/projects/ftc-decode"><b>1st place</b>FIRST World Championship award</a></li>
+          <li><a href="#work" data-chip-filter="hackathon"><b>5+</b>hackathons</a></li>
         </ul>
       </header>
       <div class="featured">
@@ -255,14 +264,14 @@ ${nav({ home: true })}
     <div class="collage">${objects.map(printCard).join('\n')}</div>
   </section>` : ''}
   <section class="section about" id="about" aria-labelledby="about-h">
-    <div class="section-head"><h2 id="about-h">About</h2></div>
+    <h2 class="about-title" id="about-h">About</h2>
     <div class="about-grid">
-      <div>${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
+      <div class="about-text">${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
       <div class="portrait"><img src="${v('/assets/media/jerry-portrait.webp')}" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
-    </div>
-    <div class="contact-card">
-      <h3>Building something? I'd like to hear about it.</h3>
-      <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
+      <div class="contact-card">
+        <h3>Building something? I'd like to hear about it.</h3>
+        <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
+      </div>
     </div>
   </section>
   ${footer()}

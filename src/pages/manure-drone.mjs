@@ -2,7 +2,8 @@
 // scroll-first (Sept 27, 2026). Copy uses only facts Jerry stated (his checklist entry, projects.mjs,
 // the README of his public repo github.com/jerryli08/cegyes2024) and his CAD. Every outside number is
 // cited where it is used (ASAE D384.1, IPCC 2006 Vol. 4 Ch. 10, the Hobbywing X6 spec, an EFT E610P
-// listing); every derived number says it is computed, and the assumptions are named.
+// listing); every derived number says it is computed, and the assumptions are named. Since Sept 27 the
+// numbers are yellow { calc } blocks (lift, one cow a day, hover power) holding the same inputs and results.
 // The airframe, motors and props are an open GrabCAD model of an EFT spraying drone (his README
 // credits it); the page claims only his changes: the vacuum canister in place of the spray tank, the
 // intake nozzle and duct, and the new landing gear. There are no photos or videos: every picture is
@@ -22,6 +23,8 @@ const GRABCAD = 'https://grabcad.com/library/eft-spraying-drone-1';
 const ASAE = 'http://large.stanford.edu/publications/coal/references/docs/ASAEStandard.pdf';
 const IPCC = 'https://www.ipcc-nggip.iges.or.jp/public/2006gl/vol4.html';
 const X6 = 'https://rcmumbai.com/hobbywing-x6-power-system-for-agricultural-drones-cw.html';
+const HEAT = 'https://www.engineeringtoolbox.com/gross-net-heating-values-d_420.html';
+const AIR = 'https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html';
 const E610P = 'https://robokits.co.in/multirotor-spare-parts/agriculture-drone-parts/eft-e-series-e610p-agriculture-drone-frame-25kg-take-off-weight-with-10l-tank-capacity';
 
 export default {
@@ -103,34 +106,65 @@ export default {
     // ------------------------------------------------------------------ the numbers
     { type: 'prose', id: 'numbers', h: 'Does it add up?', p: [
       'Numbers from my CAD and from published data. Every input is cited; every result is computed from them.',
-      { table: {
-        head: ['Input', 'Value', 'Source'],
-        rows: [
-          ['Motors and props', '12, in six coaxial pairs; 23 in props', 'My CAD'],
-          ['Lift per motor (Hobbywing X6, 180 KV, 2388 prop, 48 V)', '12 kg max, 3 to 5 kg recommended takeoff weight', '[Hobbywing X6 spec](' + X6 + ')'],
-          ['A comparable sprayer (EFT E610P frame)', '25 kg takeoff with a 10 L tank, on 6 motors', '[Robokits listing](' + E610P + ')'],
-          ['Canister below the arms', 'About 26 L, its volume as modelled', 'My CAD'],
-          ['Dairy manure', '86 kg per 1,000 kg of cow per day, 26 kg of it urine; 990 kg/m³; a typical cow is 640 kg', '[ASAE D384.1](' + ASAE + '), Table 1'],
-          ['Methane potential of dairy manure, North America', '5.4 kg of volatile solids per cow per day; 0.24 m³ of methane per kg', '[IPCC 2006](' + IPCC + '), Vol. 4, Ch. 10, Table 10A-4'],
-          ['Share of that methane released', 'Manure on pasture: 1 %. Uncovered lagoon, cool climate (10 °C): 66 %', 'IPCC 2006, Table 10.17'],
+      { h: 'Lift and payload' },
+      { calc: 'Can twelve motors carry a full canister?',
+        given: [
+          ['Motors, in six coaxial pairs, with 23 in props', '12', 'My CAD'],
+          ['Hobbywing X6 (180 KV, 2388 prop, 48 V): max lift per motor', '12 kg', '[Hobbywing X6 spec](' + X6 + ')'],
+          ['Recommended takeoff weight per motor', '3 to 5 kg', 'Hobbywing X6 spec'],
+          ['A comparable sprayer, the EFT E610P frame: takeoff on 6 motors with a 10 L tank', '25 kg', '[Robokits listing](' + E610P + ')'],
+          ['Canister below the arms, as modelled', 'about 26 L', 'My CAD'],
+          ['Dairy manure density', '990 kg/m³', '[ASAE D384.1](' + ASAE + '), Table 1'],
         ],
-      } },
-      { h: 'Results' },
-      { ul: [
-        '**Lift.** 12 motors x 3 to 5 kg = **36 to 60 kg** of recommended takeoff weight, before the loss from the lower props working in the upper props\' wash. For comparison, a six-motor 10 L sprayer frame is rated for 25 kg; twelve motors instead of six is what makes a full 26 L canister plausible.',
-        '**Payload.** Taking the half of the canister below the arms as the manure space (about 26 L as modelled), a full load is **about 26 kg** at 990 kg/m³.',
-        '**Manure per cow.** 86 - 26 = 60 kg of feces per 1,000 kg of cow per day, so **about 38 kg (39 L)** for a 640 kg cow: about **1.5 full canisters per cow per day**.',
-        '**Energy.** 5.4 kg x 0.24 m³/kg = **1.3 m³ of methane per cow per day** at most, about **13 kWh** of heat at about 10 kWh per m³ of methane.',
-        '**Methane kept out of the air.** In an uncovered lagoon, 66 % of that potential escapes: about **0.86 m³ per cow per day**. A digester captures it instead.',
-      ] },
-      { h: 'The problems, honestly' },
+        work: [
+          'Rated takeoff weight: 12 motors x 3 to 5 kg = **36 to 60 kg**, before the loss from the lower props working in the upper props\' wash',
+          'The six-motor 10 L sprayer frame for comparison: 25 kg / 6 motors = 4.2 kg per motor, inside the same 3 to 5 kg band',
+          'Payload: taking the half of the canister below the arms as the manure space, 26 L x 0.99 kg/L = **about 26 kg** for a full load',
+        ],
+        result: 'A full canister is about 26 kg, and twelve motors are rated for 36 to 60 kg of takeoff weight. Twelve motors instead of six is what makes a full 26 L canister plausible.' },
+      { h: 'One cow, one day' },
+      { calc: 'How much manure, and how much methane?',
+        given: [
+          ['Dairy manure per 1,000 kg of cow per day', '86 kg', '[ASAE D384.1](' + ASAE + '), Table 1'],
+          ['of which urine', '26 kg', 'ASAE D384.1, Table 1'],
+          ['A typical dairy cow', '640 kg', 'ASAE D384.1, Table 1'],
+          ['Volatile solids per cow per day, North America', '5.4 kg', '[IPCC 2006](' + IPCC + '), Vol. 4, Ch. 10, Table 10A-4'],
+          ['Methane potential per kg of volatile solids', '0.24 m³', 'IPCC 2006, Table 10A-4'],
+          ['Share of that methane released: uncovered lagoon, cool climate (10 °C)', '66 %', 'IPCC 2006, Table 10.17'],
+          ['Share released: manure on pasture', '1 %', 'IPCC 2006, Table 10.17'],
+          ['Heat in methane (net: 8,570 kcal per normal m³)', 'about 10 kWh/m³', '[Engineering ToolBox](' + HEAT + ')'],
+        ],
+        work: [
+          'Manure: 86 - 26 = 60 kg of feces per 1,000 kg of cow per day, so 0.64 x 60 = **about 38 kg (39 L)** for a 640 kg cow',
+          'Trips: 38 kg / 26 kg per canister = **about 1.5 full canisters per cow per day**',
+          'Methane: 5.4 kg x 0.24 m³/kg = **1.3 m³ per cow per day** at most, about **13 kWh** of heat at 10 kWh per m³',
+          'In an uncovered lagoon, 66 % of that potential escapes: **about 0.86 m³ per cow per day**. A digester captures it instead. On pasture, 1 % escapes: about 0.013 m³',
+        ],
+        result: 'One cow makes about 1.5 canisters of manure a day, holding up to 1.3 m³ of methane, about 13 kWh.' },
       { problem: 'By the same IPCC data, manure lying on a pasture releases only about 1 % of its methane potential, because it breaks down with air around it.', title: 'Manure left on grass makes little methane' },
       { fix: 'The methane the drone saves is the methane the manure would have made in a lagoon or slurry tank, where 66 % of it escapes. For manure that would have stayed on the grass, the gain is the energy from the digester rather than avoided methane.', label: 'What it changes' },
       { problem: 'One cow makes about 38 kg of manure a day, so a 100-cow herd on pasture would need about 150 full trips a day.', title: 'Scale' },
       { fix: 'One drone can only cover part of a farm: a real system needs several, or aims at the places ground machines cannot reach easily. That is where flying wins: the drone does not need roads, lanes or a flat barn floor.', label: 'Where it still works' },
+      { h: 'Hover power' },
+      { calc: 'How much power does it take to hover?',
+        given: [
+          ['Takeoff weight, the low end of the rating', '36 kg', 'the lift calculation above'],
+          ['Prop radius (23 in props), six pairs', '0.2925 m', 'My CAD'],
+          ['Air density at sea level', '1.225 kg/m³', '[Engineering ToolBox, standard atmosphere](' + AIR + ')'],
+          ['Coaxial penalty; figure of merit', '1.28; 0.7', 'assumed'],
+        ],
+        work: [
+          'Thrust: T = 36 kg x 9.81 m/s² = 353 N',
+          'Disc area: A = 6 x π x 0.2925² = 1.61 m²',
+          'Ideal induced power: T^1.5 / √(2 ρ A) = 353^1.5 / √(2 x 1.225 x 1.61) = about 3.3 kW',
+          'With the coaxial penalty and the figure of merit: 3.3 kW x 1.28 / 0.7 = **about 6.1 kW**. At 60 kg the same model gives about 13 kW',
+          'Air time per kilowatt-hour of battery: 60 min x 1 kWh / 6.1 kW = **about 10 minutes**',
+        ],
+        result: 'Hovering at 36 kg takes about 6 kW, so every kilowatt-hour of battery buys about 10 minutes in the air.',
+        note: 'Estimate from momentum theory with the two factors assumed; not a flight test.' },
       { problem: 'Hovering at 36 kg takes roughly 6 kW, so every kilowatt-hour of battery buys only about 10 minutes in the air.', title: 'Flight time' },
       { fix: 'Keep every trip short and put the charger at the depot, where the drone lands anyway after it empties the canister.', label: 'Where it still works' },
-      { note: 'Hover power, computed: ideal induced power T^1.5 / sqrt(2 ρ A) for 36 kg (353 N) over the six prop discs (A = 6 x π x 0.2925² = 1.61 m², ρ = 1.225 kg/m³) is about 3.3 kW; with a coaxial penalty of 1.28 and a figure of merit of 0.7, both assumed, about 6.1 kW. At 60 kg the same model gives about 13 kW.' },
+      { h: 'Not solved yet' },
       { problem: 'Fresh dairy manure is about 86 % water (ASAE: 12 kg of solids in 86 kg). It is heavy for its volume and messy to vacuum, and the nozzle and duct could clog. The concept does not solve this yet.', title: 'Wet manure' },
     ], media: [
       { i: 'patrol-vacuum.webp', c: 'From the mission above: the drone low over the pasture after its third pat, the canister shown full (the pasture and the fill level are illustrations)' },

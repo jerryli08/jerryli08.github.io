@@ -93,6 +93,19 @@ export async function mount(el, ctx) {
   model.position.set(0, 0, 0.00906); // the model's bounding-box centre (nose -88 mm, tail +69.9 mm) at the pivot
   const pv = rig(stage, craft);
 
+  // Counter-rotating props (Jerry, Sept 27). Both shafts run along the model's z (rig.js). The CAD
+  // puts the same DALPROP T3045 on both motors, one hand: measured on its blades, each section's
+  // leading edge (the end nearer the nose) is at the smaller angle about +z, so it pulls the
+  // aircraft forward when it turns the negative way about +z. The right prop keeps that part and
+  // that direction. The left prop is drawn as its mirror image, the opposite-hand prop, mirrored in
+  // the plane through its own shaft axis, and turns the positive way: it still pushes air back over
+  // the wing, and the two reaction torques cancel.
+  const mirrorL = new THREE.Group(); mirrorL.name = 'prop_L, opposite hand';
+  mirrorL.scale.x = -1; // pv.spinL's origin is on the left shaft axis, its x the model's x
+  pv.spinL.add(mirrorL);
+  for (const p of parts.propL) mirrorL.add(p); // local transforms kept, so mirrored about the shaft axis
+  const SPIN = { R: -1, L: 1 };
+
   // hover pose on the pad: where the tail touches the ground
   body.rotation.x = 90 * DEG;
   body.updateMatrixWorld(true);
@@ -126,6 +139,25 @@ export async function mount(el, ctx) {
   const discMat = new THREE.MeshBasicMaterial({ color: '#ffe2c8', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
   const discGeo = new THREE.CircleGeometry(PROP_R, 64);
   const discs = [0.07676, -0.07674].map((x) => { const d = new THREE.Mesh(discGeo, discMat); d.position.set(x, 0, propZ); notes.add(d); return d; });
+  // spin arrows: an arc just outside each prop disc, its head on the side the prop turns toward
+  const arrowMat = new THREE.MeshBasicMaterial({ color: '#fff1e2', transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+  const ARC = 1.3 * Math.PI, AR = PROP_R + 0.0075;
+  const arcGeo = new THREE.TorusGeometry(AR, 0.0017, 6, 72, ARC);
+  const headGeo = new THREE.ConeGeometry(0.0055, 0.014, 14);
+  const spinArrow = (x, sign, a0) => {
+    const g = new THREE.Group();
+    const arc = new THREE.Mesh(arcGeo, arrowMat); arc.rotation.z = a0; g.add(arc);
+    const end = sign > 0 ? a0 + ARC : a0;
+    const head = new THREE.Mesh(headGeo, arrowMat);
+    head.position.set(AR * Math.cos(end), AR * Math.sin(end), 0);
+    head.rotation.z = end + (sign > 0 ? 0 : Math.PI); // the cone's +y turned onto the direction of travel
+    g.add(head);
+    g.position.set(x, 0, propZ - 0.002);
+    notes.add(g);
+    return g;
+  };
+  // mirror images of each other: both heads on the outboard side
+  const arrows = [spinArrow(0.07676, SPIN.R, 0), spinArrow(-0.07674, SPIN.L, Math.PI - ARC)];
   // the column of air the right prop pushes back over its elevon
   const washLen = 0.095 - propZ;
   const washMat = new THREE.MeshBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
@@ -185,7 +217,7 @@ export async function mount(el, ctx) {
     body.rotation.x = pitch(t) * DEG;
     body.position.set(0, onPad + alt(t), -fwd(t));
     setDeg(pv.elevR, elevDeg); setDeg(pv.elevL, elevDeg);
-    pv.spinR.setAngle(-spin); pv.spinL.setAngle(-spin);
+    pv.spinR.setAngle(SPIN.R * spin); pv.spinL.setAngle(SPIN.L * spin); // counter-rotating
     stage.invalidate();
   }
 
@@ -272,6 +304,9 @@ export async function mount(el, ctx) {
     for (const m of propMats) { const o = 1 - 0.72 * blur; if (m.opacity !== o) { m.opacity = o; m.depthWrite = o > 0.95; } }
     discMat.opacity = 0.2 * blur;
     for (const d of discs) d.visible = discMat.opacity > 0.005;
+    // the spin arrows: from spool-up until the pitch-over starts
+    arrowMat.opacity = 0.9 * smooth(0.25, 0.7, s) * (1 - smooth(4.1, 4.6, t));
+    for (const a of arrows) a.visible = arrowMat.opacity > 0.005;
     // hover close-up: the wash and the span bars
     const close = step === 2 ? k : step === 3 ? 1 - smooth(0, 0.3, stepP) : 0;
     washMat.opacity = 0.12 * close; wash.visible = close > 0.01;

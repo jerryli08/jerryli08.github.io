@@ -5,6 +5,9 @@
 // drone.glb) and rig them about the real axes in the CAD; demo posters live in M.
 const M = '/assets/models/hybrid-vehicle';
 
+// datasheets and sources linked from the worked calculations
+const HOLY = '[Holybro X500 V2 specs](https://docs.holybro.com/drone-development-kit/px4-development-kit-x500v2)';
+
 export default {
   summary: {
     stats: [
@@ -62,6 +65,17 @@ export default {
       'The latch has two jobs: catch the drone by itself, and let go on command.',
       { problem: 'Every gram of latch is a gram the drone has to lift when it carries the rover, and a latch with a motor per arm or per door would be heavy.', title: 'Weight' },
       { fix: 'I built both jobs into one linkage geartrain with 10 degrees of freedom, 6 active and 4 passive, all driven by a single servo.' },
+      { calc: 'How heavy is the rover for this drone?',
+        given: [
+          ['Rover weight', '1.23 kg', 'weighed on a scale'],
+          ['Holybro’s rated maximum payload for the X500 V2', 'about 1 kg, with a 4S 5000 mAh battery at 70 % throttle', HOLY],
+        ],
+        work: [
+          '1.23 kg / 1 kg = 1.23',
+          '1.23 kg - 1 kg = 0.23 kg over the rating',
+        ],
+        result: 'The rover alone is about 1.2 times the payload Holybro rates the X500 V2 for, so carrying it means flying above the 70 % throttle that rating assumes. Every gram in the latch adds to that.',
+        note: 'Holybro’s figure is for its stock kit, not our drone with its printed landing gear.' },
       'Each latch has two arms that stand up on either side of a landing tube, with a door hinged on the tip of each arm. Front and back cradle brackets with a 17 mm bore locate the 16 mm tube before the doors ever close over it.',
       'The geartrain drives all four arms from one Feetech FT5325M servo:',
       { ol: [
@@ -87,7 +101,7 @@ export default {
         { i: 'landing-gear-latched.webp', c: 'The printed landing-gear mounts and tubes held in both latches, off the drone' },
       ] },
 
-    { type: 'scrolly', id: 'latch', module: 'latch', width: 'wide', poster: `${M}/poster-latch.webp`,
+    { type: 'scrolly', id: 'latch', module: 'latch', poster: `${M}/poster-latch.webp`,
       h: 'Inside the latch',
       p: ['A section through the middle of both latches, and the geartrain running as you scroll.'],
       steps: [
@@ -111,7 +125,7 @@ export default {
       ],
       caption: 'Door angles come from my CAD: a section of the real door turned on its pin against the 16 mm tube. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
 
-    { type: 'scrolly', id: 'drive', module: 'drive', width: 'wide', side: 'right', poster: `${M}/poster-drive.webp`,
+    { type: 'scrolly', id: 'drive', module: 'drive', poster: `${M}/poster-drive.webp`,
       h: 'The belt drivetrain',
       p: ['The rover’s left side, cut open along the outside of the belt. The wheels turn as you scroll.'],
       steps: [
@@ -148,6 +162,21 @@ export default {
           'I went into this change knowing what the bigger teeth would cost. Each arm hangs off a 7-tooth pinion, so a little play at the pinions becomes a lot of play at the doors on the arm tips. But backlash was something I could mitigate, and within our constraints there was no other way to stop the skipping. So I took the trade on purpose.',
           { problem: 'As expected, a lot of backlash, and it showed up at the doors: with that much play, they could not be counted on to close over the tube.', title: 'Backlash at the doors' },
           { fix: 'I dealt with it in the doors instead of the gears: I cut the doors so they would overlap each other.' },
+          { calc: 'How much play lets a door slip off the tube?',
+            given: [
+              ['Arm pinion', '7 teeth, module 2: 7 mm pitch radius', 'measured from the CAD'],
+              ['Pinion axis to the outer door’s finger tip', '35.8 mm', 'measured from the CAD'],
+              ['How far each finger reaches past the tube’s edge', '3.7 mm', 'measured from the CAD'],
+              ['Meshes from the servo gear to the outer arm of the first latch', '2', 'counted from the CAD'],
+            ],
+            work: [
+              'When the arm turns, its finger tip moves 35.8 / 7 = 5.1 times as far as its pinion’s pitch circle',
+              'For the finger to swing 3.7 mm off the tube: 3.7 mm / 5.1 = 0.72 mm of free travel at the pinion',
+              'Play adds up along the chain: with play p at each mesh, the outer arm can drift p / 2 per mesh either way, p over two meshes. So p = 0.72 mm',
+              'A module 2 tooth repeats every π × 2 mm = 6.3 mm, so that is about a ninth of a tooth',
+            ],
+            result: 'About 0.7 mm of play at each mesh, a ninth of a tooth, is enough to let the outer finger swing off the tube. The small pinion is the multiplier: on a 25-tooth gear (25 mm pitch radius) the finger would need 25 / 7 = 3.6 times as much play.',
+            note: 'Geometry only, from the final CAD with the doors as modelled, before the overlap cut; the play in the real gears was not measured. The backlash section below shows the same numbers on the model.' },
         ],
         media: [
           { i: 'latch-gears-fine-vs-coarse.webp', c: 'Version 1 (red, module 1) next to version 2 (black, module 2), each gear with an arm and its pinion, Aug 1' },
@@ -201,7 +230,7 @@ export default {
       { v: 'final-run-lands-beside-rover.mp4', c: 'The drone comes back and lands beside the rover' },
     ] },
 
-    { type: 'scrolly', id: 'terrain', module: 'terrain', webgl: false, width: 'wide', stepHeight: '85vh',
+    { type: 'scrolly', id: 'terrain', module: 'terrain', webgl: false, stepHeight: '85vh',
       h: 'Six terrains',
       p: ['We then tested the rover on six surfaces at a constant 8.0 V, three trials each. We timed straight runs over a meterstick with a stopwatch, and turns with a protractor and a timer.'],
       steps: [
@@ -218,15 +247,48 @@ export default {
       ],
       caption: 'Averages of three trials per surface, from Table 1 of our poster: straight-line speed (m/s) and turning speed (rad/s). Foam 0.62 and 4.20, concrete 0.63 and 4.05, grass could not cross, mulch 0.57 and 1.88, sand 0.60 and 3.40, forest floor 0.59 and 1.25.' },
 
+    { type: 'prose', id: 'turning', h: 'Why turning split the surfaces', p: [
+      'A skid-steered rover has no steering linkage: to turn in place, one side drives forward and the other backward, and all four wheels have to scrub sideways over the ground. How easily they scrub depends on the surface.',
+      { calc: 'How close to a perfect turn did the rover get?',
+        given: [
+          ['Track width, wheel centre to wheel centre', '135.2 mm', 'measured from the CAD'],
+          ['Straight-line and turning speeds per surface', 'Table 1', '[our poster](/assets/docs/drone-on-wheels-poster.pdf)'],
+          ['Each side’s wheel speed while turning', 'the same as in a straight line', 'assumed (same 8.0 V)'],
+        ],
+        work: [
+          'With no slip, turning in place with each side at speed v gives ω = 2v / 135.2 mm',
+          'Foam: 2 × 0.623 / 0.1352 = 9.22 rad/s possible, 4.20 measured: 46 %',
+          'Concrete: 9.28 possible, 4.05 measured: 44 %',
+          'Sand: 8.85 possible, 3.40 measured: 38 %',
+          'Mulch: 8.50 possible, 1.88 measured: 22 %',
+          'Forest floor: 8.66 possible, 1.25 measured: 14 %',
+        ],
+        result: 'Even on foam the rover turned at under half of the no-slip rate, and on forest floor at about a seventh. Straight-line speed barely changed between surfaces, so where they differ is mostly in how easily the wheels scrub sideways.',
+        note: 'Estimate: ideal skid steering with no slip is an upper bound; the measured rates are the poster’s averages of three trials.' },
+    ],
+      media: [{ i: 'terrain-forest-floor.webp', c: 'Forest floor, one of the six test surfaces (Figure 4 of our poster)' }] },
+
     { type: 'callout', id: 'strength', h: '27.28 N per latch', p: [
       'We loaded the docked latches with weights, adding them until the latches let go. On average they held 4,337 g of weights plus the 1.23 kg rover: 5,564 g in all, or 54.57 N. That is 27.28 N per latch, and about four and a half times the rover’s own weight.',
+      { calc: 'How much margin does each latch have when the drone carries the rover?',
+        given: [
+          ['Load the two latches held before letting go', '5,564 g, rover included', '[our poster](/assets/docs/drone-on-wheels-poster.pdf), Table 2'],
+          ['Rover weight', '1.23 kg', 'weighed on a scale'],
+          ['g', '9.81 m/s²', ''],
+        ],
+        work: [
+          'Held: 5.564 kg × 9.81 = 54.57 N, or 27.28 N per latch',
+          'Carrying the rover: 1.23 kg × 9.81 = 12.07 N, or 6.03 N per latch',
+          '27.28 N / 6.03 N = 4.5',
+        ],
+        result: 'In a straight vertical pull each latch holds about 4.5 times its share of the rover hanging still.',
+        note: 'From the pull test, which pulled straight up. Accelerating, tilting or an off-center rover all eat into that margin.' },
       { problem: 'That is with a perfectly vertical pull. With the rover off-center or the drone rolling, it unlatches more easily.', title: 'Off-axis loads' },
     ] },
 
-    { type: 'media', layout: 'grid', cols: 3, items: [
+    { type: 'media', layout: 'row', items: [
       { i: 'still-carry-flight-cage.webp', c: 'Carrying the rover across the flight cage' },
       { i: 'rover-on-foam.webp', c: 'The finished rover on the foam mats' },
-      { i: 'terrain-forest-floor.webp', c: 'Forest floor, one of the six test surfaces (Figure 4 of our poster)' },
     ] },
 
     { type: 'prose', id: 'research', h: 'Research', p: [

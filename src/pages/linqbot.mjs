@@ -8,7 +8,11 @@
 // autonomous takes were driven; which text agent came first; how the gripper "FAILED" was handled
 // on the day; what was done with the CAD the day before; any placement. Also left out: the phase A
 // "[draft next]" items, the team selfie, the third-party Instagram reel, IMG_8898/8899/8904.
-// Every animation is driven by the scroll alone (Jerry, Sept 26): no camera, no buttons, no typing.
+// Every animation is driven by the scroll alone (Jerry, Sept 26), with one exception Jerry asked for
+// (Sept 27): the webcam demo `webcam`, which starts only when the reader presses Start camera.
+// Worked calculations (Sept 27) use only constants from the repo (robot/config/settings.py,
+// agent/src/demo/hardware/so101.py). The webgl: false `paths` scrolly animates a diagram continuously
+// (a lane walked box by box), not a photo slideshow, so it stays a scrolly.
 const M = '/assets/models/linqbot';
 const REPO = 'https://github.com/amzoeee/soma-hackathon';
 
@@ -129,6 +133,23 @@ export default {
           '**Solve.** Inverse kinematics (ikpy on the arm’s URDF) turns the gripper target into shoulder, elbow and wrist angles, starting each solve from the arm’s real angles so the answer stays continuous. If a solve misses by more than 3 cm, the arm keeps the last good answer.',
           '**Limit and send.** No joint may move more than 5 degrees per step, and a joint that trails its command by more than 3 degrees for 10 frames is flagged as stalled. The status panel (clutch, hand found, gesture, frame rate, gripper target) shows on the glasses.',
         ] },
+        { calc: 'How much hand motion moves the arm?',
+          given: [
+            ['Gripper travel for the full image width', '0.6 m', 'our settings'],
+            ['for the full image height', '0.5 m', 'our settings'],
+            ['Dead band on each image axis', '0.006 of the image', 'our settings'],
+            ['Eye camera frame', '512 x 378 px', 'the camera stream'],
+            ['Joint limit', '5° per frame', 'our settings'],
+            ['Frame rate', 'up to 30 a second', 'our settings'],
+          ],
+          work: [
+            'Sideways: 0.6 m / 512 px = 1.2 mm of gripper travel for every pixel the hand moves',
+            'Dead band: 0.006 x 512 px = 3 px, which is 0.006 x 0.6 m = 3.6 mm of gripper sideways and 0.006 x 0.5 m = 3.0 mm up and down',
+            'Fastest joint: 5° x 30 frames/s = 150°/s',
+            'A joint target that jumps 90° (a tracking glitch, say) takes at least 90 / 5 = 18 frames, 0.6 s, to reach',
+          ],
+          result: 'The hand has to drift about 3 pixels, 3.6 mm of gripper, before the arm follows, and nothing the tracker does can swing a joint faster than 150°/s.',
+          note: 'The dead band acts on the smoothed hand position; depth, from hand size, has its own wider one (0.010).' },
       ],
       media: [
         { i: 'still-operator-in-glasses.webp', c: 'The operator in the Xreal glasses; the camera on them tracks his hand' },
@@ -151,6 +172,18 @@ export default {
         { h: 'Carry on, no jump', p: ['Six frames after the fist opens, the clutch lets go. The hand’s new position becomes the origin and the frozen gripper the anchor, so the arm carries on from where it stopped: across, down, fingers open, and the can stands in its new spot.'] },
       ],
       caption: 'A simulation on our CAD of the SO-101, not a recording: the table, the can and the hand are drawn, and the glasses view in the corner shows the drawn hand the pipeline is given. The readout is our code’s rules run on that hand, with the settings from our repo.',
+    },
+    {
+      // Jerry's explicit exception to scroll-only (Sept 27): the webcam demo. Nothing loads until the
+      // reader presses Start camera; the camera stops on scrolling away. `interactive: true` asks the
+      // build not to list it as a demo to convert (framework request, work/linqbot/framework-requests.md).
+      type: 'demo', id: 'webcam', module: 'webcam', webgl: false, interactive: true, height: 'clamp(460px, 72vh, 680px)', poster: `${M}/poster-teleop.webp`,
+      h: 'Try it with your own hand',
+      p: [
+        'Press **Start camera** and your webcam stands in for the camera on the glasses. An open hand moves the gripper, a pinch closes the claw, and a fist is the clutch: it freezes the arm so you can move your hand back and carry on without a jump. Try to pick up the can.',
+        'Everything after the camera is the same code as the animation above, run on your real hand. The camera is only asked for when you press the button, the hand tracker loads only after that, and the video never leaves your browser.',
+      ],
+      caption: 'A simulation on our CAD of the SO-101, driven live by your webcam; the table and the can are props. The glasses’ camera looked out from the operator’s head toward the arm, while a webcam looks back at you, so left, right and reach are mirrored to feel natural. The hand tracker is MediaPipe (about 8 MB). The camera stops when you scroll away.',
     },
     {
       type: 'media', layout: 'row',
@@ -237,6 +270,22 @@ export default {
           'Moves ramp over 2 seconds in 40 steps; wrist moves are held to the servo calibration.',
         ] },
         '"Move up 500 meters" came back as requested +500 m, applied +0.0315 m, "(safety/workspace limited)".',
+        { calc: 'How fast can a text move the arm?',
+          given: [
+            ['Largest single move', '0.5 m', 'our code'],
+            ['Every move ramps over', '2 s, in 40 steps', 'our code'],
+            ['A typical request', '0.2 m', 'the texts we sent'],
+          ],
+          work: [
+            'Each step: 2 s / 40 = 50 ms',
+            'A 0.2 m move: 0.2 m / 2 s = 0.1 m/s on average, about 5 mm a step',
+            'The largest move allowed: 0.5 m / 2 s = 0.25 m/s on average, 12.5 mm a step',
+          ],
+          result: 'However a text is worded, the gripper averages at most 0.25 m/s over a move.',
+          note: 'The ramp steps the joint angles evenly, so the gripper\'s speed along its path varies; these are averages.' },
+      ],
+      media: [
+        { i: `${M}/imessage-clamps.webp`, c: 'From our repo: "Move up 500 meters" moved the gripper 3 cm; "Wrist tilt 90 degrees" stopped at the calibration limit' },
       ],
     },
     {
@@ -259,7 +308,6 @@ export default {
       media: [
         { i: 'still-gripper-failed-reply.webp', c: 'The jaw moved from 98.62 to 66.16 (100 is open) but had not reached closed, so the step failed' },
         { i: 'still-limited-reply.webp', c: 'Asked for 0.1 m down, moved 0.115 m: "limited"' },
-        { i: `${M}/imessage-clamps.webp`, c: 'From our repo: "Move up 500 meters" moved the gripper 3 cm; "Wrist tilt 90 degrees" stopped at the calibration limit' },
       ],
     },
     {

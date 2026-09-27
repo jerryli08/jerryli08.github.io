@@ -29,7 +29,7 @@ export default {
       'At the event you are given three test masses and report two ratios, A/B and B/C, as decimals. The device’s whole job is to turn "where do the two masses balance" into a number.',
     ] },
 
-    { type: 'scrolly', id: 'linkage', module: 'linkage', width: 'wide', side: 'left', stepHeight: '85vh',
+    { type: 'scrolly', id: 'linkage', module: 'linkage', stepHeight: '85vh',
       poster: `${M}/poster-linkage.webp`, h: 'Two levers and a link',
       steps: [
         { h: 'The CAD', p: ['This is the CAD of the device: two beams on two posts, each beam a lever, joined at the right end by one rigid link.'] },
@@ -52,6 +52,21 @@ export default {
         caption: 'Heavier mass to lighter mass, with both masses on the rulers. Computed from the CAD: 316 / 65 = 4.9, times 5 from the link.',
       } },
       'The link is what stretches the range: without it, the same rulers would stop at about 4.9 : 1. The catch is that the lighter mass always goes on the upper, class 1 lever. Hang the heavier one there and there is no balance point on the rulers; the animation below shows that too.',
+      { calc: 'How much does a misread ruler move the answer?',
+        given: [
+          ['Ratio from the two positions', 'm_A / m_B = b / (5a)', 'the balance above'],
+          ['Example setting', 'a = 200 mm, b = 285.7 mm (100 g and 350 g)', 'the example below'],
+          ['Ruler range', '65 to 316 mm on each beam', 'measured from the CAD'],
+          ['Reading error', '1 mm on each ruler', 'assumed'],
+        ],
+        work: [
+          'For a ratio of two lengths, the relative errors add: 1 / a + 1 / b',
+          'Example: 1 / 200 + 1 / 285.7 = 0.50 % + 0.35 % = 0.85 %, so 0.286 could read 0.283 to 0.288',
+          'Both masses at the start of the rulers: 1 / 65 + 1 / 65 = 3.1 %',
+          'Both near the ends: 1 / 316 + 1 / 316 = 0.6 %',
+        ],
+        result: 'A millimetre misread on each ruler costs under 1 % in the example, and less the further out the masses hang: about 3 % near the fulcrums, 0.6 % near the ends.',
+        note: 'Worst case: both misreadings push the ratio the same way (one ruler read long, the other short).' },
     ],
       media: [{ v: 'hero-device-lever-moving.mp4', c: 'Tipping the upper lever by hand: the link carries the lower lever with it' }] },
 
@@ -71,6 +86,20 @@ export default {
       'Each fulcrum is a ball bearing (35 mm outside, 14 mm bore) in a printed stand on top of its post, with a printed 14 mm fulcrum rod on the beam turning inside it. The two link joints run on the same bearings, so all four pivots are rolling rather than sliding.',
       { problem: 'Friction at a pivot can hold a beam still when the masses are not quite balanced, and that error goes straight into the ratio.', title: 'Friction' },
       { fix: 'A ball bearing at every pivot, and a quick setup check before each run: set the parts the right way, "and then that should reduce the friction."' },
+      { calc: 'How much can a bearing hide?',
+        given: [
+          ['Rolling bearing friction coefficient', '0.001 to 0.005', '[NTN Rolling Bearings Handbook](https://www.ntnglobal.com/en/products/catalog/pdf/9012E.pdf)'],
+          ['Bearing bore', '14 mm (7 mm radius)', 'measured from the CAD'],
+          ['Example', '100 g hung 200 mm out on the upper lever', 'the example above'],
+          ['Load on the fulcrum bearing', '10 N', 'assumed, generous: the mass, the link\'s pull and the beam'],
+        ],
+        work: [
+          'Friction torque, taking the high end: 0.005 × 10 N × 7 mm = 0.35 N·mm',
+          'The mass\'s moment: 0.981 N × 200 mm = 196 N·mm',
+          '0.35 / 196 = 0.18 %, the same as moving the mass 0.35 / 0.981 = 0.36 mm along the ruler',
+        ],
+        result: 'A ball bearing can hold back at most about a third of a millimetre of hanger position, less than misreading a ruler by a millimetre.',
+        note: 'Estimate from the handbook\'s range for rolling bearings; a sliding pivot has a friction coefficient over a hundred times higher (same handbook).' },
     ],
       media: [{ v: 'setup-before-run.mp4', c: 'Part of the setup check I filmed for running it' }] },
 

@@ -140,7 +140,7 @@
   function unmount(b) {
     const st = state.get(b);
     try { st.api?.dispose?.(); } catch (e) { console.error(`[${b.id}] dispose failed`, e); }
-    b.querySelector('[data-rx-stage]').dispatchEvent(new Event('rx:unmount')); // frees any stage the module left behind
+    (st.host || b.querySelector('[data-rx-stage]')).dispatchEvent(new Event('rx:unmount')); // frees any stage the module left behind
     for (const n of st.added || []) n.remove();
     st.panel?.replaceChildren();
     st.api = null; st.mounting = null;
@@ -162,23 +162,35 @@
       status(b, 'ask');
       return;
     }
-    const stage = b.querySelector('[data-rx-stage]');
+    // A 2D scrolly (webgl: false) with steps draws in the part of the stage the step cards leave
+    // free: an element from the cards' right edge to the stage's right (--rx-cover, written by
+    // layout(); the whole stage on a phone), so no diagram or photo sits under a card. Its
+    // ctx.shift() is then [0, 0]. A 3D stage keeps the whole width and shifts its picture instead.
+    const free = b.dataset.rxBlock === 'scrolly' && b.dataset.webgl === 'false' && !!b.querySelector('[data-step]');
+    const stageEl = b.querySelector('[data-rx-stage]');
+    let stage = stageEl;
+    if (free) {
+      stage = stageEl.querySelector(':scope > .rx-free');
+      if (!stage) { stage = document.createElement('div'); stage.className = 'rx-free'; stageEl.appendChild(stage); }
+    }
+    st.host = stage;
     const before = new Set(stage.children);
     status(b, 'loading');
     let data = {};
     try { data = JSON.parse(b.dataset.rxData || '{}'); } catch { /* none */ }
-    const wide = b.classList.contains('rx-scrolly-wide');
     const ctx = {
       id: b.id, slug: main?.dataset.slug || '', data, asset, reducedMotion: reduced, isTouch,
-      panel: st.panel, kind: b.dataset.rxBlock, width: wide ? 'wide' : 'full',
-      // where the step text covers the stage right now, as a stage.setShift(fx, fy) that keeps the
-      // model clear of it: on a full-width desktop scrolly the cards cover the left
+      panel: st.panel, kind: b.dataset.rxBlock, width: 'full', // every scrolly is full width (Jerry, Sept 27)
+      // where the step text covers the stage right now, as a stage.setShift(fx, fy) that centres the
+      // model in the part of the stage the cards leave free: on a desktop the cards cover the left,
+      // so fx is half the covered fraction (about 0.2); on a phone the text sits below the stage
       shift() {
-        // up to 900 px wide the text sits below the stage, and a wide scrolly has it beside
-        if (b.dataset.rxBlock !== 'scrolly' || wide || innerWidth <= 900) return [0, 0];
-        return [0.15, 0];
+        if (b.dataset.rxBlock !== 'scrolly' || free) return [0, 0];
+        return (st.geom || layout(b)).shift.slice();
       },
     };
+    // createStage reads this, so a stage frames its views for the shift from the start
+    stage.rxShift = ctx.shift;
     st.mounting = (async () => {
       const mod = await import(b.dataset.module);
       const fn = mod.mount || mod.default?.mount || (typeof mod.default === 'function' ? mod.default : null);
@@ -219,13 +231,28 @@
   for (const b of blocks) {
     const st = { near: false, api: null, panel: b.querySelector('[data-rx-panel]'), progress: null };
     state.set(b, st);
+    b.rxState = st; // read by the page tools (progress, step, stepP, geom)
     status(b, 'idle');
     b.querySelector('[data-rx-load]')?.addEventListener('click', () => { st.consent = true; mount(b); });
     nearIO.observe(b);
   }
 
   // ---------------------------------------------------------------- scrolly progress
+  // Every scrolly is a full-width sticky stage. Each step owns a slot of scrolling (its li, the
+  // section's stepHeight): its card rises into place, stays pinned there (CSS position: sticky, at
+  // the top written below) while that step's animation runs, stepP 0 to 1, over the pinned part of
+  // the slot, then leaves as the next card arrives and pins in turn. On a desktop the cards sit over
+  // the left of the stage; up to 900 px wide they pin just under the stage (a card taller than the
+  // room there pins with its bottom at the screen's bottom).
+  //   p      0..1 while the stage is pinned (continuous)
+  //   step   the step whose card is pinned, or the nearer one during a hand-off
+  //   stepP  0..1 through that step's pinned range; 0 before it pins, 1 after it lets go
+  // The first card is in its pinned spot when p is 0, and the last lets go exactly when the stage
+  // does (desktop) or before it (phone), so the last step always reaches stepP = 1.
+  // All positions are measured in layout(), on resize and when the page's height changes; the
+  // scroll loop reads nothing but scrollY.
   const scrollies = blocks.filter((b) => b.dataset.rxBlock === 'scrolly');
+  const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
   function callProgress(b, st, force) {
     if (!st.api?.setProgress) return;
     const key = `${st.progress.toFixed(5)}|${st.step}|${st.stepP.toFixed(4)}`;
@@ -235,43 +262,93 @@
     // draw in this same frame, so the canvas and any HTML labels on it move together
     for (const c of st.canvases || []) c.rxFlush?.();
   }
-  // layout values that only change on resize, read once instead of every scroll frame
-  function geom(b, st) {
-    if (st.geom && st.geom.w === innerWidth && st.geom.h === innerHeight) return st.geom;
-    const stage = b.querySelector('.rx-scrolly-stage');
-    return (st.geom = {
-      w: innerWidth, h: innerHeight, body: b.querySelector('.rx-scrolly-body'), stage,
-      top: parseFloat(getComputedStyle(stage).top) || 0,
-      // the active step is the last one whose text has come up past the line: its top passes 70%
-      // of the screen on a desktop (so it is in view and the one before has scrolled away), 84% on a
-      // phone, where the text scrolls in below the stage (--rx-line in site.css)
-      line: innerHeight * (parseFloat(getComputedStyle(b).getPropertyValue('--rx-line')) || 0.7),
-    });
+  const setStyle = (el, prop, val) => { if (el.style[prop] !== val) el.style[prop] = val; };
+  const setVar = (el, name, val) => { if (el && el.style.getPropertyValue(name) !== val) el.style.setProperty(name, val); };
+  // Lay out one scrolly's slots and cache where everything pins, in document pixels.
+  function layout(b) {
+    const st = state.get(b);
+    const body = b.querySelector('.rx-scrolly-body'), box = b.querySelector('.rx-scrolly-stage');
+    const stageEl = b.querySelector('[data-rx-stage]');
+    const list = b.querySelector('.rx-steps');
+    const steps = st.steps || (st.steps = [...b.querySelectorAll('[data-step]')]);
+    const cards = st.cards || (st.cards = steps.map((s) => s.querySelector('.rx-step-card')));
+    const vh = innerHeight;
+    const ST = parseFloat(getComputedStyle(box).top) || 0; // the stage's sticky top (under the nav)
+    const SH = box.offsetHeight;
+    const sr = box.getBoundingClientRect();
+    // desktop: the cards float over the stage (the list is pulled up over it); phone: below it
+    const over = !!list && parseFloat(getComputedStyle(list).marginTop) < 0;
+    const g = { vh, vw: innerWidth, shift: [0, 0], starts: [], ends: [], cut: [] };
+    if (steps.length) {
+      const gap = parseFloat(getComputedStyle(steps[0]).paddingBottom) || 0;
+      for (const s of steps) s.style.minHeight = ''; // each slot as the CSS gives it (--step-h)
+      const slot = steps.map((s) => s.offsetHeight);
+      const C = cards.map((c) => c.offsetHeight);
+      // where each card pins: over the stage, a little above its middle (a card taller than the
+      // stage pins with its bottom 16 px above the stage's bottom); on a phone, just under the stage
+      const T = C.map((c) => {
+        if (over) return c <= SH - 32 ? ST + Math.max(16, (SH - c) * 0.42) : ST + SH - c - 16;
+        const below = ST + SH + 12;
+        return c <= vh - below - 12 ? below : vh - c - 12;
+      });
+      cards.forEach((c, i) => setStyle(c, 'top', `${Math.round(T[i])}px`));
+      // a slot keeps at least half its length pinned: a tall card makes its slot longer
+      steps.forEach((s, i) => {
+        const need = C[i] + (i < steps.length - 1 ? gap : 0) + slot[i] * 0.5;
+        if (need > slot[i]) s.style.minHeight = `${Math.ceil(need)}px`;
+      });
+      // the first card is in its pinned spot when the stage pins (p = 0); the last lets go when
+      // the stage does (desktop) or just before it (phone, where the text is below the stage)
+      const listTop0 = ST + (over ? 0 : SH); // the list's top on screen when p = 0
+      const last = steps.length - 1;
+      setStyle(list, 'paddingTop', `${Math.round(Math.max(over ? 0 : 12, T[0] - listTop0))}px`);
+      setStyle(list, 'paddingBottom', `${Math.round(over ? Math.max(0, ST + SH - T[last] - C[last]) : 0)}px`);
+      // measure after writing (one layout); scrollY read after it, in case scroll anchoring moved it
+      steps.forEach((s, i) => {
+        const top = s.getBoundingClientRect().top + scrollY;
+        const h = s.offsetHeight - (i < last ? gap : 0);
+        g.starts[i] = top - T[i];
+        g.ends[i] = Math.max(g.starts[i] + 1, top + h - C[i] - T[i]);
+      });
+      // cards over the stage: centre the model in what they leave free (card's right edge + 24 px)
+      if (over) {
+        const right = cards[0].getBoundingClientRect().right - sr.left + 24;
+        const fx = Math.min(0.3, Math.max(0, right / (2 * Math.max(1, sr.width))));
+        g.shift = [+fx.toFixed(4), 0];
+        setVar(stageEl, '--rx-cover', `${Math.round(right)}px`);
+      } else setVar(stageEl, '--rx-cover', '0px');
+      // a step becomes the active one half way through the hand-off from the step before
+      for (let i = 1; i < steps.length; i++) g.cut[i] = (g.ends[i - 1] + g.starts[i]) / 2;
+    } else setVar(stageEl, '--rx-cover', '0px');
+    const bt = body.getBoundingClientRect().top + scrollY;
+    g.p0 = bt - ST;
+    g.p1 = Math.max(g.p0 + 1, bt + body.offsetHeight - SH - ST);
+    if (steps.length) g.ends[steps.length - 1] = Math.min(g.ends[steps.length - 1], g.p1);
+    st.geom = g;
+    return g;
   }
   function measure(b, force) {
     const st = state.get(b);
-    const g = geom(b, st);
-    const r = g.body.getBoundingClientRect();
-    const span = r.height - g.stage.offsetHeight;
-    const p = span > 0 ? Math.min(1, Math.max(0, (g.top - r.top) / span)) : 0;
-    const steps = st.steps || (st.steps = [...b.querySelectorAll('[data-step]')]);
-    const cards = st.cards || (st.cards = steps.map((s) => s.querySelector('.rx-step-card') || s));
-    let step = 0, stepP = steps.length ? 0 : p; // a scrolly without steps: one step, the whole way
-    steps.forEach((s, i) => { // progress through a step runs over the height of its slot
-      const y = cards[i].getBoundingClientRect().top;
-      if (y <= g.line) {
-        step = i; stepP = Math.min(1, Math.max(0, (g.line - y) / (s.offsetHeight || 1)));
-        // the last step's slot runs past the point where the stage unpins, so it would stop part way
-        // (about 0.6): finish it exactly when the section's progress reaches 1
-        if (i === steps.length - 1 && span > 0) {
-          const p0 = Math.min(0.999, Math.max(0, (g.top - g.line + (y - r.top)) / span));
-          stepP = Math.min(1, Math.max(stepP, (p - p0) / (1 - p0)));
-        }
-      }
-    });
+    const g = st.geom || layout(b);
+    const y = scrollY;
+    const p = clamp01((y - g.p0) / (g.p1 - g.p0));
+    const steps = st.steps;
+    let step = 0, stepP = p; // a scrolly without steps: one step, the whole way
+    if (steps.length) {
+      while (step < steps.length - 1 && y >= g.cut[step + 1]) step++;
+      stepP = clamp01((y - g.starts[step]) / (g.ends[step] - g.starts[step]));
+    }
     if (step !== st.step) {
       steps.forEach((s, i) => s.classList.toggle('is-active', i === step));
       b.dataset.step = String(step);
+    }
+    // the next card stays out of sight until the step before it has played out (Jerry: once a
+    // step's animation is done, scrolling carries its card away and brings the next one); it then
+    // fades in just under the leaving card and pins in turn
+    if (steps.length > 1) {
+      let k = 1;
+      while (k < steps.length && y >= g.ends[k - 1]) k++;
+      if (k !== st.shown) { st.shown = k; st.cards.forEach((c, i) => c.classList.toggle('is-later', i >= k)); }
     }
     st.progress = p; st.step = step; st.stepP = stepP;
     callProgress(b, st, force);
@@ -285,8 +362,25 @@
       requestAnimationFrame(() => { ticking = false; for (const b of scrollies) if (state.get(b).near) measure(b); });
     };
     addEventListener('scroll', onScroll, { passive: true });
-    // a resize changes the stage's shape: re-send the progress so the module can re-frame
-    addEventListener('resize', () => requestAnimationFrame(() => { for (const b of scrollies) if (state.get(b).api) measure(b, true); }));
+    // re-measure every slot when the layout moves: a resize (then re-send the progress, so the
+    // modules can re-frame for the new shape), fonts arriving, anything above changing height
+    let pending = 0, forceNext = false;
+    const relayout = (force) => {
+      forceNext ||= force;
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        const f = forceNext; forceNext = false;
+        for (const b of scrollies) layout(b);
+        for (const b of scrollies) { const st = state.get(b); if (st.near || f) measure(b, f && !!st.api); }
+      });
+    };
+    addEventListener('resize', () => relayout(true));
+    const ro = new ResizeObserver(() => relayout(false));
+    ro.observe(main || document.body);
+    for (const b of scrollies) for (const c of b.querySelectorAll('.rx-step-card')) ro.observe(c);
+    document.fonts?.ready.then(() => relayout(false));
+    for (const b of scrollies) layout(b);
     for (const b of scrollies) measure(b);
   }
 })();

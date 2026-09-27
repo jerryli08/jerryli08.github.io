@@ -229,8 +229,12 @@ export function hull(stage, models, { max = 24000 } = {}) {
         }
       }
       const n = P.length / 3, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = zs / n;
-      const tv = Math.tan((stage.camera.fov * DEG) / 2) / pad;
-      const th = (tv * stage.el.clientWidth) / Math.max(1, stage.el.clientHeight);
+      // like stage.frame: with the picture shifted clear of the step cards, fit the part left free
+      let sh = [0, 0];
+      try { sh = stage.el.rxShift?.() || sh; } catch { /* none */ }
+      const fx = 1 - 2 * Math.min(0.4, Math.abs(+sh[0] || 0)), fy = 1 - 2 * Math.min(0.4, Math.abs(+sh[1] || 0));
+      const tv = (Math.tan((stage.camera.fov * DEG) / 2) * fy) / pad;
+      const th = (Math.tan((stage.camera.fov * DEG) / 2) * fx * stage.el.clientWidth) / Math.max(1, stage.el.clientHeight) / pad;
       let dist = 0;
       for (let i = 0; i < P.length; i += 3) {
         const z = P[i + 2] - cz;

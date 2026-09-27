@@ -1,10 +1,11 @@
 // PowerPlay off-season robot (S.T.A.T.I.C., FTC 18996), April to August 2023. Rich page.
 // There is no CAD file of this robot (Jerry's checklist: "no cad for now, would need to find"), so the
-// page has no 3D and no stand-in geometry. Jerry, Sept 26: projects without CAD are scroll-based too,
-// and scrolling advances a slideshow of the real media. So the four scrollies are 2D (webgl: false):
-// real test clips stepped frame by frame (WebP frame sequences cut from the page's own clips into
-// /assets/models/powerplay-offseason/frames/ by /home/claude/work/powerplay-offseason-robot/frames.sh),
-// photos, and CAD screenshots, all driven only by the scroll.
+// page has no 3D and no stand-in geometry. Jerry, Sept 27: real footage plays as video ("the
+// scrolling should only advance CAD animations"), and a scroll slideshow of separate photos is
+// awkward. So the three frame-by-frame scrollies (cycle, lift, arm) became the test clips themselves,
+// playing normally beside their text, and the dated CAD-to-robot timeline is normal pictures.
+// No calculation block: the rigging (continuous or cascade), the spool size, the slide length, the
+// motors and the arm's gear teeth are not stated, and the lift's loads are unknown.
 // Copy uses only what Jerry stated (checklist: first CAD project, string-driven drawer slides, belted
 // virtual four bar, the printed bores, the string, the REV planetary stages; projects.mjs) and what
 // the media plainly shows, with dates from the files (clip dates from the photo numbering around
@@ -19,21 +20,6 @@
 // pockets changed, plate material and cutting, whether the odometry pods were built (Q7); which
 // motors carried the REV stages and the lift ratio (Q8). No faces (IMG_0794, 0798, 0799, 1982 are
 // never used) and no car photo (IMG_2042).
-
-// Frames per clip at 8 fps: frame i is clip time i / 8 s. n counts the whole clip; only the frames the
-// scrollies use are on disk.
-const FPS = 8;
-const FRAMES = {
-  'arm-lift-cone': { n: 60 },
-  'hero-lift-junction': { n: 32 },
-  'hero-arm-swing': { n: 32 },
-  'arm-cone-reach': { n: 88 },
-  'arm-swing-back': { n: 36 },
-  'lift-string-extend': { n: 120 },
-  'arm-bench-swing': { n: 72 },
-  'servo-gear-closeup': { n: 56 },
-};
-const P = '/assets/models/powerplay-offseason';
 
 export default {
   summary: {
@@ -63,32 +49,22 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ one cycle, from footage
-    { type: 'scrolly', id: 'cycle', module: 'reel', webgl: false, width: 'full', poster: `${P}/poster-cycle.webp`,
-      h: 'One cycle, from real test clips',
-      p: ['A POWERPLAY cycle goes: grab a cone, lift, swing it out over the pole, drop it, come back. Scroll, and one plays out in my test clips from Aug 25 to 29, 2023, put in that order and stepped frame by frame. They are separate tests, and they stop short of dropping a cone on a pole.'],
-      steps: [
-        { h: 'Grab', p: ['The claw\'s curved printed jaws wrap around the body of the cone. In this test the arm is lifted by hand, with a cone in the claw.'],
-          view: { shots: [{ clip: 'arm-lift-cone', from: 0, to: 7.5, date: 'Aug 25, 2023', c: 'The arm lifting a cone off the robot, moved by hand', tag: 'Moved by hand' }] } },
-        { h: 'Lift', p: ['Two towers of drawer slides, pulled up by string, raise the arm. Here the lift rises beside a junction pole on our practice field.'],
-          view: { shots: [
-            { clip: 'hero-lift-junction', from: 2, to: 4, w: 3, date: 'Aug 29, 2023', c: 'The lift rising beside a junction pole', tag: 'Clip' },
-            { i: 'still-lift-junction.webp', w: 1, date: 'Aug 29, 2023', c: 'The robot beside a junction pole, arm straight up', tag: 'Still from a clip' },
-          ] } },
-        { h: 'Swing over', p: ['A servo swings the belted arm from folded back over the chassis, over the top, to out in front. Here it is driven from a handheld servo tester.'],
-          view: { shots: [{ clip: 'hero-arm-swing', from: 0, to: 4, date: 'Aug 25 to 26, 2023', c: 'Folded back to out in front, on a servo tester', tag: 'Servo power' }] } },
-        { h: 'Reach', p: ['At full reach the cone is held high above the field wall. This check was by hand: flip the arm over and hold it up to see where the cone ends up.'],
-          view: { shots: [
-            { clip: 'arm-cone-reach', from: 2.5, to: 10.5, w: 3, date: 'Aug 25, 2023', c: 'Checking the reach by hand with a cone in the claw', tag: 'Moved by hand' },
-            { i: 'still-arm-cone-high.webp', w: 1, date: 'Aug 25, 2023', c: 'The cone high above the field wall', tag: 'Still from a clip' },
-          ] } },
-        { h: 'Come back', p: ['The arm swings back to fold over the chassis and the lift comes down, ready for the next cone.'],
-          view: { shots: [
-            { clip: 'arm-swing-back', from: 0, to: 4.5, w: 2, date: 'Aug 25 to 26, 2023', c: 'Out in front to folded back, on the servo tester', tag: 'Servo power' },
-            { clip: 'hero-lift-junction', from: 0, to: 2, w: 1, date: 'Aug 29, 2023', c: 'The lift coming down', tag: 'Clip' },
-          ] } },
-      ],
-      caption: 'Real test clips from Aug 25 to 29, 2023, in the order of a cycle. In steps 1 and 4 the arm is moved by hand; in steps 3 and 5 it runs on a servo tester.',
-      data: { aria: 'One POWERPLAY cycle told with real test clips', fps: FPS, frames: FRAMES } },
+    { type: 'prose', id: 'cycle', h: 'One cycle, from real test clips', p: [
+      'A POWERPLAY cycle goes: grab a cone, lift, swing it out over the pole, drop it, come back. Here one plays out in my test clips from Aug 25 to 29, 2023, put in that order. They are separate tests, and they stop short of dropping a cone on a pole.',
+    ] },
+    { type: 'split', id: 'cycle-clips', items: [
+      { h: 'Grab, then lift', media: { v: 'arm-lift-cone.mp4', c: 'Aug 25, 2023: the arm lifting a cone off the robot, moved by hand' }, p: [
+        'The claw\'s curved printed jaws wrap around the body of the cone. In this test the arm is lifted by hand, with a cone in the claw.',
+        'Then two towers of drawer slides, pulled up by string, raise the arm. The second clip at the top of the page is the lift rising beside a junction pole on our practice field, on Aug 29.',
+      ] },
+      { h: 'Swing over, and reach', media: { v: 'arm-cone-reach.mp4', c: 'Aug 25, 2023: checking the reach by hand with a cone in the claw, up to the cone high above the field wall' }, p: [
+        'A servo swings the belted arm from folded back over the chassis, over the top, to out in front: the first clip at the top of the page, driven from a handheld servo tester.',
+        'At full reach the cone is held high above the field wall. This check was by hand: flip the arm over and hold it up to see where the cone ends up.',
+      ] },
+      { h: 'Come back', media: { v: 'arm-swing-back.mp4', c: 'Aug 25 to 26, 2023: out in front to folded back, on the servo tester' }, p: [
+        'The arm swings back to fold over the chassis and the lift comes down, ready for the next cone. Here the arm runs on the servo tester, from out in front to folded back.',
+      ] },
+    ] },
 
     // ------------------------------------------------------------------ drivetrain
     { type: 'prose', id: 'drivetrain', h: 'Learning CAD on the drivetrain', p: [
@@ -100,39 +76,11 @@ export default {
       { i: 'cad-chassis-side.webp', c: 'May 7, 2023: the chassis side in CAD, with the mecanum wheels and the odometry pod' },
     ] },
 
-    { type: 'scrolly', id: 'timeline', module: 'timeline', webgl: false, width: 'wide', side: 'left', length: '480vh', poster: `${P}/poster-timeline.webp`,
-      h: 'From CAD to robot',
-      p: ['April to August 2023, one dated picture at a time: the CAD on the top band of the rail, the build on the bottom. Scroll, and the robot goes from Fusion 360 to the practice field.'],
-      caption: 'Dates come from the photo files; clip stills are dated by the photos around them. The April pod video has no exact date.',
-      data: {
-        aria: 'The robot from CAD to the practice field, April to August 2023',
-        from: '2023-04-01', to: '2023-08-31',
-        items: [
-          { d: '2023-04-15', when: 'April 2023', band: 'cad', i: 'cad-odometry-pod.webp', c: 'The dead-wheel odometry pod in CAD, turned on its pivot' },
-          { d: '2023-04-26', band: 'cad', i: 'cad-drive-module.webp', c: 'A drive module between two plates, with two motors' },
-          { d: '2023-04-30', band: 'cad', i: 'cad-plate-pocket-sketch.webp', c: 'The first sketch of pockets over the side plate' },
-          { d: '2023-05-04', band: 'cad', i: 'cad-plate-plain.webp', c: 'The plain side plate, with the wheels and the pod' },
-          { d: '2023-05-07', band: 'cad', i: 'cad-chassis-side.webp', c: 'The chassis side: mecanum wheels and the odometry pod' },
-          { d: '2023-05-12', band: 'cad', i: 'cad-plate-pocketed.webp', c: 'A triangulated pocket layout' },
-          { d: '2023-05-22', band: 'cad', i: 'cad-slides-render.webp', c: 'An early render with long slide stacks drawn out, two up and two forward' },
-          { d: '2023-06-01', band: 'cad', i: 'cad-plate-markup.webp', c: 'The next pocket layout, drawn over the plate in red' },
-          { d: '2023-07-29', band: 'build', i: 'plate-built-mecanum.webp', c: 'A finished pocketed side plate over the mecanum wheels' },
-          { d: '2023-08-05', band: 'build', i: 'chassis-both-sides.webp', c: 'Both halves of the drivetrain' },
-          { d: '2023-08-15', band: 'build', v: 'drive-test.mp4', c: 'Drive test of the bare drivetrain (a still from the clip)' },
-          { d: '2023-08-17', band: 'cad', i: 'cad-claw-render.webp', c: 'The claw around a cone in CAD' },
-          { d: '2023-08-21', band: 'cad', i: 'cad-full-robot.webp', c: 'The whole robot in CAD' },
-          { d: '2023-08-22', band: 'build', i: 'slides-tower.webp', c: 'One lift tower: three drawer slides with printed caps' },
-          { d: '2023-08-23', band: 'build', i: 'lift-spool-motor.webp', c: 'A printed spool wound with string on a lift motor' },
-          { d: '2023-08-24', band: 'build', i: 'arm-servo-gear.webp', c: 'The arm servo with its pinion and the large aluminum gear' },
-          { d: '2023-08-25', band: 'build', i: 'still-arm-bench.webp', c: 'The belted arm, off the robot' },
-          { d: '2023-08-26', band: 'build', i: 'robot-standing.webp', c: 'The whole robot on our practice field, lift and arm up' },
-          { d: '2023-08-29', band: 'build', i: 'still-lift-junction.webp', c: 'Beside a junction pole on the practice field, arm straight up' },
-        ],
-      } },
-
     { type: 'iterations', id: 'pockets', h: 'The side plate, layout by layout', items: [
       { label: 'Apr 30, 2023', title: 'A sketch over the solid plate', p: ['The first pocket pattern, sketched in white straight over the side plate, with the wheels and the odometry pod behind it.'],
         media: [{ i: 'cad-plate-pocket-sketch.webp', c: 'Apr 30, 2023: the first pocket sketch over the side plate' }] },
+      { label: 'May 4, 2023', title: 'The plain plate', p: ['The side plate with no pockets at all, with the wheels and the odometry pod behind it.'],
+        media: [{ i: 'cad-plate-plain.webp', c: 'May 4, 2023: the plain side plate, with the wheels and the pod' }] },
       { label: 'May 12, 2023', title: 'Triangulated pockets', p: ['A layout of triangulated pockets between thin webs, cut through the whole plate.'],
         media: [{ i: 'cad-plate-pocketed.webp', c: 'May 12, 2023: a triangulated pocket layout' }] },
       { label: 'Jun 1, 2023', title: 'The next layout, in red', p: ['A new layout drawn by hand in red over the plate.'],
@@ -147,29 +95,19 @@ export default {
 
     // ------------------------------------------------------------------ the lift
     { type: 'prose', id: 'lift-build', h: 'The lift: string-driven drawer slides', p: [
+      'Slides show up in the CAD in May: an early render on May 22 has long slide stacks drawn out, two up and two forward.',
       'The lift is two towers, one on each side of the robot. Each tower is a stack of three drawer slides with printed caps on top.',
       'A printed spool on a motor at the base winds in string. The string runs up the stages and turns over printed pulleys at their tops, so winding it in pulls the stages up. The spool in the photo sits on a gearbox built from stacked planetary stages.',
+      'On Aug 29 the lift was being strung. Pulled up by hand, the stages rise with the string running up beside them and over a printed pulley block at the top of each stage, until the tower stands at full height.',
     ], media: [
+      { i: 'cad-slides-render.webp', c: 'May 22, 2023: an early render with long slide stacks drawn out, two up and two forward' },
       { i: 'slides-tower.webp', c: 'Aug 22, 2023: one lift tower, three drawer slides with printed caps' },
       { i: 'lift-spool-motor.webp', c: 'Aug 23, 2023: a printed spool wound with string, on a motor with a gearbox of stacked planetary stages' },
-    ] },
-
-    { type: 'scrolly', id: 'lift', module: 'reel', webgl: false, width: 'full', poster: `${P}/poster-lift.webp`,
-      steps: [
-        { h: 'The spool', p: ['A printed spool on a lift motor winds the string in. The motor\'s gearbox is built from stacked planetary stages.'],
-          view: { shots: [{ i: 'lift-spool-motor.webp', date: 'Aug 23, 2023', c: 'The printed spool, wound with string, on its motor', tag: 'Photo' }] } },
-        { h: 'The stages', p: ['Each tower is three drawer slides, and the string pulls the stages up. Here they are pulled up by hand while the lift is strung.'],
-          view: { shots: [{ clip: 'lift-string-extend', from: 0, to: 6, date: 'Aug 29, 2023', c: 'Pulling the stages up by hand, with the string running up beside them', tag: 'Moved by hand' }] } },
-        { h: 'The pulleys', p: ['At the top of each stage the string turns over a printed pulley block.'],
-          view: { shots: [{ clip: 'lift-string-extend', from: 11, to: 13, date: 'Aug 29, 2023', c: 'A printed pulley block at the top of a stage', tag: 'Moved by hand' }] } },
-        { h: 'Full height', p: ['All three stages out: the tower at full height, and the whole robot with its lift up.'],
-          view: { shots: [
-            { clip: 'lift-string-extend', from: 13, to: 15, w: 2, date: 'Aug 29, 2023', c: 'Looking up the tower at full height', tag: 'Moved by hand' },
-            { i: 'robot-standing.webp', w: 1, date: 'Aug 26, 2023', c: 'The whole robot with its lift and arm up', tag: 'Photo' },
-          ] } },
+      [
+        { v: 'lift-string-extend.mp4', c: 'Aug 29, 2023: the stages pulled up by hand, the string running up beside them and over the pulley blocks, to full height' },
+        { v: 'lift-stringing-base.mp4', c: 'Aug 29, 2023: stringing the lift at its base, with the first stage pulled up by hand' },
       ],
-      caption: 'Photos from Aug 23 and 26 and a clip from Aug 29, 2023, stepped frame by frame by the scroll. In the clip the stages are pulled up by hand while the lift is strung.',
-      data: { aria: 'How the string lift is built, from a real photo and clip', fps: FPS, frames: FRAMES } },
+    ] },
 
     { type: 'prose', id: 'lift-problems', h: 'What went wrong in the lift', p: [
       { problem: 'I printed the bores straight into the pulleys, and they stripped out completely on the 5 mm shafts.', title: 'Printed bores stripped' },
@@ -180,7 +118,6 @@ export default {
       { next: 'Go with goBILDA gearboxes, which do not come as individual stages you assemble.' },
     ], media: [
       { i: 'still-dyneema-spool.webp', c: 'Aug 23, 2023, while stringing the lift: a spool of 1.0 mm Dyneema whipping twine' },
-      { v: 'lift-stringing-base.mp4', c: 'Aug 29, 2023: stringing the lift at its base, with the first stage pulled up by hand' },
     ] },
 
     // ------------------------------------------------------------------ the arm
@@ -188,26 +125,12 @@ export default {
       'On top of the lift sits the arm that carries the cone out over the pole. It is a belted virtual four bar. A parallel four bar uses two equal links so the end keeps its angle as the arm swings; a virtual four bar gets the same effect from one arm and a belt, which runs along the arm from a pulley at the pivot to a pulley at the claw end.',
       'The arm swings from folded back over the chassis, over the top, to out in front. Its pivot is driven by a servo through a gear reduction: a small pinion on the servo turns a large aluminum gear on the pivot shaft. Threaded rods tie the tops of the two towers together.',
     ], media: [
-      { i: 'still-arm-bench.webp', c: 'Aug 25, 2023: the arm off the robot, with the belt running from the pivot pulley to the pulley at the claw end' },
-      { i: 'arm-servo-gear.webp', c: 'Aug 24, 2023: the arm servo with its pinion and the large aluminum gear, on a printed mount' },
-    ] },
-
-    { type: 'scrolly', id: 'arm', module: 'reel', webgl: false, width: 'wide', side: 'right', poster: `${P}/poster-arm.webp`,
-      steps: [
-        { h: 'The belt', p: ['Off the robot, the arm is two bars with a belt running along them from the pulley at the pivot to the pulley at the claw end. Swinging it by hand shows its whole range.'],
-          view: { shots: [{ clip: 'arm-bench-swing', from: 0, to: 9, date: 'Aug 25, 2023', c: 'The arm off the robot, swung by hand through its range', tag: 'Moved by hand' }] } },
-        { h: 'The drive', p: ['A small pinion on the servo turns the large aluminum gear on the pivot shaft: a reduction that trades the servo\'s speed for torque at the arm.'],
-          view: { shots: [
-            { i: 'still-servo-gear.webp', date: 'Aug 25 to 26, 2023', c: 'The arm drive on top of a tower: servo, pinion and the large gear', tag: 'Still from a clip' },
-            { clip: 'servo-gear-closeup', from: 0, to: 7, date: 'Aug 25 to 26, 2023', c: 'The arm drive as the arm is moved by hand', tag: 'Moved by hand' },
-          ] } },
-        { h: 'Out in front to folded back', p: ['Under servo power, driven from a handheld servo tester, the arm swings from out in front, over the top, to folded back over the chassis.'],
-          view: { shots: [{ clip: 'arm-swing-back', from: 0, to: 4.5, date: 'Aug 25 to 26, 2023', c: 'Out in front to folded back, on the servo tester', tag: 'Servo power' }] } },
-        { h: 'And back out', p: ['And from folded back, over the top, to out in front again.'],
-          view: { shots: [{ clip: 'hero-arm-swing', from: 0, to: 4, date: 'Aug 25 to 26, 2023', c: 'Folded back to out in front, on the servo tester', tag: 'Servo power' }] } },
+      { v: 'arm-bench-swing.mp4', c: 'Aug 25, 2023: the arm off the robot, swung by hand through its range, the belt running from the pivot pulley to the pulley at the claw end' },
+      [
+        { i: 'arm-servo-gear.webp', c: 'Aug 24, 2023: the arm servo with its pinion and the large aluminum gear, on a printed mount' },
+        { v: 'servo-gear-closeup.mp4', c: 'Aug 25 to 26, 2023: the same drive on top of a tower as the arm is moved by hand' },
       ],
-      caption: 'Real clips from Aug 25 to 26, 2023, stepped frame by frame by the scroll.',
-      data: { aria: 'The belted arm and its drive, from real clips', fps: FPS, frames: FRAMES } },
+    ] },
 
     // ------------------------------------------------------------------ the claw and the robot
     { type: 'media', id: 'claw', layout: 'row', h: 'The claw',

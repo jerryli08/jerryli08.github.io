@@ -66,5 +66,15 @@
     const k = b.dataset.filter;
     tiles.forEach((t) => { t.hidden = k !== 'all' && t.dataset.kind !== k; });
   }));
+  // landing chips that jump to All work with a filter on ("5+ hackathons")
+  document.querySelectorAll('[data-chip-filter]').forEach((a) => a.addEventListener('click', (e) => {
+    const b = document.querySelector(`[data-filter="${a.dataset.chipFilter}"]`);
+    const work = document.getElementById('work');
+    if (!b || !work) return;
+    e.preventDefault();
+    b.click();
+    work.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    history.replaceState(null, '', '#work');
+  }));
 
 })();
