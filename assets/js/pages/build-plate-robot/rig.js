@@ -1,9 +1,10 @@
 // Shared rig for the Replac3d demos: loads Jerry's full CAD (robot, printer, plate holders) and
 // rigs its two axes about the real geometry.
 //
-// The web model (assets/models/build-plate-robot/final.glb) keeps the CAD's parts grouped by how
-// they move (regrouped by world transform before tools/optimize-cad.mjs, shapes untouched); every
-// group is named G_<NAME>:
+// The web models keep the CAD's parts grouped by how they move (regrouped by world transform before
+// tools/optimize-cad.mjs, shapes untouched; see /home/claude/work/replac3d/cad/README.md); every
+// group is named G_<NAME>. final.glb has everything but the circuit boards, which are in
+// electronics.glb (loaded only by the electronics scrolly, with { electronics: true }):
 //   ROT      everything that turns with the turntable: frame, side plates, bottom plate, slides'
 //            outer members, extension motors and idlers, chain mount
 //   EXT      the carriage: 2020 extrusions, electromagnet mount, slides' inner members, belt clamps
@@ -13,7 +14,8 @@
 //   THR_UP / THR_LO the 8 upper and 8 lower GoBILDA thrust bearings, MR106 the 8 radial bearings,
 //   RING     the printed 288-tooth pulley disc and its standoffs, MIDPLATE the fixed middle plate
 //   TPUL     the NEMA 23's 80-tooth pulley, BELT the turntable belt, NEMA23, BASE the fixed base
-//   UNO PERF PI PSU TERM BUCK MOS1 MOS2 BAY_L BAY_R   electronics and their printed bays
+//   PSU BAY_L BAY_R   the power supply and the printed electronics bays
+//   UNO PERF PI TERM BUCK MOS1 MOS2   the boards (electronics.glb)
 //   PRINTER HOLDERS PLATE_L PLATE_C PLATE_R STOCK
 //
 // Axes, from the CAD (GLB metres, Y up; GLB (x, y, z) = STEP (x, z, -y) / 1000):
@@ -27,6 +29,7 @@
 import * as THREE from 'three';
 
 export const MODEL = '/assets/models/build-plate-robot/final.glb';
+export const BOARDS = '/assets/models/build-plate-robot/electronics.glb';
 export const AXIS = [0, -0.03, 0.0795];
 export const STROKE = 0.355;                 // m, grasper centre z -1 mm to the printer plate centre z -356 mm
 export const RATIO = 288 / 80;               // turntable reduction, from the pulley tooth counts
@@ -34,13 +37,13 @@ export const EXT_PITCH_R = (80 * 0.002) / (2 * Math.PI); // 80 T GT2 pulley pitc
 const DEG = Math.PI / 180;
 
 const NAMES = ['ROT', 'EXT', 'MAG', 'MID', 'BALLS_IN', 'BALLS_OUT', 'EPUL_L', 'EPUL_R', 'THR_UP', 'THR_LO', 'MR106', 'RING',
-  'MIDPLATE', 'TPUL', 'BELT', 'NEMA23', 'BASE', 'UNO', 'PERF', 'PI', 'PSU', 'TERM', 'BUCK', 'MOS1', 'MOS2', 'BAY_L', 'BAY_R',
-  'PRINTER', 'HOLDERS', 'PLATE_L', 'PLATE_C', 'PLATE_R', 'STOCK'];
+  'MIDPLATE', 'TPUL', 'BELT', 'NEMA23', 'BASE', 'PSU', 'BAY_L', 'BAY_R', 'PRINTER', 'HOLDERS', 'PLATE_L', 'PLATE_C', 'PLATE_R', 'STOCK'];
+const BOARD_NAMES = ['UNO', 'PERF', 'PI', 'TERM', 'BUCK', 'MOS1', 'MOS2'];
 
-export async function loadRig(stage) {
-  const model = await stage.load(MODEL);
+export async function loadRig(stage, { electronics = false } = {}) {
+  const [model, boards] = await Promise.all([stage.load(MODEL), electronics ? stage.load(BOARDS) : null]);
   const P = {};
-  for (const n of NAMES) {
+  for (const n of electronics ? [...NAMES, ...BOARD_NAMES] : NAMES) {
     P[n] = stage.part(new RegExp(`_G_${n}$`))[0];
     if (!P[n]) throw new Error(`replac3d rig: part ${n} missing`);
   }
@@ -89,14 +92,18 @@ export async function loadRig(stage) {
     stage.invalidate();
   }
 
-  // Materials are shared between parts of one colour, so anything faded gets its own copies.
-  const faded = new Map();
+  // Materials are shared between parts of one colour, so anything faded gets its own copies
+  // (stage.cloneMaterial keeps section cuts working). Only a change of opacity touches the scene.
+  const faded = new Map(), fadeNow = new Map();
   function fade(obj, opacity) {
+    opacity = Math.round(opacity * 1000) / 1000;
+    if (fadeNow.get(obj) === opacity) return;
+    fadeNow.set(obj, opacity);
     obj.traverse((m) => {
       if (!m.isMesh) return;
       if (!faded.has(m)) {
         const orig = m.material;
-        m.material = Array.isArray(orig) ? orig.map((x) => x.clone()) : orig.clone();
+        m.material = Array.isArray(orig) ? orig.map((x) => stage.cloneMaterial(x)) : stage.cloneMaterial(orig);
         faded.set(m, orig);
       }
       for (const mat of [].concat(m.material)) {
@@ -133,102 +140,39 @@ export async function loadRig(stage) {
   }
 
   set({});
-  return { model, P, turret, upper, ext, mid, ballsIn, ballsOut, thrUp, radial, thrLo, ring, drive, set, state, fade, carrier };
+  return { model, boards, P, turret, upper, ext, mid, ballsIn, ballsOut, thrUp, radial, thrLo, ring, drive, set, state, fade, carrier };
 }
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 export const lerp = (a, b, t) => a + (b - a) * t;
 
-let styled = false;
-/** Small dark overlay styles shared by the demos (the site's .rx-hint look). */
-export function style() {
-  if (styled) return;
-  styled = true;
-  const s = document.createElement('style');
-  s.textContent = `
-.bpr-hud { position: absolute; z-index: 3; top: 12px; right: 12px; display: grid; grid-template-columns: auto auto; gap: 2px 12px;
-  padding: 8px 12px; border-radius: 12px; background: rgba(10, 8, 7, 0.7); border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: 12px; line-height: 1.5; color: #b8b0a7; pointer-events: none; }
-.bpr-hud b { font-weight: 650; color: #eee9e3; text-align: right; font-variant-numeric: tabular-nums; }
-.bpr-hud b.on { color: #ff8a57; }
-.bpr-note { position: absolute; z-index: 3; left: 12px; bottom: 12px; max-width: min(360px, calc(100% - 24px)); padding: 6px 11px; border-radius: 10px;
-  background: rgba(10, 8, 7, 0.66); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 12px; line-height: 1.4; color: #b8b0a7; pointer-events: none; }
-.bpr-labs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
-.bpr-lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;
-  font-size: 12px; line-height: 1.2; color: #eee9e3; transition: opacity .25s; }
-.bpr-lab i { width: 7px; height: 7px; border-radius: 50%; background: #ff6b35; box-shadow: 0 0 0 2px rgba(11, 10, 9, .7); flex: none; }
-.bpr-lab b { font-weight: 500; padding: 3px 7px; border-radius: 6px; background: rgba(11, 10, 9, .8); border: 1px solid rgba(237, 232, 226, .18); }
-.bpr-lab.l { flex-direction: row-reverse; }
-@media (max-width: 600px) { .bpr-hud { top: 8px; right: 8px; font-size: 11px; padding: 6px 9px; } .bpr-lab { font-size: 11px; } .bpr-note { font-size: 11px; left: 8px; bottom: 8px; } }
-@media (prefers-reduced-motion: reduce) { .bpr-lab { transition: none; } }`;
-  document.head.append(s);
-}
-
-/** Heads-up readout in a corner of the stage: rows [{ key, label }]. Returns set({ key: text }). */
-export function hud(el, rows) {
-  style();
-  const box = document.createElement('div');
-  box.className = 'bpr-hud';
-  box.setAttribute('aria-hidden', 'true');
-  const cells = {};
-  for (const r of rows) {
-    const k = document.createElement('span'); k.textContent = r.label;
-    const v = document.createElement('b');
-    box.append(k, v); cells[r.key] = v;
-  }
-  el.append(box);
-  return {
-    el: box,
-    set(vals) { for (const [k, v] of Object.entries(vals)) { const c = cells[k]; if (!c) continue; const [txt, on] = Array.isArray(v) ? v : [v, false]; if (c.textContent !== txt) c.textContent = txt; c.classList.toggle('on', !!on); } },
+/** Emissive glow on parts that follows the scroll: set(k) with k 0..1 (0 restores the parts). */
+export function glow(stage, parts, color = '#ff7a2f', max = 0.55) {
+  let off = null, last = -1;
+  return (k) => {
+    k = Math.round(k * 100) / 100;
+    if (k === last) return;
+    last = k;
+    if (k <= 0) { off?.(); off = null; return; }
+    off = stage.highlight(parts, color, { intensity: max * k });
   };
 }
 
-/** A one-line note in the bottom-left corner of the stage. */
-export function note(el, text) {
-  style();
-  const n = document.createElement('p');
-  n.className = 'bpr-note';
-  n.textContent = text;
-  el.append(n);
-  return n;
-}
-
-/** Screen-space labels: a dot on a point of the model and a short name beside it. */
-export function labels(el) {
-  style();
-  const box = document.createElement('div');
-  box.className = 'bpr-labs';
-  box.setAttribute('aria-hidden', 'true');
-  el.append(box);
-  let items = [];
-  const v = new THREE.Vector3();
+/** An .rx-hud readout in the label layer: html with data-k cells; put(k, text) and bar(k, 0..1) write only on change. */
+export function readout(ov, html) {
+  const hud = document.createElement('div');
+  hud.className = 'rx-hud';
+  hud.setAttribute('aria-hidden', 'true');
+  hud.innerHTML = html;
+  ov.layer.append(hud);
+  const K = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
+  const shown = {};
   return {
-    set(list) {
-      const key = list.map((x) => x.text).join('|');
-      if (key === box.dataset.key) { items.forEach((it, i) => { it.p = list[i].p; }); return; }
-      box.dataset.key = key;
-      box.textContent = '';
-      items = list.map((x) => {
-        const d = document.createElement('span');
-        d.className = `bpr-lab${x.side === 'l' ? ' l' : ''}`;
-        d.innerHTML = '<i></i><b></b>';
-        d.querySelector('b').textContent = x.text;
-        box.append(d);
-        return { ...x, d };
-      });
-    },
-    update(camera) {
-      const w = el.clientWidth, h = el.clientHeight;
-      camera.updateMatrixWorld();
-      for (const it of items) {
-        v.copy(it.p).project(camera);
-        const x = ((v.x + 1) / 2) * w, y = ((1 - v.y) / 2) * h;
-        const off = it.side === 'l' ? -it.d.offsetWidth + 3.5 : -3.5;
-        it.d.style.transform = `translate(${(x + off).toFixed(1)}px, ${(y - 9).toFixed(1)}px)`;
-        it.d.style.opacity = v.z > 1 || x < 0 || x > w || y < 0 || y > h ? '0' : '1';
-      }
-    },
+    el: hud,
+    put(k, text) { if (shown[k] !== text) { K[k].textContent = text; shown[k] = text; } },
+    bar(k, f) { const w = `${(clamp(f, 0, 1) * 100).toFixed(1)}%`; if (shown[k] !== w) { K[k].style.width = w; shown[k] = w; } },
+    show(a) { const o = String(Math.round(a * 100) / 100); if (shown.$ !== o) { hud.style.opacity = o; shown.$ = o; } },
   };
 }
 

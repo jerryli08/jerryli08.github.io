@@ -4,8 +4,11 @@
 // Plate A (the used plate) is "FILLETED Bambu Build Plate:3", moved into the printer; plate B (the
 // fresh one) is ":1" on the -X holder; the +X holder starts empty. The same order as the firmware:
 // retrieve() at the printer, deposit() to the right-hand holder, pickup() from the left, replace().
+// The camera views are framed once per stage shape, each with the rig parked in its step's end pose,
+// and blended; nothing is framed on a moving part.
 import { createStage } from '/assets/js/lib/stage.js';
-import { loadRig, STROKE, clamp, smooth, lerp, hud, note, blendView } from './rig.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
+import { loadRig, STROKE, clamp, smooth, lerp, readout, glow, blendView } from './rig.js';
 
 const BED_UP = 0.15; // m. The printer's bed is not in the CAD; the plate shows it dropping to the bottom.
 
@@ -28,9 +31,11 @@ function poseAt(t) {
 }
 // the end pose of each step (reduced motion shows only these)
 const STEP_END = [0.95, 1.95, 2.95, 3.95, 4.95, 5.95, 6.95, 7.95, 8.95, 9.99];
+// which function of the final sketch (finalWorking08-23-2024.ino) each step belongs to
+const FN = ['waiting for the button', 'retrieve()', 'retrieve()', 'retrieve()', 'deposit()', 'deposit()', 'pickup()', 'pickup()', 'replace()', 'replace()'];
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { controls: false });
+  const stage = createStage(el, { controls: false, hint: false });
   const rig = await loadRig(stage);
   const { P } = rig;
   P.STOCK.visible = false;   // the stock plate: the finished machine runs on my steel plates
@@ -40,12 +45,15 @@ export async function mount(el, ctx) {
   const aPrinter = A.at(0, STROKE), aHolder = A.at(-90, STROKE), bPrinter = B.at(0, STROKE), bHolder = B.at(90, STROKE);
   const up = (m, y) => m.clone().premultiply(new stage.THREE.Matrix4().makeTranslation(0, y, 0));
 
-  const info = hud(el, [
-    { key: 'theta', label: 'Turntable' },
-    { key: 's', label: 'Reach' },
-    { key: 'mag', label: 'Magnets' },
-  ]);
-  note(el, 'My CAD. The printer’s bed is not modeled, so only the plate moves with it.');
+  const ov = labelLayer(stage);
+  const hud = readout(ov, `
+    <div class="rx-hud-row"><span>Sketch</span><b data-k="fn"></b></div>
+    <table class="num"><tbody>
+      <tr><td>Turntable</td><td data-k="theta"></td></tr>
+      <tr><td>Reach <small>355 mm stroke</small></td><td data-k="s"></td></tr>
+      <tr><td>Magnets</td><td data-k="mag"></td></tr>
+    </tbody></table>
+    <div class="rx-hud-mini num" data-k="mini"></div>`);
 
   // camera: one framed view per step, computed with the rig in that step's pose (and again on resize)
   const V = [
@@ -73,18 +81,19 @@ export async function mount(el, ctx) {
     rig.set(keep);
   }
 
-  let magOn = null, lastA = '', lastB = '';
+  const magGlow = glow(stage, P.MAG, '#ff7a2f', 1);
+  let lastA = '', lastB = '';
   function setProgress(p, step, stepP) {
-    const portrait = el.clientHeight > el.clientWidth;
+    step = clamp(step | 0, 0, V.length - 1);
+    stage.setShift(...ctx.shift());
     const key = `${el.clientWidth}x${el.clientHeight}`;
-    if (key !== sized) { sized = key; stage.setShift(portrait ? 0 : 0.15, portrait ? 0.2 : 0); computeViews(); }
+    if (key !== sized) { sized = key; computeViews(); }
     const t = ctx.reducedMotion ? STEP_END[step] : clamp(step + stepP, 0, 9.999);
     const q = poseAt(t);
     rig.set({ theta: q.theta, s: q.s });
 
     // magnets glow while they are on
-    if (q.mag > 0.02) magOn = stage.highlight(P.MAG, '#ff7a2f', { intensity: 0.25 + 0.75 * q.mag });
-    else if (magOn) { magOn(); magOn = null; }
+    magGlow(q.mag > 0.02 ? 0.25 + 0.75 * q.mag : 0);
 
     // plates: at rest where they were left, or riding the carriage while the magnets hold them
     if (q.a === 'printer') A.put(up(aPrinter, q.bed));
@@ -105,13 +114,13 @@ export async function mount(el, ctx) {
     const view = step === 0 ? views[0] : blendView(views[step - 1], views[step], k);
     stage.setView(view);
 
-    info.set({
-      theta: `${q.theta.toFixed(0)}°`,
-      s: `${(q.s * 1000).toFixed(0)} mm`,
-      mag: q.mag > 0.5 ? ['On', true] : 'Off',
-    });
+    const deg = `${Math.round(q.theta)}°`, mm = `${Math.round(q.s * 1000)} mm`, mag = q.mag > 0.5 ? 'On' : 'Off';
+    hud.put('fn', FN[step]);
+    hud.put('theta', deg); hud.put('s', mm); hud.put('mag', mag);
+    hud.put('mini', `Turntable ${deg}, reach ${mm}, magnets ${mag.toLowerCase()}`);
+    ov.update();
   }
   setProgress(0, 0, 0);
-  return { setProgress, dispose: () => stage.dispose() };
+  return { setProgress, dispose() { ov.dispose(); stage.dispose(); } };
 }
 

@@ -1,108 +1,166 @@
-// V2 turret mechanism on the Worlds CAD. Sliders turn the turret (the two 90T gears that mesh
-// with its 150T ring counter-rotate 150/90 as far) and roll the hood along its toothed arc (the
-// 40T pinion turns 7.65x as far the other way). "Feed a ball" runs the four TPU spinners and
-// sends the top stored ball up through the turret bearing's bore, under the hood and out, along
-// the geometry of the CAD. Nothing moves until the reader asks.
+// "The turret", scroll-driven, on the Worlds CAD (V2) with its moving parts rigged about their real
+// axes (rig.js). u = step + progress through it (0..4):
+//   0  at rest: the turret on its turntable bearing, the 150T ring and the two 90T gears named
+//   1  the turret turns 60 degrees; both 90T gears counter-rotate 150/90 as far (100 degrees)
+//   2  the turret comes back, the section sweeps in down the centreline (keeping the robot's left
+//      half, where the pinion is), and the hood rolls along its toothed arc from 50 to 30 degrees
+//      about the flywheel axle while the 40T pinion turns 7.65 times as far the other way
+//   3  the hood rolls back, the flywheel spins up, the four TPU spinners push the stack, and the
+//      top ball rises out of the bearing's bore onto the wheel, rides under the hood and leaves
+//      (fading out past the robot); the other two move up behind it
+// Every picture is a pure function of the scroll. Tooth counts and pitch radii are from the CAD;
+// how far the turret turns here is illustrative (not its real travel limit); the hood stays where
+// the pinion is on the arc in the CAD. Launch directions are geometry only.
 import { createStage } from '/assets/js/lib/stage.js';
-import { slider, playToggle, readout, button, segmented } from '/assets/js/lib/ui.js';
-import { loadParts, rigTurret, restCentre, placeBall, dropMouthBall, DEG, V2, RING_T, SERVO_T, HOOD_RACK_R, PINION_R, lerp, smooth, mix3 } from './rig.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
+import { loadParts, rigTurret, restCentre, placeBall, dropMouthBall, wholeBalls, region, viewSet, hudPanel, stepState, integrate, DEG, V2, MID_X, RING_T, SERVO_T, HOOD_RACK_R, PINION_R, lerp, smooth, mix3 } from './rig.js';
+
+const N = 4, TURN = 60, HOOD_LOW = 30;
+const CUT_AT = -MID_X, CUT_OFF = 0.3;
+const turretAt = (u) => TURN * smooth(1.1, 1.8, u) * (1 - smooth(2.0, 2.25, u)); // degrees
+const hoodAt = (u) => V2.hoodEnd - (V2.hoodEnd - HOOD_LOW) * smooth(2.5, 2.85, u) * (1 - smooth(3.0, 3.2, u));
+const cutAt = (u) => smooth(2.15, 2.4, u);
+const flySpeed = (u) => smooth(3.0, 3.3, u);
+const spinSpeed = (u) => smooth(3.28, 3.34, u) * (1 - smooth(3.72, 3.78, u));
+const flyAngle = integrate(flySpeed, N), spinAngle = integrate(spinSpeed, N);
 
 export async function mount(el, ctx) {
-  const stage = createStage(el, { exposure: 1.15, hint: ctx.isTouch ? 'Swipe sideways to turn' : 'Drag to rotate' });
+  const stage = createStage(el, { controls: false, hint: false });
+  const { THREE } = stage;
+  const reduced = ctx.reducedMotion;
   const { chassis, top } = await loadParts(stage, 'v2');
   dropMouthBall(stage, top);
   const rig = rigTurret(stage, chassis, top);
-
-  // camera on the turret, from the front left
-  const focus = [...rig.ring, ...rig.gears, ...rig.hoodParts];
-  const views = { whole: { azimuth: 38, elevation: 24 }, cut: { azimuth: -76, elevation: 10 } };
-  let view = 'whole';
-  const reframe = (dur = 0) => stage.frame(focus, { ...views[view], pad: 1.3, offset: [0, -0.06, 0], duration: dur });
-  reframe();
-
-  // ------------------------------------------------------------ readouts
-  const info = readout(null, { rows: [
-    { key: 't', label: 'Turret', unit: '°', format: (v) => v.toFixed(0) },
-    { key: 's', label: 'Each 90T gear (150:90)', unit: '°', format: (v) => v.toFixed(0) },
-    { key: 'h', label: 'Hood end, about the axle', unit: '°', format: (v) => v.toFixed(0) },
-    { key: 'p', label: '40T pinion', unit: '°', format: (v) => v.toFixed(0) },
-    { key: 'l', label: 'Ball leaves at', format: (v) => `about ${v.toFixed(0)}° up` },
-  ] });
-  const paint = () => info.set({
-    t: rig.turret / DEG, s: (-RING_T / SERVO_T) * rig.turret / DEG,
-    h: rig.hoodEnd, p: -(V2.hoodEnd - rig.hoodEnd) * (HOOD_RACK_R / PINION_R), l: 90 - rig.hoodEnd,
-  });
-
-  // glow the parts a control moves, briefly
-  let unlight = null, lightTimer = 0;
-  const glow = (parts) => {
-    unlight?.(); unlight = stage.highlight(parts, '#ff6b35', { intensity: 0.55 });
-    clearTimeout(lightTimer); lightTimer = setTimeout(() => { unlight?.(); unlight = null; }, 900);
-  };
-
-  slider(ctx.panel, { label: 'Turret', min: -90, max: 90, step: 1, value: 0, unit: '°', format: (v) => v.toFixed(0),
-    onInput: (v) => { rig.setTurret(v * DEG); glow([...rig.ring, ...rig.gears]); paint(); } });
-  slider(ctx.panel, { label: 'Hood', min: 26, max: 54, step: 0.5, value: V2.hoodEnd, unit: '°', format: (v) => v.toFixed(0),
-    onInput: (v) => { rig.setHood(v); glow(rig.hoodParts); paint(); } });
-
-  // ------------------------------------------------------------ flywheel
-  let spin = null;
-  const flyBtn = playToggle(ctx.panel, { playing: false, labels: ['Spin flywheel', 'Stop flywheel'], onChange(on) {
-    spin?.(); spin = null;
-    if (on) spin = stage.onFrame((dt) => rig.setFly(rig.flyAngle - dt * 14));
-  } });
-
-  // ------------------------------------------------------------ section through the ball path
-  let cut = null; // keeps x >= -0.036, the robot's left half; made when the reader first asks
-  const setCut = (on) => { if (on && !cut) cut = stage.sectionPlane([1, 0, 0], 0.036); else cut?.enable(on); };
-
-  // ------------------------------------------------------------ feed a ball
+  const cut = stage.sectionPlane([1, 0, 0], CUT_OFF); // parked outside the robot until step 3
   const b = rig.balls;
   const rest = { top: restCentre(stage, b.top), mid: restCentre(stage, b.mid), low: restCentre(stage, b.low) };
-  const startTh = Math.atan2(rest.top[1] - V2.fly.y, rest.top[2] - V2.fly.z) / DEG; // about -21 degrees
-  let feed = null;
-  function ballAt(t) {
-    // 0..0.25 rise out of the bore onto the wheel, 0.25..0.7 ride under the hood, 0.7..1 fly out
-    const endTh = rig.hoodEnd;
-    if (t < 0.25) {
-      const k = smooth(0, 0.25, t);
-      return mix3(rest.top, rig.onTurret(rig.hoodPoint(startTh)), k);
-    }
-    if (t < 0.7) return rig.onTurret(rig.hoodPoint(lerp(startTh, endTh, (t - 0.25) / 0.45)));
-    const p0 = rig.onTurret(rig.hoodPoint(endTh)), d = rig.launchDir();
-    const s = (t - 0.7) / 0.3, dist = 0.9 * s;
-    return [p0[0] + d[0] * dist, p0[1] + d[1] * dist - 4.9 * (s * 0.35) ** 2, p0[2] + d[2] * dist];
-  }
-  function runFeed() {
-    if (feed) return;
-    let t = 0;
-    const wasSpinning = flyBtn.playing;
-    if (!wasSpinning) flyBtn.set(true);
-    feed = stage.onFrame((dt) => {
-      t = Math.min(1.35, t + dt / 1.6);
-      const k = Math.min(1, t);
-      placeBall(stage, b.top, ballAt(k));
-      b.top.visible = t < 1;
-      if (t < 0.75) rig.setSpin(rig.spinAngle - dt * 9); // the spinners push the stack up the ramp
-      const up = smooth(0.1, 0.6, t);
-      placeBall(stage, b.mid, mix3(rest.mid, rest.top, up));
-      placeBall(stage, b.low, mix3(rest.low, rest.mid, up));
-      if (t >= 1.35) {
-        feed(); feed = null;
-        for (const k2 of ['top', 'mid', 'low']) { placeBall(stage, b[k2], rest[k2]); b[k2].visible = true; }
-        if (!wasSpinning) flyBtn.set(false);
-        stage.invalidate();
-      }
-    });
-  }
-  button(ctx.panel, { label: 'Feed a ball', onClick: runFeed });
-  segmented(ctx.panel, { label: 'View', options: [{ value: 'whole', label: 'Whole' }, { value: 'cut', label: 'Cut in half' }], value: 'whole', onChange(v) {
-    view = v; setCut(v === 'cut'); reframe(0.8);
-  } });
-  ctx.panel.append(info.el);
-  paint();
+  const topMat = wholeBalls(stage, [b.low, b.mid, b.top], ['#35b04a', null, '#35b04a'])[2];
+  topMat.transparent = true;
 
+  // glow on the parts a step is about (emissive only: no material rebuild while scrolling)
+  const glow = (parts) => { let k = -1; return (x) => { x = Math.round(x * 100) / 100; if (x !== k) { k = x; stage.highlight(parts, '#ff6b35', { intensity: 0.5 * x }); } }; };
+  const glowGears = glow([...rig.ring, ...rig.gears]), glowHood = glow(rig.hoodParts), glowSpin = glow(rig.spinnerParts);
+
+  // the ball's trip: out of the bore onto the wheel, under the hood, out along the tangent
+  const startTh = Math.atan2(rest.top[1] - V2.fly.y, rest.top[2] - V2.fly.z) / DEG; // about -21 degrees
+  const exitOf = (th) => ({ p: rig.hoodPoint(th), d: [0, Math.cos(th * DEG), -Math.sin(th * DEG)] });
+  function shotAt(t) {
+    if (t < 0.4) return rest.top;
+    if (t < 0.5) return mix3(rest.top, rig.hoodPoint(startTh), smooth(0.4, 0.5, t));
+    if (t < 0.68) return rig.hoodPoint(lerp(startTh, V2.hoodEnd, (t - 0.5) / 0.18));
+    if (t < 0.84) { const { p, d } = exitOf(V2.hoodEnd), s = 0.2 * (t - 0.68) / 0.16; return [p[0], p[1] + d[1] * s, p[2] + d[2] * s]; }
+    return null;
+  }
+  function balls(u) {
+    const t = u - 3;
+    return {
+      top: u < 3 ? rest.top : shotAt(t),
+      mid: u < 3 ? rest.mid : mix3(rest.mid, rest.top, smooth(0.5, 0.85, t)),
+      low: u < 3 ? rest.low : mix3(rest.low, rest.mid, smooth(0.5, 0.85, t)),
+    };
+  }
+
+  // the launch direction while the hood rolls: a dashed line from where the ball leaves (annotation)
+  const lineGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(6), 3));
+  const lineMat = new THREE.LineDashedMaterial({ color: '#ff6b35', dashSize: 0.012, gapSize: 0.008, transparent: true, opacity: 0, depthTest: false });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.renderOrder = 5; line.visible = false; line.frustumCulled = false;
+  stage.scene.add(line);
+  let lineTh = NaN;
+  const lineEnd = new THREE.Vector3();
+  function setLine(th, a) {
+    if (th !== lineTh) {
+      lineTh = th;
+      const { p, d } = exitOf(th);
+      lineEnd.set(p[0], p[1] + d[1] * 0.26, p[2] + d[2] * 0.26);
+      lineGeo.attributes.position.array.set([...p, lineEnd.x, lineEnd.y, lineEnd.z]);
+      lineGeo.attributes.position.needsUpdate = true;
+      line.computeLineDistances();
+      stage.invalidate(false);
+    }
+    const o = Math.round(a * 100) / 100;
+    if (o !== lineMat.opacity) { lineMat.opacity = o; line.visible = o > 0; stage.invalidate(false); }
+  }
+
+  // views, framed once at rest on fixed regions (the turret's swept space, the hood, the cut)
+  const regions = {
+    turret: region(THREE, [-0.22, 0.12, -0.23], [0.15, 0.41, 0.1]),
+    hood: region(THREE, [MID_X - 0.005, 0.12, -0.3], [MID_X + 0.005, 0.5, 0.14]),
+    cut: region(THREE, [MID_X - 0.005, -0.02, -0.4], [MID_X + 0.005, 0.56, 0.2]),
+  };
+  const views = viewSet(stage, el, {
+    turret: { obj: regions.turret, azimuth: 38, elevation: 28, pad: 1.0 },
+    hood: { obj: regions.hood, azimuth: -90, elevation: 6, pad: 1.05 },
+    cut: { obj: regions.cut, azimuth: -90, elevation: 8, pad: 1.04 },
+  });
+  const VIEW = ['turret', 'turret', 'hood', 'cut'];
+
+  // labels (model metres; points on the turret follow it) and the readout
+  const ov = labelLayer(stage);
+  const L = (text, p, o) => ov.label(text, p, { color: '#fff1e2', ...o });
+  const gearL = rig.gears[0], gearR = rig.gears[1];
+  const lab = {
+    rest: [L('150T ring gear, on the turret', [V2.yaw.x, 0.226, V2.yaw.z + 0.088]), L('90T gear', gearL, { side: 'l' }), L('90T gear', gearR)],
+    turn: [L('90T gear', gearL, { side: 'l' }), L('90T gear', gearR)],
+    hood: [L(el.clientWidth < 640 ? 'Hood, toothed arc' : 'Hood: a toothed arc about the flywheel axle', [MID_X, 0.341, -0.0014], { side: 'l' }), L('40T pinion', [-0.021, 0.353, 0.026]), L('Flywheel axle', [MID_X, V2.fly.y, V2.fly.z], { side: 'l' })],
+    cut: [L('Top ball, in the bearing\'s bore', [MID_X, rest.top[1], rest.top[2]], { side: 'l' }), L('Flywheel, 72 mm', [MID_X, V2.fly.y, V2.fly.z], { side: 'l' }), L('TPU spinner', [0.0505, 0.1655, -0.0212])],
+  };
+  const hud = hudPanel(ov.layer, `
+    <table class="num"><tbody>
+      <tr><td>Turret</td><td data-k="t"></td></tr>
+      <tr><td>Each 90T gear <small>150 : 90</small></td><td data-k="s"></td></tr>
+      <tr><td>Hood end, about the axle</td><td data-k="h"></td></tr>
+      <tr><td>40T pinion <small>180.5 : 23.6 mm</small></td><td data-k="p"></td></tr>
+      <tr><td>Ball leaves at</td><td data-k="l"></td></tr>
+    </tbody></table>
+    <div class="rx-hud-mini num" data-k="mini"></div>`);
+
+  function setProgress(p, step, stepP) {
+    const s = stepState(step, stepP, N, reduced);
+    const u = s.uu;
+    const tDeg = turretAt(u), hEnd = hoodAt(u);
+    rig.setTurret(tDeg * DEG);
+    rig.setHood(hEnd);
+    rig.setFly(reduced ? 0 : -flyAngle(s.u) * 3 * 2 * Math.PI);
+    rig.setSpin(reduced ? 0 : -spinAngle(s.u) * 26);
+    cut.set(lerp(CUT_OFF, CUT_AT, cutAt(u)));
+    const pos = balls(u);
+    let moved = false;
+    for (const k of ['top', 'mid', 'low']) {
+      const q = pos[k], vis = !!q;
+      if (b[k].visible !== vis) { b[k].visible = vis; moved = true; }
+      if (q && placeBall(stage, b[k], q)) moved = true;
+    }
+    // the shot fades out once it is clear of the robot
+    const fade = u < 3 ? 1 : 1 - smooth(0.73, 0.83, u - 3);
+    if (Math.abs(topMat.opacity - fade) > 0.004) { topMat.opacity = fade; topMat.depthWrite = fade > 0.99; moved = true; }
+    if (moved) stage.invalidate();
+    glowGears(s.step === 1 ? 1 : s.step === 2 ? 1 - smooth(0, 0.3, stepP) : 0);
+    glowHood(s.step === 2 ? smooth(0.4, 0.5, stepP) : s.step === 3 ? 1 - smooth(0, 0.25, stepP) : 0);
+    glowSpin(s.step === 3 ? smooth(0.25, 0.32, stepP) * (1 - smooth(0.78, 0.86, stepP)) : 0);
+    setLine(hEnd, s.step === 2 ? smooth(0.42, 0.5, stepP) : s.step === 3 ? 1 - smooth(0, 0.15, stepP) : 0);
+    // camera
+    stage.setShift(...(el.clientWidth < 640 ? [0, -0.06] : ctx.shift()));
+    views.blend(VIEW[s.prev], VIEW[s.step], s.k);
+    // labels
+    const settled = s.step === 0 ? 1 : smooth(0.4, 0.6, stepP);
+    for (const l of lab.rest) l.a = s.step === 0 ? 1 : 0;
+    for (const l of lab.turn) l.a = s.step === 1 ? smooth(0.05, 0.15, stepP) : 0;
+    for (const l of lab.hood) l.a = s.step === 2 ? settled : 0;
+    for (const l of lab.cut) l.a = s.step === 3 ? settled * (1 - smooth(0.42, 0.5, stepP)) : 0;
+    ov.update();
+    // readout: the turret, the gears it drives, the hood and its pinion
+    const gear = (-RING_T / SERVO_T) * tDeg, pin = -(V2.hoodEnd - hEnd) * (HOOD_RACK_R / PINION_R);
+    const deg = (v) => `${Math.round(v) === 0 ? 0 : Math.round(v)}°`;
+    hud.show(1);
+    hud.put('t', deg(tDeg)); hud.put('s', deg(gear));
+    hud.put('h', deg(hEnd)); hud.put('p', deg(pin));
+    hud.put('l', `about ${Math.round(90 - hEnd)}° up`);
+    hud.put('mini', s.step < 2 ? `Turret ${deg(tDeg)}, each 90T gear ${deg(gear)}` : `Hood ${deg(hEnd)}, pinion ${deg(pin)}, ball leaves about ${Math.round(90 - hEnd)}° up`);
+  }
+  setProgress(0, 0, 0);
   return {
-    dispose() { clearTimeout(lightTimer); spin?.(); feed?.(); stage.dispose(); },
+    setProgress,
+    dispose() { ov.dispose(); lineGeo.dispose(); lineMat.dispose(); for (const r of Object.values(regions)) r.geometry.dispose(); stage.dispose(); },
   };
 }

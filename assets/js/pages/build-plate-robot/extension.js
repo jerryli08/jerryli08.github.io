@@ -1,76 +1,114 @@
-// Demo: the telescoping arm. The carriage runs out along the real slide direction (-Z of the
-// turntable); each SAR340 slide's three members and two ball rows move at their own rates.
-// "Cut the slides" puts a horizontal section plane through the upper ball rows (y 41 mm in the
-// CAD) and looks down on the right-hand slide, so the members and balls show in section.
+// "The telescoping arm", scroll-driven. The carriage runs out along the real slide direction (-Z of
+// the turntable); each SAR340 slide's three members and two ball rows move at their own rates
+// (rig.js). It replaces the reach slider and the "cut the slides" button; nothing is clicked.
+// Steps: folded into the frame; cut through the upper ball rows (a horizontal section plane at
+// y 41 mm in the CAD sweeps down) while the carriage starts out; out to 355 mm on the belts; back in.
+// Both camera views are framed once per stage shape on fixed boxes, never on a moving part.
 import { createStage } from '/assets/js/lib/stage.js';
-import { slider, playToggle, readout, segmented } from '/assets/js/lib/ui.js';
-import { loadRig, STROKE, EXT_PITCH_R } from './rig.js';
+import { labelLayer } from '/assets/js/lib/labels.js';
+import { loadRig, STROKE, EXT_PITCH_R, clamp, smooth, lerp, readout, glow, blendView } from './rig.js';
+
+const CUT_Y = 0.041;      // m: through the upper ball rows
+const Y_TOP = 0.075;      // m: just above the arm (nothing cut)
+const S1 = 0.12;
+const END = -0.1205;      // m: where the slide members end at the front, retracted (CAD)          // m of reach while the slide is cut open
+const TURN = 2 * Math.PI * EXT_PITCH_R; // 160 mm of belt per motor turn (80 T GT2, CAD)
+
+// reach through the steps: folded, starting out (cut), out to 355 mm, back in
+function reachAt(step, q) {
+  if (step === 0) return 0;
+  if (step === 1) return S1 * smooth(0.3, 0.95, q);
+  if (step === 2) return lerp(S1, STROKE, smooth(0.1, 0.8, q));
+  return STROKE * (1 - smooth(0.1, 0.8, q));
+}
 
 export async function mount(el, ctx) {
-  const stage = createStage(el);
+  const stage = createStage(el, { controls: false, hint: false });
+  const T = stage.THREE;
   const rig = await loadRig(stage);
   const { P } = rig;
   // the arm alone: everything below and behind it is hidden
-  for (const n of ['PRINTER', 'HOLDERS', 'PLATE_L', 'PLATE_R', 'PLATE_C', 'STOCK', 'UNO', 'PERF', 'PI', 'PSU', 'TERM', 'BUCK', 'MOS1', 'MOS2', 'BAY_L', 'BAY_R',
+  for (const n of ['PRINTER', 'HOLDERS', 'PLATE_L', 'PLATE_R', 'PLATE_C', 'STOCK', 'PSU', 'BAY_L', 'BAY_R',
     'BASE', 'NEMA23', 'TPUL', 'BELT', 'MIDPLATE', 'RING', 'THR_UP', 'THR_LO', 'MR106']) P[n].visible = false;
-  const arm = [P.ROT, P.EXT, P.MAG];
+  stage.fitGround();
+  const reduced = !!ctx.reducedMotion;
 
-  // the whole arm at full reach, framed once so the view does not jump as it moves
-  rig.set({ s: STROKE }); rig.turret.updateMatrixWorld(true);
-  const whole = stage.frame(arm, { azimuth: 68, elevation: 28, pad: 1.02, apply: false, refresh: true });
-  rig.set({ s: 0 });
-  stage.setView(whole);
+  // fixed boxes to frame: the whole arm at full reach, and the right-hand slide where its ball rows
+  // front end while it is cut open: there the three members' ends telescope out (retracted, all three
+// end at z -120.5 mm in the CAD; the inner member runs out s, the middle member s / 2)
+  const box = (min, max) => { const m = new T.Mesh(new T.BoxGeometry(max[0] - min[0], max[1] - min[1], max[2] - min[2])); m.position.set((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2); m.updateMatrixWorld(true); return m; };
+  const ARM = box([-0.145, 0, -0.121 - STROKE], [0.145, 0.065, 0.29]);
+  const SLIDE = box([0.105, 0.035, -0.25], [0.15, 0.045, -0.085]);
+  let views = null, aspect = 0;
+  function viewsNow() {
+    const a = el.clientWidth / Math.max(1, el.clientHeight);
+    if (!views || a !== aspect) {
+      aspect = a;
+      views = {
+        arm: stage.frame(ARM, { azimuth: 68, elevation: 28, pad: 1.02, apply: false, refresh: true }),
+        cut: stage.frame(SLIDE, { dir: [0.5, 0.75, -0.42], pad: a < 1 ? 1.1 : 1.25, apply: false, refresh: true }),
+      };
+    }
+    return views;
+  }
 
-  const cut = stage.sectionPlane([0, -1, 0], 0.041); // keeps y <= 41 mm: through the upper ball rows
-  cut.enable(false);
-  // in section the camera follows the two ball rows (their centres sit at z 79.5 mm - 0.75 s and
-  // 79.5 mm - 0.25 s), looking down from outside the right-hand slide
-  let mode = 'whole';
-  const T = stage.THREE;
-  const closeView = (s) => {
-    const target = new T.Vector3(0.123, 0.041, 0.0795 - 0.5 * s);
-    return { pos: target.clone().add(new T.Vector3(0.07, 0.17, 0.0)), target };
+  const cut = stage.sectionPlane([0, -1, 0], Y_TOP); // keeps y <= constant; parked above the arm
+  const pulleys = glow(stage, [P.EPUL_L, P.EPUL_R], '#ff6b35', 0.7);
+
+  const ov = labelLayer(stage);
+  const L = {
+    slide: ov.label('Telescoping slide, SAR340', [0.14, 0.05, 0.2], { color: '#fff1e2' }),
+    carriage: ov.label('Carriage: 2020 extrusion', [-0.05, 0.065, -0.12], { color: '#fff1e2', side: 'l' }),
+    magnets: ov.label('4 electromagnets', [0.0, 0.012, -0.121], { color: '#fff1e2', side: 'l', minW: 420 }),
+    motor: ov.label('NEMA 17, one per side', [0.05, 0.06, 0.2425], { color: '#ff6b35' }),
+    // in section (from the CAD, right-hand slide at y 41 mm): inner member x 115 to 117 mm, inner
+    // ball row 118 to 122, middle member between, outer ball row 124 to 128, outer member 130 to 134
+    inner: ov.label('Inner member, on the carriage', [0.116, CUT_Y, END], { color: '#fff1e2', side: 'l' }),
+    mid: ov.label('Middle member', [0.123, CUT_Y, END], { color: '#8fc3ff', side: 'l' }),
+    outer: ov.label('Outer member, on the frame', [0.132, CUT_Y, END + 0.004], { color: '#fff1e2' }),
   };
+  const hud = readout(ov, `
+    <table class="num"><thead><tr><th></th><th>Out</th></tr></thead><tbody>
+      <tr><td>Carriage <small>inner member</small></td><td data-k="c"></td></tr>
+      <tr><td>Middle member</td><td data-k="m"></td></tr>
+      <tr class="rx-hud-x"><td>Inner ball row</td><td data-k="bi"></td></tr>
+      <tr class="rx-hud-x"><td>Outer ball row</td><td data-k="bo"></td></tr>
+    </tbody></table>
+    <div class="rx-hud-mini num" data-k="mini"></div>
+    <div class="rx-hud-row rx-hud-big"><span>Motor turns <small>80T GT2 pulley, 160 mm a turn</small></span><b class="num" data-k="t"></b></div>`);
 
-  const info = readout(null, { rows: [
-    { key: 'c', label: 'Carriage, inner member', unit: 'mm', format: (v) => v.toFixed(0) },
-    { key: 'm', label: 'Middle member', unit: 'mm', format: (v) => v.toFixed(0) },
-    { key: 'bi', label: 'Inner ball row', unit: 'mm', format: (v) => v.toFixed(0) },
-    { key: 'bo', label: 'Outer ball row', unit: 'mm', format: (v) => v.toFixed(0) },
-    { key: 't', label: 'Motor turns (80 T in CAD)', format: (v) => v.toFixed(2) },
-  ] });
-  const set = (mm) => {
-    const s = mm / 1000;
+  function setProgress(p, step, stepP) {
+    step = clamp(step | 0, 0, 3);
+    const [fx, fy] = ctx.shift();
+    stage.setShift(fx, el.clientWidth < 640 ? -0.07 : fy); // on a phone, clear of the readout across the top
+    const q = reduced ? 1 : clamp(stepP, 0, 1);
+    const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+    const s = reachAt(step, q);
     rig.set({ s });
-    if (mode === 'cut' && !tweening) stage.setView(closeView(s));
-    info.set({ c: mm, m: mm / 2, bi: 0.75 * mm, bo: 0.25 * mm, t: s / (2 * Math.PI * EXT_PITCH_R) });
-  };
-  const s = slider(ctx.panel, { label: 'Reach', min: 0, max: 355, step: 1, value: 0, unit: ' mm', format: (v) => v.toFixed(0), onInput: set });
 
-  let stop = null, dir = 1, tweening = false;
-  playToggle(ctx.panel, {
-    playing: false,
-    onChange(on) {
-      stop?.(); stop = null;
-      if (!on) return;
-      stop = stage.onFrame((dt) => {
-        let v = s.value + dir * dt * 150; // 150 mm/s, illustrative
-        if (v >= 355) { v = 355; dir = -1; } else if (v <= 0) { v = 0; dir = 1; }
-        s.set(v);
-      });
-    },
-  });
-  segmented(ctx.panel, {
-    label: 'View', value: 'whole',
-    options: [{ value: 'whole', label: 'Whole arm' }, { value: 'cut', label: 'Cut the slides' }],
-    onChange(v) {
-      mode = v;
-      cut.enable(v === 'cut');
-      tweening = true;
-      stage.tweenCamera(v === 'cut' ? closeView(s.value / 1000) : whole, 0.9).then(() => { tweening = false; });
-    },
-  });
-  ctx.panel.append(info.el);
-  set(0);
-  return { dispose() { stop?.(); stage.dispose(); } };
+    // camera: the whole arm, or close over the right-hand slide while it is cut open
+    const v = viewsNow();
+    const inCut = step === 1 ? k : step === 2 ? 1 - k : 0;
+    stage.setView(blendView(v.arm, v.cut, inCut));
+    // the cut sweeps down to the ball rows as the camera arrives, and back up as it leaves
+    cut.set(lerp(Y_TOP, CUT_Y, smooth(0.2, 1, inCut)));
+
+    pulleys(step === 2 ? k : step === 3 ? 1 - k : 0);
+    const whole = 1 - inCut;
+    for (const n of ['slide', 'carriage', 'magnets']) L[n].a = step === 0 ? 1 : 0;
+    L.motor.a = step === 0 || step === 2 || step === 3 ? whole : 0;
+    // the section labels ride their members
+    L.inner.p.z = END + 0.004 - s;
+    L.mid.p.z = END + 0.004 - s / 2;
+    for (const n of ['inner', 'mid', 'outer']) L[n].a = smooth(0.6, 1, inCut);
+
+    const mm = s * 1000;
+    hud.put('c', `${Math.round(mm)} mm`); hud.put('m', `${Math.round(mm / 2)} mm`);
+    hud.put('bi', `${Math.round(0.75 * mm)} mm`); hud.put('bo', `${Math.round(0.25 * mm)} mm`);
+    hud.put('t', (s / TURN).toFixed(2));
+    hud.put('mini', `Carriage ${Math.round(mm)} mm, middle member ${Math.round(mm / 2)} mm, motor ${(s / TURN).toFixed(2)} turns`);
+    ov.update();
+  }
+  setProgress(0, 0, 0);
+  return { setProgress, dispose() { ov.dispose(); cut.remove(); for (const b of [ARM, SLIDE]) { b.geometry.dispose(); b.material.dispose(); } stage.dispose(); } };
 }

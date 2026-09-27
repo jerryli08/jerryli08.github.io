@@ -1,0 +1,6 @@
+{
+  "prefix": "bpre",
+  "remove": ["^G_(?!(UNO|PERF|PI|TERM|BUCK|MOS1|MOS2)$)"],
+  "keep": ["^G_"],
+  "simplify": 0.001
+}
