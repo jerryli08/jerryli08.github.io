@@ -14,6 +14,7 @@ const ONLY = flags.only ? flags.only.split(',') : null;
 const PS = flags.p ? flags.p.split(',').map(Number) : [0, 0.25, 0.5, 0.75, 1];
 if (!url || !prefix) { console.log('usage: node tools/pages/shoot.mjs <url> <out-prefix> [width height]'); process.exit(1); }
 const phone = +w < 600;
+await (await import('./pwlock.mjs')).acquire(); // wait for a free browser slot
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await (await browser.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1, isMobile: phone, hasTouch: phone })).newPage();
 page.on('console', (m) => { if (m.type() === 'error') console.log('console error:', m.text().slice(0, 300)); });

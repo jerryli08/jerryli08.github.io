@@ -16,6 +16,7 @@ const W = +(opt.w || 1440), H = +(opt.h || 900);
 const STEP = +(opt.step || 120); // px per wheel tick
 if (!url) { console.log('usage: node tools/pages/perf.mjs <url> [#id ...] [--w=1440 --h=900 --step=120]'); process.exit(1); }
 
+await (await import('./pwlock.mjs')).acquire(); // wait for a free browser slot
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await (await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })).newPage();
 page.on('pageerror', (e) => console.log('page error:', e.message));
