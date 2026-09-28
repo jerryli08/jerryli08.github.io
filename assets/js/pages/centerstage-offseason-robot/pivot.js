@@ -10,10 +10,11 @@
 // the robot at rest and cached; reduced motion cuts to each step's end.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
+import { blendIn, smoother } from '/assets/js/lib/ease.js';
 import { rigRobot, PIVOT, CLAW_C, PHI_UP, TRAVEL, FLOOR, TICKS_PER_DEG } from './rig.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const smooth = smoother; // quintic: every motion starts and stops with zero speed and acceleration
 const lerp = (a, b, t) => a + (b - a) * t;
 const DEG = Math.PI / 180;
 const PHI_REST = 4;
@@ -40,7 +41,7 @@ function state(step, sp, reduced) {
   if (step === 2) return { phi: PHI_REST, e: 1 };
   return { phi: lerp(PHI_REST, PHI_UP, m(0.55, 0.95)), e: 1 - m(0.1, 0.5) };
 }
-const VIEW = ['sideUp', 'sideAll', 'pivot', 'sideAll'];
+const VIEW = ['sideUp', 'sideAll', 'pivot', 'sideAll']; // step 3 then closes in on sideUp (see setProgress)
 
 export async function mount(el, ctx) {
   const stage = createStage(el, { controls: false, hint: false });
@@ -62,31 +63,36 @@ export async function mount(el, ctx) {
   const place = (v) => ({ t: v.target.clone(), s: new THREE.Spherical().setFromVector3(v.pos.clone().sub(v.target)) });
   let views = null, aspect = 0;
   function viewsNow() {
-    const a = el.clientWidth / Math.max(1, el.clientHeight);
+    // keyed on the camera's own aspect, the one stage.frame fits to (the stage updates it from a
+    // ResizeObserver, a moment after the element changes size)
+    const a = stage.camera.aspect;
     if (views && a === aspect) return views;
     aspect = a;
-    const portrait = a < 0.9;
-    const f = ctx.shift()[0] > 0 ? 1.18 : 1;
-    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad: pad * f, apply: false, refresh: true }));
+    const portrait = a < 0.9, narrow = el.clientWidth < 600;
+    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad, apply: false, refresh: true }));
     views = {
-      sideUp: fr(boxOf(-0.24, 0.19, FLOOR, 0.62, -0.3, 0.55), 90, 8, portrait ? 1.0 : 1.1),
-      sideAll: fr(boxOf(-0.24, 0.19, FLOOR, 0.62, -0.3, 1.5), 90, 8, portrait ? 1.0 : 1.04),
-      pivot: fr(pivotCh, 24, 20, portrait ? 1.7 : 2.2),
+      // from the robot's left (-X): the arm reaches to the right, away from the step cards
+      sideUp: fr(boxOf(-0.24, 0.19, FLOOR, 0.62, -0.3, 0.55), -90, 8, narrow ? 1.2 : 1.1),
+      sideAll: fr(boxOf(-0.24, 0.19, FLOOR, 0.62, -0.3, 1.5), -90, 14, portrait ? 1.0 : 1.04),
+      pivot: fr(pivotCh, -28, 20, portrait ? 1.7 : 2.0),
     };
     return views;
   }
   const sph = new THREE.Spherical();
-  function blend(a, b, k) {
+  // a view between two cached ones (target, distance and angles interpolated)
+  function mix(a, b, k) {
     let dT = b.s.theta - a.s.theta;
     while (dT > Math.PI) dT -= 2 * Math.PI;
     while (dT < -Math.PI) dT += 2 * Math.PI;
-    const target = a.t.clone().lerp(b.t, k);
-    sph.set(lerp(a.s.radius, b.s.radius, k), lerp(a.s.phi, b.s.phi, k), a.s.theta + dT * k);
-    stage.setView({ pos: new THREE.Vector3().setFromSpherical(sph).add(target), target });
+    return { t: a.t.clone().lerp(b.t, k), s: new THREE.Spherical(lerp(a.s.radius, b.s.radius, k), lerp(a.s.phi, b.s.phi, k), a.s.theta + dT * k) };
+  }
+  function apply(v) {
+    sph.copy(v.s);
+    stage.setView({ pos: new THREE.Vector3().setFromSpherical(sph).add(v.t), target: v.t });
   }
 
   // ---- lever-arm lines: annotations drawn just outside the robot's +x side, over the model
-  const LX = 0.22;
+  const LX = -0.26; // just outside the left sideplate, the side the camera looks from
   const lineMat = (color, opacity) => new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthTest: false });
   const mkLine = (color, opacity) => {
     const g = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
@@ -134,10 +140,10 @@ export async function mount(el, ctx) {
   const sgn = (v) => `${v < 0 ? '-' : '+'}${Math.abs(v).toFixed(3)}`;
   const LBL = {
     r0: ov.label('', [0, 0, 0], { color: '#e8e2da' }),
-    r1: ov.label('', [0, 0, 0], { color: ORANGE }),
+    r1: ov.label('', [0, 0, 0], { color: ORANGE, side: 'l' }), // above the claw, reading back toward the pivot
     ch: ov.label('Short 72 mm U-channels', [0, 0, 0], { color: ORANGE }),
   };
-  LBL.r0.el.lastChild.textContent = `Slides in: ${R0.toFixed(2)} m`;
+  LBL.r0.setText(`Slides in: ${R0.toFixed(2)} m`);
   const chBox = new THREE.Box3();
   for (const o of pivotCh) chBox.expandByObject(o);
   const chTop = new THREE.Vector3((chBox.min.x + chBox.max.x) / 2 + 0.04, chBox.max.y, 0);
@@ -159,8 +165,11 @@ export async function mount(el, ctx) {
     const s = state(step, stepP, reduced);
     R.pose({ phi: s.phi, e: s.e, wrist: 0, grip: [0, 0] });
     const vs = viewsNow();
-    const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
-    blend(vs[VIEW[Math.max(0, step - 1)]], vs[VIEW[step]], k);
+    const k = step === 0 || reduced ? 1 : blendIn(stepP);
+    let v = mix(vs[VIEW[Math.max(0, step - 1)]], vs[VIEW[step]], k);
+    // the interlock step: framed for the slides out while they come in, then closer for the swing up
+    if (step === 3) v = mix(v, vs.sideUp, reduced ? 1 : smooth(0.4, 0.6, stepP));
+    apply(v);
     stage.setShift(...ctx.shift());
 
     // which readout shows
@@ -198,9 +207,9 @@ export async function mount(el, ctx) {
       stage.invalidate();
     }
     const c0 = clawAt(s.phi, 0), c1 = clawAt(s.phi, s.e);
-    LBL.r0.p.set(...c0); LBL.r1.p.set(...c1);
+    LBL.r0.p.set(...c0); LBL.r1.p.set(c1[0], c1[1] + 0.08, c1[2]);
     const t1 = s.e > 0.98 ? `Slides out: ${r.toFixed(2)} m, 3.2x the torque` : `${r.toFixed(2)} m`;
-    if (LBL.r1.el.lastChild.textContent !== t1) LBL.r1.el.lastChild.textContent = t1;
+    if (LBL.r1.t !== t1) { LBL.r1.t = t1; LBL.r1.setText(t1); }
     LBL.r0.a = showLines * (s.e > 0.12 ? 1 : 0);
     LBL.r1.a = showLines;
 

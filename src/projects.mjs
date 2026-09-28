@@ -356,22 +356,28 @@ export const projects = [
   {
     slug: 'centerstage-offseason-robot',
     kind: 'main',
-    draft: true,
     title: 'FTC CENTERSTAGE Offseason Robot',
     subtitle: 'Telescoping pitching arm',
-    short: 'An FTC robot with a telescoping pitching arm, built in 4 days for the HoCo STEAM Carnival.',
+    short: 'An FTC CENTERSTAGE robot with a pitching claw on four-stage belt-driven slides, built in less than a week to demo at the library system\'s STEAM Carnival.',
     org: 'Howard County Library System',
     date: 'Jul to Aug 2024',
     year: '2024',
     role: 'STEM instructor and youth peer intern',
-    tools: ['Proportional control', 'Cosine feedforward'],
-    stats: [{ v: '4 days', l: 'Design to working robot' }],
+    tools: ['Fusion 360', 'goBILDA', 'FTC SDK (Java)', 'P control with gravity feedforward', 'Laser cutting', '3D printing'],
+    links: [{ label: 'Code on GitHub', href: 'https://github.com/jerryli08/newftccad' }],
+    stats: [
+      { v: 'Less than a week', l: 'For everything' },
+      { v: '979 mm', l: 'Slide travel, four stages (CAD)' },
+    ],
     body: [
       { h: 'Overview', p: [
-        'As a STEM instructor at the Howard County Library System, I built an FTC robot with a telescoping pitching arm in 4 days for the HoCo STEAM Carnival. The arm runs a proportional controller with cosine feedforward. I also wrote and taught a robotics curriculum.',
+        'As a STEM instructor at the Howard County Library System, I built an FTC CENTERSTAGE robot with a telescoping pitching arm in less than a week for the HoCo STEAM Carnival. The arm runs a proportional controller with cosine feedforward. I also wrote and taught a robotics curriculum.',
       ]},
     ],
-    media: [],
+    media: [
+      { v: 'centerstage-offseason-robot/hero-finished-reach.mp4', c: 'The finished robot: the slides run out along the floor, then the arm pitches up' },
+      { i: 'centerstage-offseason-robot/finished-robot.webp', c: 'Aug 2, 2024: the finished robot, red truss sideplates and the lettered back plate' },
+    ],
   },
   {
     slug: 'battlebot',

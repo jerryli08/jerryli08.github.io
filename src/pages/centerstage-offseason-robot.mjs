@@ -1,10 +1,14 @@
-// STEAM Carnival Pitching Robot: rich page. Built for Jerry's internship with the Howard County
-// Library System, Jul to Aug 2024.
+// FTC CENTERSTAGE Offseason Robot (was "STEAM Carnival Pitching Robot"; Jerry renamed it Sept 27, 2026):
+// rich page. Built for Jerry's internship with the Howard County Library System, Jul to Aug 2024, to
+// demo at the library system's STEAM Carnival.
 // Facts are Jerry's (his checklist, src/projects.mjs, /home/claude/work/answers.md and the orchestrator's
 // answers of Sept 27), his public repo github.com/jerryli08/newftccad (README, TestTeleop.java and the
 // dated build notes in buildproof/), or plainly shown by the media. Numbers marked "from my CAD" were
-// measured on his STEP (see /home/claude/work/hcls-2024-ftc-offseason-bot/demos.md); numbers marked
-// "from the code" are computed from the constants in TestTeleop.java. Dates are the photos' capture dates.
+// measured on his CAD (the STEP, and the FBX he exported on Sept 27, which has the same coordinates;
+// see /home/claude/work/hcls-2024-ftc-offseason-bot/demos.md); numbers marked "from the code" are
+// computed from the constants in TestTeleop.java. Dates are the photos' capture dates.
+// The 3D model is robot.glb, from that FBX (prep-robot.mjs in the notes folder, then
+// tools/optimize-cad.mjs with tools/cad/configs/centerstage-offseason-robot-robot.json).
 // Answered: the robot picked pixels up in front and scored over the back. Held back until Jerry
 // answers (questions.md): the "6 feet of extension" figure (the page uses the CAD's 979 mm of travel
 // and 1.49 m of reach instead), "4 days" (the page uses his checklist's "less than a week"), why each
@@ -36,19 +40,19 @@ export default {
   },
   sections: [
     // ------------------------------------------------------------------ one full cycle
-    { type: 'scrolly', id: 'cycle', module: 'cycle', width: 'full', stepHeight: '85vh', poster: `${M}/poster-cycle.webp`,
+    { type: 'scrolly', id: 'cycle', module: 'cycle', stepHeight: '85vh', poster: `${M}/poster-cycle.webp`,
       h: 'One full cycle',
-      p: ['Scroll to run one cycle on my real CAD, in the order the robot works: reach out, grab two pixels, pull in, pitch over, reach again and drop them on the backdrop.'],
+      p: ['Scroll to run one cycle on my real CAD, in the order the robot works: reach out, grab two pixels, pull in, pitch over the back, reach again and drop them on the backdrop.'],
       steps: [
-        { h: '1. Stowed', p: ['The arm lies forward along the robot with the slides pulled in. Two pixels wait on the floor ahead, right where the claw lands at full reach.'] },
-        { h: '2. Reach', p: ['One motor at the base of the arm drives a single belt through all four slide stages at once, and the claw runs out along the floor: **979 mm** of travel, 245 mm per stage (from my CAD).'] },
-        { h: '3. Grab', p: ['Each finger has its own servo and its own bumper on the second gamepad, and the right trigger moves both together. The claw is built to take two pixels at once, side by side.'] },
-        { h: '4. Pull in', p: ['The slides pull back in with both pixels before the arm moves. That order is the lesson of this robot, and the code did not enforce it: see [what broke](#broke).'] },
-        { h: '5. Pitch', p: ['Two motors swing the whole arm about the pivot, about 109 degrees from the down preset to the up preset, until it leans about 15 degrees past vertical over the back of the robot (from the code\'s constants). The same button sets the wrist, so the claw turns to face the backdrop.'] },
-        { h: '6. Reach again', p: ['The slides run out again, this time up toward the backdrop, until the claw is over it.'] },
-        { h: '7. Drop', p: ['The fingers open and the pixels drop onto the backdrop. Then the slides come in and the arm swings back down for the next pair.'] },
+        { h: '1. Stowed', p: ['Slides in, arm just off the floor: the claw sits 0.44 m out from the pivot (from my CAD). Two pixels wait where it lands at full reach.'] },
+        { h: '2. Reach', p: ['One 435 rpm motor drives a single belt through all four slide stages at once: 245 mm each, **979 mm** in all (from my CAD).'] },
+        { h: '3. Grab', p: ['Each finger has its own servo and its own bumper on the second gamepad; the right trigger moves both. Two pixels, side by side.'] },
+        { h: '4. Pull in', p: ['The slides come back in with both pixels before the arm moves. The code never enforced that order: see [what broke](#broke).'] },
+        { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm about 109 degrees to the up preset, 15 degrees past vertical over the back (from the code). The same button turns the wrist to face the backdrop.'] },
+        { h: '6. Reach again', p: ['The driver runs the slides out on the second gamepad\'s left stick until the claw is over the backdrop. Open loop: the code never knows how far out they are.'] },
+        { h: '7. Drop', p: ['The fingers open and both pixels drop onto the backdrop. Then slides in, arm down, and the next pair.'] },
       ],
-      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo hubs. The pixels, the floor and the backdrop are added for the animation; they are not in the CAD. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
+      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels, the floor and the backdrop are added for the animation; they are not in the CAD. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
 
     // ------------------------------------------------------------------ the brief
     { type: 'prose', id: 'brief', h: 'The brief', p: [
@@ -62,35 +66,37 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ how it works (CAD tour)
-    { type: 'scrolly', id: 'tour', module: '@turntable', width: 'wide', side: 'right', stepHeight: '90vh', poster: `${M}/poster-tour.webp`,
+    { type: 'scrolly', id: 'tour', module: '@turntable', stepHeight: '90vh', poster: `${M}/poster-tour.webp`,
       h: 'How it works',
-      p: ['My CAD of the finished robot, posed the way I designed it: arm flat, slides all the way out, claw on the floor.'],
+      p: ['My CAD of the finished robot, posed the way I designed it: arm flat, slides all the way out.'],
       data: {
         models: [{ label: 'Final CAD', src: `${M}/robot.glb`, hide: 'BELT_RET' }],
         drift: 10,
       },
       steps: [
-        { h: 'The whole robot', p: ['The robot is 430 mm across the sideplates and 456 mm long with the bumpers (from my CAD). The arm, the slides and the claw all sit on one pivot in the middle of the robot, and at full reach the claw tip is 1.49 m out from it.'],
+        { h: 'The whole robot', p: ['430 mm across the sideplates, 456 mm long with the bumpers (from my CAD). Arm, slides and claw all sit on one pivot in the middle; at full reach the claw tip is 1.49 m out from it.'],
           view: { azimuth: 35, elevation: 22, pad: 1.1 } },
         { h: 'Drive', p: [
-          'A goBILDA Strafer chassis: four 312 rpm motors lie along the side channels, each turning its 96 mm mecanum wheel through a pair of bevel gears. That is about 1.6 m/s of free speed (computed from 312 rpm on a 96 mm wheel through 1:1 bevels).',
-          'The drive code is standard mecanum mixing, with the strafe input scaled by 1.1 "to counteract imperfect strafing", in its own comment.',
-        ], view: { focus: 'G_WHEELS|G_DRIVE_MOTORS|G_BEVELS|G_CHASSIS', azimuth: 125, elevation: 30, pad: 1.15,
+          'A goBILDA Strafer chassis: four 312 rpm motors along the side channels, each turning a 96 mm mecanum wheel through 1:1 bevel gears. Free speed: 312 rpm × π × 96 mm = about 1.6 m/s.',
+          'The code is standard mecanum mixing, strafe scaled by 1.1 "to counteract imperfect strafing".',
+        ], view: { focus: 'G_WHEELS|G_DRIVE_MOTORS|G_BEVELS|G_CHASSIS', azimuth: 138, elevation: 52, pad: 1.1,
+          // cut just above the wheel axles, so the motors and bevel gears inside the side channels show
+          cut: { normal: [0, -1, 0], at: 0.66 },
           highlight: [{ parts: 'G_DRIVE_MOTORS', color: '#ffb000' }, { parts: 'G_BEVELS', color: '#ff6b35' }],
-          labels: [{ text: '312 rpm motor', part: 'G_DRIVE_MOTORS' }, { text: 'Bevel gears to the wheel', part: 'G_BEVELS' }] } },
-        { h: 'Pivot', p: ['Two 43 rpm motors face each other on one axis, 94 mm above the floor, each bolted to its own short 72 mm U-channel tower. Their hubs bolt to a third 72 mm U-channel between them, and the slides bolt on top of that, so the motors drive the arm directly and share its load.'],
+          labels: [{ text: '312 rpm motor', at: [0.108, 0.012, -0.08] }, { text: 'Bevel gears, 1:1', at: [0.121, 0.012, -0.168] }] } },
+        { h: 'Pivot', p: ['Two 43 rpm motors face each other on one axis, 94 mm above the floor, each on its own 72 mm U-channel tower. Their hubs bolt to a third 72 mm U-channel that carries the slides: direct drive, load shared.'],
           view: { focus: 'G_PIVOT_MOTORS|G_PIVOT_CH|G_TOWERS', azimuth: 28, elevation: 16, pad: 1.7,
             highlight: [{ parts: 'G_PIVOT_MOTORS', color: '#ffb000' }, { parts: 'G_PIVOT_CH', color: '#ff6b35' }],
-            labels: [{ text: '43 rpm, one each side', part: 'G_PIVOT_MOTORS' }, { text: 'Arm channel, 72 mm', part: 'G_PIVOT_CH' }] } },
-        { h: 'Slides', p: ['A goBILDA four-stage Viper-Slide kit with 336 mm slides, driven by a belt. One 435 rpm motor at the base of the arm drives the single belt, and all four stages move together: 245 mm each, 979 mm in all (from my CAD). The motor rides on the arm, so it pivots with the slides.'],
+            labels: [{ text: '43 rpm, one each side', at: [0.1, 0.066, 0] }, { text: 'Arm channel, 72 mm', at: [-0.024, 0.095, 0.01], side: 'l' }] } },
+        { h: 'Slides', p: ['A goBILDA belt-driven four-stage Viper-Slide kit, 336 mm slides. One 435 rpm motor at the base of the arm pulls one belt, and all four stages move together: 245 mm each, 979 mm in all. The motor pivots with the arm.'],
           view: { focus: 'G_STAGE|G_SLIDE_BASE|G_SLIDE_MOTOR', azimuth: 62, elevation: 24, pad: 1.05,
             highlight: [{ parts: 'G_STAGE_[13]', color: '#9fd3ff' }, { parts: 'G_STAGE_[24]', color: '#4aa3ff' }, { parts: 'G_SLIDE_MOTOR', color: '#ffb000' }],
-            labels: [{ text: '4 stages x 245 mm', part: 'G_STAGE_4' }, { text: '435 rpm slide motor', part: 'G_SLIDE_MOTOR' }] } },
-        { h: 'Claw and wrist', p: ['A servo at the end of the slides pitches the whole claw: that is the wrist. The claw has two red fingers, each on its own servo, so it holds two pixels side by side. The claw body and its mounts are 3D printed, and a LEGO ball caster (not in the CAD) sits under the claw.'],
+            labels: [{ text: '4 stages × 245 mm', part: 'G_STAGE_4' }, { text: '435 rpm slide motor', part: 'G_SLIDE_MOTOR', side: 'l' }] } },
+        { h: 'Claw and wrist', p: ['A servo at the end of the slides pitches the whole claw (the wrist). Two red fingers, each on its own servo, hold two pixels side by side. Printed body and mounts; a LEGO ball caster under it (not in the CAD).'],
           view: { focus: 'G_WRIST|G_FINGER|G_CLAW', azimuth: 145, elevation: 22, pad: 1.5,
             highlight: [{ parts: 'G_FINGER', color: '#ff2d2d', intensity: 0.3 }],
             labels: [{ text: 'Wrist servo', part: 'G_WRIST_SERVO' }, { text: 'One servo per finger', part: 'G_FINGER_R' }] } },
-        { h: 'Sideplates and back plate', p: ['Red acrylic truss sideplates, 3 mm thick and 432 mm long (from my CAD), stand off the drive channels on eight printed 56 mm standoffs. The black printed back plate spells out HOWARD COUNTY LIBRARY SYSTEM in 25 red printed letters pressed into it, beside the library\'s logo.'],
+        { h: 'Sideplates and back plate', p: ['Red acrylic truss sideplates, about 3 mm thick and 432 mm long, on eight printed 56 mm standoffs. The printed back plate spells HOWARD COUNTY LIBRARY SYSTEM in 25 red letters beside the library\'s logo.'],
           view: { focus: 'G_SIDEPLATES|G_BACKPLATE', azimuth: 212, elevation: 18, pad: 1.15,
             highlight: [{ parts: 'G_SIDEPLATES', color: '#ff3b3b', intensity: 0.25 }] } },
       ] },
@@ -120,6 +126,23 @@ export default {
       'So the pivot runs a proportional term plus a gravity feedforward term. The feedforward gives the motors the power gravity needs at the current angle, and the proportional term only has to close what is left:',
       { pre: 'angle      = -360 * position / 3895.9       (degrees)\ngravity    = 0.18 * cos(angle + 110°)\npitchPower = -0.001 * (target - position) + gravity' },
       'The pivot motors are 43 rpm goBILDA gearmotors driving the arm directly, so 3,895.9 encoder ticks are one turn of the arm, about 10.8 ticks per degree. Both motors get the same power, and only one encoder is read. The driver has two presets on the second gamepad\'s D-pad, up (50 ticks) and down (1,225 ticks), about 109 degrees apart, and each preset also moves the wrist, so the claw points the right way at both ends. I tuned it on the robot, with the target and the measured position on the Driver Station screen.',
+      { calc: 'Why the gravity term: how far would P alone sag?',
+        given: [
+          ['Proportional gain kP', '0.001 power per tick', '`TestTeleop.java`'],
+          ['Gravity gain kG', '0.18 power, arm flat', '`TestTeleop.java`'],
+          ['Encoder at the arm', '3,895.9 ticks per turn', `[goBILDA 5203, 139:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-139-1-ratio-24mm-length-8mm-rex-shaft-43-rpm-3-3-5v-encoder/)`],
+          ['Stall torque, 43 rpm motor', '185 kg·cm = 18.1 N·m', `[goBILDA 5203, 139:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-139-1-ratio-24mm-length-8mm-rex-shaft-43-rpm-3-3-5v-encoder/)`],
+          ['Pivot motors', '2, direct drive', 'my CAD'],
+        ],
+        work: [
+          'Ticks per degree = 3,895.9 / 360 = 10.8',
+          'Flat, the arm needs about 0.18 power just to hold still; the gravity term supplies it',
+          'P alone gives 0.18 only at an error of 0.18 / 0.001 = 180 ticks = 180 / 10.8 = 16.6°',
+          'Torque at 0.18 power, stalled: 2 × 0.18 × 18.1 N·m = 6.5 N·m',
+          'Up preset, 105° from flat: 0.18 × cos 105° = -0.05, a light push back toward vertical',
+        ],
+        result: 'Without the cosine term the arm would sit about 17 degrees below its target at flat before P pushed as hard as gravity pulls. With it, the motors hold about 6.5 N·m at flat, and P only closes what is left.',
+        note: 'Estimate: assumes 0.18 balances the arm at flat, a stalled motor\'s torque in proportion to its power, and no friction; the load also changes with how far out the slides are.' },
       { h: 'The rest of the code' },
       'The whole robot runs from one TeleOp OpMode: a single loop that reads both gamepads, mixes the mecanum drive, runs the pivot controller and sets the slides and servos on every pass.',
       { table: {
@@ -142,23 +165,33 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ why the pivot broke
-    { type: 'scrolly', id: 'pivot', module: 'pivot', width: 'full', stepHeight: '85vh', poster: `${M}/poster-pivot.webp`,
+    { type: 'scrolly', id: 'pivot', module: 'pivot', stepHeight: '85vh', poster: `${M}/poster-pivot.webp`,
       h: 'Why the pivot broke',
       p: ['The same arm and the same controller, first with the slides in, then all the way out.'],
       steps: [
-        { h: 'Two presets, one controller', p: ['With the slides in, the arm swings from the down preset up past vertical. The readout is the code\'s own math at each angle: the P term fades as the arm nears its target, and the gravity term fades to zero at vertical and turns negative past it, holding the arm back as it leans over the back.'] },
-        { h: 'The same arm, slides out', p: ['With the slides in, the claw is 0.44 m from the pivot. At full reach it is 1.42 m: 3.2 times the torque from the claw and its pixels, and about 10 times their inertia every time the arm starts or stops (computed from my CAD, claw only; the slides\' own mass adds more).'] },
-        { h: 'Where it broke', p: ['The pivot is built from three short 72 mm aluminum U-channels (from my CAD): a tower for each motor, and one between the motor hubs that carries the whole arm. The small U-channel at the pivot broke, because the arm pivoted a few times at full extension.'] },
-        { h: 'The rule I would add', p: ['Pull the slides in first, then pivot. With the slides out, the pivot stays locked; with them all the way in, it is free to move.'] },
+        { h: 'Two presets, one controller', p: ['Slides in, the arm swings up past vertical. The readout is the code\'s own math: the P term fades near the target; the gravity term falls from 0.18 at flat to zero at vertical and turns negative past it.'] },
+        { h: 'The same arm, slides out', p: ['The claw goes from 0.44 m to 1.42 m from the pivot (from my CAD): 3.2 times its torque, and about 10 times its inertia every time the arm starts or stops.'] },
+        { h: 'Where it broke', p: ['Three short 72 mm aluminum U-channels hold the pivot: a tower per motor, and one between the hubs that carries the arm. The small U-channel broke after the arm pivoted a few times at full extension.'] },
+        { h: 'The rule I would add', p: ['Slides in first, then pivot. With the slides out the pivot stays locked; only fully retracted may it move.'] },
       ],
       caption: 'The readout is computed from the constants in TestTeleop.java at each angle, with the target set to the up preset. The torque and inertia ratios compare the claw at its two distances from the pivot and count the claw only.' },
 
     // ------------------------------------------------------------------ what broke
     { type: 'prose', id: 'broke', h: 'What broke, and what I would change', p: [
-      { problem: [
-        'The small aluminum U-channel at the pivot broke, because the arm pivoted a few times at full extension.',
-        'At full reach the claw is 1.42 m from the pivot, against 0.44 m with the slides in (from my CAD). That is 3.2 times the moment from the claw and its pixels, and about 10 times the rotational inertia every time the arm starts or stops, and all of it goes through the short channels at the pivot.',
-      ], title: 'The pivot broke' },
+      { problem: 'The small aluminum U-channel at the pivot broke, because the arm pivoted a few times at full extension. Everything the arm does goes through the three short channels at the pivot.', title: 'The pivot broke' },
+      { calc: 'What full extension does to the pivot',
+        given: [
+          ['Claw centre to the pivot axis, slides in', '0.44 m', 'measured from my CAD'],
+          ['Claw centre to the pivot axis, slides out', '1.42 m', 'measured from my CAD'],
+          ['Slide travel', '4 × 244.8 mm = 979 mm', 'measured from my CAD'],
+        ],
+        work: [
+          'Static moment of the claw and its pixels, M = m g r: 1.42 / 0.44 = 3.2 times',
+          'Its inertia about the pivot, I = m r²: (1.42 / 0.44)² = 10.4 times',
+          'Same swing, same angular acceleration: 10.4 times the torque to start or stop it',
+        ],
+        result: 'Pivoting at full extension, the claw alone puts 3.2 times the moment and about 10 times the start and stop torque through the pivot channels.',
+        note: 'Estimate: the claw as a point mass at its centre; the slides moving out add more on top.' },
       { next: 'Reinforce the pivot.' },
       { problem: 'Nothing stopped the arm from pivoting at full extension. The pivot presets never checked the slides, and the slides ran open loop, so the code did not even know how far out they were.', title: 'No interlock in the code' },
       { next: [

@@ -1,6 +1,11 @@
 {
-  "about": "Input: the raw CAD after /home/claude/work/hcls-2024-ftc-offseason-bot/prep-robot.mjs, which leaves out the duplicate slide kits (the retracted copy of the 336 mm kit except its belt, the retracted 240 mm kit), the duplicate claw mount and finger, and the fasteners, then groups the parts into G_* nodes by their STEP paths and joins each group by material. Every G_ group stays separate (the rig moves them); the rest is merged by material.",
+  "about": "Input: Jerry's FBX export (off season ftc centerstage robot.fbx) converted with FBX2glTF, then /home/claude/work/hcls-2024-ftc-offseason-bot/prep-robot.mjs, which turns it Y up, leaves out the duplicate slide kits (the retracted copy of the 336 mm kit except its belt, the retracted 240 mm kit), the duplicate claw mount and finger, and the fasteners, groups the parts into G_* nodes by their Fusion paths, joins each group by material and simplifies the tessellation to an absolute error (0.45 mm, 0.15 mm on the parts the close-ups frame), no shape change. Every G_ group stays separate (the rig moves them, the tour highlights them); the rest is merged by material. The acrylic sideplates are smooth, not printed.",
   "prefix": "hc",
   "remove": [],
-  "keep": ["^G_"]
+  "keep": [
+    "^G_"
+  ],
+  "finish": {
+    "^G_SIDEPLATES$": "moulded"
+  }
 }

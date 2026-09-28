@@ -36,7 +36,9 @@ export const PHI_UP = phiFromTicks(50); // 105.3
 export const CLAW_C = [-0.039, 0.0077, 1.4159]; // claw body centre in the CAD pose (for the lever arm)
 
 const DEG = Math.PI / 180;
-const G = (name) => new RegExp(`_${name}(__\\d+)?$`);
+// a group's nodes as optimize-cad.mjs names them (anim_hc_<n>_G_X__<k>), anchored so the rig's own
+// pivot groups ("pivot:anim_hc_5_G_PIVOT_CH__0") never match
+const G = (name) => new RegExp(`^anim_hc_\\d+_${name}(__\\d+)?$`);
 
 export async function rigRobot(stage, { belts = true } = {}) {
   const { THREE } = stage;

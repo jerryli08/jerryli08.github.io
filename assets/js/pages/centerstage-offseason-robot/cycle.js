@@ -8,10 +8,11 @@
 // cached per stage aspect, and blended. With reduced motion each step cuts to its end pose.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
+import { blendIn, smoother } from '/assets/js/lib/ease.js';
 import { rigRobot, pixelGeometry, backdrop, FLOOR, PHI_UP, TRAVEL } from './rig.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const smooth = smoother; // quintic: every motion starts and stops with zero speed and acceleration
 const lerp = (a, b, t) => a + (b - a) * t;
 
 // poses (degrees; e 0 = slides in, 1 = all the way out)
@@ -23,25 +24,25 @@ const OPEN = 28; // finger opening, degrees each
 
 // the state at the end of every step and how the step gets there (m = the motion window's progress)
 function state(step, sp, reduced) {
-  const m = reduced ? 1 : smooth(0.45, 0.95, sp);
+  const m = reduced ? 1 : smooth(0.35, 0.97, sp);
   const s = { phi: PHI_REST, e: 0, wrist: 0, grip: [OPEN, OPEN], held: false, fall: 0 };
   if (step === 1) { s.e = m; s.phi = lerp(PHI_REST, PHI_FLOOR, m); }
   if (step === 2) {
     s.e = 1; s.phi = PHI_FLOOR;
-    const a = reduced ? 1 : smooth(0.45, 0.68, sp), b = reduced ? 1 : smooth(0.7, 0.93, sp);
+    const a = reduced ? 1 : smooth(0.4, 0.66, sp), b = reduced ? 1 : smooth(0.7, 0.96, sp);
     s.grip = [OPEN * (1 - a), OPEN * (1 - b)];
   }
   if (step >= 3) { s.grip = [0, 0]; s.held = true; }
   if (step === 3) {
-    const lift = reduced ? 1 : smooth(0.45, 0.55, sp), pull = reduced ? 1 : smooth(0.55, 0.95, sp);
+    const lift = reduced ? 1 : smooth(0.3, 0.45, sp), pull = reduced ? 1 : smooth(0.45, 0.97, sp);
     s.phi = lerp(PHI_FLOOR, PHI_REST, lift); s.e = 1 - pull;
   }
   if (step === 4) { s.phi = lerp(PHI_REST, PHI_UP, m); s.wrist = W_UP * m; }
   if (step >= 5) { s.phi = PHI_UP; s.wrist = W_UP; s.e = step === 5 ? E_DEP * m : E_DEP; }
   if (step === 6) {
-    const o = reduced ? 1 : smooth(0.45, 0.6, sp);
+    const o = reduced ? 1 : smooth(0.35, 0.5, sp);
     s.grip = [OPEN * o, OPEN * o];
-    s.held = false; s.fall = reduced ? 1 : clamp((sp - 0.5) / 0.45, 0, 1);
+    s.held = false; s.fall = reduced ? 1 : clamp((sp - 0.45) / 0.5, 0, 1);
   }
   return s;
 }
@@ -64,6 +65,18 @@ export async function mount(el, ctx) {
   });
   const bd = backdrop(THREE);
   model.add(bd.group);
+  // the backdrop only comes in once the arm pitches toward it (step 5): a fade of its own materials
+  const bdMats = [];
+  bd.group.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) if (!bdMats.includes(m)) { m.transparent = true; bdMats.push(m); } });
+  let bdShown = -1;
+  function showBackdrop(a) {
+    a = Math.round(a * 50) / 50;
+    if (a === bdShown) return;
+    bdShown = a;
+    bd.group.visible = a > 0;
+    for (const m of bdMats) m.opacity = a;
+    stage.invalidate();
+  }
   const H = 0.0127 / 2;
   // on the floor under the claw at full reach, one against each finger (claw centre x = -0.039)
   const floorPos = [new THREE.Vector3(-0.0775, FLOOR + H, 1.431), new THREE.Vector3(-0.0005, FLOOR + H, 1.431)];
@@ -136,25 +149,28 @@ export async function mount(el, ctx) {
     m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.updateMatrixWorld(true); return m;
   };
   const BOX = {
-    wide: boxOf(-0.24, 0.19, FLOOR, 0.16, -0.25, 1.5),
+    wide: boxOf(-0.24, 0.19, FLOOR, 0.2, -0.26, 1.5), // the robot, the reach and the pixels
     claw: boxOf(-0.17, 0.09, FLOOR, 0.1, 1.3, 1.5),
-    side: boxOf(-0.24, 0.19, FLOOR, 0.95, -0.62, 0.56),
-    drop: boxOf(-0.24, 0.19, 0.15, 0.95, -0.62, 0.12),
+    side: boxOf(-0.24, 0.19, FLOOR, 0.9, -0.6, 0.6), // the arm swinging over the back, the backdrop
+    drop: boxOf(-0.24, 0.19, FLOOR, 0.9, -0.6, 0.3),
   };
   const place = (v) => ({ t: v.target.clone(), s: new THREE.Spherical().setFromVector3(v.pos.clone().sub(v.target)) });
   let views = null, aspect = 0;
   function viewsNow() {
-    const a = el.clientWidth / Math.max(1, el.clientHeight);
+    // keyed on the camera's own aspect, the one stage.frame fits to (the stage updates it from a
+    // ResizeObserver, a moment after the element changes size)
+    const a = stage.camera.aspect;
     if (views && a === aspect) return views;
     aspect = a;
-    const portrait = a < 0.9;
-    const f = ctx.shift()[0] > 0 ? 1.18 : 1; // cards over the left on a wide desktop stage
-    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad: pad * f, apply: false, refresh: true }));
+    const portrait = a < 0.9, narrow = el.clientWidth < 600;
+    const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad, apply: false, refresh: true }));
     views = {
-      wide: fr(BOX.wide, 48, 26, portrait ? 1.0 : 1.08),
-      claw: fr(BOX.claw, 38, 30, portrait ? 1.1 : 1.35),
-      side: fr(BOX.side, 72, 12, portrait ? 1.0 : 1.06),
-      drop: fr(BOX.drop, 64, 14, portrait ? 1.05 : 1.12),
+      // seen from the robot's left (-X), so the arm reaches to the right, away from the step cards
+      // looking partly along the arm foreshortens the long reach, so the robot comes out bigger
+      wide: fr(BOX.wide, narrow ? -36 : -44, narrow ? 28 : 24, portrait ? 1.0 : 1.02),
+      claw: fr(BOX.claw, -40, 28, portrait ? 1.1 : 1.3),
+      side: fr(BOX.side, -80, 10, portrait ? 1.0 : 1.04),
+      drop: fr(BOX.drop, -64, 14, portrait ? 1.0 : 1.02),
     };
     return views;
   }
@@ -173,6 +189,7 @@ export async function mount(el, ctx) {
   const hud = document.createElement('div');
   hud.className = 'rx-hud';
   hud.style.width = 'min(250px, calc(100% - 28px))';
+  if (el.clientWidth < 600) hud.style.display = 'none'; // phones: the small stage stays for the model (the cards give the numbers)
   hud.innerHTML = `
     <div class="rx-hud-row"><span>Slides out</span><b class="num" data-k="e"></b><i><em data-k="eBar"></em></i></div>
     <div class="rx-hud-row" style="margin-top:8px"><span>Arm pitch, from flat</span><b class="num" data-k="phi"></b><i><em data-k="phiBar"></em></i></div>`;
@@ -183,7 +200,7 @@ export async function mount(el, ctx) {
   const bar = (k, f) => { const w = `${(clamp(f, 0, 1) * 100).toFixed(1)}%`; if (shown[k] !== w) { K[k].style.width = w; shown[k] = w; } };
   const L = {
     pixels: ov.label('Two pixels (added, not CAD)', [-0.039, FLOOR + 0.03, 1.431], { side: 'l' }),
-    backdrop: ov.label('Backdrop (added, not CAD)', B0.clone().addScaledVector(U, 0.4).setX(0.31).toArray(), { side: 'l', minW: 420 }),
+    backdrop: ov.label('Backdrop (added, not CAD)', B0.clone().addScaledVector(U, 0.45).setX(-0.31).toArray(), { minW: 420 }),
   };
 
   function setProgress(p, step = 0, stepP = 0) {
@@ -193,13 +210,14 @@ export async function mount(el, ctx) {
     model.updateMatrixWorld(true);
     placePixels(s, step);
     const vs = viewsNow();
-    const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+    const k = step === 0 || reduced ? 1 : blendIn(stepP);
     blend(vs[VIEW[Math.max(0, step - 1)]], vs[VIEW[step]], k);
     stage.setShift(...ctx.shift());
     put('e', `${Math.round(s.e * TRAVEL * 1000)} mm`); bar('eBar', s.e);
     put('phi', `${Math.round(s.phi)}°`); bar('phiBar', s.phi / PHI_UP);
+    showBackdrop(step < 4 ? 0 : step > 4 || reduced ? 1 : smooth(0.05, 0.45, stepP));
     L.pixels.a = step === 0 ? 1 : step === 1 ? 1 - smooth(0.5, 0.9, stepP) : 0;
-    L.backdrop.a = step === 4 ? smooth(0.2, 0.5, reduced ? 1 : stepP) * (1 - smooth(0.85, 1, reduced ? 0 : stepP)) : 0;
+    L.backdrop.a = step === 4 ? smooth(0.3, 0.55, reduced ? 1 : stepP) * (1 - smooth(0.88, 1, reduced ? 0 : stepP)) : 0;
     ov.update();
   }
   setProgress(0, 0, 0);
