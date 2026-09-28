@@ -194,7 +194,8 @@ function heroCard(x) {
   return `<aside class="scene-card" aria-labelledby="scene-card-h">
   <p class="sc-k"><span class="sc-feat">${PIN_ICON}Featured project</span><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD</span></p>
   <div class="sc-head">
-    <div><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)}${when(x) ? ` · <span class="nw">${esc(when(x))}</span>` : ''}</p></div>
+    <a class="sc-thumb" href="${url(x)}" tabindex="-1" aria-hidden="true"><img src="${v(`/assets/thumbs/${x.slug}.webp`)}" srcset="${v(`/assets/thumbs/mini/${x.slug}.webp`)} 192w, ${v(`/assets/thumbs/${x.slug}.webp`)} 960w" sizes="(max-width: 960px) 84px, 150px" alt="" width="960" height="600" decoding="async"></a>
+    <div class="sc-title"><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)}${when(x) ? ` · <span class="nw">${esc(when(x))}</span>` : ''}</p></div>
     <div class="sc-actions"><a class="nav-drive sc-drive" href="/drive">Drive the rover</a><a class="sc-go" href="${url(x)}">See more ${arrow}</a></div>
   </div>
   <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
@@ -273,7 +274,7 @@ ${nav({ home: true })}
     </div>
     <div class="grid">${everything.map(card).join('\n')}</div>
   </section>
-  ${shelf('concepts', 'Concepts', 'Designed in CAD, never built out.', concepts, 'shelf-concepts')}
+  ${shelf('concepts', 'Concepts', 'Designed in CAD, never finished.', concepts, 'shelf-concepts')}
   ${shelf('archive', 'Archive', '2023 and earlier: early robots and side builds.', archive)}
   ${objects.length ? `<section class="archive shelf-prints" id="prints" aria-labelledby="prints-h">
     <div class="archive-head"><h2 id="prints-h">Prints and small models</h2><p>Quick CAD and 3D printing experiments.</p></div>

@@ -169,6 +169,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .sc-live { display: inline-flex; align-items: center; gap: 8px; }
 .sc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 8px; }
 .sc-actions { display: flex; align-items: center; gap: 8px; margin-top: -6px; }
+.sc-thumb { flex: none; display: block; width: 150px; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8); }
+.sc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.sc-thumb:hover img { transform: scale(1.04); }
+.sc-title { flex: 1 1 200px; min-width: 0; }
 .scene-card h2 { font-size: clamp(24px, 1.9vw, 30px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.03em; line-height: 0.95; }
 .sc-sub { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
 .sc-p { margin-top: 10px; font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
@@ -520,6 +524,7 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .bg-still { object-position: 52% 36%; }
   .scene-card { top: 62px; left: var(--gutter); right: var(--gutter); width: auto; padding: 13px 15px 12px; }
   .scene-card h2 { font-size: 25px; }
+  .sc-thumb { width: 84px; border-radius: 9px; }
   .sc-p, .sc-fact { display: none; }
   .sc-hint { margin-top: 9px; padding-top: 8px; }
   .sc-go, .sc-actions .nav-drive { padding: 8px 14px; font-size: 13.5px; }

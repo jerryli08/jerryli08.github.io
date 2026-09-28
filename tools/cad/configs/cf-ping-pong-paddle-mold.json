@@ -1,8 +1,0 @@
-{
- "prefix": "mold",
- "keep": [
-  "^mold handle block$",
-  "^mold head block$"
- ],
- "note": "input: mold GLB split into its two solids first (/home/claude/work/static-models/model-prep/split.mjs)"
-}
