@@ -25,6 +25,8 @@
 // transfer power and so speed, and a turret). The PTO scrolly sits right below the hero.
 // Sept 28, 03:53 (Jerry): the 4-bar arms are animated correctly now (Q12 closed), so no copy calls
 // their angle "for the animation" or unknown.
+// Sept 28, 12:32-15:59 (Jerry): the team-number picture was cropped until the digits could not be
+// seen; it is now a render of robot.glb (stage lighting) in an uncropped row under the turret text.
 const M = '/assets/models/ftc-decode-two-sided/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff', PINK = '#ff2bd6';
 
@@ -279,10 +281,13 @@ export default {
       'The shooter sits on a turret toward the back of the robot, its axis 92 mm behind the robot\'s centre. The ring gear has 158 internal teeth at module 1.5 and is 256 mm across. Four Melonbotics Super Servos stand inside it, so four servos share the work of turning the turret.',
       'The hood and the two flywheel motors ride on top, with our team number, 26115, in a custom number font on both sides.',
     ],
-      media: [
+      // Sept 28 (Jerry: the number picture was cropped until the digits could not be seen): both
+      // pictures sit uncropped in one row under the text, and the flat font screenshot is replaced by
+      // a render of the turret from the page's own GLB, lit by the stage, so the number reads in place.
+      media: [[
         { i: 'cad-turret-servos.webp', c: 'The turret drive in the CAD, March 30, 2026: two of the four Super Servos, their pinions in the ring gear' },
-        { i: 'team-number-font.webp', c: 'Our team number in the custom number font that is modelled on both sides of the turret' },
-      ] },
+        { i: 'cad-turret-number.webp', c: 'Rendered from the CAD: the turret with our team number, 26115, in our custom number font on its side plate. The same plate is on the other side; the far one shows its back here' },
+      ]] },
     { type: 'scrolly', id: 'turret-demo', module: 'turret', width: 'full', length: '170vh', poster: `${M}poster-turret.webp`,
       h: 'Turning the turret',
       p: ['The servos, hood, motors and number plates turn together about the ring gear\'s centre as you scroll; the ring gear, lit orange, stays with the robot.'],

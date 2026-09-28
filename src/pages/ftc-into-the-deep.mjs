@@ -134,7 +134,7 @@ export default {
     { type: 'prose', id: 'rail', h: 'Catching on the rail', p: [
       { problem: [
         'Reaching in under the submersible rail is the extension\'s whole job, and the rail is where it got stuck. In a December practice run the intake hung up on the rail ("it\'s stuck on the rail right now"). On the practice field at the Moorefield qualifier in January, a teammate had to reach in and free it by hand.',
-        'In a February test beside the submersible, the diagnosis was the intake\'s width: "the issue is the width ... this can still get caught there."',
+        'In a February test beside the submersible, the problem was the intake\'s width: it was wide enough to still catch on the submersible.',
       ], title: 'The intake caught on the submersible rail' },
       { fix: 'Intake version 5 (below) replaced the head at the tip. Tried at the submersible in February, it looked "a lot more tolerant", and in the later tests the extension reaches in from several sides of the submersible and all the way out to the wall.', title: 'A new head at the tip' },
       'In the specimen autonomous at the top of this page, the robot works from the chamber and sends the extension across the field to fetch a sample by the wall.',
@@ -150,7 +150,7 @@ export default {
     { type: 'iterations', id: 'versions', items: [
       { label: 'Version 1 · Sep to Nov 2024', title: 'Two sideways spinners', p: [
         'The first idea is a page of sketches from Sep 14: two star-shaped spinners on either side of a funnel, one powered and the other free to roll. The next sketch gears them through a small gear and a big gear, and the note says why: the "difference in speed will turn the sample." It was in CAD the same day, and a printed prototype got its first test spun by a cordless drill. By Oct 12 the printed version had two servos wired in.',
-        { problem: 'The first sketches already marked a case where a sample "can get stuck". By late November, with the intake on the robot, the drive team put it plainly: "because it\'s side roller; if it wasn\'t side rollers you\'d be good."', title: 'Side rollers were picky about how the sample was lying' },
+        { problem: 'The first sketches already marked a case where a sample could get stuck. By late November, with the intake on the robot, the drive team traced the misses to the side rollers themselves: they only grabbed a sample lying the right way.', title: 'Side rollers were picky about how the sample was lying' },
         { fix: 'Version 2 dropped the side rollers for vertical spinners.' },
       ], media: [
         { i: 'sketch-intake-v1-jam.webp', c: 'Sep 14, 2024: a small gear and a big gear, so the "difference in speed will turn the sample", and a red note where a sample "can get stuck"' },

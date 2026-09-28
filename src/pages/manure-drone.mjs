@@ -26,6 +26,15 @@ const X6 = 'https://rcmumbai.com/hobbywing-x6-power-system-for-agricultural-dron
 const HEAT = 'https://www.engineeringtoolbox.com/gross-net-heating-values-d_420.html';
 const AIR = 'https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html';
 const E610P = 'https://robokits.co.in/multirotor-spare-parts/agriculture-drone-parts/eft-e-series-e610p-agriculture-drone-frame-25kg-take-off-weight-with-10l-tank-capacity';
+// Round 4 (Jerry, Sept 28: compare the drones' electricity and pollution with what the whole operation
+// generates and saves): OMAFRA's farm digester factsheet (ISSN 1198-712X; dairy manure 23 m³ biogas and
+// 48 kWh of electricity per wet tonne at 35 %, biogas about 60 % methane), EPA eGRID2023 rev2 (NYUP
+// 242.8 lb CO2e/MWh, the eGRID subregion of the rural New York town in his repo; US 770.9), IPCC AR6
+// WG1 Table 7.15 (non-fossil CH4, GWP-100 27.0) and IPCC 2006 Eq. 10.23 (0.67 kg per m³ of CH4).
+// The 10-minute trip and the 90 % / 85 % efficiencies are labelled as assumptions on the page.
+const OMAFRA = 'https://www.ontario.ca/page/energy-yields-farm-based-anaerobic-digestion-system';
+const EGRID = 'https://www.epa.gov/egrid/summary-data';
+const AR6 = 'https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/';
 
 export default {
   summary: {
@@ -171,6 +180,57 @@ export default {
       { i: 'patrol-vacuum.webp', c: 'From the mission above: the drone low over the pasture after its third pat, the canister shown full (the pasture and the fill level are illustrations)' },
       { i: 'cad-side.webp', c: 'My CAD from the side, front to the right: the canister through the body with the vacuum head on top, the duct up the back and the nozzle under it' },
       { i: 'cad-nozzle.webp', c: 'The intake nozzle and the duct at the back of the drone in my CAD' },
+    ] },
+
+    // ------------------------------------------------------------------ energy and pollution balance
+    // Jerry (Sept 28): compare the electricity and pollution of the drones with the electricity
+    // generated and the pollution saved by the whole operation. Inputs: this page's own numbers, cited
+    // published values (OMAFRA, EPA eGRID2023, IPCC 2006 and AR6) and two labelled assumptions.
+    { type: 'prose', id: 'balance', h: 'Energy in, energy out', p: [
+      'The drones run on electricity, and the manure they bring back makes electricity in the digester. For the 100-cow herd above, one day of the whole operation, both ways:',
+      { calc: 'Does the manure make more electricity than the drones use?',
+        given: [
+          ['Herd; manure per cow per day', '100 cows; 38 kg', 'above'],
+          ['Manure per full canister', '26 kg', 'above'],
+          ['Flying per full canister', '10 min', 'assumed'],
+          ['Hover power at 36 kg; at 60 kg', '6.1 kW; 13 kW', 'above, for the whole flight'],
+          ['Charging; motors and ESCs', '90 %; 85 % efficient', 'assumed'],
+          ['Biogas from dairy manure in a farm digester', '23 m³ per tonne', '[OMAFRA](' + OMAFRA + '), Table 1'],
+          ['Methane in the biogas', 'about 60 %', 'OMAFRA'],
+          ['Heat in methane', 'about 10 kWh/m³', 'above'],
+          ['Engine-generator, biogas to electricity', '35 % (25 to 42 %)', 'OMAFRA'],
+        ],
+        work: [
+          'Manure: 100 x 38 kg = 3,800 kg a day = **146 canisters**; x 10 min = **24.3 hours of flying**, so several drones',
+          'Grid power: 6.1 kW / (0.90 x 0.85) = 8.0 kW at 36 kg; 13 kW / 0.765 = 17 kW at 60 kg',
+          'Energy in: 24.3 h x 8.0 kW = **194 kWh a day**; at 60 kg, **413 kWh**',
+          'Energy out: 3.8 t x 23 m³/t x 0.60 x 10 kWh/m³ x 0.35 = **184 kWh a day**',
+          'Out / in: 184 / 194 = **0.95**; at 60 kg, 184 / 413 = **0.45**',
+          'Break-even: one canister makes 26 kg x 23 m³/t x 0.60 x 10 kWh/m³ x 0.35 = 1.26 kWh, enough for 1.26 / 8.0 kW = **9.5 minutes** of flying (4.4 at 60 kg)',
+        ],
+        result: 'The drones use about as much electricity as the manure makes, and twice as much flying heavy. The operation only gains electricity if a full canister takes under about 9.5 minutes of flying.',
+        note: 'Estimate: the trip time and efficiencies are assumed, and hover power for the whole flight overstates what the drones use (forward flight takes less). The digester\'s heat, 62 kWh per tonne in the same table, is not counted.' },
+      { calc: 'Does it cut more pollution than it causes?',
+        given: [
+          ['Upstate New York grid (eGRID subregion NYUP), CO2e', '242.8 lb/MWh = 0.110 kg/kWh', '[EPA eGRID2023](' + EGRID + '), Table 1'],
+          ['Methane escaping per cow per day: lagoon; pasture', '0.86 m³; 0.013 m³', 'above (IPCC 2006)'],
+          ['Mass of methane', '0.67 kg/m³', '[IPCC 2006](' + IPCC + '), Vol. 4, Eq. 10.23'],
+          ['Methane\'s 100-year warming potential (non-fossil)', '27 x CO2', '[IPCC AR6 WG1](' + AR6 + '), Table 7.15'],
+        ],
+        work: [
+          'Caused by the drones: 194 kWh x 0.110 = **21 kg of CO2e a day** (45 kg at 60 kg)',
+          'Grid power the digester displaces: 184 kWh x 0.110 = 20 kg',
+          'Manure bound for a lagoon: 100 x 0.86 m³ x 0.67 kg/m³ x 27 = 1,560 kg, plus 20 = **1,580 kg avoided a day**',
+          'Manure that would stay on the grass: 100 x 0.013 m³ x 0.67 kg/m³ x 27 = 23 kg, plus 20 = **43 kg avoided a day**',
+          'Avoided / caused: lagoon manure **35 to 75**; pasture manure **1 to 2**',
+        ],
+        result: 'For manure bound for a lagoon, the operation avoids 35 to 75 times the CO2e its drones cause. For manure that would have stayed on the grass, it about breaks even.',
+        note: 'Estimate, rounded. On the US-average grid (770.9 lb/MWh, same table) the drones cause about 3 times as much and the lagoon case is still 11 to 24 times. Leaks from the digester and the digestate storage are not counted, so the avoided figures are upper bounds. The CO2 from burning the biogas is biogenic and, as in IPCC inventories, not counted.' },
+      { problem: 'The drones use about as much electricity as the manure they bring back makes, and more when they fly heavy. As a power plant, the operation does not pay.', title: 'Energy balance' },
+      { fix: 'Its case is the methane: for manure that would have gone to a lagoon, it avoids tens of times the CO2e it causes. Short trips, with the depot and its charger close to the herd, keep the energy near break-even: under about 9.5 minutes of flying per full canister.', label: 'Where it still works' },
+    ], media: [
+      { i: 'cad-coax-pair.webp', c: 'Where the electricity goes: one of the six coaxial pairs in my CAD, an upper and a lower motor, each with its 23 in prop' },
+      { i: 'patrol-depot.webp', c: 'From the mission above: the drone landed at the depot beside the digester, its generator and the digestate tank (the depot is an illustration; the drone is my CAD)' },
     ] },
 
     // ------------------------------------------------------------------ verdict

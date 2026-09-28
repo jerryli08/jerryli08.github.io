@@ -1,4 +1,4 @@
-// Shared rig for the Drone on Wheels page: the docking latch, wheels, props and the elastic bands,
+// Shared rig for the Hybrid Detachable UAV-UGV page: the docking latch, wheels, props and the elastic bands,
 // all on Jerry's real CAD (assets/models/rover.glb and drone.glb, the same models as the landing
 // scene) and about the same real axes that assets/js/world.js uses. Every scrolly on the page is a
 // pure function of the scroll position: nothing in here animates on its own.

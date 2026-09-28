@@ -86,7 +86,7 @@ export default {
       'Both beams and both posts are 2020 aluminum extrusion, standing on a base of two 550 mm extrusion rails. The beams measure 366 mm in the CAD, inside the 40.0 cm limit. Everything that joins the extrusions is 3D printed: the lattice foot plates, the fulcrum stands on top of the posts, the fulcrum rod mounts on the beams and the link ends. The link is one rigid curved part between the two beam ends.',
       'Each fulcrum is a ball bearing (35 mm outside, 14 mm bore) in a printed stand on top of its post, with a printed 14 mm fulcrum rod on the beam turning inside it. The two link joints run on the same bearings, so all four pivots are rolling rather than sliding.',
       { problem: 'Friction at a pivot can hold a beam still when the masses are not quite balanced, and that error goes straight into the ratio.', title: 'Friction' },
-      { fix: 'A ball bearing at every pivot, and a quick setup check before each run: set the parts the right way, "and then that should reduce the friction."' },
+      { fix: 'A ball bearing at every pivot, and a quick setup check before each run: set the parts the right way so the pivots turn freely and friction stays low.' },
       { calc: 'How much can a bearing hide?',
         given: [
           ['Rolling bearing friction coefficient', '0.001 to 0.005', '[NTN Rolling Bearings Handbook](https://www.ntnglobal.com/en/products/catalog/pdf/9012E.pdf)'],

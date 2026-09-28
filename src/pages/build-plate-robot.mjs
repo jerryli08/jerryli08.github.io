@@ -127,7 +127,7 @@ export default {
           'With the CAD’s 80-tooth pulley: 8.75 × 160 mm = 1,400 mm, four times the stroke',
           'With a 20-tooth pulley: 8.75 × 40 mm = 350 mm, within 5 mm of the 355 mm stroke',
         ],
-        result: `At the turntable’s setting, 14,000 steps only fits a 20-tooth pulley: the change my [build log](${GH}/tree/main/Code) says I planned “due to torque issues and sufficient speed”, and the photo beside this shows a small pulley on the motor. For the same motor torque a 20-tooth pulley pulls four times as hard on the belt (pitch radius 6.4 mm instead of 25.5 mm). The 80-tooth pulley would only fit if its drivers were set to 32 microsteps.`,
+        result: `At the turntable’s setting, 14,000 steps only fits a 20-tooth pulley: the change I planned for torque, since the speed was already sufficient ([build log](${GH}/tree/main/Code)), and the photo beside this shows a small pulley on the motor. For the same motor torque a 20-tooth pulley pulls four times as hard on the belt (pitch radius 6.4 mm instead of 25.5 mm). The 80-tooth pulley would only fit if its drivers were set to 32 microsteps.`,
         note: 'Assumes 1.8° extension motors and the same microstep setting on every TMC2209 on my perfboard. The CAD and the animations keep the 80-tooth pulleys.' },
     ],
       media: [

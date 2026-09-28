@@ -16,6 +16,8 @@ const p = (...a) => join(ROOT, ...a);
 
 // ---------------------------------------------------------------- helpers
 const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// a title for display: short hyphenated words ("UAV-UGV", "Two-Sided") never split across lines
+const titleHtml = (t = '') => esc(t).replace(/(^|\s)([^\s-]+(?:-[^\s-]+)+)(?=\s|$)/g, (m, sp, w) => (w.length <= 10 ? `${sp}<span class="nw">${w}</span>` : m));
 const hashCache = new Map();
 // "three" plus every vendored addon under its own URL, so the 3D world's relative imports
 // (world.js, the addons importing each other) get content-hashed URLs and the year-long cache
@@ -146,7 +148,7 @@ function fcard(x) {
   const t = thumb(x);
   return `<a class="fcard" href="${url(x)}">
   <div class="fcard-img">${t ? `<img src="${v(t)}" alt="" fetchpriority="high" decoding="async">` : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="fcard-body"><h3>${esc(x.title)}</h3><p class="meta">${when(x) ? `<span class="yr">${esc(when(x))}</span>` : ''}<span>${esc(statLine(x))}</span></p></div>
+  <div class="fcard-body"><h3>${titleHtml(x.title)}</h3><p class="meta">${when(x) ? `<span class="yr">${esc(when(x))}</span>` : ''}<span>${esc(statLine(x))}</span></p></div>
 </a>`;
 }
 // newest first, by when the project ended ("Sep 2025 to May 2026" ends May 2026)
@@ -172,7 +174,7 @@ function card(x) {
   const s0 = statLine(x) || '', sub = s0 === KIND_LABEL[x.kind] ? '' : s0; // no "Concept" under a card already labelled Concept
   return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
   <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${when(x) ? `<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>${whenHtml(x)}</span>` : ''}</span><b>${esc(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
+  <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${when(x) ? `<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>${whenHtml(x)}</span>` : ''}</span><b>${titleHtml(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
 </a>`;
 }
 // Prints and small models: a collage of photo prints, each at its own aspect ratio, tilted a little.
@@ -189,19 +191,28 @@ function printCard(x, i) {
   <span class="pcard-img">${img}${x.draft ? '<span class="badge draft">Draft</span>' : ''}</span><span class="pcard-t">${esc(x.title)}${when(x) ? `<small class="pcard-d">${esc(when(x))}</small>` : ''}</span>
 </a>`;
 }
-// the project the live scene is showing
+// the project the live scene is showing: a media card, the photo filling the left column beside the
+// title, text and buttons (it stretches to their height, so there is no gap on either side), and a
+// footer with the fact and how to play with the scene. On a narrow card (phones) the photo runs
+// across the top instead. The layout follows the card's own width (container queries in site.css).
 function heroCard(x) {
-  return `<aside class="scene-card" aria-labelledby="scene-card-h">
-  <p class="sc-k"><span class="sc-feat">${PIN_ICON}Featured project</span><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD</span></p>
-  <div class="sc-head">
-    <a class="sc-thumb" href="${url(x)}" tabindex="-1" aria-hidden="true"><img src="${v(`/assets/thumbs/${x.slug}.webp`)}" srcset="${v(`/assets/thumbs/mini/${x.slug}.webp`)} 192w, ${v(`/assets/thumbs/${x.slug}.webp`)} 960w" sizes="(max-width: 960px) 84px, 150px" alt="" width="960" height="600" decoding="async"></a>
-    <div class="sc-title"><h2 id="scene-card-h">${esc(x.title)}</h2><p class="sc-sub">${esc(x.org)}${when(x) ? ` · <span class="nw">${esc(when(x))}</span>` : ''}</p></div>
+  const img = `/assets/thumbs/${x.slug}.webp`, d = dims(img) || { w: 720, h: 462 };
+  return `<aside class="scene-card" aria-labelledby="scene-card-h"><div class="sc-in">
+  <div class="sc-media">
+    <a class="sc-img" href="${url(x)}" tabindex="-1" aria-hidden="true"><img src="${v(img)}" alt="" width="${d.w}" height="${d.h}" decoding="async" fetchpriority="high"></a>
+    <p class="sc-feat">${PIN_ICON}Featured project</p>
+  </div>
+  <div class="sc-main">
+    <h2 id="scene-card-h">${titleHtml(x.title)}</h2>
+    <p class="sc-sub">${esc(x.org)}${when(x) ? ` · <span class="nw">${esc(when(x))}</span>` : ''}</p>
+    <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
     <div class="sc-actions"><a class="nav-drive sc-drive" href="/drive">Drive the rover</a><a class="sc-go" href="${url(x)}">See more ${arrow}</a></div>
   </div>
-  <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
-  <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
-  <p class="sc-hint"><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
-</aside>`;
+  <div class="sc-foot">
+    <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
+    <p class="sc-hint"><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD.</span> <span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
+  </div>
+</div></aside>`;
 }
 
 function landing() {
@@ -308,10 +319,11 @@ function drivePage() {
   // arrow keys drawn as one icon turned four ways, so all four read the same size (font arrows do not)
   const ARROW = (d) => `<kbd class="kbd-ar" aria-label="${{ u: 'Up', l: 'Left', d: 'Down', r: 'Right' }[d]} arrow"><svg class="ar-${d}" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10.2V2.2M2.6 5.4 6 2l3.4 3.4"/></svg></kbd>`;
   const ARROW_KEYS = ['u', 'l', 'd', 'r'].map(ARROW).join('');
+  const hv = projects.find((x) => x.slug === 'hybrid-vehicle'); // the vehicle this page drives
   const pad = (cls, keys, label) => `<div class="pad ${cls}" aria-hidden="true"><span class="pad-l">${label}</span><button type="button" data-k="${keys[0]}">&#9650;</button><div><button type="button" data-k="${keys[1]}">&#9664;</button><button type="button" data-k="${keys[2]}">&#9660;</button><button type="button" data-k="${keys[3]}">&#9654;</button></div></div>`;
   return `${head({
     title: 'Drive the rover · Jerry Li',
-    description: 'Drive the Drone on Wheels vehicle across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.',
+    description: `Drive the ${hv.title} across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.`,
     path: '/drive',
     extra: `${vendorImportMap()}\n`,
   })}
@@ -319,7 +331,7 @@ function drivePage() {
 <canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}" data-assets="${worldAssets()}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
-  <p class="chip drive-title"><span class="dot"></span><span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</span></p>
+  <p class="chip drive-title"><span class="dot"></span><span><a href="${url(hv)}">${titleHtml(hv.title)}</a>, from my CAD</span></p>
 </div>
 <div class="dock-bar"><button type="button" class="dock-btn x-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button><button type="button" class="dock-btn f-btn" data-fly-toggle><kbd>F</kbd><span data-fly-label>Press F to fly</span></button></div>
 <div class="split-line" aria-hidden="true"></div>
@@ -397,7 +409,7 @@ function pageFacts(x) {
 function pageHeader(x, stats = x.stats, md = esc) {
   return `<header class="p-head">
     <p class="p-kicker"><a href="/#work">&larr; All projects</a>${x.event || x.org ? `<span>${esc(x.event || x.org)}</span>` : ''}${x.date ? `<span>${esc(x.date)}</span>` : ''}${x.draft ? '<span class="draft-tag">Draft, waiting on media</span>' : ''}</p>
-    <h1 class="p-title">${esc(x.title)}</h1>
+    <h1 class="p-title">${titleHtml(x.title)}</h1>
     ${x.subtitle ? `<p class="p-sub">${esc(x.subtitle)}</p>` : ''}
     <p class="p-lede">${esc(x.short)}</p>
     ${stats?.length ? `<div class="stats">${stats.map((s) => `<div class="stat"><b>${md(s.v)}</b><span>${md(s.l)}</span></div>`).join('')}</div>` : ''}
@@ -410,7 +422,7 @@ const cadBlock = (x) => (x.cad ? `<h2 class="block-title">CAD</h2>
 // rich pages: the page's own scroll-driven 3D replaces the click-to-load embed (Jerry: nothing gated
 // behind a click); the full Fusion 360 model stays one plain link away
 const cadLink = (x) => (x.cad ? `<p class="rx-cad-link"><a href="${esc(x.cad)}" rel="noopener">Open the full Fusion 360 model in Autodesk Viewer ${arrow}</a></p>` : '');
-const nextLink = (next) => (next ? `<a class="next" href="${url(next)}"><span><span class="label">Next project</span><b>${esc(next.title)}</b></span><span class="big-arrow" aria-hidden="true">&rarr;</span></a>` : '');
+const nextLink = (next) => (next ? `<a class="next" href="${url(next)}"><span><span class="label">Next project</span><b>${titleHtml(next.title)}</b></span><span class="big-arrow" aria-hidden="true">&rarr;</span></a>` : '');
 
 function projectPage(x, next) {
   const media = (x.media || []);

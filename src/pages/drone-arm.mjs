@@ -1,7 +1,8 @@
 // Drone Grabber Arm (concept, Jul 2025). Page text from the phase A write-up for this project,
 // trimmed to what Jerry has stated, what the
 // photos plainly show and what is measured or computed from his CAD. Framed as part of MIT Beaver
-// Works Summer Institute (Jerry, Sept 27: full name, never the abbreviation); Drone on Wheels, linked
+// Works Summer Institute (Jerry, Sept 27: full name, never the abbreviation); the Hybrid Detachable
+// UAV-UGV (renamed from Drone on Wheels, Jerry, Sept 28), linked
 // from here, stays MIT Lincoln Laboratory research and is not re-framed. Held back until Jerry answers
 // questions.md: the servo model (the CAD and Jerry disagree, so no model is named), who designed the
 // claw, whether the joint hubs and bearings were parts from his other robots, any powered test,
@@ -23,7 +24,7 @@ export default {
     ],
     text: [
       'An arm that hangs under a quadcopter and grabs things, like a bottle of water off a table. The idea was a drone that could fetch household items in a place like a senior home, because a drone is more flexible than a ground robot.',
-      'I designed it in CAD and built the whole arm as part of the MIT Beaver Works Summer Institute: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted, and the same team went on to build [Drone on Wheels](/projects/hybrid-vehicle).',
+      'I designed it in CAD and built the whole arm as part of the MIT Beaver Works Summer Institute: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted, and the same team went on to build the [Hybrid Detachable UAV-UGV](/projects/hybrid-vehicle).',
     ],
   },
   hero: {
@@ -111,7 +112,7 @@ export default {
         media: [{ i: 'arm-joint-block-in-hand.webp', c: 'The shoulder mount and servo on the first link, with the elbow below' }, { i: 'arm-assembled-on-bed.webp', c: 'The assembled arm: the red shoulder wedge and servo, a carbon link, the elbow and the second link' }] },
       { label: 'Jul 15, 2025', title: 'More links and the claw parts', p: ['Spare drone arms with their motor mounts, and the printed claw parts on the desk behind them.'],
         media: [{ i: 'arm-links-drone-arms.webp', c: 'Spare carbon drone arms with their blue motor mounts, and red printed claw parts behind' }] },
-      { label: 'Then', title: 'We pivoted', p: ['The whole arm was built and almost ready to go on the drone when we pivoted to a new idea: [Drone on Wheels](/projects/hybrid-vehicle), a drone and a ground rover that dock together, so each one can carry the other. We felt it was the better idea because it would have more applications, and it was the surer bet in the time we had left, less than two weeks. The same team went on to build it.'] },
+      { label: 'Then', title: 'We pivoted', p: ['The whole arm was built and almost ready to go on the drone when we pivoted to a new idea: the [Hybrid Detachable UAV-UGV](/projects/hybrid-vehicle), a drone and a ground rover that dock together, so each one can carry the other. We felt it was the better idea because it would have more applications, and it was the surer bet in the time we had left, less than two weeks. The same team went on to build it.'] },
     ] },
   ],
 };

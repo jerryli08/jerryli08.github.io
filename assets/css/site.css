@@ -153,37 +153,70 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .card-cta { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 10px; background: rgba(10, 8, 7, 0.55); opacity: 0; transition: opacity 0.25s var(--ease); }
 .card-cta > span { padding: 7px 14px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 13.5px; font-weight: 650; white-space: nowrap; }
 
-/* the project the live scene shows, top right over the scene */
+/* the project the live scene shows, top right over the scene. A media card: the photo fills the
+   left column at the height of the title, text and buttons beside it, and a footer runs under both.
+   On a narrow card the photo runs across the top instead (container queries on .scene-card). */
 .scene-card {
-  /* wide and short: about four fifths of the space right of the text, so it covers little of the scene */
+  /* about four fifths of the space right of the text, so it covers little of the scene */
   position: absolute; z-index: 3; top: 86px; right: var(--gutter);
-  width: calc((100vw - 2 * var(--gutter) - var(--left-w)) * 0.78);
-  padding: 16px 20px 14px; border-radius: 18px;
+  width: min(calc((100vw - 2 * var(--gutter) - var(--left-w)) * 0.78), 760px);
+  container-type: inline-size; border-radius: 18px; overflow: hidden;
   background: rgba(12, 10, 9, 0.64); border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(14px) saturate(1.1); -webkit-backdrop-filter: blur(14px) saturate(1.1);
   box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
 }
-.sc-k { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 12.5px; color: var(--text-2); }
-.sc-feat { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 7px; border-radius: 999px; color: #f4c542; font-weight: 650; background: rgba(244, 197, 66, 0.1); border: 1px solid rgba(244, 197, 66, 0.4); }
-.sc-feat svg { width: 13px; height: 13px; }
-.sc-live { display: inline-flex; align-items: center; gap: 8px; }
-.sc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 8px; }
-.sc-actions { display: flex; align-items: center; gap: 8px; margin-top: -6px; }
-.sc-thumb { flex: none; display: block; width: 150px; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8); }
-.sc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-.sc-thumb:hover img { transform: scale(1.04); }
-.sc-title { flex: 1 1 200px; min-width: 0; }
-.scene-card h2 { font-size: clamp(24px, 1.9vw, 30px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.03em; line-height: 0.95; }
-.sc-sub { margin-top: 6px; font-size: 13.5px; color: var(--muted); }
-.sc-p { margin-top: 10px; font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
-.sc-fact { margin-top: 10px; padding: 7px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); font-size: 13.5px; color: var(--text-2); }
-.sc-fact b { color: var(--text); font-weight: 700; font-stretch: 110%; }
-.sc-hint { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; color: var(--muted); }
-.h-touch { display: none; }
-@media (hover: none) { .h-fine { display: none; } .h-touch { display: inline; } }
+.sc-in {
+  display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); grid-template-areas: "media main" "foot foot";
+  gap: 14px 18px; padding: 14px 16px 13px 14px;
+}
+.sc-media { grid-area: media; position: relative; min-height: 150px; border-radius: 12px; overflow: hidden; background: var(--bg-raise); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 12px 26px -14px rgba(0, 0, 0, 0.8); }
+.sc-img { position: absolute; inset: 0; display: block; }
+.sc-img img { width: 100%; height: 100%; object-fit: cover; object-position: 47% 45%; display: block; transition: transform 0.5s var(--ease); }
+.sc-img:hover img { transform: scale(1.04); }
+.sc-feat {
+  position: absolute; top: 9px; left: 9px; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 7px; border-radius: 999px;
+  font-size: 12px; color: #f4c542; font-weight: 650; background: rgba(12, 10, 9, 0.74); border: 1px solid rgba(244, 197, 66, 0.5);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.sc-feat svg { width: 12px; height: 12px; }
+.sc-main { grid-area: main; display: flex; flex-direction: column; min-width: 0; padding-top: 2px; }
+.scene-card h2 { font-size: clamp(22px, 1.8vw, 29px); font-weight: 800; font-stretch: 122%; letter-spacing: -0.03em; line-height: 1; text-wrap: balance; }
+.sc-sub { margin-top: 6px; font-size: 13px; color: var(--muted); }
+.sc-p { margin-top: 9px; font-size: 14px; line-height: 1.45; color: var(--text-2); }
+.sc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: auto; padding-top: 12px; }
 .sc-go { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 13.5px; font-weight: 650; transition: background 0.2s; }
 .sc-actions .nav-drive { flex: none; padding: 8px 14px; font-size: 13.5px; }
 .sc-go:hover { background: var(--accent); }
+.sc-foot { grid-area: foot; min-width: 0; }
+.sc-fact { padding: 7px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); font-size: 13.5px; color: var(--text-2); }
+.sc-fact b { color: var(--text); font-weight: 700; font-stretch: 110%; }
+.sc-hint { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.sc-live { display: inline-flex; align-items: center; gap: 7px; margin-right: 2px; color: var(--text-2); }
+.h-touch { display: none; }
+@media (hover: none) { .h-fine { display: none; } .h-touch { display: inline; } }
+/* a mid-width card (laptops): slightly tighter text, so the photo beside it stays wider than tall
+   and shows the whole drone */
+@container (max-width: 560px) {
+  .sc-in { grid-template-columns: minmax(0, 0.84fr) minmax(0, 1fr); }
+  .sc-p { font-size: 13.5px; line-height: 1.4; }
+}
+/* a short window: the fact repeats the "First author" chip on the left, so it gives way to the scene */
+@media (max-height: 780px) and (min-width: 961px) {
+  .sc-fact { display: none; }
+  .sc-hint { margin-top: 0; }
+}
+/* a narrow card: the photo across the top, edge to edge, then the title, the buttons and the footer */
+@container (max-width: 440px) {
+  .sc-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: "media" "main" "foot"; gap: 11px; padding: 0 0 12px; }
+  .sc-p, .sc-fact { display: none; } /* a narrow card keeps to the title and buttons, so the scene stays in view */
+  .sc-media { min-height: 0; aspect-ratio: 2.6; border-radius: 0; box-shadow: none; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+  .sc-img img { object-position: 47% 40%; }
+  .sc-feat { top: 8px; left: 8px; font-size: 11.5px; padding: 2px 9px 2px 6px; }
+  .sc-main, .sc-foot { padding: 0 15px; }
+  .sc-main { padding-top: 0; }
+  .sc-actions { padding-top: 11px; }
+}
 
 /* bottom right: a fanned hand of project photos and the count of what is below. Kept quiet:
    no motion unless hovered. */
@@ -377,7 +410,8 @@ kbd .ar-r { transform: rotate(90deg); }
 }
 body[data-dock="detaching"] .dock-btn, body[data-dock="attaching"] .dock-btn, body[data-dock="lifting"] .dock-btn, body[data-dock="landing"] .dock-btn { animation: none; }
 @media (prefers-reduced-motion: reduce) { .dock-btn { animation: none; } }
-@media (max-width: 1240px) { .dock-bar { top: 62px; } .view-label { top: 112px; } }
+/* the dock buttons drop below the top-left chips wherever the two would meet */
+@media (max-width: 1360px) { .dock-bar { top: 62px; } .view-label { top: 112px; } }
 body[data-dock="detaching"] .dock-btn, body[data-dock="attaching"] .dock-btn, body[data-dock="lifting"] .f-btn, body[data-dock="landing"] .f-btn { opacity: 0.6; pointer-events: none; }
 /* F only works while the two are latched; X only on the ground */
 body[data-dock="split"] .f-btn, body[data-dock="detaching"] .f-btn, body[data-dock="attaching"] .f-btn,
@@ -409,7 +443,7 @@ body.split-wide .view-label { opacity: 1; }
 body.split-v .split-line { top: var(--split, 0%); bottom: auto; left: 0; right: 0; width: auto; height: 2px; margin: -1px 0 0; }
 body.split-v .vl-rover { left: 12px; top: calc(var(--split, 50%) + 12px); }
 body.split-v .vl-drone { left: 12px; top: 64px; }
-@media (max-width: 1240px) { body.split-v .vl-drone { top: 112px; } } /* clear of the X button */
+@media (max-width: 1360px) { body.split-v .vl-drone { top: 112px; } } /* clear of the X button */
 body.split-v .feed { width: 100%; bottom: auto; height: var(--split, 0%); }
 @media (max-width: 640px) {
   .drive-keys .dk-help, .drive-keys .dk-help + .dk-sep { display: none; }
@@ -518,17 +552,13 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .hero { --left-w: min(56vw, 760px); }
 }
 @media (max-width: 960px) {
-  .hero { min-height: auto; padding-top: 46vh; padding-bottom: 120px; }
+  .hero { min-height: auto; padding-top: max(46vh, 412px); padding-bottom: 120px; } /* the name starts below the featured card */
   .hero-left { width: 100%; }
   .veil { background: linear-gradient(180deg, rgba(10, 8, 7, 0.35) 0%, rgba(10, 8, 7, 0.1) 18%, rgba(10, 8, 7, 0.72) 36%, rgba(10, 8, 7, 0.9) 60%); }
   .bg-still { object-position: 52% 36%; }
-  .scene-card { top: 62px; left: var(--gutter); right: var(--gutter); width: auto; padding: 13px 15px 12px; }
-  .scene-card h2 { font-size: 25px; }
-  .sc-thumb { width: 84px; border-radius: 9px; }
-  .sc-p, .sc-fact { display: none; }
-  .sc-hint { margin-top: 9px; padding-top: 8px; }
-  .sc-go, .sc-actions .nav-drive { padding: 8px 14px; font-size: 13.5px; }
-  .sc-actions { margin-top: 0; }
+  .scene-card { top: 62px; left: var(--gutter); right: var(--gutter); width: auto; }
+  .scene-card h2 { font-size: clamp(18px, 5.3vw, 22px); }
+  .sc-hint { margin-top: 0; padding-top: 9px; }
   .more { right: auto; left: 50%; transform: translateX(-50%); bottom: 14px; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 16px; }
   .more-fan { width: 110px; height: 54px; margin-left: 0; }
   .more-fan img { width: 60px; height: 45px; top: 4px; }

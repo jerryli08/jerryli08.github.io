@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Drive the rover · Jerry Li</title>
-<meta name="description" content="Drive the Drone on Wheels vehicle across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.">
+<meta name="description" content="Drive the Hybrid Detachable UAV-UGV across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.">
 <link rel="canonical" href="https://www.jerryli.design/drive">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Drive the rover · Jerry Li">
-<meta property="og:description" content="Drive the Drone on Wheels vehicle across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.">
+<meta property="og:description" content="Drive the Hybrid Detachable UAV-UGV across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.">
 <meta property="og:url" content="https://www.jerryli.design/drive">
 <meta property="og:image" content="https://www.jerryli.design/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -18,7 +18,7 @@
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=25af516e">
 <link rel="preload" href="/assets/fonts/mona-sans-latin.woff2?v=ab721e50" as="font" type="font/woff2" crossorigin>
 <style>@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(/assets/fonts/mona-sans-latin-ext.woff2?v=248c8b5b) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(/assets/fonts/mona-sans-latin.woff2?v=ab721e50) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}</style>
-<link rel="stylesheet" href="/assets/css/site.css?v=819c3ac2">
+<link rel="stylesheet" href="/assets/css/site.css?v=9d5db529">
 <meta name="robots" content="noindex">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83","/assets/vendor/addons/controls/OrbitControls.js":"/assets/vendor/addons/controls/OrbitControls.js?v=339028c2","/assets/vendor/addons/environments/RoomEnvironment.js":"/assets/vendor/addons/environments/RoomEnvironment.js?v=a41e9198","/assets/vendor/addons/libs/meshopt_decoder.module.js":"/assets/vendor/addons/libs/meshopt_decoder.module.js?v=56d88825","/assets/vendor/addons/loaders/GLTFLoader.js":"/assets/vendor/addons/loaders/GLTFLoader.js?v=72125f26","/assets/vendor/addons/math/SimplexNoise.js":"/assets/vendor/addons/math/SimplexNoise.js?v=0faaa378","/assets/vendor/addons/postprocessing/EffectComposer.js":"/assets/vendor/addons/postprocessing/EffectComposer.js?v=4fb2e598","/assets/vendor/addons/postprocessing/GTAOPass.js":"/assets/vendor/addons/postprocessing/GTAOPass.js?v=65f85cab","/assets/vendor/addons/postprocessing/MaskPass.js":"/assets/vendor/addons/postprocessing/MaskPass.js?v=073ba17b","/assets/vendor/addons/postprocessing/OutputPass.js":"/assets/vendor/addons/postprocessing/OutputPass.js?v=de15d70e","/assets/vendor/addons/postprocessing/Pass.js":"/assets/vendor/addons/postprocessing/Pass.js?v=7d7a080e","/assets/vendor/addons/postprocessing/RenderPass.js":"/assets/vendor/addons/postprocessing/RenderPass.js?v=3977ba93","/assets/vendor/addons/postprocessing/ShaderPass.js":"/assets/vendor/addons/postprocessing/ShaderPass.js?v=5e27d49c","/assets/vendor/addons/shaders/CopyShader.js":"/assets/vendor/addons/shaders/CopyShader.js?v=4a948e9a","/assets/vendor/addons/shaders/GTAOShader.js":"/assets/vendor/addons/shaders/GTAOShader.js?v=c69b9a44","/assets/vendor/addons/shaders/OutputShader.js":"/assets/vendor/addons/shaders/OutputShader.js?v=2ff40bb6","/assets/vendor/addons/shaders/PoissonDenoiseShader.js":"/assets/vendor/addons/shaders/PoissonDenoiseShader.js?v=c460ee80","/assets/vendor/addons/utils/BufferGeometryUtils.js":"/assets/vendor/addons/utils/BufferGeometryUtils.js?v=1fbbb621"}}</script>
 </head>
@@ -26,7 +26,7 @@
 <canvas class="drive-canvas" data-world="drive" data-hero="/assets/js/world.js?v=a246bb14" data-assets="{&quot;models/drone.glb&quot;:&quot;/assets/models/drone.glb?v=e3374e3c&quot;,&quot;models/rover.glb&quot;:&quot;/assets/models/rover.glb?v=8867a0d6&quot;,&quot;models/studio-env.bin&quot;:&quot;/assets/models/studio-env.bin?v=da74a86b&quot;,&quot;world/gravelly_sand_diff.webp&quot;:&quot;/assets/world/gravelly_sand_diff.webp?v=799a88b1&quot;,&quot;world/gravelly_sand_nor_gl.webp&quot;:&quot;/assets/world/gravelly_sand_nor_gl.webp?v=72a69dc5&quot;,&quot;world/gravelly_sand_rough.webp&quot;:&quot;/assets/world/gravelly_sand_rough.webp?v=f2a7c001&quot;,&quot;world/horizon.webp&quot;:&quot;/assets/world/horizon.webp?v=9302d5e5&quot;,&quot;world/red_sand_diff.webp&quot;:&quot;/assets/world/red_sand_diff.webp?v=323b1830&quot;,&quot;world/red_sand_nor_gl.webp&quot;:&quot;/assets/world/red_sand_nor_gl.webp?v=f84b6aae&quot;,&quot;world/red_sand_rough.webp&quot;:&quot;/assets/world/red_sand_rough.webp?v=e31ba3f1&quot;,&quot;world/rocks.glb&quot;:&quot;/assets/world/rocks.glb?v=96949824&quot;}"></canvas>
 <div class="drive-hud">
   <a class="chip" href="/">&larr; Back to portfolio</a>
-  <p class="chip drive-title"><span class="dot"></span><span><a href="/projects/hybrid-vehicle">Drone on Wheels</a>, rendered from my CAD</span></p>
+  <p class="chip drive-title"><span class="dot"></span><span><a href="/projects/hybrid-vehicle">Hybrid Detachable <span class="nw">UAV-UGV</span></a>, from my CAD</span></p>
 </div>
 <div class="dock-bar"><button type="button" class="dock-btn x-btn" data-dock-toggle><kbd>X</kbd><span data-dock-label>Press X to detach the drone</span></button><button type="button" class="dock-btn f-btn" data-fly-toggle><kbd>F</kbd><span data-fly-label>Press F to fly</span></button></div>
 <div class="split-line" aria-hidden="true"></div>

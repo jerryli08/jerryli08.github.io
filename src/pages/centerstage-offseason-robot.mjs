@@ -19,9 +19,15 @@
 // low-side U-channel holding the slides cracked between the 1-hole U-channel and the slide mount after
 // several pivots fully extended, then snapped cleanly; a student picked the robot up by an acrylic
 // sideplate and broke it. The FEA behind the failure section is in /home/claude/work/hcls-2024-ftc-
-// offseason-bot/fea (README-like header in each script; results r10r, convergence r10rr). Still held
-// back (questions.md): what he would cut the sideplates from next time, who else built or drove, close
-// shots of children, the classroom photo, and whether the Aug 7 photo pivot-after-event shows the crack.
+// offseason-bot/fea (README-like header in each script; results r10r, convergence r10rr).
+// Sept 28, 12:24 to 12:26: the Aug 7 photo pivot-after-event shows the snapped channel (it sits beside
+// the FEA figure in #broke); sideplates next time: polycarbonate, or second choice Delrin (more
+// expensive); the deposit: slides parallel to the backdrop and the claw touching it when the pixels
+// drop (cycle.js: with the robot's back against the backdrop the CAD cannot do both at once, so the
+// arm tips 7 degrees past parallel for the last part; see its header). Still held back (questions.md):
+// who else built or drove, close shots of children, the classroom photo.
+// Sept 28, 12:32-15:59 (Jerry): the close-up "the robot at the carnival, HOWARD COUNTY LIBRARY SYSTEM on its
+// back plate" is removed (its own media row after the carnival section; the file is deleted).
 const M = '/assets/models/centerstage-offseason-robot';
 const REPO = 'https://github.com/jerryli08/newftccad';
 
@@ -55,11 +61,11 @@ export default {
         { h: '2. Reach', p: ['One 435 rpm motor drives a single belt through all four slide stages at once: 245 mm each, **979 mm** in all (from my CAD).'] },
         { h: '3. Grab', p: ['Each finger has its own servo and its own bumper on the second gamepad; the right trigger moves both. Two pixels, side by side.'] },
         { h: '4. Pull in', p: ['The slides come back in with both pixels before the arm moves. The code never enforced that order: see [what broke](#broke).'] },
-        { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm about 109 degrees to the up preset, 15 degrees past vertical over the back (from the code). The same button turns the wrist so the pixels lie parallel to the backdrop\'s 60 degree face.'] },
-        { h: '6. Reach again', p: ['The driver runs the slides out on the second gamepad\'s left stick until the pixels are over the backdrop\'s bottom row. Open loop: the code never knows how far out they are.'] },
-        { h: '7. Drop', p: ['The fingers open and both pixels drop, still parallel to the face, into the notches of the bottom row. Then slides in, arm down, and the next pair.'] },
+        { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm over the back to 120 degrees from flat, until the slides are **parallel to the backdrop\'s 60 degree face**. The wrist turns the claw over, so the pixels face the backdrop.'] },
+        { h: '6. Reach again', p: ['The slides run out 437 mm along the face. Parallel, they hold the claw 100 mm off it (from my CAD), so the arm tips 7 degrees further and the claw comes to rest **right against the face**, the pixels flat on it.'] },
+        { h: '7. Drop', p: ['The fingers open and both pixels slide down the face into the two middle notches of the bottom row. Then slides in, arm down, and the next pair.'] },
       ],
-      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels and the floor are added for the animation. The backdrop is the official CENTERSTAGE backdrop from the field CAD (AndyMark am-5103), placed just behind the robot; in step 6 a cut through the middle of the claw shows a held pixel parallel to its face. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
+      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels and the floor are added for the animation. The backdrop is the official CENTERSTAGE backdrop from the field CAD (AndyMark am-5103), its bottom edge against the robot\'s back; in step 6 a cut through the middle of the claw shows the claw and a held pixel touching its face. The deposit pose is solved on the CAD: the smallest tip past parallel that brings the claw onto the face. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
 
     // ------------------------------------------------------------------ the brief
     { type: 'prose', id: 'brief', h: 'The brief', p: [
@@ -207,7 +213,10 @@ export default {
     { type: 'prose', id: 'broke', h: 'What broke, and what I would change', p: [
       { problem: 'The low-side U-channel that holds the slides cracked between the 1-hole U-channel and the slide mount. With the whole extension out, the slides put a large load on it, and so does the 1-hole U-channel under it, which the two 43 rpm motors drive through the 72 mm channel. The arm pivoted several times fully extended; every pivot deformed the channel a little more, until it snapped cleanly.', title: 'The low-side U-channel snapped' },
       'To see why, I ran a finite element analysis on my CAD: the low-side, 1-hole and 72 mm U-channels, the steel angle bracket beside them and the slide\'s fixed outer rail, joined where the kit\'s screws are and held where the motor hubs bolt on. The rest of the arm, 1.98 kg in my CAD, goes in as its weight and inertia at its real place.',
-      { fig: { i: 'fea-path.webp', c: 'My FEA at the worst moment: the up preset pressed from rest with the slides all the way out, both motors at stall. Von Mises stress on my CAD\'s parts, from the left and above; dark red is past 6061-T6\'s typical yield.' }, wide: true },
+      { fig: [
+        { i: 'pivot-after-event.webp', c: 'Aug 7, after the carnival: the low-side U-channel that snapped, the break running from one of its large holes through the small holes beside it' },
+        { i: 'fea-path.webp', c: 'My FEA at the worst moment: the up preset pressed from rest with the slides all the way out, both motors at stall. Von Mises stress on my CAD\'s parts, from the left and above; dark red is past 6061-T6\'s typical yield.' },
+      ], wide: true },
       { calc: 'Safety factor of the low-side U-channel at a full-power start, slides out',
         given: [
           ['Motor torque, preset pressed from rest', '2 × 185 kg·cm = 36.3 N·m (stall)', `[goBILDA 5203, 139:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-139-1-ratio-24mm-length-8mm-rex-shaft-43-rpm-3-3-5v-encoder/); direct drive, my CAD`],
@@ -248,6 +257,7 @@ export default {
     ] },
     { type: 'prose', id: 'sideplates', h: 'The sideplates', p: [
       { problem: 'I laser cut the sideplates from acrylic because it was the only material I had access to. In the weeks after the demo, a student picked the robot up by one of them, and it broke.', title: 'Acrylic sideplates' },
+      { next: 'Cut the sideplates from polycarbonate, or, as a second choice, Delrin, which costs more.' },
     ], media: [
       [{ i: 'build-glowforge-sheet.webp', c: 'Aug 1: a truss sideplate cut from red acrylic on the laser cutter bed' },
         { i: 'build-sideplate-mounted.webp', c: 'Aug 2: a sideplate bolted to the robot' }],
@@ -260,9 +270,6 @@ export default {
         { v: 'hero-carnival-field.mp4', c: 'At the carnival: the robot on the field with its arm up' },
         { i: 'carnival-field-wide.webp', c: 'Aug 3: the robot on the field, the backdrop behind it' },
       ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'still-carnival-robot.webp', c: 'Aug 3: the robot at the carnival, HOWARD COUNTY LIBRARY SYSTEM on its back plate' },
-    ] },
 
     // ------------------------------------------------------------------ more from the build
     { type: 'media', id: 'more', layout: 'grid', cols: 3, h: 'More from the build', items: [

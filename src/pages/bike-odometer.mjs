@@ -154,7 +154,7 @@ export default {
         'My commit that fixed it calls it the "going backwards bug". Before the fix, the integration sketch wrote both lines of the LCD and printed to the serial monitor on every pass of the loop, so every pass took a long time.',
       ], title: 'The distance went backwards' },
       { fix: [
-        'The final code writes the LCD once a second instead of on every pass. In my commit message: "made LCD only update once per sec instead of per loop, decreasing loop times so the encoder can read properly". With a short loop the readings stay less than half a turn apart, which is what the wrap correction above needs.',
+        'The final code writes the LCD once a second instead of on every pass. Updating the LCD takes much longer than reading the encoder, so writing it once a second shortens every loop enough for the encoder to be read properly. With a short loop the readings stay less than half a turn apart, which is what the wrap correction above needs.',
       ], title: 'LCD once a second' },
       { calc: 'How short does the loop have to be?',
         given: [

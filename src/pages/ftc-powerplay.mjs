@@ -146,7 +146,7 @@ export default {
     ] },
     { type: 'prose', id: 'stack-tests', h: 'Getting the stack right', p: [
       { problem: 'Stack pick up did not work at first. In one early test the claw came down over the top cone of a full stack and lifted it, and the other four cones tipped over and fell to the floor.', title: 'The stack tipped over' },
-      { problem: 'In another, filmed from above, someone behind the camera says it plainly: "It\'s too slow right now though."', title: 'Too slow' },
+      { problem: 'In another test, filmed from above, the mechanism worked but was too slow.', title: 'Too slow' },
       'In later clips, the one above among them, the arm takes the stack apart without knocking it over, one cone about every four and a half seconds (timed from the video).',
     ], media: [
       { v: 'claw-on-stack.mp4', c: 'An early stack test: the claw lifts the top cone off a full stack of five, and the other four tip over and fall' },

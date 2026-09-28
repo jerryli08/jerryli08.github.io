@@ -1,4 +1,5 @@
-// Drone on Wheels (hybrid UAV-UGV). Page text from the phase A write-up for this project,
+// Hybrid Detachable UAV-UGV (renamed from Drone on Wheels, Jerry, Sept 28; the poster keeps its
+// published title). Page text from the phase A write-up for this project,
 // corrected against Jerry's answers of Sept 26, 2026 (/home/claude/work/answers.md). Facts only from
 // Jerry, his poster and his CAD. Every animation is scroll-driven (Jerry, Sept 26): the modules in
 // assets/js/pages/hybrid-vehicle/ reuse the landing scene's models (assets/models/rover.glb,

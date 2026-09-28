@@ -19,7 +19,7 @@
 export const DEFAULT = 2;
 
 export const PAGES = {
-  // Drone on Wheels felt about right: about 1.5x as long there (Jerry)
+  // Hybrid Detachable UAV-UGV felt about right: about 1.5x as long there (Jerry)
   'hybrid-vehicle': 1.5,
   // Replac3d: "at least 2x longer because the motions are big"
   'build-plate-robot': 3,

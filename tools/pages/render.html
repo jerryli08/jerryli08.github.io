@@ -1,21 +1,316 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>CAD render</title>
-<style>html,body{margin:0;height:100%;background:#0b0b0c}#s{position:fixed;inset:0}</style>
-<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js","three/addons/":"/assets/vendor/addons/"}}</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0b0c; }
+  #s { position: fixed; inset: 0; }
+  #s > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* a page module's HTML overlays (labels, readouts, hints) are not part of a render */
+  #s > :not(canvas), .rx-hud, .rx-labels, .rx-hint { display: none !important; }
+</style>
+<!-- /assets/js/lib/stage.js is sent to render-stage.js: the real stage with the render's options -->
+<script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js","three/addons/":"/assets/vendor/addons/","/assets/js/lib/stage.js":"/tools/pages/render-stage.js"}}</script>
 <div id="s"></div>
 <script type="module">
-// Renders one GLB for thumbnails and posters: tools/pages/render.mjs drives it.
+// Renders one GLB (or a page's own scrolly module at one point of its scroll) for card thumbnails
+// and posters; tools/pages/render.mjs drives it and documents the parameters.
+//
+// look=studio is the product-render look for thumbnails. It is the site's stage (the studio HDRI,
+// the procedural finishes by part colour and name, the key light's soft shadow, the contact shadow)
+// with what a one-off picture can afford on top:
+//  - the lighting set up around the camera: the key light and the studio's softboxes sit where the
+//    stage puts them for its default view (key high on the front left, strips behind for rims), for
+//    whatever angle the thumbnail is taken from, with a brighter overhead softbox so horizontal
+//    plates and clear coats catch a reflection
+//  - a dark warm-neutral sweep (the site's own dark) and a soft pool of light on the floor under the
+//    product that fades into it, carrying the key shadow and the contact shadow
+//  - a finer, softer shadow map, and ambient occlusion as its own pass (render.mjs multiplies it in)
+//  - tight framing: the product's projected outline fills the frame (fill), centred
+// The page is drawn at dpr 2 or more and render.mjs downsamples it, which is the anti-aliasing.
 import { createStage } from '/assets/js/lib/stage.js';
+
 const q = new URLSearchParams(location.search);
+const num = (k, d) => (q.has(k) && q.get(k) !== '' && Number.isFinite(+q.get(k)) ? +q.get(k) : d); // 0 is a real value
+const rx = (s) => (s ? new RegExp(s) : null);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const studio = q.get('look') === 'studio';
 const el = document.getElementById('s');
-if (q.get('bg')) document.body.style.background = q.get('bg');
-const stage = createStage(el, { controls: false, hint: false, shadow: q.get('shadow') !== '0', background: q.get('bg') || 'transparent', pixelRatio: 1 });
-const model = await stage.load(q.get('src'));
-for (const re of (q.get('hide') || '').split(',').filter(Boolean)) for (const p of stage.part(new RegExp(re))) p.visible = false;
-// 0 is a real angle: only a missing (or non-numeric) value takes the default
-const num = (k, d) => (q.has(k) && q.get(k) !== '' && Number.isFinite(+q.get(k)) ? +q.get(k) : d);
-stage.frame(model, { azimuth: num('az', 35), elevation: num('el', 22), pad: num('pad', 1.1) || 1.1 });
+const bg = q.get('bg') || '';
+if (bg && !studio) document.body.style.background = bg;
+globalThis.__renderOpts = {
+  pixelRatio: num('dpr', 1), controls: false, hint: false,
+  ...(studio ? { background: 'transparent', shadow: true, shadowMapSize: num('smap', 4096), shadowRadius: num('soft', 9) } : {}),
+  ...(q.has('exposure') ? { exposure: num('exposure', 1) } : {}),
+  ...(q.has('env') ? { envIntensity: num('env', 1) } : {}),
+  ...(q.has('fov') ? { fov: num('fov', 32) } : {}),
+};
+
+// ---------------------------------------------------------------- the model, or a page's module
+let stage;
+if (q.get('module')) {
+  // a page's scrolly module, posed at u = step + progress through it
+  const mod = await import(q.get('module'));
+  const u = num('u', 0), step = Math.floor(u);
+  const api = await mod.mount(el, {
+    id: 'render', slug: q.get('slug') || '', data: {}, asset: (p) => p, reducedMotion: false, isTouch: false,
+    panel: null, kind: 'scrolly', width: 'full', shift: () => [0, 0],
+  });
+  stage = globalThis.__stages[0];
+  api.setProgress(num('p', 0.5), step, u - step);
+  // the module's own overlays that live in the scene (IK lines, frusta, boxes): hidden by name
+  const hideObj = rx(q.get('hideobj'));
+  if (hideObj) stage.scene.traverse((o) => { if (o !== stage.scene && hideObj.test(o.name)) o.visible = false; });
+} else {
+  stage = createStage(el, { background: studio ? 'transparent' : bg || 'transparent', shadow: q.get('shadow') !== '0' });
+  await stage.load(q.get('src'));
+}
+const T = stage.THREE;
+
+// parts the page leaves out: removed, so they are out of the framing and the shadows too
+const hide = rx(q.get('hide'));
+if (hide) for (const p of stage.part(hide)) p.removeFromParent();
+stage.setShift(0, 0);
+stage.fitGround();
+
+// ---------------------------------------------------------------- framing
+// az / el / pad on everything, or on the parts matching fit (a regex on names) but not nofit;
+// view=page keeps the camera the page module set. With fill (0 to 1; studio default 0.86) the
+// projected outline of those parts is then fitted to that share of the frame and centred.
+const fitRe = rx(q.get('fit')), nofitRe = rx(q.get('nofit'));
+let fitObjs = fitRe ? stage.part(fitRe) : stage.root.children.slice();
+if (nofitRe) fitObjs = fitObjs.filter((o) => !nofitRe.test(o.name));
+const fitMeshes = [];
+for (const o of fitObjs) o.traverseVisible((m) => { if (m.isMesh) fitMeshes.push(m); });
+if (q.get('view') !== 'page') {
+  const box = new T.Box3();
+  for (const m of fitMeshes) box.expandByObject(m);
+  const proxy = new T.Mesh(new T.BoxGeometry(1, 1, 1));
+  box.getCenter(proxy.position); box.getSize(proxy.scale); proxy.updateMatrixWorld(true);
+  stage.setView(stage.frame(proxy, { azimuth: num('az', 35), elevation: num('el', 22), pad: num('pad', 1.1) || 1.1, apply: false, refresh: true }));
+}
+const fill = num('fill', studio && q.get('view') !== 'page' ? 0.86 : 0);
+if (fill > 0) fitTight(fill);
+// move the framed picture (fractions of the frame, +y up) to balance it
+if (q.has('sx') || q.has('sy')) stage.setShift(num('sx', 0), num('sy', 0));
+
+if (studio) await studioLook();
 stage.invalidate();
-setTimeout(() => { document.body.dataset.ready = '1'; }, 1500);
+await sleep(600);
+// wait for the refined frame (full pixel ratio, exact shadows); a stage with nothing left to
+// refine draws none, so also stop once nothing has been drawn for two seconds
+const stats = globalThis.__rxStats;
+const before = stats.refined;
+stage.invalidate();
+let sig = '', still = 0;
+for (let i = 0; i < 900 && stats.refined === before && still < 20; i++) {
+  await sleep(100);
+  const now = `${stats.live}|${stats.refined}`;
+  still = now === sig ? still + 1 : 0; sig = now;
+}
+await sleep(300);
+document.body.dataset.ready = '1';
+
+// Fit the projected outline of fitMeshes to `fill` of the frame (whichever of width and height
+// binds) and centre it: a few rounds of moving the target across and the camera in or out.
+function fitTight(fillShare) {
+  const cam = stage.camera, pts = [];
+  let total = 0;
+  for (const m of fitMeshes) total += m.geometry?.attributes?.position?.count || 0;
+  // about 150k points in all, but every vertex of a small part (a thin panel's corners are few)
+  const stride = Math.max(1, Math.floor(total / 150000));
+  const v = new T.Vector3();
+  for (const m of fitMeshes) {
+    const pos = m.geometry?.attributes?.position;
+    if (!pos) continue;
+    m.updateWorldMatrix(true, false);
+    const st = Math.max(1, Math.min(stride, Math.floor(pos.count / 400)));
+    for (let i = 0; i < pos.count; i += st) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).clone());
+  }
+  if (!pts.length) return;
+  const target = new T.Vector3(), dir = new T.Vector3();
+  cam.getWorldDirection(dir);
+  // the current target: where the view axis passes closest to the parts' centre
+  const c = new T.Box3().setFromPoints(pts).getCenter(new T.Vector3());
+  target.copy(cam.position).addScaledVector(dir, c.clone().sub(cam.position).dot(dir));
+  const tanV = Math.tan((cam.fov * Math.PI) / 360), aspect = cam.aspect;
+  for (let round = 0; round < 6; round++) {
+    const d0 = cam.position.distanceTo(target);
+    cam.position.copy(target).addScaledVector(dir, -d0);
+    cam.lookAt(target); cam.updateMatrixWorld(true);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    const inv = cam.matrixWorldInverse;
+    for (const p of pts) {
+      const q2 = v.copy(p).applyMatrix4(inv); // camera space: -z forward
+      const z = -q2.z;
+      if (z <= 1e-6) continue;
+      const x = q2.x / (z * tanV * aspect), y = q2.y / (z * tanV);
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    const d = cam.position.distanceTo(target);
+    const right = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+    // centre: move the target (and camera) across by the outline's offset at the target's distance
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    target.addScaledVector(right, mx * d * tanV * aspect).addScaledVector(up, my * d * tanV);
+    // size: the outline spans (x1 - x0) / 2 of the half-width; scale the distance to make it fill
+    const k = Math.max((x1 - x0) / 2, (y1 - y0) / 2) / fillShare;
+    const nd = d * k;
+    cam.position.copy(target).addScaledVector(dir, -nd);
+  }
+  cam.lookAt(target);
+  stage.setView({ pos: cam.position.clone(), target: target.clone() });
+}
+
+// ---------------------------------------------------------------- the studio look
+async function studioLook() {
+  const s = stage.bounds(null, true), r = s.radius;
+  const cam = stage.camera, d = new T.Vector3();
+  cam.getWorldDirection(d);
+  const theta = Math.atan2(-d.x, -d.z); // the camera's azimuth about the product (0 = from +z)
+  const Y = new T.Vector3(0, 1, 0);
+  const around = (x, y, z) => new T.Vector3(x, y, z).applyAxisAngle(Y, theta); // camera-relative to world
+
+  // the key light, where the stage puts it for its default view (azimuth 35): high, from the front
+  // left, a little in front of the product, whatever side the thumbnail is taken from
+  const { key } = stage.lights;
+  key.position.copy(s.center).addScaledVector(around(-0.684, 1, 0.192).normalize(), r * 4);
+  key.target.position.copy(s.center); key.target.updateMatrixWorld();
+  key.intensity *= num('key', 1);
+
+  // the environment: the site's studio HDRI with the stage's softboxes, turned with the camera,
+  // plus a brighter overhead softbox for tops and clear coats and a soft fill strip on the right
+  const hdri = await studioHDRI();
+  const room = new T.Scene();
+  if (hdri) { room.background = hdri; room.backgroundIntensity = 0.3; room.backgroundRotation.set(0, 2.2 + theta - 35 * Math.PI / 180, 0); }
+  else room.background = new T.Color(0.012, 0.011, 0.01);
+  const rig = new T.Group(); rig.rotation.y = theta; room.add(rig);
+  const geo = new T.PlaneGeometry(1, 1);
+  const panel = (w, h, pos, k, tint = [1, 1, 1]) => {
+    const m = new T.Mesh(geo, new T.MeshBasicMaterial({ color: new T.Color(tint[0] * k, tint[1] * k, tint[2] * k), side: T.DoubleSide }));
+    m.scale.set(w, h, 1); m.position.set(...pos); m.lookAt(0, 0, 0); rig.add(m);
+  };
+  // the stage's panels for azimuth 35, in camera-relative coordinates (x right, z toward the camera)
+  const rel = (x, y, z) => { const a = -35 * Math.PI / 180; return [x * Math.cos(a) + z * Math.sin(a), y, -x * Math.sin(a) + z * Math.cos(a)]; };
+  panel(7, 5, rel(-5, 8, 5.5), 5.5 * num('softbox', 1), [1, 0.96, 0.9]); // key softbox, warm
+  panel(1.6, 9, rel(7, 3, -5), 7); // rim strip, back right
+  panel(1.6, 9, rel(-7.5, 2.5, -4.5), 4.5, [0.9, 0.95, 1]); // rim strip, back left, cool
+  panel(12, 12, [0, 10, 0.5], num('overhead', 2.2)); // overhead softbox (the stage's is 0.7)
+  panel(2.2, 7, [7.5, 2, 3.5], num('fillstrip', 1.4), [0.95, 0.97, 1]); // soft fill strip, front right
+  panel(10, 3, rel(3, -3.5, 8), 0.5, [1, 0.95, 0.9]); // low bounce card in front
+  // the lights are directional in the stage (a key, a fill and a rim riding with the camera); the
+  // environment adds the broad soft light a product photo has
+  room.updateMatrixWorld(true);
+  const pm = new T.PMREMGenerator(stage.renderer);
+  const env = pm.fromScene(room, 0.02).texture;
+  pm.dispose(); geo.dispose();
+  stage.scene.environment = env;
+
+  // the sweep: drawn at the refined frame's own resolution with a faint dither (no banding once encoded)
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  let seed = 1;
+  const noise = () => { seed = (seed * 16807) % 2147483647; return (seed / 2147483647 - 0.5) * 1.6; }; // +-0.8 of a level
+  const dpr = Math.min(devicePixelRatio || 1, globalThis.__renderOpts.pixelRatio);
+  const W = Math.round(el.clientWidth * dpr), H = Math.round(el.clientHeight * dpr);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const [b0, b1] = [q.get('bg0') || '#1d1b19', q.get('bg1') || '#0b0a09'].map(hex);
+  const cx = W * 0.5, cy = H * num('sweepy', 0.42), R = Math.hypot(W, H) * 0.55;
+  const img = g.createImageData(W, H), px = img.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const t = Math.min(1, Math.hypot((x - cx) * 0.8, y - cy) / R), k = (y * W + x) * 4;
+    const a = t * t * (3 - 2 * t);
+    for (let ch = 0; ch < 3; ch++) px[k + ch] = Math.max(0, Math.min(255, Math.round(b0[ch] + (b1[ch] - b0[ch]) * a + noise())));
+    px[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const tex = new T.CanvasTexture(c);
+  tex.colorSpace = T.SRGBColorSpace;
+  tex.minFilter = tex.magFilter = T.NearestFilter; tex.generateMipmaps = false;
+  stage.scene.background = tex;
+
+  // the pool of light on the floor: unlit, fading out to nothing at its rim
+  const N = 512, fc = document.createElement('canvas'); fc.width = fc.height = N;
+  const fg = fc.getContext('2d'), fi = fg.createImageData(N, N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const t = Math.min(1, Math.hypot(x - N / 2, y - N / 2) / (N / 2)), k = (y * N + x) * 4;
+    const a = 1 - t * t * (3 - 2 * t);
+    fi.data[k] = fi.data[k + 1] = fi.data[k + 2] = Math.max(0, Math.min(255, Math.round(255 * a ** 1.4 + noise() * 2))); fi.data[k + 3] = 255;
+  }
+  fg.putImageData(fi, 0, 0);
+  const alpha = new T.CanvasTexture(fc);
+  const pool = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({
+    color: new T.Color(q.get('floor') || '#3a3632'), transparent: true, alphaMap: alpha, depthWrite: false, toneMapped: false,
+    opacity: num('floorop', 1),
+  }));
+  pool.name = 'render floor';
+  pool.rotation.x = -Math.PI / 2;
+  const fs = num('floorsize', 4.2);
+  pool.scale.set(r * fs, r * fs, 1);
+  pool.position.set(s.center.x, stage.ground.position.y - r * 0.001, s.center.z);
+  pool.renderOrder = -2; // under the ground's shadow and the contact shadow
+  stage.scene.add(pool);
+  // the key light's shadow and the contact shadow, darker than on the pages' panels so they read on a dark floor
+  stage.ground.material.opacity = num('shadow', 0.5);
+  const contact = stage.ground.children.find((o) => o.name === 'contact shadow');
+  if (contact) contact.material.opacity = num('contact', 0.8);
+  stage.ground.visible = true;
+  pool.userData.rxNoAO = stage.ground.userData.rxNoAO = true;
+}
+
+// the site's studio HDRI (assets/models/studio-env.bin), decoded as stage.js does it
+async function studioHDRI() {
+  try {
+    const res = await fetch('/assets/models/studio-env.bin');
+    let u8 = new Uint8Array(await res.arrayBuffer());
+    if (u8[0] === 0x1f && u8[1] === 0x8b) u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    const dv = new DataView(u8.buffer, u8.byteOffset);
+    const W = dv.getUint32(4, true), H = dv.getUint32(8, true), N = W * H, planes = u8.subarray(16);
+    for (let ch = 0; ch < 4; ch++) for (let y = 0; y < H; y++) {
+      let prev = 0; const o = ch * N + y * W;
+      for (let x = 0; x < W; x++) { prev = (prev + planes[o + x]) & 255; planes[o + x] = prev; }
+    }
+    const half = new Uint16Array(N * 4), toHalf = T.DataUtils.toHalfFloat;
+    for (let i = 0; i < N; i++) {
+      const e = planes[3 * N + i], f = e ? Math.pow(2, e - 136) : 0;
+      half[i * 4] = toHalf((planes[i] + 0.5) * f); half[i * 4 + 1] = toHalf((planes[N + i] + 0.5) * f); half[i * 4 + 2] = toHalf((planes[2 * N + i] + 0.5) * f); half[i * 4 + 3] = toHalf(1);
+    }
+    const tex = new T.DataTexture(half, W, H, T.RGBAFormat, T.HalfFloatType);
+    tex.mapping = T.EquirectangularReflectionMapping;
+    tex.colorSpace = T.LinearSRGBColorSpace;
+    tex.magFilter = tex.minFilter = T.LinearFilter;
+    tex.flipY = true;
+    tex.needsUpdate = true;
+    return tex;
+  } catch (e) { console.warn('render: studio HDRI unavailable', e); return null; }
+}
+
+// ---------------------------------------------------------------- the AO pass, for render.mjs
+// A GTAO pass of the product alone (never the floor planes, marked rxNoAO: their depth at grazing
+// angles reads as false occlusion), drawn to the canvas as grey (white = open); render.mjs
+// multiplies it into the picture. The beauty itself is drawn by the stage directly: the stage's
+// own AO composer drops the background and the floor on software GL.
+globalThis.__renderAO = async () => {
+  const [{ GTAOPass }, { EffectComposer }] = await Promise.all([
+    import('/assets/vendor/addons/postprocessing/GTAOPass.js'), import('/assets/vendor/addons/postprocessing/EffectComposer.js')]);
+  const base = GTAOPass.prototype.overrideVisibility;
+  GTAOPass.prototype.overrideVisibility = function () {
+    base.call(this);
+    this.scene.traverse((o) => { if (o.userData.rxNoAO) o.visible = false; });
+  };
+  const { renderer, scene, camera } = stage;
+  const w = el.clientWidth, h = el.clientHeight, dpr = renderer.getPixelRatio();
+  const composer = new EffectComposer(renderer);
+  composer.setPixelRatio(dpr); composer.setSize(w, h);
+  const pass = new GTAOPass(scene, camera, w * dpr, h * dpr);
+  pass.output = GTAOPass.OUTPUT.Denoise;
+  const r = stage.bounds().radius;
+  pass.updateGtaoMaterial({ radius: r * num('aoradius', 0.06), distanceExponent: 2, thickness: 1.5, scale: 1, samples: 24, distanceFallOff: 1, screenSpaceRadius: false });
+  pass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6 * dpr, rings: 2, samples: 16 });
+  composer.addPass(pass);
+  const back = scene.background; scene.background = null;
+  document.body.style.background = '#fff';
+  composer.render();
+  scene.background = back;
+  await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+  return true;
+};
 </script>

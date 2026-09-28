@@ -248,7 +248,7 @@ export default {
     ], media: [{ v: 'clip-heading-drift.mp4', c: 'Sitting still, the heading reading creeps while the position holds' }] },
 
     { type: 'callout', id: 'after', h: 'After the season', p: [
-      'The two Axon MINI servos and their hubs went on to drive the rover in my [Drone on Wheels](/projects/hybrid-vehicle) research project.',
+      'The two Axon MINI servos and their hubs went on to drive the rover in my [Hybrid Detachable UAV-UGV](/projects/hybrid-vehicle) research project.',
     ] },
 
     { type: 'media', id: 'gallery', h: 'More pictures', layout: 'grid', cols: 3, items: [

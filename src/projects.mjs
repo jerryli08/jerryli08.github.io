@@ -21,8 +21,8 @@ export const projects = [
   {
     slug: 'hybrid-vehicle', pinned: true, hero: true, size: 'lg', // the live 3D scene on the landing page
     kind: 'main',
-    title: 'Drone on Wheels',
-    subtitle: 'Hybrid aerial-ground vehicle',
+    title: 'Hybrid Detachable UAV-UGV',
+    subtitle: 'Drone and ground rover docking system',
     short: 'A drone and a ground rover that dock together, so each one can carry the other.',
     org: 'MIT Lincoln Laboratory',
     date: 'Jul to Aug 2025',
@@ -572,13 +572,13 @@ export const projects = [
     date: 'Jul 2025',
     year: '2025',
     role: 'Came up with the idea. Designed the arm in CAD and built it',
-    team: 'Same team as Drone on Wheels',
+    team: 'Same team as the Hybrid Detachable UAV-UGV',
     tools: ['CAD', '3D printing', 'Servo joints', 'Carbon fiber links', 'Inverse kinematics (planned)'],
     body: [{ h: 'Overview', p: [
-      'A robotic arm under a drone for grabbing household objects, like a bottle of water off a table, for example in a senior home. It was an extra project at the MIT Beaver Works Summer Institute, from the same team that went on to build Drone on Wheels.',
+      'A robotic arm under a drone for grabbing household objects, like a bottle of water off a table, for example in a senior home. It was an extra project at the MIT Beaver Works Summer Institute, from the same team that went on to build the Hybrid Detachable UAV-UGV.',
       'I designed it in CAD and built the whole arm: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted.',
     ] }],
-    links: [{ label: 'See Drone on Wheels', href: '/projects/hybrid-vehicle' }],
+    links: [{ label: 'See the Hybrid Detachable UAV-UGV', href: '/projects/hybrid-vehicle' }],
     media: [{ i: 'images/drone-arm/arm-assembled.webp', c: 'The arm assembled: shoulder mount and servo, the first carbon link, the elbow and the second link' }],
   },
   {
