@@ -21,6 +21,9 @@
 // code, and every "next time" item. No teammate faces; no other team of Jerry's is mentioned.
 // Version 5's pick-up clip (intake-v5-pick-close): its first second is a wide shot with a person in
 // the background, so the clip on the page is re-cut from 1.0 s on (field and robot only).
+// Hero (Jerry, Sept 28): the old IMG_9301 clip showed the autonomous missing its samples; the hero
+// is now IMG_9293 (Mar 2, 2025, 10:11, venue practice field; the team counts specimens in the
+// audio), 2.3 to 11.5 s, left 23% cropped so the human player's face never shows.
 // Calculation: the stated 15 in and 3 in widths against the game manual's 18 in starting size
 // (R101). Nothing else about the slide or intake (motor, ratio, stroke) is stated.
 export default {
@@ -39,7 +42,7 @@ export default {
   hero: {
     layout: 'row',
     items: [
-      { v: 'hero-final-intake-real-field.mp4', c: 'The final robot on a practice field at the FIRST Chesapeake Championship, March 2025: the extension reaches out along the floor and the star-wheel intake picks up a sample' },
+      { v: 'hero-auto-samples-venue.mp4', c: 'Mar 2, 2025, a practice field at the FIRST Chesapeake Championship: our specimen autonomous, start to finish. The star-wheel intake picks up all three blue samples and passes them to the observation zone for the human player, then the robot cycles specimens' },
       { v: 'hero-extension-full-reach.mp4', c: 'February 2025, a specimen autonomous test: the extension runs out to its full length for a sample by the wall' },
     ],
   },

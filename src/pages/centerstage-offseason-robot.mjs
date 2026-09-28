@@ -13,10 +13,15 @@
 // a week" is right; the extension figure he once gave is wrong and is never used (the page uses the
 // CAD's 979 mm of travel and 1.49 m of reach); at the carnival a bunch of kids from the community and
 // even some adults drove it; he was tasked with making a cool-looking robot to recruit for the library
-// system's FTC class, which was overbooked and which he taught (no kids' faces or names). Held back
-// until Jerry answers (questions.md): why each pivot motor change was needed, which of the pivot's U-channels cracked and when (no photo of it is
-// shown), how the sideplates broke and what he would cut them from next time, who else built or drove,
-// close shots of children, and the classroom photo.
+// system's FTC class, which was overbooked and which he taught (no kids' faces or names).
+// Sept 28, 07:04 to 07:42: the pivot needed as low a motor speed as possible for the most torque (312 rpm
+// at first, then 223 rpm borrowed from a friend, then the 43 rpm motors that had been ordered); the
+// low-side U-channel holding the slides cracked between the 1-hole U-channel and the slide mount after
+// several pivots fully extended, then snapped cleanly; a student picked the robot up by an acrylic
+// sideplate and broke it. The FEA behind the failure section is in /home/claude/work/hcls-2024-ftc-
+// offseason-bot/fea (README-like header in each script; results r10r, convergence r10rr). Still held
+// back (questions.md): what he would cut the sideplates from next time, who else built or drove, close
+// shots of children, the classroom photo, and whether the Aug 7 photo pivot-after-event shows the crack.
 const M = '/assets/models/centerstage-offseason-robot';
 const REPO = 'https://github.com/jerryli08/newftccad';
 
@@ -30,7 +35,7 @@ export default {
     ],
     text: [
       'For my internship with the Howard County Library System, I was tasked with building an eye-catching FIRST Tech Challenge robot to demo at the STEAM Carnival the library system hosts, to recruit for the library system\'s FTC class, which I taught. Inspired by the FTC team KookyBotz, I designed a pitching claw robot for the CENTERSTAGE game: four-stage belt-driven Viper-Slides on a pivot, so one mechanism reaches out along the floor to grab two pixels, then swings up over the back of the robot to score them. I had less than a week for everything, so I used as many off-the-shelf goBILDA parts as I could.',
-      `It ran at the carnival on Aug 3, 2024, where visitors from the community, children and adults, drove it. Two things broke: the small aluminum U-channel at the pivot, because the arm pivoted a few times at full extension, and the laser-cut acrylic sideplates, in the weeks after the demo. The code is [on GitHub](${REPO}).`,
+      `It ran at the carnival on Aug 3, 2024, where visitors from the community, children and adults, drove it. Two things broke. The low-side U-channel that carries the slides cracked just past the pivot and then snapped, after the arm had pivoted several times with the slides all the way out; my FEA of it is [below](#broke). And in the weeks after the demo, a student picked the robot up by one of the laser-cut acrylic sideplates and broke it. The code is [on GitHub](${REPO}).`,
     ],
   },
   hero: {
@@ -86,7 +91,7 @@ export default {
           cut: { normal: [0, -1, 0], at: 0.66 },
           highlight: [{ parts: 'G_DRIVE_MOTORS', color: '#ffb000' }, { parts: 'G_BEVELS', color: '#ff6b35' }],
           labels: [{ text: '312 rpm motor', at: [0.108, 0.012, -0.08] }, { text: 'Bevel gears, 1:1', at: [0.121, 0.012, -0.168] }] } },
-        { h: 'Pivot', p: ['Two 43 rpm motors face each other on one axis, 94 mm above the floor, each on its own 72 mm U-channel tower. Their hubs bolt to a third 72 mm U-channel that carries the slides: direct drive, load shared.'],
+        { h: 'Pivot', p: ['Two 43 rpm motors face each other on one axis, 94 mm above the floor, each on its own 72 mm U-channel tower. Their hubs bolt to a third 72 mm U-channel; the slide kit\'s 1-hole U-channel and low-side U-channel stack on it and carry the slides. Direct drive, load shared.'],
           view: { focus: 'G_PIVOT_MOTORS|G_PIVOT_CH|G_TOWERS', azimuth: 28, elevation: 16, pad: 1.7,
             highlight: [{ parts: 'G_PIVOT_MOTORS', color: '#ffb000' }, { parts: 'G_PIVOT_CH', color: '#ff6b35' }],
             labels: [{ text: '43 rpm, one each side', at: [0.1, 0.066, 0] }, { text: 'Arm channel, 72 mm', at: [-0.024, 0.095, 0.01], side: 'l' }] } },
@@ -112,11 +117,11 @@ export default {
       { label: 'Jul 30', title: 'The slides go from cable to belt', p: ['I took the old cable-driven slides apart and converted them to belt drive: bearing idlers, end stops and pulleys on each stage, then the belt routed through them. That evening I rendered the whole robot in its red and black.'],
         media: [{ i: 'build-slides-stacked.webp', c: 'Jul 30: the four-stage slide assembled after the belt conversion' }, { i: 'cad-render-jul30.webp', c: 'Jul 30: my render of the robot, slides out with the claw' }] },
       { label: 'Jul 31', title: 'First motion, and a new pivot motor', p: [
-        'I printed the wrist and claw parts at home in the morning, then ran the slides for the first time: straight up, then flat along the floor. That night at home I swapped the pivot motors from 312 rpm to 223 rpm, with new D-bore hubs, and tested the pivot with the claw on.',
+        'I printed the wrist and claw parts at home in the morning, then ran the slides for the first time: straight up, then flat along the floor. The pivot needed as much torque as I could get, which meant as low a motor speed as possible, and at first I only had 312 rpm motors. That night at home I swapped in 223 rpm motors borrowed from a friend, with new D-bore hubs, and tested the pivot with the claw on.',
         { problem: 'One of the 223 rpm motors had a damaged JST-PH connector.' },
         { fix: 'I soldered the motor\'s leads to a JST-PH connector and heat-shrank the joints.' },
       ], media: [{ v: 'test-first-vertical-extension.mp4', c: 'Jul 31: the first extension test, slides straight up on the bare chassis' }, { v: 'test-first-floor-extension.mp4', c: 'Jul 31: the slides lying flat, running out across the tiles' }, { v: 'test-pivot-first.mp4', c: 'Jul 31, at home: the first pivot test with the printed wrist and claw' }] },
-      { label: 'Aug 1', title: 'Claw, final pivot motors, sideplates', p: ['The two-finger claw went on in the morning. The pivot changed motors again, to 43 rpm with new 8 mm REX hubs, and I tuned its controller. In the afternoon I laser cut the truss sideplates from red acrylic, and that night I printed the letters and the logo for the back plate.'],
+      { label: 'Aug 1', title: 'Claw, final pivot motors, sideplates', p: ['The two-finger claw went on in the morning. The 43 rpm motors that had been ordered arrived, so the pivot changed motors a final time, with new 8 mm REX hubs, and I tuned its controller. In the afternoon I laser cut the truss sideplates from red acrylic, and that night I printed the letters and the logo for the back plate.'],
         media: [{ i: 'claw-v2-red-fingers.webp', c: 'Aug 1: the two-pixel claw with its two red fingers' }, { v: 'build-laser-cut-sideplate.mp4', c: 'Aug 1: the laser cutter tracing a truss sideplate in red acrylic' }] },
       { label: 'Aug 2', title: 'Finished', p: ['Sideplates and the lettered back plate on, then drive tests with the finished robot.'],
         media: [{ i: 'finished-robot.webp', c: 'Aug 2: the finished robot, red truss sideplates and the lettered back plate' }] },
@@ -127,7 +132,24 @@ export default {
       'The pivot is the hard part of a pitching robot. Gravity pulls hardest on the arm when it lies flat and not at all when it stands straight up, and the slides make the arm longer or shorter on top of that. A plain proportional controller has to build up error before it pushes back, so the arm would sag below its target by an amount that changes with the angle.',
       'So the pivot runs a proportional term plus a gravity feedforward term. The feedforward gives the motors the power gravity needs at the current angle, and the proportional term only has to close what is left:',
       { pre: 'angle      = -360 * position / 3895.9       (degrees)\ngravity    = 0.18 * cos(angle + 110°)\npitchPower = -0.001 * (target - position) + gravity' },
-      'The pivot motors are 43 rpm goBILDA gearmotors driving the arm directly, so 3,895.9 encoder ticks are one turn of the arm, about 10.8 ticks per degree. Both motors get the same power, and only one encoder is read. The driver has two presets on the second gamepad\'s D-pad, up (50 ticks) and down (1,225 ticks), about 109 degrees apart, and each preset also moves the wrist, so the claw points the right way at both ends. I tuned it on the robot, with the target and the measured position on the Driver Station screen.',
+      'The motors drive the arm directly, with no gears or belts between them and the arm, so their gearboxes set the torque. I needed as much torque as possible, which meant as low a speed as possible: I started with the 312 rpm motors I had, moved to 223 rpm motors borrowed from a friend, and ended on the 43 rpm motors that had been ordered.',
+      { calc: 'Which pivot motors could hold the arm out?',
+        given: [
+          ['Gravity moment about the pivot, arm flat, slides in', '4.1 N·m', 'my CAD (masses and positions of every part on the arm)'],
+          ['The same, slides all the way out', '12.4 N·m', 'my CAD'],
+          ['Stall torque, 312 rpm motor', '24.3 kg·cm = 2.38 N·m', '[goBILDA 5203, 19.2:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-19-2-1-ratio-24mm-length-8mm-rex-shaft-312-rpm-3-3-5v-encoder/)'],
+          ['Stall torque, 223 rpm motor', '38.0 kg·cm = 3.73 N·m', '[goBILDA 5203, 26.9:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/)'],
+          ['Stall torque, 43 rpm motor', '185 kg·cm = 18.1 N·m', '[goBILDA 5203, 139:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-139-1-ratio-24mm-length-8mm-rex-shaft-43-rpm-3-3-5v-encoder/)'],
+          ['Pivot motors', '2, direct drive', 'my CAD'],
+        ],
+        work: [
+          '312 rpm pair: 2 × 2.38 = 4.8 N·m, barely above 4.1 with the slides in and well under 12.4 with them out',
+          '223 rpm pair: 2 × 3.73 = 7.5 N·m, 1.8 times the load with the slides in, still under 12.4',
+          '43 rpm pair: 2 × 18.1 = 36.3 N·m, 2.9 times the load with the slides out',
+        ],
+        result: 'Only the 43 rpm pair can hold the arm flat with the slides out, and stall torque is the most a motor gives, at zero speed: neither faster pair could have lifted the full reach at all.',
+        note: 'Estimate: stall torque at 12 V; the arm weighs 1.98 kg in my CAD, with the printed claw parts taken as solid plastic, so the loads are an upper bound.' },
+      'With the 43 rpm goBILDA gearmotors on the arm directly, 3,895.9 encoder ticks are one turn of the arm, about 10.8 ticks per degree. Both motors get the same power, and only one encoder is read. The driver has two presets on the second gamepad\'s D-pad, up (50 ticks) and down (1,225 ticks), about 109 degrees apart, and each preset also moves the wrist, so the claw points the right way at both ends. I tuned it on the robot, with the target and the measured position on the Driver Station screen.',
       { calc: 'Why the gravity term: how far would P alone sag?',
         given: [
           ['Proportional gain kP', '0.001 power per tick', '`TestTeleop.java`'],
@@ -169,41 +191,66 @@ export default {
     // ------------------------------------------------------------------ why the pivot broke
     { type: 'scrolly', id: 'pivot', module: 'pivot', stepHeight: '85vh', poster: `${M}/poster-pivot.webp`,
       h: 'Why the pivot broke',
-      p: ['The same arm and the same controller, first with the slides in, then all the way out.'],
+      p: ['The same arm and the same controller, first with the slides in, then all the way out, and then what that did to the channel that carries the slides.'],
       steps: [
         { h: 'Two presets, one controller', p: ['Slides in, the arm swings up past vertical. The readout is the code\'s own math: the P term fades near the target; the gravity term falls from 0.18 at flat to zero at vertical and turns negative past it.'] },
         { h: 'The same arm, slides out', p: ['The claw goes from 0.44 m to 1.42 m from the pivot (from my CAD): 3.2 times its torque, and about 10 times its inertia every time the arm starts or stops.'] },
-        { h: 'Where it broke', p: ['Three short 72 mm aluminum U-channels hold the pivot: a tower per motor, and one between the hubs that carries the arm. The small U-channel broke after the arm pivoted a few times at full extension.'] },
+        { h: 'Where the load goes', p: ['The motor hubs turn a 72 mm U-channel. The slide kit\'s 1-hole U-channel sits on it, and the low-side U-channel carrying the slides sits on that. For the first 16 mm past the 1-hole channel, that 12 mm tall channel and one small steel bracket carry the whole arm.'] },
+        { h: 'Every full-power start', p: ['Pressing the up preset from rest puts both motors at stall: 36.3 N·m. My FEA puts **560 MPa** at the side-wall hole 8 mm past the 1-hole channel, against 276 MPa yield: a safety factor of **0.49**.'] },
+        { h: 'Pivot after pivot', p: ['The down preset starts at stall the other way, so every pivot swings the stress at that hole from +600 to -570 MPa: past yield both ways, six times the fatigue limit. A crack starts at the hole and grows.'] },
+        { h: 'The snap', p: ['The crack ran across the channel and it snapped cleanly: the slides and the claw fell, and the stub left on the pivot swung up. The crack and the snap are drawn, not simulated.'] },
         { h: 'The rule I would add', p: ['Slides in first, then pivot. With the slides out the pivot stays locked; only fully retracted may it move.'] },
       ],
-      caption: 'The readout is computed from the constants in TestTeleop.java at each angle, with the target set to the up preset. The torque and inertia ratios compare the claw at its two distances from the pivot and count the claw only.' },
+      caption: 'Steps 1 and 2: the readout is computed from the constants in TestTeleop.java at each angle, with the target set to the up preset; the torque and inertia ratios compare the claw at its two distances from the pivot and count the claw only. Steps 4 to 6: the colours are my FEA\'s von Mises stress on the low-side U-channel at the up start and at the down start, on a scale that ends at 6061-T6\'s 276 MPa yield (dark red is past it). The crack follows the row of holes where the FEA peak is, and it and the snap are an illustration of the failure; the drawn pivots swing 16 degrees to stay in frame, where the real up preset is 105.' },
 
     // ------------------------------------------------------------------ what broke
     { type: 'prose', id: 'broke', h: 'What broke, and what I would change', p: [
-      { problem: 'The small aluminum U-channel at the pivot broke, because the arm pivoted a few times at full extension. Everything the arm does goes through the three short channels at the pivot.', title: 'The pivot broke' },
-      { calc: 'What full extension does to the pivot',
+      { problem: 'The low-side U-channel that holds the slides cracked between the 1-hole U-channel and the slide mount. With the whole extension out, the slides put a large load on it, and so does the 1-hole U-channel under it, which the two 43 rpm motors drive through the 72 mm channel. The arm pivoted several times fully extended; every pivot deformed the channel a little more, until it snapped cleanly.', title: 'The low-side U-channel snapped' },
+      'To see why, I ran a finite element analysis on my CAD: the low-side, 1-hole and 72 mm U-channels, the steel angle bracket beside them and the slide\'s fixed outer rail, joined where the kit\'s screws are and held where the motor hubs bolt on. The rest of the arm, 1.98 kg in my CAD, goes in as its weight and inertia at its real place.',
+      { fig: { i: 'fea-path.webp', c: 'My FEA at the worst moment: the up preset pressed from rest with the slides all the way out, both motors at stall. Von Mises stress on my CAD\'s parts, from the left and above; dark red is past 6061-T6\'s typical yield.' }, wide: true },
+      { calc: 'Safety factor of the low-side U-channel at a full-power start, slides out',
         given: [
-          ['Claw centre to the pivot axis, slides in', '0.44 m', 'measured from my CAD'],
-          ['Claw centre to the pivot axis, slides out', '1.42 m', 'measured from my CAD'],
-          ['Slide travel', '4 × 244.8 mm = 979 mm', 'measured from my CAD'],
+          ['Motor torque, preset pressed from rest', '2 × 185 kg·cm = 36.3 N·m (stall)', `[goBILDA 5203, 139:1](https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-139-1-ratio-24mm-length-8mm-rex-shaft-43-rpm-3-3-5v-encoder/); direct drive, my CAD`],
+          ['Arm inertia about the pivot, slides out', '1.50 kg·m²', 'my CAD'],
+          ['Gravity moment, arm flat, slides out', '12.4 N·m', 'my CAD'],
+          ['Low-side U-channel', 'goBILDA 1121-0015-0384, aluminium, 130 g', '[goBILDA](https://www.gobilda.com/1121-series-low-side-u-channel-15-hole-384mm-length/); 6061 (Jerry)'],
+          ['6061-T6 yield strength', '276 MPa typical, 240 MPa minimum', '[6061 aluminium alloy](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
         ],
         work: [
-          'Static moment of the claw and its pixels, M = m g r: 1.42 / 0.44 = 3.2 times',
-          'Its inertia about the pivot, I = m r²: (1.42 / 0.44)² = 10.4 times',
-          'Same swing, same angular acceleration: 10.4 times the torque to start or stop it',
+          'Angular acceleration at the start: (36.3 - 12.4) / 1.50 = 15.9 rad/s²',
+          'Nearly all of the arm is past the crack, so nearly all of the 36.3 N·m goes through the channel there: 29 N·m in the channel itself, the rest through the bracket beside it (FEA)',
+          'FEA peak, von Mises, at the side-wall hole 8 mm past the 1-hole channel: 560 MPa; just holding the arm flat: 190 MPa',
+          'Safety factor = 276 / 560 = 0.49 (0.43 on the 240 MPa minimum); holding still: 276 / 190 = 1.45',
         ],
-        result: 'Pivoting at full extension, the claw alone puts 3.2 times the moment and about 10 times the start and stop torque through the pivot channels.',
-        note: 'Estimate: the claw as a point mass at its centre; the slides moving out add more on top.' },
+        result: 'Below 1: every full-power start with the slides out pushes the metal at that hole past yield. Holding the arm out was fine; starting and stopping it was not.',
+        note: 'Linear FEA (CalculiX, 10-node tetrahedra, about 800,000 unknowns) on my CAD\'s parts; above yield the real stress is capped by plasticity, so the number means the metal deforms there. The peak moved 1% when the elements at the hole went from 0.45 to 0.25 mm. Estimate: rigid arm, stall torque at 12 V, the printed claw parts taken as solid plastic.' },
+      { fig: { i: 'fea-wall.webp', c: 'The same moment, the low-side U-channel\'s left side wall seen from the left: the metal past yield runs along the top of the wall over the 1-hole channel and peaks at the hole 8 mm past it, before the slide\'s first screws.' }, wide: true },
+      'Why the extension mattered: with the slides out the arm is 8.5 times harder to spin up, so at every start the motors stay above 80% of stall about ten times longer (about 70 ms, against 6 ms with the slides in, from a simulation of the code\'s controller), and gravity alone already takes 190 of the channel\'s 276 MPa at that hole.',
+      { calc: 'Why it cracked, then snapped',
+        given: [
+          ['Stress along the channel at the hole, up start', '+600 MPa (tension)', 'my FEA'],
+          ['The same, down start (both motors at stall the other way)', '-570 MPa (compression)', 'my FEA'],
+          ['6061-T6 fatigue limit', '97 MPa for 5 × 10⁸ fully reversed cycles', '[6061 aluminium alloy](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
+          ['6061-T6 yield strength', '276 MPa typical', '[6061 aluminium alloy](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
+        ],
+        work: [
+          'Each pivot, up then back down, is one cycle: amplitude (600 + 570) / 2 = 585 MPa, mean +15 MPa, so fully reversed',
+          '585 / 97 = 6 times the fatigue limit, and past yield in both directions',
+        ],
+        result: `Every pivot bent the metal at the hole past yield, one way going up and the other way coming down. That is [low-cycle fatigue](https://en.wikipedia.org/wiki/Low-cycle_fatigue): plastic deformation in each cycle, and a low number of cycles to failure. A crack started at the hole, grew with each pivot, and the channel finally snapped cleanly across.`,
+        note: 'The code starts both moves at full power: pressing a preset from the other one gives a P term over 1 (0.001 × 1,175 ticks), which is clipped to full power (TestTeleop.java). The amplitude is the elastic FEA value at the edge of the hole; the real one is capped by plasticity, which is what makes each cycle a small permanent deformation.' },
       { next: 'Reinforce the pivot.' },
       { problem: 'Nothing stopped the arm from pivoting at full extension. The pivot presets never checked the slides, and the slides ran open loop, so the code did not even know how far out they were.', title: 'No interlock in the code' },
       { next: [
         'Hard states that keep the arm from pivoting unless the slides are fully retracted.',
         'That needs the code to know where the slides are, from the slide motor\'s encoder or a switch at full retraction, and then a small state machine: retract, pivot, extend.',
       ] },
-      { problem: 'I laser cut the sideplates from acrylic because it was the only material I had access to, and they broke in the weeks after the demo.', title: 'Acrylic sideplates' },
+    ] },
+    { type: 'prose', id: 'sideplates', h: 'The sideplates', p: [
+      { problem: 'I laser cut the sideplates from acrylic because it was the only material I had access to. In the weeks after the demo, a student picked the robot up by one of them, and it broke.', title: 'Acrylic sideplates' },
     ], media: [
-      { i: 'build-glowforge-sheet.webp', c: 'Aug 1: a truss sideplate cut from red acrylic on the laser cutter bed' },
-      { i: 'build-sideplate-mounted.webp', c: 'Aug 2: a sideplate bolted to the robot' },
+      [{ i: 'build-glowforge-sheet.webp', c: 'Aug 1: a truss sideplate cut from red acrylic on the laser cutter bed' },
+        { i: 'build-sideplate-mounted.webp', c: 'Aug 2: a sideplate bolted to the robot' }],
     ] },
 
     // ------------------------------------------------------------------ the carnival

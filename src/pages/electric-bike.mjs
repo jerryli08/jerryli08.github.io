@@ -10,7 +10,9 @@
 // Bracket temper: Fabworks' 5052 is H32. The second-belt failure was never fixed (Sept 28, 03:53: it
 // happened right before winter, during college applications). The idler flange calculation is measured from the V1 STEP (notes in
 // /home/claude/work/ebike/r3/); the fold in the iterations scrolly is his request (illustrative).
-// Sept 28: the V2 idler mount FEA ('v2-load') is held back from the page pending Jerry (support of the jockey bolt); section saved in /home/claude/work/ebike/r4/fea/v2-load-section-held.mjs; documented in /home/claude/work/ebike/r4/fea/README.md;
+// Sept 28: the V2 idler mount FEA ('v2-load') reran with the jockey bolt also through the old aluminum flange (Jerry,
+// 07:04) and Polymaker PC; method, supports and numbers in /home/claude/work/ebike/r4/fea/README.md (round 4c);
+// figure from render_v3.py. Its safety factor is NOT high (0.80 best case), so no "made it high on purpose" line.
 // never say the bike was for his mom (Jerry); copy kept understated (no hype, no self-praise).
 const M = '/assets/models/electric-bike';
 // the carbon fibre parts in the CAD (same list as assets/js/pages/electric-bike/bike.js)
@@ -225,7 +227,7 @@ export default {
           ] },
         { h: 'V2, my latest: one jockey on a tall printed mount',
           view: { version: 1, focus: 'Jockey_Wheel|polycarb_idler_mount', azimuth: 156, elevation: -15, pad: 1.55 },
-          p: [{ fix: 'V2 carries one jockey, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube (orange, see-through). The second jockey only added chain wrap on the pedaling chainring, which was not really needed.' }] },
+          p: [{ fix: 'V2 carries one jockey, 4 mm further outboard, on a tall 3D-printed polycarbonate mount along the seat tube (orange, see-through); its bolt also runs through the old aluminum flange behind it. The second jockey only added chain wrap on the pedaling chainring, which was not really needed.' }] },
         { h: 'Everything else stayed',
           view: { version: 1, azimuth: 200, elevation: 16, pad: 1.05 },
           p: ['The motors, both belts, every pulley and both axle stacks are identical in the two CAD files. The only other changes: a polycarbonate battery plate adapter, and the drive-side battery panel moved out 6 mm.'] },
@@ -272,6 +274,31 @@ export default {
     { type: 'media', id: 'v2-mount', layout: 'row', items: [
       { i: 'v2-idler-mount-print-crop.webp', c: 'V2: the 3D-printed idler mount on the print bed' },
       { i: 'still-v2-idler-mount-crop.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube, with the jockey behind it guiding the chain' },
+    ] },
+    { type: 'prose', id: 'v2-load', h: 'How much load the printed mount takes', p: [
+      'In V2 the jockey turns on a bolt through the bottom of the printed mount. The bolt also runs on through the jockey\'s bearing caps, across an 8 mm gap and through the old aluminum flange of the seat tube bracket behind it, so it is held at both ends: by the printed mount, 4 mm out from the middle of the jockey, and by the flange, 14.4 mm in. A finite element analysis of my V2 CAD, at the same full-torque chain load as the V1 calculation, shows how the two share the load and which part gives first.',
+      { fig: { i: 'fea-v2-jockey-support.webp', c: 'FEA of my V2 jockey support at 100 N·m on the sprocket, 4,310 N on the jockey, colored by stress as a share of each part\'s strength. Left: if everything stayed elastic, the aluminum flange would take about half the load, but the bolt across the gap would be far past its strength. Right: with the bolt at its limit, the printed mount carries the rest; the darkest blue is at or above its strength. Grey marks the bolted joints, held fixed in the model.' }, wide: true },
+      { calc: 'How much load can the printed mount take?',
+        given: [
+          ['Chain pull on the jockey', '4,310 N: 4,300 N in the chain\'s plane, 29° above horizontal toward the rear wheel, and 330 N inboard, because the V2 jockey sits 4 mm outboard of the sprocket', 'the V1 calculation above, with the jockey\'s position in my V2 CAD'],
+          ['Printed mount', 'the V2 idler mount, printed flat in Polymaker PC (FDM)', 'my CAD; the print photo above'],
+          ['Polymaker PC', 'tensile strength 69.1 MPa along the layers (X-Y) and 52.8 MPa across them (Z); modulus 2,497 MPa. It breaks at 4.8 and 2.7 % strain, so the tensile strength is taken as the yield', '[Polymaker PC datasheet](https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PC_TDS_V5.3.pdf)'],
+          ['Poisson\'s ratio of PC', '0.37', '[Polycarbonate](https://en.wikipedia.org/wiki/Polycarbonate)'],
+          ['Jockey bolt', 'M5 steel: through the mount\'s 5.3 mm hole (head in its 9 mm counterbore), the jockey\'s bearing caps, the 8 mm gap and the flange\'s 5.04 mm hole; modeled as a snug fit in both holes', 'the hole sizes in my CAD; the bolt itself is not in my CAD'],
+          ['Strongest common M5 grade', 'class 12.9: yield strength 1,100 MPa', '[ISO 898-1 table, Nordic Fastening Group](https://www.nfgab.com/technology-quality/technical-pages/mechanical-properties-for-fasteners/mechanical-properties-screws-and-studs-en-iso-898-1-2013)'],
+          ['Aluminum flange', 'the seat tube bracket\'s old jockey flange, 4.75 mm 5052-H32 (yield 193 MPa), its mid-plane 14.4 mm from the middle of the jockey', 'my CAD; [ASM / MatWeb](https://asm.matweb.com/search/specificmaterial.Asp?Bassnum=ma5052h32)'],
+          ['Mounting', 'three M6 bolts through the printed mount, the 3.18 mm drivetrain-side plate and the bracket\'s side flange, with the back of the mount resting on the plate; the bracket is also bolted through its other side flange and its web', 'my CAD'],
+        ],
+        work: [
+          'FEA in CalculiX with 10-node tetrahedra of the real parts: the printed mount, the bolt with the jockey\'s inner bearing cap (steel), the whole seat tube bracket and the plate behind the mount (5052 aluminum). The bolted joints are held fixed. The bolt in both holes, the cap on the mount\'s boss, the bolt head in its counterbore and the mount on the plate touch without friction and can only push: the solve is repeated, letting go of every point that pulls, until the contacts settle',
+          'If everything stayed elastic, the flange would take 52 % of the pull in the chain\'s plane, about 2,250 N, and the printed mount would see only 41 MPa 1 mm into its bolt hole and 36 MPa in its body',
+          'That share bends the bolt. The flange\'s 2,250 N acts 14.4 mm from the middle of the jockey, so the 5 mm bolt carries M = 2,250 N × 14.4 mm ≈ 32.4 N·m, a bending stress of M / (π d³ / 32) = 32,400 N·mm / 12.3 mm³ ≈ 2,630 MPa (the FEA agrees within about 10 %). That is 2.4 times the yield of a class 12.9 bolt, which it reaches at 4,310 N × 1,100 / 2,630 ≈ 1,800 N on the jockey',
+          'Once the bolt yields right through, it cannot pass more to the flange: fully yielded, a 5 mm class 12.9 bolt holds 1,100 MPa × d³ / 6 ≈ 22.9 N·m, so the flange takes at most 22.9 N·m / 14.4 mm ≈ 1,590 N. The FEA again with that force on the bolt in place of the flange: the printed mount carries the rest and reaches 87 MPa 1 mm into its bolt hole and 46 MPa in its body',
+          'Load at first yield: elastically the flange\'s share reaches 1,590 N at 4,310 N × 1,590 / 2,250 ≈ 3,050 N on the jockey, where the hole is at 41 MPa × 3,050 / 4,310 ≈ 29 MPa; beyond that every extra newton goes through the printed mount. Between those two FEA results, the stress 1 mm into the hole reaches 69.1 MPa at about 3,900 N on the jockey, about 91 N·m at the sprocket. The bolt already starts to yield at 1,800 N, so the flange\'s share grows more slowly than that before 3,050 N: 3,900 N is an upper bound',
+          'Mesh check: going from 1.2 to 0.7 mm elements at the holes (169,000 to 451,000 nodes), the flange\'s share stayed at 52 % and the stresses in the printed mount by 5 to 7 %, except 1 mm into the hole with the bolt at its limit: 103 MPa on the coarser mesh, 87 MPa on the finer one, whose contact pressures along the hole are smoother. The numbers here are from the finer mesh',
+        ],
+        result: 'At full torque the printed mount is still past its strength where the bolt bears on its hole, even with the flange behind it. With the strongest common bolt, the stress there is 87 MPa, a safety factor of 0.80 along the layers (0.61 across them), and it starts to yield at no more than about 3,900 N on the jockey, about 91 N·m at the sprocket. The body of the mount is at 46 MPa: a safety factor of 1.5 along the layers and 1.1 across them. The bolt starts to yield well before that, bent across the gap, from about 1,800 N on the jockey (42 N·m at the sprocket).',
+        note: 'FEA estimate from my CAD, not a test: linear elastic apart from the bolt\'s limit, with the datasheet\'s strength for solid test bars, and printed parts vary with the print settings. The bolt is not in my CAD, so its grade, and whether its threads reach the gap, are not known: a class 12.9 bolt with a plain shank across the gap is the best case, and a weaker bolt passes less to the flange (class 8.8: about 930 N). The aluminum also reaches its 193 MPa yield locally, at the flange\'s hole and in the bracket\'s web next to the flange\'s bend, from about 1,300 N on the jockey. The stress right at the sharp edges where the bolt and its head touch the mount keeps rising as the mesh is refined, so the hole is judged 1 mm in.' },
     ] },
 
     { type: 'prose', id: 'failures', h: 'What the first rides found', p: [

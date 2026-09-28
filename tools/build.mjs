@@ -198,7 +198,7 @@ function heroCard(x) {
     <div class="sc-actions"><a class="nav-drive sc-drive" href="/drive">Drive the rover</a><a class="sc-go" href="${url(x)}">See more ${arrow}</a></div>
   </div>
   <p class="sc-p">${esc(x.short)} I came up with it, led the ${esc(x.team.replace(/ people$/, '-person'))} team, and designed and built all of the hardware.</p>
-  <p class="sc-fact"><b>Co-first author</b> of the research poster at IEEE MIT URTC 2025</p>
+  <p class="sc-fact"><b>First author</b> of the research poster at IEEE MIT URTC 2025</p>
   <p class="sc-hint"><span class="h-fine">Move your cursor: the rover drives there. Point far away and the drone carries it over.</span><span class="h-touch">Tap the ground: the rover drives there. Tap far away and the drone carries it over.</span></p>
 </aside>`;
 }
@@ -254,7 +254,7 @@ ${nav({ home: true })}
         <h1 class="name">Jerry Li</h1>
         <p class="lede">Mechanical engineering at UIUC. I design and build robots, drones and electric vehicles, from the first CAD sketch to the last wire.</p>
         <ul class="chips">
-          <li><a href="/projects/hybrid-vehicle"><b>Co-first author</b>MIT Lincoln Laboratory research</a></li>
+          <li><a href="/projects/hybrid-vehicle"><b>First author</b>MIT Lincoln Laboratory research</a></li>
           <li><a href="/projects/ftc-decode"><b>1st place</b>FIRST World Championship award</a></li>
           <li><a href="#work" data-chip-filter="hackathon"><b>5+</b>hackathons</a></li>
         </ul>

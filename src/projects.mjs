@@ -31,7 +31,7 @@ export const projects = [
     team: '7 people',
     tools: ['Fusion 360', '3D printing', 'Linkage design', 'Geartrains', 'Belt drive', 'Servo actuation'],
     stats: [
-      { v: 'Co-first author', l: 'Poster at IEEE MIT URTC 2025' },
+      { v: 'First author', l: 'Poster at IEEE MIT URTC 2025' },
       { v: '10 DOF', l: 'Latch linkage driven by one servo' },
       { v: '7', l: 'Person team' },
     ],
@@ -44,8 +44,8 @@ export const projects = [
         'The docking latch is a linkage geartrain with 10 degrees of freedom, 4 passive and 6 active, all driven by a single servo so the mechanism stays light enough to fly.',
       ]},
       { h: 'Research', p: [
-        'After the summer we ran more tests, collected more data and wrote the work up. I presented the poster, "Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation", as co-first author at the IEEE MIT Undergraduate Research Technology Conference on October 10 to 12, 2025. SLAM integration was the next step we identified.',
-        'Authors: Jerry Li and Mihika Sakharpe (co-first), Zoe Zhao, Katherine Zhang, William Kollmyer, Shashwat Pandya, and Chris Rincon (PI).',
+        'After the summer we ran more tests, collected more data and wrote the work up. I presented the poster, "Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation", as first author at the IEEE MIT Undergraduate Research Technology Conference on October 10 to 12, 2025. SLAM integration was the next step we identified.',
+        'Authors: Jerry Li, Mihika Sakharpe, Zoe Zhao, Katherine Zhang, William Kollmyer, Shashwat Pandya, and Chris Rincon (PI).',
       ]},
     ],
     media: [
@@ -297,7 +297,7 @@ export const projects = [
       ]},
     ],
     media: [
-      { v: 'ftc-into-the-deep/hero-final-intake-real-field.mp4', c: 'The final robot on a practice field at the FIRST Chesapeake Championship, March 2025' },
+      { v: 'ftc-into-the-deep/hero-auto-samples-venue.mp4', c: 'Mar 2, 2025: our specimen autonomous on a practice field at the FIRST Chesapeake Championship' },
     ],
   },
   {

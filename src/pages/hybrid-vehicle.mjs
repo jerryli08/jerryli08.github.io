@@ -13,12 +13,12 @@ export default {
     stats: [
       { v: '10 DOF', l: 'Latch linkage driven by one servo' },
       { v: '27.3 N', l: 'Held per latch in a vertical pull test' },
-      { v: 'Co-first author', l: 'Poster at IEEE MIT URTC 2025' },
+      { v: 'First author', l: 'Poster at IEEE MIT URTC 2025' },
       { v: '7', l: 'Person team' },
     ],
     text: [
       'A drone and a ground rover that lock together, so either one can carry the other. I came up with the project, recruited and led a team of seven, and designed and fabricated all of the hardware.',
-      'The core of it is a latch on the rover that catches the drone’s landing tubes with no power and lets go on command: a linkage geartrain with 10 degrees of freedom, driven by a single servo. On the course run the drone carried the rover, let go of it with the servo and flew on alone. I presented the work as co-first author at the IEEE MIT Undergraduate Research Technology Conference.',
+      'The core of it is a latch on the rover that catches the drone’s landing tubes with no power and lets go on command: a linkage geartrain with 10 degrees of freedom, driven by a single servo. On the course run the drone carried the rover, let go of it with the servo and flew on alone. I presented the work as first author at the IEEE MIT Undergraduate Research Technology Conference.',
     ],
   },
   hero: {
@@ -292,8 +292,8 @@ export default {
     ] },
 
     { type: 'prose', id: 'research', h: 'Research', p: [
-      'After the summer we ran more tests, collected more data and wrote the work up. I presented the poster “Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation” as co-first author at the IEEE MIT Undergraduate Research Technology Conference (URTC), October 10 to 12, 2025.',
-      'Authors: Jerry Li and Mihika Sakharpe (co-first), Zoe Zhao, Katherine Zhang, William Kollmyer, Shashwat Pandya, and Chris Rincon (PI). [Read the poster (PDF)](/assets/docs/drone-on-wheels-poster.pdf).',
+      'After the summer we ran more tests, collected more data and wrote the work up. I presented the poster “Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation” as first author at the IEEE MIT Undergraduate Research Technology Conference (URTC), October 10 to 12, 2025.',
+      'Authors: Jerry Li, Mihika Sakharpe, Zoe Zhao, Katherine Zhang, William Kollmyer, Shashwat Pandya, and Chris Rincon (PI). [Read the poster (PDF)](/assets/docs/drone-on-wheels-poster.pdf).',
       { note: 'The poster’s data is on this page: the terrain speeds (Table 1), the latch strength (Table 2), its photos of the docked pair in the air and the rover on forest floor, and the overall dimensions from its side view.' },
     ] },
     { type: 'media', layout: 'row', id: 'urtc', items: [
