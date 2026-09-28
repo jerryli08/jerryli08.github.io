@@ -23,8 +23,8 @@
 // Sept 28, 12:24 to 12:26: the Aug 7 photo pivot-after-event shows the snapped channel (it sits beside
 // the FEA figure in #broke); sideplates next time: polycarbonate, or second choice Delrin (more
 // expensive); the deposit: slides parallel to the backdrop and the claw touching it when the pixels
-// drop (cycle.js: with the robot's back against the backdrop the CAD cannot do both at once, so the
-// arm tips 7 degrees past parallel for the last part; see its header). Still held back (questions.md):
+// drop (cycle.js: Jerry allows the CAD to overlap itself, so the backdrop is drawn ~100 mm closer and
+// the slides stay exactly parallel while the claw touches). Still held back (questions.md):
 // who else built or drove, close shots of children, the classroom photo.
 // Sept 28, 12:32-15:59 (Jerry): the close-up "the robot at the carnival, HOWARD COUNTY LIBRARY SYSTEM on its
 // back plate" is removed (its own media row after the carnival section; the file is deleted).
@@ -62,10 +62,10 @@ export default {
         { h: '3. Grab', p: ['Each finger has its own servo and its own bumper on the second gamepad; the right trigger moves both. Two pixels, side by side.'] },
         { h: '4. Pull in', p: ['The slides come back in with both pixels before the arm moves. The code never enforced that order: see [what broke](#broke).'] },
         { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm over the back to 120 degrees from flat, until the slides are **parallel to the backdrop\'s 60 degree face**. The wrist turns the claw over, so the pixels face the backdrop.'] },
-        { h: '6. Reach again', p: ['The slides run out 437 mm along the face. Parallel, they hold the claw 100 mm off it (from my CAD), so the arm tips 7 degrees further and the claw comes to rest **right against the face**, the pixels flat on it.'] },
+        { h: '6. Reach again', p: ['The slides run out along the face, still parallel to it, until the claw rests **right against the face** with the pixels flat on it.'] },
         { h: '7. Drop', p: ['The fingers open and both pixels slide down the face into the two middle notches of the bottom row. Then slides in, arm down, and the next pair.'] },
       ],
-      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels and the floor are added for the animation. The backdrop is the official CENTERSTAGE backdrop from the field CAD (AndyMark am-5103), its bottom edge against the robot\'s back; in step 6 a cut through the middle of the claw shows the claw and a held pixel touching its face. The deposit pose is solved on the CAD: the smallest tip past parallel that brings the claw onto the face. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
+      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels and the floor are added for the animation. The backdrop is the official CENTERSTAGE backdrop from the field CAD (AndyMark am-5103); in step 6 a cut through the middle of the claw shows the claw and a held pixel touching its face. To show the slides parallel to the face with the claw touching it, the backdrop is drawn about 100 mm closer than my CAD allows, overlapping the robot\'s back. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
 
     // ------------------------------------------------------------------ the brief
     { type: 'prose', id: 'brief', h: 'The brief', p: [

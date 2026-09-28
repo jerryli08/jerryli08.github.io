@@ -275,10 +275,48 @@ export default {
         { i: 'v1-chain-wrap-crop.webp', c: 'V1: the chain comes in under the upper jockey, wraps the drive sprocket and leaves past the lower jockey' },
         { i: 'v1-mockup-two-jockeys-crop.webp', c: 'V1 mocked up in the frame: the 20T sprocket above the chainring and two blue jockey wheels' },
       ] },
-    { type: 'media', id: 'v2-mount', layout: 'row', items: [
+    { type: 'prose', id: 'v2-load', h: 'How much load the printed mount takes', media: [
       { i: 'v2-idler-mount-print-crop.webp', c: 'V2: the 3D-printed idler mount on the print bed' },
-      { i: 'still-v2-idler-mount-crop.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube, with the jockey behind it guiding the chain' },
+    ], p: [
+      'In V2 the jockey turns on a McMaster-Carr [91273A403](https://www.mcmaster.com/91273A403/) stainless shoulder screw, threaded into the old aluminum flange of the seat tube bracket 8 mm behind the jockey, and the printed mount holds the screw on the jockey\'s other side. How much the printed mount carries depends on how hard the chain pulls when I ride. I worked that out from my CAD, then ran a finite element analysis (FEA) of the real parts.',
+      { calc: 'How hard does the chain pull when I ride it?',
+        given: [
+          ['Rider', '77 kg (170 lb), seated', 'me'],
+          ['Bike', '13.25 kg, a 2019 Trek Dual Sport 2, plus about 12 kg of e-bike parts (motors, pack, plates, belts, controllers)', '[99 Spokes](https://99spokes.com/bikes/trek/2019/dual-sport-2); my CAD and estimates'],
+          ['Center of mass', '0.43 m ahead of the rear tire\'s contact, 0.99 m up', 'estimate from the frame geometry'],
+          ['Drive', 'two SKP 6465, 150 KV, 50 A each; 16.2 : 1 to the 20T sprocket (40.6 mm pitch radius)', 'my VESC setup; my CAD'],
+          ['Gearing', 'Shimano HG31 11-32 cassette, 27.5 × 2.4 in tire (708 mm)', '[Trek](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/dual-sport-bikes/dual-sport/dual-sport-2/p/23067/)'],
+        ],
+        work: [
+          'Motor torque: Kt = 60 / (2π × 150) = 0.0637 N·m/A, so 2 × 50 A × 0.0637 × 16.2 ≈ 103 N·m at the sprocket, capped at 100 N·m',
+          'Chain pull at that torque: 100 N·m / 40.6 mm ≈ 2,460 N',
+          'Push at the tire: 2,460 N × r(cog) / 354 mm = 157 N in the 11T up to 451 N in the 32T',
+          'The front wheel lifts at m g b / h = 102.5 kg × 9.81 × 0.43 / 0.99 ≈ 440 N of push, well before the tire slips (about 1,760 N)',
+        ],
+        result: 'With me on it, every full-throttle start in the 11T to 28T reaches the motors\' 100 N·m before the front wheel lifts (only the 32T lifts first, at 2,410 N). So the riding peak is the same 2,460 N of chain pull, 4,310 N on the jockey.',
+        note: 'Estimate: no drivetrain losses and no pedaling, which keeps the pull on the high side.' },
     ] },
+    { type: 'prose', id: 'v2-fea', h: 'The printed mount at that load', media: [
+      { i: 'still-v2-idler-mount-crop.webp', c: 'V2 on the bike: the tall printed idler mount along the seat tube, with the jockey behind it guiding the chain' },
+    ], p: [
+      { calc: 'How much load can the printed mount take?',
+        given: [
+          ['Load on the jockey', '4,310 N at the riding peak (the calculation above): 4,300 N in the chain\'s plane, 29° above horizontal toward the rear wheel, and 330 N inboard, because the V2 jockey sits 4 mm outboard of the sprocket', 'the calculation above, with the jockey\'s position in my V2 CAD'],
+          ['Printed mount', 'the V2 idler mount, printed flat in Polymaker PC (FDM)', 'my CAD; the print photo above'],
+          ['Polymaker PC', 'tensile strength 69.1 MPa along the layers (X-Y) and 52.8 MPa across them (Z); modulus 2,497 MPa. It breaks at 4.8 and 2.7 % strain, so the tensile strength is taken as the yield', '[Polymaker PC datasheet](https://wiki.polymaker.com/polymaker-products/more-about-our-products/documents/technical-data-sheets/polycarbonate/polylite-tm-pc)'],
+          ['Poisson\'s ratio of PC', '0.37', '[Polycarbonate](https://en.wikipedia.org/wiki/Polycarbonate)'],
+          ['Mounting', 'three M6 bolts through the printed mount, the 3.18 mm drivetrain-side plate and the seat tube bracket\'s side flange, with the back of the mount resting on the plate; the jockey\'s shoulder screw threads into the old aluminum flange behind it', 'my CAD'],
+        ],
+        work: [
+          'FEA in CalculiX with 10-node tetrahedra of the real parts: the printed mount, the jockey screw and bearing cap, the plate behind the mount and the seat tube bracket (5052 aluminum). The bolted joints are held fixed; where parts touch they can only push on each other, and the solve is repeated until the contacts settle',
+          'At the riding peak the body of the printed mount reaches about 39 MPa',
+          'Safety factor: 69.1 / 39 ≈ 1.8 along the layers, 52.8 / 39 ≈ 1.3 across them',
+          'Mesh check: going from 1.2 to 0.7 mm elements (169,000 to 451,000 nodes), the body\'s peak stayed at 39 MPa',
+        ],
+        result: 'At the riding peak, 4,310 N on the jockey, the body of the printed mount has a safety factor of 1.8 along the print layers (1.3 across them). FDM prints are anisotropic and never perfectly fused, so that margin matters.',
+        note: 'FEA estimate from my CAD, not a test: linear elastic, with the datasheet\'s strength for solid test bars; printed parts vary with the print settings.' },
+    ] },
+
     { type: 'prose', id: 'failures', h: 'What the first rides found', p: [
       'After the first rides I took the drive apart. The problems chained into each other, and the second belt took the hit.',
       { problem: 'The axles had play along their length, enough for a bearing to slip out of its seat in the carbon fiber plate.', title: 'Axial play in the axles' },

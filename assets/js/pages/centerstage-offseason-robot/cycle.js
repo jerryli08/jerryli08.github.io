@@ -9,11 +9,10 @@
 // code's up preset is not used here), the wrist turns the claw over so the pixels lie flat toward the
 // face, the slides run out along it, and the claw sits right against the face (touching) when the
 // fingers open; the pixels then slide down the face into two notches of the bottom row.
-// Measured on the CAD (scratch probes, Sept 28): with the back plate against the backdrop, the slides
-// parallel to the face pass 263 mm from it at the pivot, and the claw with the pixels flat reaches
-// only 138 mm past the wrist axis, so a claw on parallel slides stands about 100 mm off the face.
-// To touch, the arm tips past parallel by the least the CAD allows (solved below: about 7 degrees
-// with the pixels set on the face 0.55 m up it). The picture is a pure function of (step, progress through the step): scrolling back
+// Measured on the CAD (scratch probes, Sept 28): with the back plate against the backdrop, a claw on
+// parallel slides stands about 100 mm off the face. Jerry (Sept 28): keep the slides parallel and the
+// claw touching, letting the CAD overlap itself, so the backdrop is set about 100 mm closer (solved
+// below) and overlaps the robot's back; the pixels go on the face 0.55 m up it. The picture is a pure function of (step, progress through the step): scrolling back
 // plays it backwards and nothing moves on its own. Views are framed once with the robot at rest,
 // cached per stage aspect, and blended. With reduced motion each step cuts to its end pose.
 import { createStage } from '/assets/js/lib/stage.js';
@@ -60,7 +59,7 @@ function state(step, sp, reduced, dep) {
   }
   if (step === 4) { s.phi = lerp(PHI_REST, PHI_PAR, m); s.wrist = wristFor(PHI_PAR) * m; }
   if (step === 5) {
-    // out along the face on parallel slides, then the arm tips the last degrees until the claw touches
+    // out along the face on parallel slides until the claw rests against the face
     const out = reduced ? 1 : smooth(0.08, 0.55, sp), tip = reduced ? 1 : smooth(0.6, 0.95, sp);
     s.e = dep.e * out; s.phi = lerp(PHI_PAR, dep.phi, tip); s.wrist = wristFor(s.phi);
   }
@@ -143,14 +142,20 @@ export async function mount(el, ctx) {
   heldLocal.forEach((L) => nearest(pixels[0], toM.copy(Wm0).multiply(L)));
   const pixC = new THREE.Vector3();
   heldLocal.forEach((L) => pixC.add(vtx.setFromMatrixPosition(toM.copy(Wm0).multiply(L)).multiplyScalar(0.5)));
-  const wT = E.clone().addScaledVector(N, TOUCH - near).addScaledVector(UP, S_DEP - UP.dot(pixC.clone().sub(W0)));
-  // the wrist axis sits (WRIST.y - PIVOT.y) off the arm's line, TRAVEL (1 - e) short of WRIST.z at e;
-  // pitching by phi turns the angle atan2(y, z) about the pivot by phi
-  const ry = wT.y - PIVOT[1], rz = wT.z - PIVOT[2], off = WRIST[1] - PIVOT[1];
-  const reach = Math.sqrt(ry * ry + rz * rz - off * off);
-  const dep = { phi: (Math.atan2(ry, rz) - Math.atan2(off, reach)) / DEG, e: (reach - (WRIST[2] - TRAVEL)) / TRAVEL };
+  // Jerry (Sept 28): the slides stay exactly parallel to the face AND the claw touches it; he allows
+  // the CAD to overlap itself for this. With the robot's back against the backdrop the claw on
+  // parallel slides stands about 100 mm off the face, so the backdrop is set that much closer to the
+  // robot (along the floor), overlapping its back, until the claw's nearest point is TOUCH off the face.
+  const gapNow = N.dot(W0.clone().sub(E)) + near; // nearest claw/pixel point to the face on parallel slides
+  const dz = (gapNow - TOUCH) / N.z; // slide the backdrop along the floor toward the robot
+  E.z += dz; bd.obj.position.z += dz; bd.obj.updateMatrixWorld(true); // E is the plane's point and the rest() edge
+  // on parallel slides the wrist axis runs straight up the face as the slides extend (TRAVEL per unit e)
+  const armDir = new THREE.Vector3(0, Math.sin(PHI_PAR * DEG), Math.cos(PHI_PAR * DEG));
+  const eDep = clamp(0.5 + (S_DEP - UP.dot(pixC.clone().sub(E))) / (TRAVEL * armDir.dot(UP)), 0, 1);
+  const dep = { phi: PHI_PAR, e: eDep };
   // released: from the face, flat on it, the pixels slide down it into the notches under them
   const release = heldAt({ phi: dep.phi, e: dep.e, wrist: wristFor(dep.phi), grip: [0, 0] });
+  const wT = new THREE.Vector3().setFromMatrixPosition(wristInModel()); // the wrist axis at the deposit (heldAt left the rig there)
   const land = release.map(({ pos }) => bd.rest(pos.x));
 
   const pv = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1), M = new THREE.Matrix4();
