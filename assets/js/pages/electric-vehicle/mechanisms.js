@@ -4,6 +4,9 @@
 //   2 the two GT2 belts to the front axle (1 : 1), so all four wheels drive
 //   3 the two buttons on the top plate: left toggles the laser pointer, right starts the run
 //   4 the whole car
+// Nothing is cut (Jerry, Sept 27: a section view makes the gears look weird). To see the gears, the
+// top plate (with the laser clamp and the buttons that sit in it), the printed end panels, the motor
+// mount and the encoder fade out for the steps that need them gone and fade back in afterwards.
 // The picture is a pure function of the scroll (step, progress through it). The drivetrain turns
 // only while the reader scrolls, every part at its tooth ratio (rig.js), and the readout counts the
 // turns. Each view is framed ONCE with the drivetrain at rest and cached (per stage shape); scrolling
@@ -12,10 +15,9 @@
 // nothing turns and the views cut from one step to the next.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
-import { M, AXES, WHEEL_R, PITCH_R, BELT_X, partsOf, rigDrive, beltMarkers, blendViews, hud, clamp, smooth, lerp } from './rig.js';
+import { M, AXES, WHEEL_R, PITCH_R, BELT_X, partsOf, rigDrive, beltMarkers, blendViews, hud, clamp, smooth } from './rig.js';
 
 const ORANGE = '#ff6b35', PURPLE = '#a78bfa', BLUE = '#3d8bff', INK = '#fff1e2';
-const PARK = 5; // a plane constant that keeps everything
 const TURN = 2 * Math.PI;
 const CIRC = 2 * Math.PI * WHEEL_R; // m of travel per wheel turn (229.4 mm)
 // what the readout says in each step
@@ -37,11 +39,37 @@ export async function mount(el, ctx) {
   const reduced = ctx.reducedMotion;
   const blend = blendViews(stage);
 
-  // section planes (world metres): keep y <= c (drops the top plate) and x <= c (drops the right-hand belt,
-  // wheels and the goBILDA beam in front of the gears, so the gear train is seen face on)
-  const cutY = stage.sectionPlane([0, -1, 0], PARK);
-  const cutX = stage.sectionPlane([-1, 0, 0], PARK);
   const markers = beltMarkers(stage, model);
+
+  // parts that fade out of the way (no section cuts). Each faded mesh gets its own copy of its
+  // materials, so parts that shared them (the bottom plate) are untouched. The opacity is written to
+  // whatever material the mesh has at the time, so a highlight's copies fade too.
+  const topPlate = parts.plates.filter((o) => stage.bounds(o).center.y > 0.07); // G10 plate 2, y 83 to 85 mm
+  function fader(list) {
+    const meshes = [];
+    for (const o of list) o.traverse((m) => {
+      if (!m.isMesh) return;
+      m.material = Array.isArray(m.material) ? m.material.map(stage.cloneMaterial) : stage.cloneMaterial(m.material);
+      meshes.push(m);
+    });
+    let last = -1;
+    return (a) => {
+      a = a > 0.995 ? 1 : a < 0.005 ? 0 : a;
+      let changed = a !== last;
+      last = a;
+      for (const m of meshes) {
+        if (m.visible !== a > 0) { m.visible = a > 0; changed = true; }
+        for (const x of [].concat(m.material)) {
+          if (x.opacity === a && x.transparent === (a < 1)) continue;
+          x.opacity = a; x.transparent = a < 1; changed = true;
+        }
+      }
+      if (changed) stage.invalidate(); // what casts shadows changes too
+    };
+  }
+  const fadeTop = fader([...topPlate, ...parts.laserHolder, ...parts.btnLaser, ...parts.btnRun]);
+  const fadeHousing = fader([...parts.endPanels, ...parts.mountPlate]);
+  const fadeEncoder = fader([...parts.encoder, ...parts.encMount]);
 
   const gears = [...parts.pinion, ...parts.gear48, ...parts.gear40];
   const encoderSet = [...parts.gear40, ...parts.encShaft, ...parts.encoder, ...parts.encMount];
@@ -110,8 +138,8 @@ export async function mount(el, ctx) {
     aspect = a;
     drive.set(0); press([...btnL, ...btnR], 0);
     fixed = [
-      [V(gears, { azimuth: 90, elevation: 12, pad: 1.8 }), V(gears, { azimuth: 90, elevation: 16, pad: 1.8 })],
-      [V([...parts.pinion, ...encoderSet], { azimuth: 90, elevation: 16, pad: 2.2 }), V([...parts.pinion, ...encoderSet], { azimuth: 60, elevation: 26, pad: 2.2 })],
+      [V(gears, { azimuth: 90, elevation: 40, pad: 1.8 }), V(gears, { azimuth: 78, elevation: 36, pad: 1.8 })],
+      [V([...parts.pinion, ...encoderSet], { azimuth: 84, elevation: 30, pad: 2.2 }), V([...parts.pinion, ...encoderSet], { azimuth: 62, elevation: 34, pad: 2.2 })],
       [V(beltSet, { azimuth: 58, elevation: 42, pad: 1.75 }), V(beltSet, { azimuth: 118, elevation: 32, pad: 1.75 })],
       [V([...btnL, ...btnR, ...parts.mountPlate], { azimuth: 6, elevation: 50, pad: 1.6 }), V(car, { azimuth: 30, elevation: 28, pad: 1.0, offset: [0, 0, -0.1] })],
       [V(car, { azimuth: 250, elevation: 30, pad: 1.04 }), V(car, { azimuth: 212, elevation: 20, pad: 1.04 })],
@@ -139,17 +167,17 @@ export async function mount(el, ctx) {
     if (k < 1) view = blend(blend(...views[step - 1], within(step - 1, 1)), view, k);
     stage.setView(view);
 
-    // what is cut, hidden and lit in each step; the cuts sweep open as a step comes in
-    const gearSteps = step <= 1;
-    cutY.set(step <= 2 ? 0.083 : step === 3 && k < 1 ? lerp(0.083, 0.14, k) : PARK);
-    cutX.set(gearSteps ? 0.031 : step === 2 && k < 1 ? lerp(0.031, 0.2, k) : PARK);
-    for (const o of parts.endPanels) o.visible = !gearSteps;
-    for (const o of [...parts.encoder, ...parts.encMount]) o.visible = step !== 0;
-    for (const o of parts.mountPlate) o.visible = !gearSteps;
-    markers.mesh.visible = step >= 2;
+    // what is lit, and what is faded out of the way. Step 0 starts with the whole car and fades the
+    // top plate, the housings and the encoder away; the encoder comes back in step 1, the housings in
+    // step 2 and the top plate with its buttons in step 3, each while its step's view eases in.
+    const out0 = step === 0 ? 1 - smooth(0.05, 0.35, sp) : 0;
     light('a', step === 0, [...parts.pinion, ...parts.gear48], ORANGE, 0.85);
     light('b', step === 1, encoderSet, PURPLE, 0.6);
     light('c', step === 2, beltSet, BLUE, 0.5);
+    fadeTop(step >= 4 ? 1 : step === 3 ? k : out0);
+    fadeHousing(step >= 3 ? 1 : step === 2 ? k : out0);
+    fadeEncoder(step >= 2 ? 1 : step === 1 ? k : out0);
+    if (markers.mesh.visible !== (step >= 2)) { markers.mesh.visible = step >= 2; stage.invalidate(); }
 
     // buttons: left pressed (laser) early in step 3, right pressed (run) later in it
     const bp = step === 3 ? (reduced ? 1 : sp) : step > 3 ? 1 : 0;

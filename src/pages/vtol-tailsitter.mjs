@@ -4,8 +4,8 @@
 // flown, so the take-off is labelled as an illustration.
 // Held back until Jerry answers /home/claude/work/solidworks-vtol-tailsitter/questions.md: the project
 // date and Hack Club context (Q1), why the part is seven bodies and how he would print it (Q2), the
-// Feb 2025 screenshots' open nose (Q3), whether the motor and props were chosen or placeholders, and
-// the prop handedness (Q4), what he would do next (Q5), what exactly he took from MIT's aircraft (Q6),
+// Feb 2025 screenshots' open nose (Q3), whether the motor and props were chosen or placeholders
+// (Q4; the same-hand props are a CAD mix-up, Jerry, Sept 27: the take-off draws the left one mirrored), what he would do next (Q5), what exactly he took from MIT's aircraft (Q6),
 // and his control plan (Q7).
 // Models: assets/models/vtol-tailsitter/ (see assets/js/pages/vtol-tailsitter/rig.js and
 // /home/claude/work/solidworks-vtol-tailsitter/prepass.mjs); demo posters live there too.
@@ -30,25 +30,6 @@ export default {
     items: [{ i: 'cad-hero.webp', c: 'My SolidWorks CAD of the tailsitter, rendered with the colours set by part: a white printed-plastic airframe, light grey elevons, red and black motors and orange props' }],
   },
   sections: [
-    { type: 'prose', id: 'why', h: 'Why a tailsitter', p: [
-      'I made this project to learn SolidWorks. I based it on the tailsitter aircraft from MIT\'s 2023 work on planning fast, acrobatic flight for tailsitters ([MIT News](https://news.mit.edu/2023/planning-algorithm-tailsitter-aircraft-0823)), and in my repo\'s README I called it "a VTOL Tailsitter I plan on 3D Printing".',
-      'A tailsitter is one of the simplest ways to get a plane that takes off and lands vertically. There is no runway, no landing gear and no motor that tilts. The whole aircraft points its nose at the sky to take off and land, and tips over to fly forward. The same two props lift it in a hover and push it in forward flight, and the same two elevons steer it in both.',
-      'The catch is that one airframe has to work in two very different regimes: hanging on its props at zero airspeed, and flying on its wing. In this layout the elevons sit directly behind the props, where there is moving air over them even in a hover.',
-      { calc: 'How much of each elevon is behind its prop?',
-        given: [
-          ['Right prop disc, out from the centreline', '38.9 to 114.6 mm', 'measured from the CAD'],
-          ['Right elevon, out from the centreline', '29.5 to 119.5 mm', 'measured from the CAD'],
-        ],
-        work: [
-          'The disc lies inside the elevon\'s span: 29.5 < 38.9 and 114.6 < 119.5 mm',
-          'Disc: 114.6 − 38.9 = 75.7 mm across. Elevon: 119.5 − 29.5 = 90.0 mm',
-          'Share of the elevon\'s span straight behind the disc: 75.7 / 90.0 = **0.84**',
-        ],
-        result: 'About 84 % of each elevon\'s span sits straight behind its prop, so most of the surface that steers in a hover is in the propwash.' },
-      { note: 'Geometry only: behind a real prop the wash narrows and swirls, so this is the share in line with the disc, not a measured airflow.' },
-    ],
-      media: [{ i: 'solidworks-render-aug-2024.webp', c: 'The assembly in SolidWorks, Aug 2024 (the image in my repo\'s README), with the colours I gave the motors and props there' }] },
-
     { type: 'scrolly', id: 'takeoff', module: 'takeoff', stepHeight: '95vh', poster: `${M}/poster-takeoff.webp`,
       h: 'Take-off, step by step',
       p: ['My CAD on a launch pad. Scroll to fly it: it spools up, climbs straight up, hovers, pitches over and flies away on its wing. The props, motor rotors and elevons turn about their real axes in the CAD, and the readout keeps the clock.'],
@@ -68,7 +49,26 @@ export default {
         { h: 'Pitching over', p: ['At 4 seconds in this illustration the transition starts. The elevons go trailing edge down and the nose tips toward the horizon. As it gains speed, the wing starts to carry the weight instead of the props.'] },
         { h: 'Flying on the wing', p: ['Now it is a flying wing. The wing carries the weight, the props only push it forward, and the same two elevons steer it.'] },
       ],
-      caption: 'An illustration on my real CAD: the aircraft, its props, motor rotors and elevon hinges are the model, and each turns about its real axis. The flight itself (times, heights, speeds, angles and elevon deflections) is scripted to show the sequence. It is not flight data: this aircraft was never built or flown. The prop discs, the spin arrows, the air column and the span bars are drawn in. My CAD puts the same prop on both motors; here the left one is drawn mirrored, as the opposite-hand prop, so the two can turn opposite ways and still both push air back over the wing.' },
+      caption: 'An illustration on my real CAD: the aircraft, its props, motor rotors and elevon hinges are the model, and each turns about its real axis. The flight itself (times, heights, speeds, angles and elevon deflections) is scripted to show the sequence. It is not flight data: this aircraft was never built or flown. The prop discs, the spin arrows, the air column and the span bars are drawn in.' },
+
+    { type: 'prose', id: 'why', h: 'Why a tailsitter', p: [
+      'I made this project to learn SolidWorks. I based it on the tailsitter aircraft from MIT\'s 2023 work on planning fast, acrobatic flight for tailsitters ([MIT News](https://news.mit.edu/2023/planning-algorithm-tailsitter-aircraft-0823)), and in my repo\'s README I called it "a VTOL Tailsitter I plan on 3D Printing".',
+      'A tailsitter is one of the simplest ways to get a plane that takes off and lands vertically. There is no runway, no landing gear and no motor that tilts. The whole aircraft points its nose at the sky to take off and land, and tips over to fly forward. The same two props lift it in a hover and push it in forward flight, and the same two elevons steer it in both.',
+      'The catch is that one airframe has to work in two very different regimes: hanging on its props at zero airspeed, and flying on its wing. In this layout the elevons sit directly behind the props, where there is moving air over them even in a hover.',
+      { calc: 'How much of each elevon is behind its prop?',
+        given: [
+          ['Right prop disc, out from the centreline', '38.9 to 114.6 mm', 'measured from the CAD'],
+          ['Right elevon, out from the centreline', '29.5 to 119.5 mm', 'measured from the CAD'],
+        ],
+        work: [
+          'The disc lies inside the elevon\'s span: 29.5 < 38.9 and 114.6 < 119.5 mm',
+          'Disc: 114.6 − 38.9 = 75.7 mm across. Elevon: 119.5 − 29.5 = 90.0 mm',
+          'Share of the elevon\'s span straight behind the disc: 75.7 / 90.0 = **0.84**',
+        ],
+        result: 'About 84 % of each elevon\'s span sits straight behind its prop, so most of the surface that steers in a hover is in the propwash.' },
+      { note: 'Geometry only: behind a real prop the wash narrows and swirls, so this is the share in line with the disc, not a measured airflow.' },
+    ],
+      media: [{ i: 'solidworks-render-aug-2024.webp', c: 'The assembly in SolidWorks, Aug 2024 (the image in my repo\'s README), with the colours I gave the motors and props there' }] },
 
     { type: 'scrolly', id: 'airframe', module: '@turntable', width: 'wide', side: 'right', stepHeight: '85vh', poster: `${M}/poster-airframe.webp`,
       h: 'The airframe',

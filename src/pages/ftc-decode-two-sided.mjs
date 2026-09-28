@@ -17,6 +17,12 @@
 // what the CAD shows, with no roles), why the drivetrain is in the middle (Q3), why a differential
 // PTO and a worm (Q4: consequences are stated, not reasons), where the 52T side belt goes (Q5),
 // the flywheel (Q6), what he would change (Q7) and materials (Q8).
+// Round 4 (Sept 27, 21:12, Jerry): the outer two rows are driven "through belts on the most outside",
+// at "a reasonable fraction that has intake speed around 1500+ rpm": the page uses an intended 20T to
+// 120T (6:1) from the 20T pulley, labelled as intended (those belts are not in the CAD, and are not
+// modelled). Why it was never built, in his words: construction, friction and play and slop issues he
+// foresaw, little meaningful benefit on a real robot, so the old robot was improved instead (twice the
+// transfer power and so speed, and a turret). The PTO scrolly sits right below the hero.
 const M = '/assets/models/ftc-decode-two-sided/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff', PINK = '#ff2bd6';
 
@@ -30,7 +36,7 @@ export default {
     ],
     text: [
       'A robot concept for the 2025-26 FTC DECODE game that picks up balls from either side, three at a time. One 4-bar linkage swings out to whichever side is intaking and comes back to the middle to hand the balls up to a turret shooter. Two motors run both the 4-bar and the rollers on it through a differential power take-off: spin them the same way and one thing happens, spin them opposite and the other does.',
-      'It was never built. The design was not finished and the World Championship deadline was close, so we built a simpler robot from the one we already had. The one piece of real hardware is a test chassis for its collinear mecanum drivetrain: all four mecanum wheels in a line down the middle.',
+      'It was never built. I could see construction, friction and slop problems coming, it would not have gained much on a real robot, and the World Championship deadline was close, so we improved the robot we already had instead. The one piece of real hardware is a test chassis for its collinear mecanum drivetrain: all four mecanum wheels in a line down the middle.',
     ],
   },
   hero: {
@@ -41,6 +47,19 @@ export default {
     ],
   },
   sections: [
+    // ------------------------------------------------------------------ PTO, the best of the CAD, first
+    { type: 'scrolly', id: 'pto', module: 'pto', width: 'full', stepHeight: '95vh', poster: `${M}poster-pto.webp`,
+      h: 'The differential PTO',
+      p: ['The heart of the concept: two motors drive both the 4-bar and all four rows of intake wheels through a differential power take-off (PTO). Two motors, two outputs, and which output moves depends only on how the motors turn relative to each other. Yellow is the motor input, orange is carrier 1\'s path to the 4-bar, blue is carrier 2\'s path to the rows of wheels, and whichever is moving lights up.'],
+      steps: [
+        { h: 'Two motors, two differentials', p: ['Motor 1 turns the front shafts of both bevel differentials, one of them the other way through a row of gears; motor 2 turns both back shafts. Carrier 1 turns the worm, and with it the 4-bar. Carrier 2 drives the belts up to F, the top of the 4-bar, for the two rows on it, and a side belt toward the two outer rows.'] },
+        { h: 'Same way: the wheels run', p: ['In close on the gearbox. Same way, same speed: carrier 1 stays still and carrier 2 turns, so all four rows of wheels run and the 4-bar holds. Carrier 2 turns at 2,175 RPM and F, the top of the coupler, at about 2,750 RPM, no load.'] },
+        { h: 'Opposite ways: the 4-bar swings', p: ['Opposite ways: carrier 2 stays still and carrier 1 turns. The 4-bar swings and the wheels stop. Both motors swing the 4-bar: about 155 RPM (930°/s) at no load, which would take it from one endstop to the other in about 0.21 s.'] },
+        { h: 'One motor: some of both', p: ['Anything in between does some of both. With one motor running and the other still, each carrier turns at half speed: the 4-bar swings back at about 78 RPM while the roller drive turns at about 1,370 RPM.'] },
+        { h: 'Inside the differentials', p: ['Cut open at their axes and running the same way again. In differential 1 the two 14-tooth side gears turn opposite ways, so the 28-tooth spider spins in place and the carrier holds. In differential 2 both side gears turn together, and the whole carrier turns with them.'] },
+      ],
+      caption: 'Seen from the front, with the front drive pod cut away. Every gear, carrier, spider, pulley and link turns about its axis in the CAD by the ratios its tooth counts give; the readout shows real no-load speeds, computed from the tooth counts. The dots on the belts are an overlay. How F is split to the two roller shafts is not modelled in the CAD, so the shafts simply turn with F. Carrier 2\'s side belt, lit with it, heads for the two outer rows.' },
+
     // ------------------------------------------------------------------ the idea
     { type: 'prose', id: 'idea', h: 'The idea', p: [
       'DECODE robots pick up 5 in balls from the floor and shoot them into a goal. This concept picks them up from both sides of the robot, three balls wide on either side. The cycle:',
@@ -51,7 +70,7 @@ export default {
         'Rollers on the 4-bar push them up into the shooter.',
         'The shooter is a turret, turned by four Melonbotics Super Servos on the inside of a ring gear.',
       ] },
-      'The main mechanism is the differential power take-off (PTO) that drives the intake. Two motors feed it, and it has two outputs: the rotation of the 4-bar, through a worm gear, and the spinning of the four rows of intake wheels. Spin the two motors the same way and one output moves; spin them opposite ways and the other one does. Because the rollers ride on the moving 4-bar, their drive climbs up through the linkage on five belt stages to F, the top of the linkage, where it is split to both rollers. The sections below follow the power from the motors to the wheels, with the CAD moving as you scroll.',
+      'The main mechanism is the differential power take-off (PTO) that drives the intake, animated at the top of this page. Two motors feed it, and it has two outputs: the rotation of the 4-bar, through a worm gear, and the spinning of the four rows of intake wheels. Spin the two motors the same way and one output moves; spin them opposite ways and the other one does. Because the rollers ride on the moving 4-bar, their drive climbs up through the linkage on five belt stages to F, the top of the linkage, where it is split to both rollers. The sections below follow the power from the motors to the wheels, with the CAD moving as you scroll.',
     ] },
     { type: 'media', layout: 'row', items: [
       { v: 'sketch-4bar-sweep.mp4', c: 'The first geometry study, a 2D sketch: the 4-bar lies out to one side, swings across to the other and stands up in the middle. The two circles are 104 mm across, the same size as the mecanum wheels, and the cup on the coupler is drawn at R63.5 mm, a 5 in ball\'s radius' },
@@ -123,17 +142,6 @@ export default {
       caption: 'Cut faces are hatched. The floor plate lights up while the linkage sits on it. The side walls, the two outer rows of 48 mm wheels (fixed to the chassis) and the arms on top of the coupler are drawn see-through; the arms are set by their own servos and stay in their CAD position here. The balls are 5 in DECODE game pieces for scale, not part of the CAD. Endstops and travel are measured from the CAD.' },
 
     // ------------------------------------------------------------------ PTO
-    { type: 'scrolly', id: 'pto', module: 'pto', width: 'full', stepHeight: '95vh', poster: `${M}poster-pto.webp`,
-      h: 'The differential PTO',
-      p: ['Two motors, two outputs, and which output moves depends only on how the motors turn relative to each other. Yellow is the motor input, orange is carrier 1\'s path to the 4-bar, blue is carrier 2\'s path to the rows of wheels, and whichever is moving lights up.'],
-      steps: [
-        { h: 'Two motors, two differentials', p: ['Motor 1 turns the front shafts of both bevel differentials, one of them the other way through a row of gears; motor 2 turns both back shafts. Carrier 1 turns the worm, and with it the 4-bar. Carrier 2 drives the belts up to F, for the two rows on the 4-bar, and a side belt toward the two outer rows.'] },
-        { h: 'Same way: the wheels run', p: ['In close on the gearbox. Same way, same speed: carrier 1 stays still and carrier 2 turns, so all four rows of wheels run and the 4-bar holds. Carrier 2 turns at 2,175 RPM and F, the top of the coupler, at about 2,750 RPM, no load.'] },
-        { h: 'Opposite ways: the 4-bar swings', p: ['Opposite ways: carrier 2 stays still and carrier 1 turns. The 4-bar swings and the wheels stop. Both motors swing the 4-bar: about 155 RPM (930°/s) at no load, which would take it from one endstop to the other in about 0.21 s.'] },
-        { h: 'One motor: some of both', p: ['Anything in between does some of both. With one motor running and the other still, each carrier turns at half speed: the 4-bar swings back at about 78 RPM while the roller drive turns at about 1,370 RPM.'] },
-        { h: 'Inside the differentials', p: ['Cut open at their axes and running the same way again. In differential 1 the two 14-tooth side gears turn opposite ways, so the 28-tooth spider spins in place and the carrier holds. In differential 2 both side gears turn together, and the whole carrier turns with them.'] },
-      ],
-      caption: 'Seen from the front, with the front drive pod cut away. Every gear, carrier, spider, pulley and link turns about its axis in the CAD by the ratios its tooth counts give; the readout shows real no-load speeds, computed from the tooth counts. The dots on the belts are an overlay. How F is split to the two roller shafts is not modelled in the CAD, so the shafts simply turn with F. Carrier 2\'s side belt, lit with it, heads for the two outer rows.' },
     { type: 'prose', id: 'pto-build', h: 'How the PTO is built', p: [
       'All from the CAD:',
       { ul: [
@@ -160,9 +168,9 @@ export default {
           'Opposite ways at full speed: carrier 1 = (9/48) × (5,800 + 5,800) = 2,175 RPM, carrier 2 = 0.',
           'Worm shaft: 2,175 × 28/14 = 4,350 RPM, so the 4-bar turns at 4,350 / 28 = 155 RPM, or 932°/s.',
           'Same way at full speed: carrier 1 = 0, carrier 2 = 2,175 RPM, and F = 2,175 × 4 × 12/38 = 2,747 RPM.',
-          'The side branch turns with it: G and the 20T pulley at the front of the robot run at 2,175 × 52/12 = 9,425 RPM. The belt from there to the outer rows is not in the CAD, so their speed is not known.',
+          'The side branch turns with it: G and the 20T pulley at the front of the robot run at 2,175 × 52/12 = 9,425 RPM, and the intended 6:1 belts on the outermost sides bring the outer rows down to about 1,570 RPM ([Four rows of wheels](#top)).',
         ],
-        result: 'All of both motors\' speed goes to one output or the other: up to 155 RPM at the 4-bar, or up to about 2,750 RPM at F, which drives both rollers.',
+        result: 'All of both motors\' speed goes to one output or the other: up to 155 RPM at the 4-bar, or up to about 2,750 RPM at F, which drives both rollers, and about 1,570 RPM at the outer rows.',
         note: 'Computed from tooth counts at no load; under load both are slower.' },
       { note: 'Motor 1 faces the front of the robot and motor 2 faces the back. "Same way" here means both output shafts turn the same way seen from the front, which is opposite directions for the motors themselves.' },
     ],
@@ -213,21 +221,40 @@ export default {
       'The intake has four rows of wheels, and the same PTO drives all four.',
       { ul: [
         'Two rows ride on the 4-bar. Each is a 432 mm shaft, nearly the full length of the robot, with twelve wheels on it, carried on an arm 73 mm out from the arm\'s pivot at F, the top of the coupler. The roller drive at F is split to both.',
-        'The outermost two rows are not on the 4-bar: they are fixed to the chassis, one along each side of the robot, eight 48 mm wheels each. They are driven by the same PTO that drives the two rows on the 4-bar.',
+        'The outermost two rows are not on the 4-bar: they are fixed to the chassis, one along each side of the robot, eight 48 mm wheels each. They are driven by the same PTO that drives the two rows on the 4-bar, through belts on the outermost sides of the robot.',
         'On each side of the robot a 150 mm tall wall runs the full length, on vertical linear rails at the corners, with an Axon MAX servo and an arm above it.',
       ] },
-      'In the CAD the outer rows\' drive leaves the gearbox from carrier 2, the same carrier that drives the belts up to F. A 52-tooth pulley on carrier 2 belts down to a 12-tooth pulley at G, low and to the right of the gearbox, and a 4 mm shaft and a shaft coupler carry that forward on bearings to a 20-tooth pulley just behind the robot\'s front plate. The belt from that pulley out to the rows is not modelled.',
-    ] },
+      'In the CAD the outer rows\' drive leaves the gearbox from carrier 2, the same carrier that drives the belts up to F. A 52-tooth pulley on carrier 2 belts down to a 12-tooth pulley at G, low and to the right of the gearbox, and a 4 mm shaft and a shaft coupler carry that forward on bearings to a 20-tooth pulley just behind the robot\'s front plate. From there the rows are driven through belts on the robot\'s outermost sides. Those belts are not in the CAD, so the ratio below is the intended one, picked so the rows run at about 1,500 RPM or a bit more.',
+      { calc: 'How fast do the outer rows turn?',
+        given: [
+          ['Carrier 2, both intake motors the same way', '2,175 RPM', 'computed in [How the PTO is built](#pto-build) from the tooth counts and the [goBILDA 5000](https://www.gobilda.com/5000-series-12vdc-motor/) no-load speed'],
+          ['Carrier 2 to the 20T pulley at the front', '52T to 12T at G, then a shaft', 'counted in the CAD'],
+          ['Belts to the rows, on the outermost sides', '20T to 120T: 6 : 1 down', 'intended, for about 1,500+ RPM; not in the CAD'],
+          ['Outer row wheels', '48 mm', 'measured from the CAD'],
+        ],
+        work: [
+          '20T pulley: 2,175 × 52/12 = 9,425 RPM.',
+          'With 1 : 1 belts the rows would turn at that same 9,425 RPM, about six times the 1,500 RPM wanted.',
+          'Through the intended 6 : 1: 9,425 / 6 = 1,571 RPM.',
+          'Wheel surface: π × 0.048 m × 1,571 / 60 s = 3.9 m/s, about 1.8 times the drivetrain\'s 2.21 m/s no-load top speed ([below](#drivetrain)).',
+        ],
+        result: 'Belted down 6 : 1 on the outermost sides, the outer rows run at about 1,570 RPM, and their wheels outrun the robot driving into a ball.',
+        note: 'No load, at full speed through the PTO. The belts and their pulleys are not in the CAD: 6 : 1 is the intended ratio, not a modelled one.' },
+    ],
+      media: [
+        { i: 'still-rows-four.webp', c: 'Rendered from the CAD: the two rows on the 4-bar\'s arms (orange) and the two outer rows fixed to the chassis (blue), with the outer plates and walls left out' },
+        { i: 'still-rows-carrier2.webp', c: 'Rendered from the CAD: carrier 2 and everything it drives in blue, the belts up the 4-bar to F and the side belt to G and the 20-tooth pulley at the front' },
+      ] },
     { type: 'scrolly', id: 'rows-demo', module: 'rows', stepHeight: '85vh', poster: `${M}poster-rows.webp`,
       h: 'One PTO for four rows, a servo for each arm',
       p: ['The 4-bar at transfer, as the CAD holds it. Scroll to run carrier 2, then to turn each arm with its servo.'],
       steps: [
         { h: 'Four rows of wheels', p: ['Two rows ride on arms on top of the 4-bar. The outermost two are fixed to the chassis, one along each side.'] },
-        { h: 'One PTO drives all four', p: ['Carrier 2 turns. Its belts run up the 4-bar to F, which drives both rows on the arms; its side belt runs to G, and a shaft carries that to a pulley at the front for the outer rows.'] },
+        { h: 'One PTO drives all four', p: ['Carrier 2 turns. Its belts run up the 4-bar to F, for the rows on the arms. Its side belt runs to G and a shaft to a 20-tooth pulley at the front, which drives the outer rows 6 : 1 down through belts on the outermost sides.'] },
         { h: 'The left arm\'s servo', p: ['Cut just in front of the arms. The servo right of F turns its 14-tooth bevel, which turns the 28-tooth bevel on the left arm: the arm swings about F, half as far as the servo.'] },
         { h: 'The right arm\'s servo', p: ['The servo left of F does the same for the right arm: two servos, two arm angles.'] },
       ],
-      caption: 'The outer plates, the side walls and everything above the arms are left out, and cut faces are hatched. The belts, pulleys, rows, bevels and arms turn about their axes in the CAD; the dots on the belts are an overlay. The belt from the 20-tooth pulley to the outer rows and the split from F to the rows on the arms are not modelled, so those rows turn with their pulleys here. The arm angles are for the animation.' },
+      caption: 'The outer plates, the side walls and everything above the arms are left out, and cut faces are hatched. The belts, pulleys, rows, bevels and arms turn about their axes in the CAD; the dots on the belts are an overlay. The belts from the 20-tooth pulley to the outer rows are not modelled; those rows turn at the intended 6 : 1 from that pulley. The split from F to the rows on the arms is not modelled either, so those rows turn with F. The arm angles are for the animation.' },
     { type: 'prose', id: 'arms', h: 'A servo for each arm', p: [
       'On the 4-bar, the two servos with bevels set the angles of the two arms that hold its rows of wheels. Each arm turns about F with a 28-tooth bevel on it, and each Axon MAX turns a 14-tooth bevel that meshes one of them: the servo right of F turns the left arm, the other the right.',
       { calc: 'What does the 2:1 bevel give each arm?',
@@ -326,9 +353,19 @@ export default {
 
     // ------------------------------------------------------------------ outcome
     { type: 'prose', id: 'outcome', h: 'Why it was never built', p: [
+      'It was cool to make this concept, and working out in CAD how to make the differential PTOs actually work was a good problem-solving exercise: two motors, two differentials, a worm and five belt stages up a moving linkage, packed into an 18 in cube. But the further the design got, the more I could see what building it would take.',
+      { problem: [
+        'I foresaw a lot of construction issues. Everything on this page has to be built, aligned and kept aligned: two bevel differentials tied together by a row of four spur gears and a belt, a worm set, a bevel pair on each arm, belts up the passive link and along the coupler, the side branch to the outer rows, and walls on linear rails, all between carbon fiber plates.',
+        'I also foresaw a lot of friction, and a lot of play and slop. Every gear mesh, bearing and belt in a drive takes a little of the power and adds a little play, and in this intake the power to the rows on the 4-bar goes through a gear train, a differential and five belts in a row, so all of it adds up.',
+      ], title: 'Problems I could see coming' },
+      { problem: 'For all that, it would not have offered much meaningful benefit on a real robot.', title: 'Not much to gain' },
       { problem: 'The design never got finished, and the World Championship deadline was coming up.', title: 'Out of time' },
-      { fix: ['We built a more reasonable design that built off what we already had: the turret robot we took to Worlds.', '[See the FTC DECODE robot](/projects/ftc-decode)'] },
-    ] },
+      { fix: [
+        'So we decided to improve our old robot instead. We doubled its transfer\'s power, and with it the transfer\'s speed, and we added a turret: a more reasonable design that built off what we already had. That is the robot we took to Worlds.',
+        '[See the FTC DECODE robot](/projects/ftc-decode)',
+      ], title: 'Improve what already works' },
+    ],
+      media: [{ i: '/assets/media/ftc-decode/v2-three-quarter.webp', c: 'What we built instead: our old robot with a turret shooter on top, on the bench' }] },
   ],
   assets: ['/assets/models/ftc-decode-two-sided/'],
 };

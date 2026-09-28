@@ -97,7 +97,7 @@ export default {
 |---|---|
 | `prose` | `h`, `p`, `media?: [item or [items]]` (pictures beside the text), `side?: 'left'` (pictures on the left) |
 | `media` | `layout: 'grid' \| 'row' \| 'wide' \| 'collage'`, `items`, `h?`, `p?`, `cols?: 3` (grid only) |
-| `scrolly` | `id`, `module`, `steps?: [{ h, p, view? }]`, `h?`, `p?`, `caption?`, `stepHeight?` (each step's slot of scrolling, default `'80vh'`), `length?` (no steps: how long it stays pinned, default `'180vh'`), `poster?`, `data?`, `webgl?: false` (2D). `width` and `side` are ignored: every scrolly is full width |
+| `scrolly` | `id`, `module`, `steps?: [{ h, p, view? }]`, `h?`, `p?`, `caption?`, `stepHeight?` (the base slot of scrolling per step, default `'80vh'`), `length?` (no steps: the base length it stays pinned, default `'180vh'`; both are scaled by the pace in `src/pace.mjs`, see below), `poster?`, `data?`, `webgl?: false` (2D). `width` and `side` are ignored: every scrolly is full width |
 | `demo` | legacy (interactive; do not add new ones): `id`, `module`, `h?`, `p?`, `caption?`, `height?`, `poster?`, `aside?`, `data?`, `webgl?: false`, `interactive?: true` (only for a demo Jerry asked to keep interactive, like LinqBot's webcam demo; it silences the "convert to a scrolly" warning). A demo with `module: '@viewer'` is built as a full-width `@turntable` scrolly |
 | `split` | `items: [{ h, p, module? \| media?, data?, height?, poster?, caption?, id? }]`, `h?` |
 | `iterations` | `items: [{ label, title, p, media: [...] }]`, `h?` |
@@ -114,6 +114,12 @@ builds the broken section shows a yellow box, in production it is left out.
   show side by side. With no `media`, prose sits in the centred reading column. A paragraph may also
   be `{ fig: item or [items], wide: true? }`: a picture in the flow of the text (`wide` breaks out
   of the column).
+- **Pictures beside text fill their column.** One picture beside a run of text is pinned, as tall
+  as the text (up to the screen under the nav), cropped to fill (never more than about 45 % off a
+  side; the lightbox shows it whole); a wide one (aspect 1.45 or more) gets a wider column. An item
+  that is an array of several pictures goes under its run of text instead, side by side the full
+  width, with that text in the reading column. Any media item may set `focus: '50% 30%'` (a CSS
+  position): what stays in view when it is cropped (pinned column, grid tiles).
 - **media layouts.** `grid`: two columns (`cols: 3` for three) of 4:3 tiles, cropped to fill; put
   `tall: true` on a portrait item to span two rows. `row`: one line of items at the same height,
   nothing cropped; on a phone a row of wide items stacks. `wide`: each item full width. `collage`:
@@ -126,9 +132,9 @@ builds the broken section shows a yellow box, in production it is left out.
   scrolling: its card rises into place over the left of the stage, **pins there while that step's
   animation runs** (`stepP` 0 to 1), then scrolls away as the next card comes in and pins. The
   next card stays hidden until the step before it has played out, then fades in just under the
-  leaving card. The pinned part is the slot minus the card's own height and the gap to the next card, and never less
-  than half the slot (a tall card makes its slot longer), so a longer `stepHeight` means more
-  scrolling for the animation, not a longer wait for the text. The first card is already in place
+  leaving card. The pinned part is the pace (below) times max(half the slot, the slot minus the card's own
+  height and the gap to the next card), and the card's height and the gap come on top, so a longer
+  `stepHeight` means more scrolling for the animation, not a longer wait for the text. The first card is already in place
   when the stage pins, and the last one lets go exactly when the stage does. Up to 900 px wide
   (phones, small tablets) the stage pins in the top half of the screen and each card pins just
   under it, never over the model (a card taller than the room left pins with its bottom at the
@@ -136,6 +142,12 @@ builds the broken section shows a yellow box, in production it is left out.
   through progress 0 to 1. A step's `view` object is passed to the module as `data.steps[i]` (for
   `@turntable`). Keep step cards short (one idea, two or three sentences): a long card means a long
   hand-off, and on a phone its top slides under the stage.
+- **Pace** (Jerry, Sept 27: "slow down everything by 2x") lives in one framework file,
+  `src/pace.mjs`: a factor per page or per scrolly id, as a multiple of the round 3 pace (default 2).
+  Each card stays pinned for that factor times round 3's pinned range, max(slot / 2, slot - card -
+  gap), and the hand-off (the card's height and the gap) comes on top. Page files never tune speed
+  with `stepHeight` or `length`; ask the framework agent for a different factor. The module follows a
+  damped copy of the scroll (0.12 s), so wheel ticks glide; a scroll made by a script snaps.
 - **split** rows alternate sides; each has a demo (`module`) or `media` (one item, or an array for a row).
 
 ### Text
@@ -238,8 +250,9 @@ the stage in the same frame, so HTML labels and the canvas move together.
 
 Patterns that keep it smooth and steady:
 
-- Blend each step in from the previous one over the first ~45 % of the step
-  (`k = smoothstep(0, 0.45, stepP)`), then hold, with at most a slow drift. Cut instead when
+- Blend each step in from the previous one over the first ~60 % of the step with the quintic
+  ease, `k = blendIn(stepP)` from `/assets/js/lib/ease.js` (zero speed and acceleration at both
+  ends, so a camera move eases in and out), then hold, with at most a slow drift. Cut instead when
   `ctx.reducedMotion`.
 - Frame views once, at rest, and cache them (recompute only when the stage's aspect changes).
 - Spin mechanisms by an angle that is a function of the scroll (for a run-up, integrate a speed
@@ -506,6 +519,13 @@ is built as a full-width turntable with no steps, so old pages convert without c
   and `geom`: `p0`/`p1`, the scroll positions where the stage pins and lets go, and per step
   `starts`/`ends`, where its card pins and lets go). A shot at the middle of step `i` is
   `scrollTo(0, (g.starts[i] + g.ends[i]) / 2)`.
+- Pace by eye: `node tools/pages/record.mjs http://localhost:8123/projects/<slug>.html '#<id>' /tmp/rec/<slug>-<id> [--steps=0-2]`
+  records a WebM of a reader scrolling through the section with the mouse wheel and prints each
+  step's pinned scroll (px and vh), the hand-offs, and the biggest per-frame jump of the page against
+  the animation (the glide).
+- Load: `node tools/pages/load.mjs [slug ...] [--slow] [--phone]` loads each page without scrolling
+  and prints requests, bytes (text as gzip sizes, about what Vercel sends), load time, LCP and the
+  biggest files.
 - Smoothness: `node tools/pages/perf.mjs http://localhost:8123/projects/<slug>.html '#<scrolly-id>'`
   scrolls through a section and reports frames drawn, draw calls per frame, script time and long
   frames, plus the stage's own counters (`stage`: live frames, draw calls per live frame with the

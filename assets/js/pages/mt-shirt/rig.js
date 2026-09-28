@@ -72,6 +72,18 @@ export async function loadMechanism(stage) {
 // Linkage from the CAD: crank 31.98 mm (12T axis to crank pin), coupler 33.07 mm (pin to pin), crank
 // axis 24.0 mm off the rail line: an offset slider-crank. In the CAD pose the crank pin sits at
 // -115.36 degrees about the 12T axis (from STEP +X, counterclockwise seen from above).
+//
+// One push (Jerry, Sept 27: the rail block pushes the keycap to the end of the switch's travel and
+// back), measured on the STEP: the carriage plate's front face (X -40.73) is 33.02 mm behind the
+// keycap's top face (X -7.71), the two faces overlapping in Y and Z, so the plate meets the keycap
+// 33.02 mm past the CAD pose and then presses keycap and stem (`Pulsador`) along +X by the switch's
+// 4 mm total travel (Cherry's published value: the switch model in the CAD is simplified and has no
+// working stop; pressed 4 mm, its keycap skirt still clears the housing by 1.3 mm, measured). The
+// push starts with the block's back end at the rail's back end (X -77.73), 18.83 mm behind the CAD
+// pose, so the carriage runs 55.85 mm. Servo angle phi: 0 at the start, PHI_CAD = 15 in the CAD pose
+// (every offset zero), STROKE_DEG = 38.79 at the bottom of the key's travel (crank at -44.0 degrees,
+// 22 degrees short of the linkage's dead point at -21.65). At the bottom the block's front end is
+// 8.5 mm past the rail's front end (X -7.73), as the CAD's geometry makes it.
 export const AX = {
   servo: { p: [0, -26.4, -14.4], d: [1, 0, 0] },
   bevel: { p: [-19.2, -26.4, 0], d: [0, 0, 1] },
@@ -80,23 +92,32 @@ export const AX = {
   pin: { p: [-54.4, -50.3, 0], d: [0, 0, 1] },
 };
 export const CRANK = 31.98, LINK = 33.07, RAIL_Y = -50.3, THETA0 = -115.36;
-export const STROKE_DEG = 15; // servo degrees for one push: 45 degrees at the crank ends the block at the back end of its rail
+export const PHI_CAD = 15;          // servo degrees from the start of the push to the CAD pose
+export const KEY_GAP = 33.02;       // carriage plate to keycap face in the CAD pose, mm
+export const KEY_TRAVEL = 4;        // Cherry MX total travel, mm
+export const STROKE_DEG = 38.788;   // servo degrees for the whole push, to the bottom of the key's travel
 
-/** Slider-crank at servo angle phi (0..15 deg; 15 = the CAD pose): crank angle, crank pin, carriage travel. */
+/** Slider-crank at servo angle phi (0..STROKE_DEG; PHI_CAD = the CAD pose): crank angle, crank pin, carriage pin. */
 export function linkage(phi) {
-  const u = phi - STROKE_DEG;
+  const u = phi - PHI_CAD;
   const th = (THETA0 + 3 * u) * DEG; // the 12T turns three times as far as the 36T, the other way
   const px = AX.spur12.p[0] + CRANK * Math.cos(th), py = AX.spur12.p[1] + CRANK * Math.sin(th);
   const dy = RAIL_Y - py;
   const sx = px + Math.sqrt(LINK * LINK - dy * dy);
   return { u, theta: THETA0 + 3 * u, px, py, sx, psi: Math.atan2(dy, sx - px) / DEG };
 }
-const REST = linkage(STROKE_DEG);
-export const TRAVEL = REST.sx - linkage(0).sx; // 18.8 mm
+const REST = linkage(PHI_CAD);
+const START = linkage(0).sx;
+export const TRAVEL = linkage(STROKE_DEG).sx - START; // 55.85 mm
+/** Carriage travel from the start of the push (mm) and how far the key is pressed (0..KEY_TRAVEL mm). */
+export function travel(k) {
+  const dx = k.sx - REST.sx;
+  return { car: k.sx - START, key: clamp(dx - KEY_GAP, 0, KEY_TRAVEL) };
+}
 
 /**
  * Rigs the drivetrain on a loaded mechanism. Returns set(phi): every part placed for servo angle
- * phi, a pure function of phi (phi = 15 is the CAD pose, every offset zero).
+ * phi, a pure function of phi (phi = PHI_CAD is the CAD pose, every offset zero).
  */
 export function rigDrivetrain(stage, mech) {
   const P = mech.parts;
@@ -109,6 +130,7 @@ export function rigDrivetrain(stage, mech) {
     spur36: byName(/_3422_0006_0020_core_2$|_3422_series_barrel_2$|_3422_series_flange_2$|_Spur_Gear_36_teeth_/),
     spur12: [...byName(/_Spur_Gear_12_teeth_/), ...P.crankScrew],
     carriage: [...byName(/_LS_MGN7_Block_/), ...P.plate, ...P.plateScrews],
+    key: byName(/_Component38_1$|_Pulsador_/), // keycap and stem, pressed along +X together
   };
   const piv = (list, ax) => stage.pivot(list, cad.point(ax.p), cad.dir(ax.d));
   const servo = piv(L.servo, AX.servo);
@@ -119,12 +141,15 @@ export function rigDrivetrain(stage, mech) {
   const couplerBase = coupler.position.clone();
   const carriage = L.carriage;
   const carBase = carriage.map((o) => o.position.clone());
+  const key = L.key;
+  const keyBase = key.map((o) => o.position.clone());
   let last = null;
   function set(phi) {
     if (phi === last) return linkage(phi);
     last = phi;
     const k = linkage(phi);
     const dx = (k.sx - REST.sx) / 1000; // metres along STEP X, which is model X
+    const dk = travel(k).key / 1000;
     servo.setAngle(-k.u * DEG);
     bevel.setAngle(-k.u * DEG);
     spur36.setAngle(-k.u * DEG);
@@ -132,6 +157,7 @@ export function rigDrivetrain(stage, mech) {
     coupler.setAngle((k.psi - REST.psi) * DEG);
     coupler.position.set(couplerBase.x + dx, couplerBase.y, couplerBase.z);
     carriage.forEach((o, i) => o.position.set(carBase[i].x + dx, carBase[i].y, carBase[i].z));
+    key.forEach((o, i) => o.position.set(keyBase[i].x + dk, keyBase[i].y, keyBase[i].z));
     stage.invalidate();
     return k;
   }

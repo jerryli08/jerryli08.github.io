@@ -34,7 +34,7 @@ export default {
     { type: 'scrolly', id: 'swap', module: 'swap', h: 'One swap, step by step', poster: 'cad-render-final-system.webp',
       p: ['Scroll to run a full swap on my CAD. Everything happens on two axes: a turntable, and an arm that rides on it and reaches out.'],
       steps: [
-        { h: 'A print finishes', p: ['The printer sits behind the robot with a plate holder on each side: a fresh plate on the left, the right one empty. When a print is done the printer drops its bed all the way down, and the plate presses a button wired to the robot, which starts the swap.'] },
+        { h: 'A print finishes', p: ['The printer sits behind the robot, a plate holder on each side: a fresh plate on the left, the right one empty. At the end of a print the bed drops to the bottom and the plate presses a button that starts the swap.'] },
         { h: 'Reach in', p: ['Two NEMA 17 steppers pull belts that run the carriage 355 mm into the printer on a pair of telescoping ball slides. The printer goes see-through so you can watch.'] },
         { h: 'Grab', p: ['Four 5 V electromagnets, switched by two MOSFET modules, take hold of the steel plate from above.'] },
         { h: 'Slide it off the bed', p: ['The arm pulls back. The plate slides forward off the bed, print and all, and comes out with it.'] },
@@ -77,7 +77,7 @@ export default {
     ] },
     { type: 'scrolly', id: 'rails-demo', module: 'concept', poster: `${M}/poster-rails.webp`,
       steps: [
-        { h: 'Side by side', p: ['My February concept on the left and the final arm on the right, both from my CAD at the same scale. The concept bolts the magnet plate to the carriage blocks of two 450 mm MGN12 rails. The final carriage rides a 400 mm telescoping slide on each side.'] },
+        { h: 'Side by side', p: ['My February concept (left) and the final arm (right), from my CAD at the same scale. The concept bolts the magnet plate to the blocks of two 450 mm MGN12 rails; the final carriage rides a 400 mm telescoping slide on each side.'] },
         { h: 'The same job', p: ['Both reach out over the printer plate. The concept’s blocks and plate slide the full length of its rails, 405 mm; the final carriage runs its 355 mm stroke.'] },
         { h: 'Held only at one end', p: ['From the side: at full reach the concept’s plate hangs about 400 mm past the ends of its rails, held only at its back by the two small carriage blocks (orange).'] },
         { h: 'Carried along both sides', p: ['The final carriage is carried by a slide on each side along its whole length (the slides’ middle members, blue).'] },
@@ -89,9 +89,9 @@ export default {
       h: 'The telescoping arm',
       p: ['The arm has to reach 355 mm into the printer and fold back into a 400 mm frame so it can turn.'],
       steps: [
-        { h: 'Folded into the frame', p: ['Each side of the carriage runs on a 400 mm, three-member telescoping ball slide (SAR340 in my CAD). The outer member is bolted to the side plate, the inner member to the carriage’s 2020 extrusion, and the middle member rides between them, so the carriage is carried on both sides at any reach.'] },
-        { h: 'Inside a slide', p: ['Cut through the upper rows of balls, all three members show. Each row of balls rolls at the average speed of the two members it sits between: as the carriage moves out, the middle member goes half as far, and the two rows of balls three quarters and a quarter as far.'] },
-        { h: 'Two open belts', p: ['Each side has its own NEMA 17 at the back of the frame and its own GT2 belt. The belt is open: both ends are clamped to the back of the carriage. As the motor turns, one run gets shorter and the other longer, so the belt drags the carriage in or out.'] },
+        { h: 'Folded into the frame', p: ['Each side runs on a 400 mm, three-member ball slide (SAR340 in my CAD): the outer member bolted to the side plate, the inner member to the carriage’s 2020 extrusion, the middle member riding between them.'] },
+        { h: 'Inside a slide', p: ['Cut through the upper balls. Each row of balls rolls at the mean speed of the two members around it: as the carriage moves out, the middle member goes half as far, the two ball rows three quarters and a quarter as far.'] },
+        { h: 'Two open belts', p: ['Each side has its own NEMA 17 at the back of the frame and its own GT2 belt. The belt is open, both ends clamped to the back of the carriage: as the motor turns, one run shortens, the other lengthens, and the carriage moves.'] },
         { h: 'Out to 355 mm', p: ['In the CAD each motor has an 80-tooth GT2 pulley, which moves 160 mm of belt per turn: the full 355 mm stroke is about 2.2 motor turns.'] },
         { h: 'Back in', p: ['The motors turn back and pull the carriage home, and the slides fold back into the frame.'] },
       ],
@@ -146,11 +146,8 @@ export default {
         { h: 'Seen from below', p: ['A NEMA 23 at the back of the base drives a printed pulley disc under the turntable, with an 80-tooth pulley and a GT2 belt.'] },
         { h: 'A quarter turn', p: ['The disc has 288 teeth on its rim. That is a 288 : 80 = 3.6 : 1 reduction (tooth counts from the CAD), so a quarter turn of the arm is 0.9 of a motor turn.'] },
         { h: 'The three stations', p: ['A swap only ever stops the turntable at 0° and ±90°. Going from one holder to the other is half a turn of the arm and 1.8 turns of the motor.'] },
-        { h: 'Pull the stack apart', p: ['A fixed middle plate with a 210 mm hole in it. A printed pulley disc with 288 teeth on its rim sits under the hole, and the arm’s bottom plate sits above it. Eight standoffs through the hole tie the two together.'] },
-        { h: 'Cut through one post', p: [
-          'On each standoff, a GoBILDA thrust bearing above the plate and another below it clamp the plate between them: 16 thrust bearings carry the weight and the tipping load.',
-          'Also on each standoff, an MR106 radial bearing rolls on the inside edge of the hole, which keeps the turntable centered.',
-        ] },
+        { h: 'Pull the stack apart', p: ['A fixed middle plate with a 210 mm hole. The printed 288-tooth pulley disc sits under the hole, the arm’s bottom plate above it, and eight standoffs through the hole tie the two together.'] },
+        { h: 'Cut through one post', p: ['On each standoff, GoBILDA thrust bearings above and below clamp the middle plate (16 in all, for the weight and the tipping load), and an MR106 bearing rolls on the edge of the hole to keep the turntable centered.'] },
       ],
       caption: 'From my CAD, seen from below, then close on one of the eight bearing posts. The motor pulley turns 3.6 times as far as the arm.' },
     { type: 'media', id: 'turntable-photos', layout: 'grid', cols: 3, items: [
@@ -193,8 +190,8 @@ export default {
     { type: 'scrolly', id: 'firmware-run', module: 'firmware', webgl: false, stepHeight: '80vh',
       steps: [
         { h: 'Knowing when to start', p: [
-          { problem: 'The printer knows when a print is done. My plan was for it to publish that over MQTT, with the Raspberry Pi subscribed and telling the Uno to start. I never finished it.', title: 'MQTT' },
-          { fix: 'A hard-wired button instead. At the end of a print the printer lowers its bed all the way down, and the plate presses the button.' },
+          { problem: 'The plan: the printer publishes “done” over MQTT, and the Raspberry Pi, subscribed, tells the Uno to start. I never finished it.', title: 'MQTT' },
+          { fix: 'A hard-wired button: at the end of a print the bed drops all the way down and the plate presses it.' },
         ] },
         { h: 'The button', p: [
           { problem: 'In use, the plate often missed the button at the bottom. Knowing when to start was the main way the machine failed.', title: 'The button' },
@@ -204,7 +201,7 @@ export default {
         { h: '`pickup()`', p: ['All the way across to the left-hand holder at -1,450 steps, reach out, magnets on, pull back with the fresh plate.'] },
         { h: '`replace()`', p: ['Back to the printer at 0, reach in, magnets off, pull back. The printer is ready for the next job, and `loop()` is empty.'] },
         { h: 'No homing', p: [
-          { problem: 'There are no limit switches or other homing. I set both axes to zero by hand and ran conservative speeds and accelerations so the motors would never skip and lose count.', title: 'Homing' },
+          { problem: 'No limit switches or other homing: I zeroed both axes by hand and kept speeds and accelerations low so the motors would never skip and lose count.', title: 'Homing' },
           { next: 'A real homing method, so a skipped step cannot put the arm in the wrong place.' },
         ] },
       ],
@@ -234,7 +231,6 @@ export default {
       media: [
         { i: 'custom-steel-plates.webp', c: 'One of my 3 mm steel build plates (Aug 14, 2024)' },
         { i: 'custom-plate-in-printer.webp', c: 'A custom plate on the printer’s bed' },
-        { i: 'printing-on-custom-plate.webp', c: 'Printing on a custom plate: the printer at temperature, the bare steel plate on the bed (Aug 26, 2024)' },
       ] },
 
     { type: 'iterations', id: 'timeline', h: 'How it got here', items: [
@@ -283,8 +279,27 @@ export default {
     { type: 'prose', id: 'next', h: 'What I would change', p: [
       { next: 'Grab the plate instead of using electromagnets. I chose electromagnets partly because they were cool; gripping the plate, or hooking the two small holes it already has, would have been the better design.', title: 'Grip' },
       { next: 'Far less CNC. Almost none of these parts had any business being CNC machined.', title: 'Make it simpler' },
-      { next: 'Build it much lighter. It is badly overbuilt: it could probably hold 1,000 lb.', title: 'Stop overbuilding' },
       { next: 'Find a better way to home both axes than setting them by hand.', title: 'Homing' },
+      { next: 'Build it much lighter. At full reach the slides limit it to about 40 N (9 lb), not 1,000 lb, while the machined plates around them only reach their limit at 120 to 840 N: most of their metal is weight the slides can never use.', title: 'Stop overbuilding' },
+      { fig: { i: 'fea-full-reach.webp', c: 'FEA of my CAD at full reach with 55 N at the magnets. The darkest spot, at the allowed stress, is each slide’s middle member between its two ball cages; the plates reach at most about half of theirs.' }, wide: true },
+      { calc: 'How much can the arm hold at full reach?',
+        given: [
+          ['Reach', '355 mm, both slides at full stroke', 'measured from the CAD'],
+          ['Load', 'straight down at the build plate’s center, shared by the four magnets, plus the arm’s own weight', 'magnet positions from the CAD'],
+          ['Magnet, side and bottom plates', 'aluminum, taken as 6061-T6: minimum yield 240 MPa', '[6061 aluminium](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
+          ['2020 extrusions and the slides', 'aluminum, taken as 6063-T5: minimum yield 97 MPa', '[6063 aluminium](https://en.wikipedia.org/wiki/6063_aluminium_alloy)'],
+          ['Slides', 'MISUMI SAR340, rated 49 N for a pair, fully extended (460 mm), load at the middle of the inner rails', '[PLEX Robotics](https://plexrobotics.com/en/products/misumi-telescopic-slides), [MISUMI](https://jp.misumi-ec.com/tech-info/categories/technical_data/td06/x0673.html)'],
+          ['Carriage riding on the slides', 'about 0.93 kg, 9 N: magnet plate 212 g and extrusions 370 g (CAD volume × 2.70 g/cm³), four 84 g magnets', 'the CAD, [Adafruit 3874](https://www.adafruit.com/product/3874)'],
+        ],
+        work: [
+          'FEA of my CAD: the magnet plate, both carriage extrusions, all three members of each slide, the side plates and the bottom plate, in 10-node tetrahedra, solved in CalculiX. Bolted joints are bonded, each ball cage is a row of links along the balls’ lines of contact, and the bottom plate is held at the eight turntable standoffs',
+          'Safety factor 2: each part may reach half its minimum yield, 120 MPa for the plates and 48.5 MPa for the extrusions and slides',
+          'Weakest part: each slide’s middle member, in the 36 mm between its two ball cages, where it alone carries the arm’s bending. It reaches 48.5 MPa at 55 N (12 lb) at the magnets; refining the slides’ mesh from 6 to 3.6 mm elements changed that by 3%',
+          'The rest reach their limit much later: bottom plate about 120 N, side plates 200 N, carriage extrusions 210 N, magnet plate 840 N',
+          'The maker’s rating is lower still: 49 N − 9 N of carriage = 40 N at the magnets. My load sits 236 mm past the ends of the fixed rails, less than the 260 mm of the rated case, so the rating is on the safe side',
+        ],
+        result: 'About 40 N (9 lb) at full reach, set by the slides; the FEA’s 55 N agrees. My 1.6 kg steel plate is 16 N of that, which leaves about 24 N (2.4 kg) for the print.',
+        note: 'FEA estimate from my CAD, not a test. The aluminum grades were not recorded, so I used the weaker common grades at their minimum yield; at 6063-T5’s typical 145 MPa the slides’ limit is about 86 N. The ball cages sit where they roll to at 355 mm; in a real slide the middle member floats between its stops.' },
     ] },
   ],
 };

@@ -35,13 +35,13 @@ export default {
     layout: 'row',
     items: [
       { v: 'hero-regional-run.mp4', c: 'A competition run, filmed from behind the start line' },
-      { v: 'hero-stop-on-target.mp4', c: 'Testing at home: the car rolls in and stops at the tape mark' },
+      { v: 'hero-home-stop.mp4', c: 'Testing at home on January 17, 2025: the car runs down the hallway and stops with its front on the tape mark' },
     ],
   },
   sections: [
     { type: 'scrolly', id: 'mechanisms', module: 'mechanisms', stepHeight: '90vh', poster: `${M}/poster-mechanisms.webp`,
       h: 'How it works',
-      p: ['Five views of my final CAD, one per mechanism. The drivetrain turns as you scroll, every part at the speed its tooth count gives it.'],
+      p: ['Five views of my final CAD, one per mechanism. The top plate fades away while the gears are on screen and comes back for the buttons. The drivetrain turns as you scroll, every part at the speed its tooth count gives it.'],
       steps: [
         { h: '1. The geared drivetrain', p: [
           'One D2830 brushless outrunner sits on a printed mount at the back of the car; the label on the real motor reads 850KV. Its 8-tooth pinion drives a 48-tooth gear on the rear axle, a **6 : 1** reduction.',

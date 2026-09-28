@@ -36,6 +36,28 @@ export default {
     ],
   },
   sections: [
+    // ------------------------------------------------------------------ the code, animated (Jerry: right below the hero)
+    { type: 'scrolly', id: 'unwrap', module: 'unwrap', webgl: false, stepHeight: '85vh', poster: 'still-lcd-0017.webp',
+      h: 'How the code counts the miles',
+      p: ['The MT6701 sensor faces the end of the trainer\'s flywheel axle, which turns with the roller, and only reports an angle. This is how my code turns that angle into distance, and why the distance went backwards until I stopped writing the LCD on every pass of the loop ([the code](#code) has the details).'],
+      steps: [
+        { h: 'An angle, not a distance', p: [
+          'The MT6701 only reports where the magnet points: 0 to 360 degrees, then back to 0. Scroll, and the roller makes one full turn, which is 6.68 in of riding (from the code).',
+        ] },
+        { h: 'Count the change', p: [
+          'Each pass of the loop takes a reading (a dot) and subtracts the one before. When the reading crosses 0, the raw difference jumps to +315 degrees, and the wrap correction turns it back into -45: a small step forward. The green arcs are what the code counts, and the total climbs 6.68 in per turn.',
+        ] },
+        { h: 'When readings are far apart', p: [
+          'The correction only works if the roller turns less than half a turn between two readings. Here it turns 225 degrees: the short way is 135 degrees the other way, so every step forward is counted as a step backward. The dashed arcs are what the roller did, the red ones what the code counted, and the total **falls** while the bike rides forward.',
+        ] },
+        { h: 'LCD once a second', p: [
+          'In the integration test, every pass of the loop also wrote both lines of the LCD and printed to the serial monitor. The final code writes the LCD only when a second has passed and prints nothing, so the loop spends its time reading the sensor and the readings stay close together.',
+        ] },
+        { h: 'The speed limit', p: [
+          'Half a turn per reading sets a top speed for any loop time. From the code\'s constants the roller turns about 949 degrees a second for every mph, so a 10 ms loop can count up to about 19 mph and a 20 ms loop only about 9.5 mph. I never timed the loop on the bike: this is the math, not a measurement.',
+        ] },
+      ],
+      caption: 'A drawing of the code\'s math, not a recording. The readings every 45 or 225 degrees and the loop strip are illustrations; the arithmetic is exactly the code\'s.' },
     // ------------------------------------------------------------------ the trainer
     { type: 'prose', id: 'trainer', h: 'What I had to work with', media: [
       { v: 'trainer-flywheel-roller.mp4', c: 'The trainer before I started: the flywheel, then the roller pressed against the tire' },
@@ -124,25 +146,6 @@ export default {
       'The sensor only knows an angle between 0 and 360 degrees, so every pass of the loop reads the new angle and subtracts the last one. If that change is more than half a turn, the code assumes the reading wrapped past 0 and corrects it by a full turn, so the change always lands between -180 and +180 degrees. The change as a fraction of a turn, times 6.68 in per roller turn, is the distance ridden since the last pass. The running total is kept in inches and shown in miles to three decimals, next to the time since the odometer was switched on.',
       'Two more details: the final code subtracts the change (its comment says "assuming reverse direction"), so a falling angle counts as riding forward, and it clamps the total at zero, so the display never shows a negative distance.',
     ] },
-    { type: 'scrolly', id: 'unwrap', module: 'unwrap', webgl: false, width: 'wide', side: 'right', stepHeight: '85vh', poster: 'still-lcd-0017.webp',
-      steps: [
-        { h: 'An angle, not a distance', p: [
-          'The MT6701 only reports where the magnet points: 0 to 360 degrees, then back to 0. Scroll, and the roller makes one full turn, which is 6.68 in of riding (from the code).',
-        ] },
-        { h: 'Count the change', p: [
-          'Each pass of the loop takes a reading (a dot) and subtracts the one before. When the reading crosses 0, the raw difference jumps to +315 degrees, and the wrap correction turns it back into -45: a small step forward. The green arcs are what the code counts, and the total climbs 6.68 in per turn.',
-        ] },
-        { h: 'When readings are far apart', p: [
-          'The correction only works if the roller turns less than half a turn between two readings. Here it turns 225 degrees: the short way is 135 degrees the other way, so every step forward is counted as a step backward. The dashed arcs are what the roller did, the red ones what the code counted, and the total **falls** while the bike rides forward.',
-        ] },
-        { h: 'LCD once a second', p: [
-          'In the integration test, every pass of the loop also wrote both lines of the LCD and printed to the serial monitor. The final code writes the LCD only when a second has passed and prints nothing, so the loop spends its time reading the sensor and the readings stay close together.',
-        ] },
-        { h: 'The speed limit', p: [
-          'Half a turn per reading sets a top speed for any loop time. From the code\'s constants the roller turns about 949 degrees a second for every mph, so a 10 ms loop can count up to about 19 mph and a 20 ms loop only about 9.5 mph. I never timed the loop on the bike: this is the math, not a measurement.',
-        ] },
-      ],
-      caption: 'A drawing of the code\'s math, not a recording. The readings every 45 or 225 degrees and the loop strip are illustrations; the arithmetic is exactly the code\'s.' },
     { type: 'prose', id: 'backwards', h: 'Going backwards', media: [
       { v: 'hero-distance-counts.mp4', c: 'Testing with the display on the table: the distance counts up as the wheel spins on the trainer' },
       { v: 'mount-to-readout.mp4', c: 'From the tower on the trainer to the reading on the LCD' },

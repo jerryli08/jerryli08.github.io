@@ -29,18 +29,7 @@ export default {
     ],
   },
   sections: [
-    { type: 'prose', id: 'idea', h: 'Why dock a drone to a rover', p: [
-      'Drones get somewhere fast and see from above. Ground robots last longer on a charge and work at ground level. Each one is weak exactly where the other is strong, so I wanted one system that could be either.',
-      { problem: 'A drone’s battery runs out quickly, and a ground robot gets stuck on terrain it cannot drive over.', title: 'Two weak spots' },
-      { fix: 'Dock them. The rover carries the drone across open ground so the drone saves its battery. When the rover reaches something it cannot cross, or we need a view from above, the drone lifts off, on its own or carrying the rover with it.' },
-      'We framed it as a cooperative multi-agent system for search and rescue and data collection.',
-      'The drone is a Holybro X500 V2 quadcopter on a 5000 mAh battery. I designed new 3D-printed landing gear for it: two mounts that hold a pair of 16 mm tubes 110 mm apart, and those tubes are what the rover grabs. The rover is a 3D-printed truss chassis, 327 mm long and about 1.23 kg, with two latches on its deck, one per tube, and an AprilTag in front of them for the drone’s downward camera.',
-    ],
-      media: [
-        { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover waits' },
-        { i: 'airborne-docked.webp', c: 'Docked and airborne: the drone carrying the rover in a low hover (Figure 1 of our poster)' },
-      ] },
-
+    // Jerry (Sept 27, 21:12): the best CAD scroll animation sits right below the hero.
     { type: 'scrolly', id: 'model', module: 'system', stepHeight: '90vh', poster: `${M}/poster-model.webp`,
       h: 'One full cycle, on my CAD',
       p: ['Both vehicles from my CAD. Scroll to see what is where, cut the rover open, and run a whole cycle: the drone carries the rover, lets go with the servo, and comes back to a latch that catches it with no power.'],
@@ -53,6 +42,18 @@ export default {
         { h: 'Coming back: a catch with no power', p: ['As the drone comes down, its tubes push the four doors down and out of the way. Once the tubes are down in their cradles, elastic pulls the doors back up over them, and the pair is latched again with no help from the servo. The next sections go inside each of these mechanisms.'] },
       ],
       caption: 'The latch angles are from my CAD, and the door angles during the catch come from a section of the real door turned against the tube. How high the vehicles lift is an illustration. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
+
+    { type: 'prose', id: 'idea', h: 'Why dock a drone to a rover', p: [
+      'Drones get somewhere fast and see from above. Ground robots last longer on a charge and work at ground level. Each one is weak exactly where the other is strong, so I wanted one system that could be either.',
+      { problem: 'A drone’s battery runs out quickly, and a ground robot gets stuck on terrain it cannot drive over.', title: 'Two weak spots' },
+      { fix: 'Dock them. The rover carries the drone across open ground so the drone saves its battery. When the rover reaches something it cannot cross, or we need a view from above, the drone lifts off, on its own or carrying the rover with it.' },
+      'We framed it as a cooperative multi-agent system for search and rescue and data collection.',
+      'The drone is a Holybro X500 V2 quadcopter on a 5000 mAh battery. I designed new 3D-printed landing gear for it: two mounts that hold a pair of 16 mm tubes 110 mm apart, and those tubes are what the rover grabs. The rover is a 3D-printed truss chassis, 327 mm long and about 1.23 kg, with two latches on its deck, one per tube, and an AprilTag in front of them for the drone’s downward camera.',
+    ],
+      media: [
+        { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover waits' },
+        { i: 'airborne-docked.webp', c: 'Docked and airborne: the drone carrying the rover in a low hover (Figure 1 of our poster)' },
+      ] },
 
     { type: 'stats', id: 'size', items: [
       { v: '327 mm', l: 'Rover length' },

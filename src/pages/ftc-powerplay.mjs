@@ -150,7 +150,7 @@ export default {
       'In later clips, the one above among them, the arm takes the stack apart without knocking it over, one cone about every four and a half seconds (timed from the video).',
     ], media: [
       { v: 'claw-on-stack.mp4', c: 'An early stack test: the claw lifts the top cone off a full stack of five, and the other four tip over and fall' },
-      { v: 'stack-pickup-overhead.mp4', c: 'The test where someone says it is too slow, filmed from above with the phone on its side: the funnel comes down over the top cone and takes it' },
+      { v: 'stack-pickup-overhead.mp4', c: 'The test where someone says it is too slow, filmed from above: the funnel comes down over the top cone and takes it' },
     ] },
 
     // ------------------------------------------------------------------ full run

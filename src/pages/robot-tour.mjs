@@ -33,12 +33,6 @@ export default {
     ],
   },
   sections: [
-    { type: 'prose', id: 'event', h: 'The event', p: [
-      'Robot Tour gives each team a 2 m by 2.5 m track, split by tape into twenty 50 cm zones, with up to ten wooden 2x4s on the lines as obstacles. The robot starts with its dowel over the start point, drives through gate zones, one of them marked "Last", and stops on a target point, as close as it can to a target time between 55 and 85 seconds. It runs by itself: no remote control.',
-      'Low scores win. Every centimetre between the dowel and the target point costs 2 points, missing the target time costs points, each gate zone the dowel fully enters takes 15 off, and entering the "Last" zone last takes off 30 more. The layout, the gates and the target time are only announced at the event, so the route is reprogrammed on the spot during a 10-minute setup.',
-      { note: 'From the 2025 Robot Tour C rules.' },
-    ], media: [{ i: 'photo-v2-floor.webp', c: 'The finished robot, version 2' }] },
-
     { type: 'scrolly', id: 'cad', module: '@turntable', stepHeight: '85vh', poster: `${M}/poster-cad.webp`,
       h: 'The robot in 3D',
       p: ['Both versions of my CAD, turned by the scroll.'],
@@ -73,6 +67,12 @@ export default {
           'The two drive modules are mirror images: servo, gear pair, axle, two bearings and a wheel each. The OTOS sits under the middle, with a ball caster ahead of the wheels and one behind, all on the centre line.',
         ] },
       ] },
+
+    { type: 'prose', id: 'event', h: 'The event', p: [
+      'Robot Tour gives each team a 2 m by 2.5 m track, split by tape into twenty 50 cm zones, with up to ten wooden 2x4s on the lines as obstacles. The robot starts with its dowel over the start point, drives through gate zones, one of them marked "Last", and stops on a target point, as close as it can to a target time between 55 and 85 seconds. It runs by itself: no remote control.',
+      'Low scores win. Every centimetre between the dowel and the target point costs 2 points, missing the target time costs points, each gate zone the dowel fully enters takes 15 off, and entering the "Last" zone last takes off 30 more. The layout, the gates and the target time are only announced at the event, so the route is reprogrammed on the spot during a 10-minute setup.',
+      { note: 'From the 2025 Robot Tour C rules.' },
+    ], media: [{ i: 'photo-v2-floor.webp', c: 'The finished robot, version 2' }] },
 
     { type: 'media', id: 'build', h: 'Building version 1', layout: 'grid',
       p: ['I had version 1 in Fusion 360 by December 23, 2024, printed the plates the next day and had the frame together that night. By December 29 it was wired to the Arduino Mega and driving on foam tiles.'],

@@ -1,6 +1,7 @@
 // Hero scrolly (`hero-explode`): the page opens on the machine closed up as one box, and scrolling
 // lifts it apart, layer by layer and top down like a step in an assembly manual, into the exact pose
-// that is printed on the shirt: Jerry's CAD as exported, seen from azimuth 35, elevation 30.
+// that is printed on the shirt: Jerry's CAD as exported, seen from the angle of the print (azimuth
+// -25.5, elevation 43.5, fitted to the photo of the shirt).
 //
 // Every group moves only along STEP Z, the axis his explode uses (rig.js has the offsets and why).
 // The picture is a pure function of the scroll: P = (step + stepP) / 4 over the four steps. With
@@ -10,12 +11,15 @@ import { labelLayer } from '/assets/js/lib/labels.js';
 import { GROUPS, loadMechanism, smooth, lerp, sph, place } from './rig.js';
 
 const STEPS = 4;
+// the angle of the print, fitted to the photo of the shirt (lines of the print overlaid on the CAD)
+const PRINT_AZ = -25.5, PRINT_EL = 43.5;
 
 export async function mount(el, ctx) {
   // the page opens on this block: let the page itself load first (the poster shows meanwhile)
   await new Promise((res) => (document.readyState === 'complete' ? res() : addEventListener('load', res, { once: true })));
   await new Promise((res) => (window.requestIdleCallback ? requestIdleCallback(res, { timeout: 1200 }) : setTimeout(res, 200)));
-  const stage = createStage(el, { controls: false, hint: false });
+  // a long lens: the print is drawn almost without perspective, so the shirt pose reads like it
+  const stage = createStage(el, { controls: false, hint: false, fov: 18 });
   const { THREE } = stage;
   const mech = await loadMechanism(stage);
   const { model, parts, base } = mech;
@@ -63,7 +67,7 @@ export async function mount(el, ctx) {
     const closed = sph(THREE, stage.frame(solid, { azimuth: 35, elevation: 28, pad: 1.22, apply: false, refresh: true }));
     shown.clear();
     pose(1);
-    const open = sph(THREE, stage.frame(solid, { azimuth: 35, elevation: 30, pad: 1.1, apply: false, refresh: true }));
+    const open = sph(THREE, stage.frame(solid, { azimuth: PRINT_AZ, elevation: PRINT_EL, pad: 1.18, apply: false, refresh: true }));
     shown.clear();
     return (views = { closed, open });
   }

@@ -3,8 +3,11 @@
 // no 3D model and no stand-in geometry. One 2D scrolly (webgl: false), driven only by the scroll:
 // the Sep 12 and Sep 17 renders with the width marks drawing in ("My part of the robot": Jerry,
 // Sept 27, keep it exactly as it is).
-// Jerry, Sept 27: the season timeline slideshow was awkward, so "The season at a glance" is a grid of
-// normal pictures, and the five intake versions are normal pictures (the iterations). Real footage
+// Jerry, Sept 27: the season timeline slideshow was awkward, and then (21:12) a 3x3 grid was too
+// basic, so "The season at a glance" is a plain vertical timeline in date order (an iterations
+// section: a line with a dated node per picture, no scroll animation), and the five intake versions
+// are normal pictures (the iterations). The extension scrolly sits right below the hero (21:12:
+// the best scroll animation first). Real footage
 // plays as video ("the scrolling should only advance CAD animations"), so the frame-by-frame hand
 // off became the two bench clips, clean and failed, side by side. still-lift-at-basket was cut from
 // the page's own clips.
@@ -41,30 +44,8 @@ export default {
     ],
   },
   sections: [
-    // ------------------------------------------------------------------ the game and the season
-    { type: 'prose', id: 'game', h: 'The game, and my part of the robot', p: [
-      'In INTO THE DEEP, game pieces called samples start in a pile inside the submersible, a metal frame in the middle of the field. Robots reach in under its rails, pull samples out, and either score them in the baskets or bring them to the human player, who turns them into specimens that the robot clips onto the chambers.',
-      'I was the team captain. On the robot, my part was the horizontal extension: the slide that pushes the intake out across the floor and in under the submersible rail. This page follows that slide and the intake at its tip through the season, using our photos, renders and videos from kickoff on Sep 7, 2024 to the Chesapeake Championship on Mar 2, 2025.',
-    ] },
-    { type: 'media', id: 'season', layout: 'grid', cols: 3, h: 'The season at a glance',
-      p: ['The dated photos, renders and results from kickoff on Sep 7, 2024 to the championship on Mar 2, 2025, in order. Each one comes back further down the page, next to its part of the story.'],
-      items: [
-        { i: 'cad-sep12-two-rail-extension.webp', c: 'Sep 12, 2024: the first CAD of the robot, the extension on two slides, one on each side of the chassis: **15 in** wide' },
-        { i: 'sketch-intake-v1-spinners.webp', c: 'Sep 14: the first intake sketch, two spinners geared through a small gear and a big gear (intake version 1)' },
-        { i: 'cad-sep17-center-slide.webp', c: 'Sep 17: five days later, one slide inside the chassis: **3 in** wide' },
-        { i: 'intake-v1-printed.webp', c: 'Oct 12: intake version 1 printed, with two servos wired in' },
-        { i: 'cad-oct20-robot-extended.webp', c: 'Oct 20: the first full robot in CAD, with the extension all the way out' },
-        { i: 'extension-slide-belt-carrier.webp', c: 'Dec 12: the built slide, with its belt and cable carrier' },
-        { i: 'intake-v2-compliant-wheels.webp', c: 'Dec 13: intake version 2, two days before our first event' },
-        { i: 'result-playoff-150-149.webp', c: 'Dec 15, Glen Allen VA #2 Qualifier: 5-0 in qualification matches, finalist alliance captain, Innovate Award. This playoff match went 150 to 149' },
-        { i: 'intake-v4-at-moorefield.webp', c: 'Jan 25, 2025, Moorefield WV 1 Qualifier, with the reworked intake: Innovate Award' },
-        { i: 'intake-v4-green-pivot.webp', c: 'Feb 3: a green intake housing on its pivot arm (intake version 4)' },
-        { i: 'intake-v5-built.webp', c: 'Feb 22: intake version 5 built, ten days after its first hand-held prototype' },
-        { i: 'still-extension-out-venue.webp', c: 'Mar 2, FIRST Chesapeake Championship: fully extended on a practice field. 1st place Think Award' },
-      ] },
-
-    // ------------------------------------------------------------------ the extension
-    { type: 'scrolly', id: 'extension', module: 'width', webgl: false, width: 'wide', stepHeight: '85vh', poster: 'cad-sep12-two-rail-extension.webp',
+    // ------------------------------------------------------------------ the extension (right below the hero)
+    { type: 'scrolly', id: 'extension', module: 'width', webgl: false, stepHeight: '85vh', poster: 'cad-sep12-two-rail-extension.webp',
       h: 'The horizontal extension: 15 in to 3 in',
       steps: [
         { h: 'My part of the robot', p: ['The samples start inside the submersible, so the robot parks beside it and pushes its intake in under the rail on a horizontal slide. That slide was my part of the robot.'] },
@@ -89,6 +70,39 @@ export default {
           { img: 'cad-sep17-slide-closeup.webp', w: 1600, h: 1055, date: 'Sep 17, 2024', note: 'the new slide up close, beside a drive pod' },
         ],
       } },
+    // ------------------------------------------------------------------ the game and the season
+    { type: 'prose', id: 'game', h: 'The game, and my part of the robot', p: [
+      'In INTO THE DEEP, game pieces called samples start in a pile inside the submersible, a metal frame in the middle of the field. Robots reach in under its rails, pull samples out, and either score them in the baskets or bring them to the human player, who turns them into specimens that the robot clips onto the chambers.',
+      'I was the team captain. On the robot, my part was the horizontal extension: the slide that pushes the intake out across the floor and in under the submersible rail. This page follows that slide and the intake at its tip through the season, using our photos, renders and videos from kickoff on Sep 7, 2024 to the Chesapeake Championship on Mar 2, 2025. The timeline below puts the season\'s dated photos, renders and results in order; each one comes back further down the page, next to its part of the story.',
+    ] },
+    { type: 'iterations', id: 'season', h: 'The season at a glance',
+      items: [
+        { label: 'Sep 12, 2024', title: 'First CAD: two slides, 15 in wide', p: [], media: [
+          { i: 'cad-sep12-two-rail-extension.webp', c: 'The first CAD of the robot: the extension runs on two slides, one on each side of the chassis' }] },
+        { label: 'Sep 14, 2024', title: 'Intake version 1, sketched', p: [], media: [
+          { i: 'sketch-intake-v1-spinners.webp', c: 'The first intake sketch: two spinners geared through a small gear and a big gear' }] },
+        { label: 'Sep 17, 2024', title: 'One slide, 3 in wide', p: [], media: [
+          { i: 'cad-sep17-center-slide.webp', c: 'Five days after the first CAD: one slide inside the chassis' }] },
+        { label: 'Oct 12, 2024', title: 'Intake version 1, printed', p: [], media: [
+          { i: 'intake-v1-printed.webp', c: 'Version 1 printed, with two servos wired in' }] },
+        { label: 'Oct 20, 2024', title: 'The whole robot in CAD', p: [], media: [
+          { i: 'cad-oct20-robot-extended.webp', c: 'The first full robot in CAD, with the extension all the way out' }] },
+        { label: 'Dec 12, 2024', title: 'The slide, built', p: [], media: [
+          { i: 'extension-slide-belt-carrier.webp', c: 'The built slide, with its belt and cable carrier' }] },
+        { label: 'Dec 13, 2024', title: 'Intake version 2', p: [], media: [
+          { i: 'intake-v2-compliant-wheels.webp', c: 'Two days before our first event: version 2, with surgical-tubing flaps on the roller' }] },
+        { label: 'Dec 15, 2024 · Glen Allen VA #2 Qualifier', title: 'First event: 5-0 and the Innovate Award', p: ['5-0 in qualification matches, captain of the finalist alliance, and the Innovate Award.'], media: [
+          { i: 'result-playoff-150-149.webp', c: 'The livestream result card for playoff match 9: our alliance 150, the other 149' }] },
+        { label: 'Jan 25, 2025 · Moorefield WV 1 Qualifier', title: 'The reworked intake: Innovate Award again', p: [], media: [
+          { i: 'intake-v4-at-moorefield.webp', c: 'At the Moorefield qualifier, with the reworked intake' }] },
+        { label: 'Feb 3, 2025', title: 'Intake version 4', p: [], media: [
+          { i: 'intake-v4-green-pivot.webp', c: 'A green intake housing on its pivot arm' }] },
+        { label: 'Feb 22, 2025', title: 'Intake version 5, built', p: [], media: [
+          { i: 'intake-v5-built.webp', c: 'Ten days after its first hand-held prototype' }] },
+        { label: 'Mar 2, 2025 · FIRST Chesapeake Championship', title: '1st place Think Award', p: [], media: [
+          { i: 'still-extension-out-venue.webp', c: 'Fully extended on a practice field at the championship' }] },
+      ] },
+
     { type: 'prose', id: 'extension-built', h: 'From CAD to the robot', p: [
       { calc: 'How much of the robot\'s width did the extension take?',
         given: [

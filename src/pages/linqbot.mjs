@@ -38,6 +38,19 @@ export default {
   },
   sections: [
     {
+      // Jerry's explicit exception to scroll-only (Sept 27): the webcam demo. Jerry (Sept 27, 21:12): right
+      // below the hero videos. Nothing loads until the
+      // reader presses Start camera; the camera stops on scrolling away. `interactive: true` asks the
+      // build not to list it as a demo to convert (framework request, work/linqbot/framework-requests.md).
+      type: 'demo', id: 'webcam', module: 'webcam', webgl: false, interactive: true, height: 'clamp(460px, 72vh, 680px)', poster: `${M}/poster-teleop.webp`,
+      h: 'Try it with your own hand',
+      p: [
+        'Press **Start camera** and your webcam stands in for the camera on the glasses. An open hand moves the gripper, a pinch closes the claw, and a fist is the clutch: it freezes the arm so you can move your hand back and carry on without a jump. Try to pick up the can.',
+        'Everything after the camera is our real hand-control code, the same code [Mode 2](#hand) walks through further down, run on your real hand. The camera is only asked for when you press the button, the hand tracker loads only after that, and the video never leaves your browser.',
+      ],
+      caption: 'A simulation on our CAD of the SO-101, driven live by your webcam; the table and the can are props. The glasses’ camera looked out from the operator’s head toward the arm, while a webcam looks back at you, so left, right and reach are mirrored to feel natural. The hand tracker is MediaPipe (about 8 MB). The camera stops when you scroll away.',
+    },
+    {
       type: 'prose', id: 'idea', h: 'The idea: a person on call for the odd case',
       p: [
         'Robots on a line run on their own until something odd happens: a part in the wrong place, a missed grasp, an object they do not expect. Today the fix is a person standing next to each robot. We wanted that person somewhere else, looking after many robots and only stepping in when one gets stuck.',
@@ -172,18 +185,6 @@ export default {
         { h: 'Carry on, no jump', p: ['Six frames after the fist opens, the clutch lets go. The hand’s new position becomes the origin and the frozen gripper the anchor, so the arm carries on from where it stopped: across, down, fingers open, and the can stands in its new spot.'] },
       ],
       caption: 'A simulation on our CAD of the SO-101, not a recording: the table, the can and the hand are drawn, and the glasses view in the corner shows the drawn hand the pipeline is given. The readout is our code’s rules run on that hand, with the settings from our repo.',
-    },
-    {
-      // Jerry's explicit exception to scroll-only (Sept 27): the webcam demo. Nothing loads until the
-      // reader presses Start camera; the camera stops on scrolling away. `interactive: true` asks the
-      // build not to list it as a demo to convert (framework request, work/linqbot/framework-requests.md).
-      type: 'demo', id: 'webcam', module: 'webcam', webgl: false, interactive: true, height: 'clamp(460px, 72vh, 680px)', poster: `${M}/poster-teleop.webp`,
-      h: 'Try it with your own hand',
-      p: [
-        'Press **Start camera** and your webcam stands in for the camera on the glasses. An open hand moves the gripper, a pinch closes the claw, and a fist is the clutch: it freezes the arm so you can move your hand back and carry on without a jump. Try to pick up the can.',
-        'Everything after the camera is the same code as the animation above, run on your real hand. The camera is only asked for when you press the button, the hand tracker loads only after that, and the video never leaves your browser.',
-      ],
-      caption: 'A simulation on our CAD of the SO-101, driven live by your webcam; the table and the can are props. The glasses’ camera looked out from the operator’s head toward the arm, while a webcam looks back at you, so left, right and reach are mirrored to feel natural. The hand tracker is MediaPipe (about 8 MB). The camera stops when you scroll away.',
     },
     {
       type: 'media', layout: 'row',

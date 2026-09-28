@@ -33,11 +33,23 @@ export default {
   hero: {
     layout: 'row',
     items: [
-      { v: 'hero-worlds-robot-orbit.mp4', c: 'V2, the World Championship robot: a turret shooter on the chassis I designed for V1' },
-      { v: 'hero-turret-tracking-test.mp4', c: 'The first turret tracking test, April 27, 2026: the robot is turned on the floor while the turret tries to stay on the target' },
+      { v: 'hero-worlds-match.mp4', c: 'A qualification match at the FIRST World Championship, Jackson Division, from the top-down broadcast camera. We are 26115, the dark robot on the red alliance' },
+      { v: 'hero-turret-tracking.mp4', c: 'The turret tracking on our practice field, April 18, 2026: the chassis drives and turns under it while the turret stays pointed at the goal' },
     ],
   },
   sections: [
+    { type: 'scrolly', id: 'cad', module: 'versions', stepHeight: '85vh', poster: `${M}/poster-versions.webp`,
+      h: 'The CAD: what changed from V1 to V2',
+      p: ['V1 is the robot I designed and played our first four events with; V2 is the World Championship robot, the same chassis with a turret shooter on top. Here are both, from my CAD files, on one stage. Parts that are identical in both files stay where they are, and only the parts that differ swap, found by comparing the two files body by body.'],
+      steps: [
+        { h: 'V1, November 2025', p: ['The robot I designed: a mecanum chassis, a full-width intake, a ramp that stores three balls and a fixed flywheel shooter at the back.'] },
+        { h: 'Cut in half', p: ['A section down the middle of the robot shows the ball path. In V1 the top ball waits under a gate in front of a fixed flywheel.'] },
+        { h: 'What changed', p: ['Tinted: the V1 parts that are not in the Worlds CAD. The shooter, the top of the ramp and some of the plates.'] },
+        { h: 'V2, the Worlds robot', p: ['The same chassis, intake and ramp, with a turret shooter on top. Its new parts are tinted as they come in.'] },
+        { h: 'Cut in half again', p: ['In V2 the top ball waits in the bore of the turret bearing, right under the new shooter.'] },
+      ],
+      caption: 'Screws and circuit boards are left out; every other part is the CAD as modelled.' },
+
     { type: 'prose', id: 'overview', h: 'Two robots, one chassis', p: [
       'DECODE is the 2025-26 FIRST Tech Challenge game. Robots pick up purple and green balls, 5 in across (127 mm in the CAD), and shoot them into their alliance\'s goal. I was the team captain.',
       'We ran two robots on one chassis. I designed V1 entirely by myself in the fall of 2025, and it played our four events in January and February 2026. For the World Championship we replaced its fixed shooter with a turret. I made the engineering decisions for the new shooter; a student who had never used CAD before did the modelling, and I guided him through every step.',
@@ -58,18 +70,6 @@ export default {
         caption: 'Part sizes, tooth counts and dimensions on this page are read from the CAD unless a source is given.',
       } },
     ] },
-
-    { type: 'scrolly', id: 'cad', module: 'versions', stepHeight: '85vh', poster: `${M}/poster-versions.webp`,
-      h: 'The CAD: what changed from V1 to V2',
-      p: ['Both robots from my CAD files, on one stage. Parts that are identical in both files stay where they are, and only the parts that differ swap, found by comparing the two files body by body.'],
-      steps: [
-        { h: 'V1, November 2025', p: ['The robot I designed: a mecanum chassis, a full-width intake, a ramp that stores three balls and a fixed flywheel shooter at the back.'] },
-        { h: 'Cut in half', p: ['A section down the middle of the robot shows the ball path. In V1 the top ball waits under a gate in front of a fixed flywheel.'] },
-        { h: 'What changed', p: ['Tinted: the V1 parts that are not in the Worlds CAD. The shooter, the top of the ramp and some of the plates.'] },
-        { h: 'V2, the Worlds robot', p: ['The same chassis, intake and ramp, with a turret shooter on top. Its new parts are tinted as they come in.'] },
-        { h: 'Cut in half again', p: ['In V2 the top ball waits in the bore of the turret bearing, right under the new shooter.'] },
-      ],
-      caption: 'Screws and circuit boards are left out; every other part is the CAD as modelled.' },
 
     // ------------------------------------------------------------------ V1
     { type: 'prose', id: 'v1', h: 'V1: the robot I designed', p: [
@@ -143,6 +143,7 @@ export default {
       'We planned to fuse the Limelight\'s AprilTag readings with odometry, but odometry was very good on its own. The Limelight was only there to relocalize the robot after a minute or more, with a button or with a mode that relocalizes on the next AprilTag it sees. In practice we did not use it: our software lead did not get relocalization working in time.',
     ],
       media: [
+        { v: 'hero-worlds-robot-orbit.mp4', c: 'V2, the World Championship robot: a turret shooter on the chassis I designed for V1' },
         { i: 'v2-top-down-turret.webp', c: 'V2 from straight above on April 30, during the World Championship' },
         [{ i: 'still-v2-turret-gear-mesh.webp', c: 'A black 90-tooth gear on the chassis against the turret\'s ring gear' }, { v: 'v2-turret-turned-by-hand.mp4', c: 'The turret mounted on the chassis, turned by hand on its bearing' }],
         [{ v: 'v2-turret-closeup-orbit.mp4', c: 'Around the turret up close: the flywheel shroud, the hood and the motors' }, { i: 'v2-transfer-spinners-top.webp', c: 'The ramp from above, marked up in yellow and blue: TPU spinners sit on both sides of the ball path' }],
@@ -194,13 +195,10 @@ export default {
       { label: 'Dec 2025 to Jan 2026', title: 'Autonomous and consistent shots', p: ['Full autonomous routines on our practice field, and a long chase for consistent shots: first the shooter\'s stiffness, then the flywheel\'s inertia.'] },
       { label: 'Jan to Feb 2026', title: 'Four events with V1', p: ['The Moorefield, WV and Laurel, MD qualifiers and the Chesapeake Championship: Inspire Award 2nd and 3rd place and a Reach Award.'],
         media: [{ i: 'v1-at-event.webp', c: 'V1 on event day at the Moorefield, WV Qualifier II, January 11, 2026' }] },
-      { label: 'Apr 2026', title: 'V2: the turret', p: ['The new turret shooter went onto the same chassis in April. The first tracking test was on April 27.'],
+      { label: 'Apr 2026', title: 'V2: the turret', p: ['The new turret shooter went onto the same chassis in April. By April 18 the turret was tracking the goal on our practice field (the second video at the top of this page), and on April 27 a test showed its range was off.'],
         media: [{ v: 'v2-turret-assembly-in-hand.mp4', c: 'The turret before it was mounted: the turntable bearing, the printed turret body and the flywheel shroud' }] },
       { label: 'Apr 29 to May 2, 2026', title: 'The World Championship', p: ['Jackson Division. A printed servo mount broke and I reprinted it overnight. The team won the 1st place Sustain Award.'],
-        media: [
-          { i: 'v2-inspection-worlds.webp', c: 'V2 at inspection at the World Championship' },
-          { v: '/assets/media/ftc-decode-worlds-match.mp4', c: 'A qualification match in the Jackson Division at the World Championship, from the event broadcast. We are 26115 on the red alliance' },
-        ] },
+        media: [{ i: 'v2-inspection-worlds.webp', c: 'V2 at inspection at the World Championship' }] },
     ] },
 
     // ------------------------------------------------------------------ failures
@@ -245,9 +243,12 @@ export default {
       { i: 'v1-flywheel-nuts-photo.webp', c: 'The flywheel hub packed with steel nuts, January 30' },
     ] },
     { type: 'prose', id: 'tracking', p: [
-      { h: 'The first turret tracking test' },
-      { problem: 'On April 27 we ran the turret tracker for the first time and turned the robot on the floor (the second video at the top of this page). The turret tried to stay on target, but its range was off: the servo covered much more angle than the code expected.', title: 'Tracking range' },
+      { h: 'A turret test with the range off' },
+      { problem: 'On April 27 we turned the robot on the floor with the tracker running (the video here). The turret tried to stay on target, but its range was off: the servo covered much more angle than the code expected.', title: 'Tracking range' },
       { fix: 'That night the code got a centering routine on the Driver Hub: turn the turret until it is physically centered, note the servo position, and write it into the tracker code as the center.', label: 'Calibration' },
+    ],
+      media: [{ v: 'hero-turret-tracking-test.mp4', c: 'April 27, 2026: the robot is turned on the floor while the turret tries to stay on the target' }] },
+    { type: 'prose', id: 'mount', p: [
       { h: 'A servo mount at the World Championship' },
       { problem: [
         'At the World Championship a printed servo mount on the new shooter broke.',

@@ -97,9 +97,11 @@ export async function mount(el, ctx) {
 
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, STEPS.length - 1);
+    // clear of the step cards on a desktop (ctx.shift), and of the readout (bottom right; across the top on a phone)
+    const [fx, fy] = ctx.shift();
     const phone = el.clientWidth < 640;
     hudPlace(phone);
-    stage.setShift(phone ? 0 : -0.05, phone ? -0.07 : 0.03); // clear of the readout (bottom right; across the top on a phone)
+    stage.setShift(phone ? 0 : fx - 0.03, phone ? -0.07 : fy + 0.07);
     const prev = Math.max(0, step - 1), A = STEPS[prev], B = STEPS[step];
     const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
     const u = step + (reduced ? (step === 3 ? 0.33 : 1) : stepP); // reduced motion: each step's own pose, no sweep

@@ -16,7 +16,7 @@
 //     highlight: [{ parts: 'regex', color: '#ff6b35' }],
 //     labels: [{ text, at: [x, y, z] } | { text, part: 'regex' }],   at: model metres (Y up)
 //     image: 'render.webp', alt: '...' }    a still (a version that exists only as a render or photo)
-// Each step blends in from the one before over its first 45 % and then keeps turning slowly
+// Each step blends in from the one before over its first 60 % (eased in and out, ease.js) and then keeps turning slowly
 // (data.drift degrees per step, default 14), so the model is never frozen while the text is read.
 // Per model: { src, label, hide: 'regex' (parts left out), ghost: 'regex' (see-through),
 // highlight: [{ parts, color }], azimuth, elevation, pad, and finishes by part name: carbon, rubber,
@@ -27,6 +27,7 @@
 // Every picture is a pure function of the scroll position; nothing moves on its own.
 import { createStage, cad } from '../stage.js';
 import { labelLayer } from '../labels.js';
+import { blendIn } from '../ease.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
@@ -251,7 +252,7 @@ export async function mount(el, ctx) {
       step = clamp(step | 0, 0, steps.length - 1);
       const prev = Math.max(0, step - 1);
       const S = steps[step], P = steps[prev];
-      const k = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+      const k = step === 0 || reduced ? 1 : blendIn(stepP);
       const vi = S.version ?? 0, vp = P.version ?? 0;
       if (!models[vi]) get(vi);
       if (steps[step + 1] && !models[steps[step + 1].version ?? 0]) get(steps[step + 1].version ?? 0); // the next one, ahead of time

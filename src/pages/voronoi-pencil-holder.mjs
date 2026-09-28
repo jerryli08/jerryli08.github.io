@@ -1,4 +1,5 @@
-// Voronoi Pencil Holder: a small page, the CAD turned by the scroll.
+// Voronoi Pencil Holder: a small page. Its one animation (drawers.js) slides the two pencil inserts
+// out of the body one after the other and back in together as you scroll (Jerry, Sept 27, 21:12).
 // Held back until Jerry answers (questions.md Q4, Q8): whether he modeled it himself, and whether
 // it was printed.
 export default {
@@ -10,12 +11,11 @@ export default {
   hero: null,
   sections: [
     {
-      type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', length: '140vh',
+      type: 'scrolly', id: 'cad', module: 'drawers', length: '140vh',
       h: 'The CAD',
-      p: ['The body and its two inserts, one for each pencil, from my CAD.'],
-      caption: 'The holder and its two inserts, from my CAD',
+      p: ['The body and its two inserts, one for each pencil, from my CAD. Scroll and the inserts slide out of the end like drawers, first the OHTO, then the Orenz, and back in together.'],
+      caption: 'The holder and its two inserts, from my CAD. How far the inserts slide out is chosen for the animation',
       poster: '/assets/media/voronoi-pencil-holder/cad-pencil-holder.webp',
-      data: { models: [{ label: 'Holder', src: '/assets/models/voronoi-pencil-holder/holder.glb' }], azimuth: 30, elevation: 35, spin: 360 },
     },
   ],
 };

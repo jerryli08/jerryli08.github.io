@@ -11,9 +11,10 @@
 //  - torque: full throttle is the stated 100 N·m at the sprocket, split back through the ratios with
 //    no losses; half throttle is half of it; it fades to zero as the motors near their no-load speed
 //  - how fast it spins up is a simple illustration: speed is a smooth function of the scroll
-//  - road speed is an estimate: a 27 in rim with a standard tire (Jerry's numbers), taken as 694 mm
-//    across, in the 18T cog of the stock cassette of a 2019 Trek Dual Sport 2 (Shimano HG31, 11-32,
-//    8 speed), because the cassette on the bike is not confirmed
+//  - road speed is an estimate: Jerry's Schwalbe Super Moto-X, "27.5, I think 2.4 inches wide"
+//    (Sept 27, 21:12; replaces the earlier "27 in rim with a standard tire", 694 mm): ETRTO 62-584,
+//    584 + 2 x 62 = 708 mm across (Schwalbe gives no outer diameter), in the 18T cog of the stock
+//    cassette of a 2019 Trek Dual Sport 2, a Shimano HG31 11-32 8 speed (Trek's spec, product 23067)
 // Every picture is a pure function of the scroll position (step + progress through it).
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
@@ -22,8 +23,8 @@ import { loadBike, AXES, STAGE1, STAGE2, TOTAL, R72, T } from './bike.js';
 const KV = 150, VOLTS = 48;
 const NOLOAD = KV * VOLTS; // 7,200 rpm at the motors
 const PEAK = 100; // N·m at the output sprocket (stated)
-const COG = 18; // rear cog for the road-speed estimate (assumed cassette, see above)
-const WHEEL_D = 0.694; // m across the tire (estimate)
+const COG = 18; // rear cog for the road-speed estimate (stock cassette, see above)
+const WHEEL_D = 0.708; // m across the tire (estimate from its size code, see above)
 const MPH = 2.2369363;
 const TURNS = 4; // motor turns per step of scrolling at full speed (the picture is slowed; the numbers are real)
 

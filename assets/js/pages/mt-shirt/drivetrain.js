@@ -1,20 +1,21 @@
 // Drivetrain scrolly (`drivetrain`): zoomed in on Jerry's CAD, one push of the servo runs through
-// every stage (bevel pair, belt, 36T:12T spur pair, offset slider-crank) and moves the carriage along
-// its MGN7 rail. Each step frames one stage and lights it; in every step the whole mechanism does
+// every stage (bevel pair, belt, 36T:12T spur pair, offset slider-crank) and runs the carriage along
+// its MGN7 rail until its plate has pressed the keycap to the end of the switch's travel. Each step frames one stage and lights it; in every step the whole mechanism does
 // one push and comes back, so the reader sees what that stage does to the motion. The last step
-// pushes once and holds.
+// pushes the key all the way in, holds it there, and lets it back out (Jerry, Sept 27).
 //
 // Everything turns about its real axis from the CAD (rig.js). The mechanism runs in the CAD pose,
 // the shirt pose the reader just saw, with the lid, frame and logo lifted away. The keycap stays
-// where the CAD has it: the export has no part joining the carriage to the keycap, so nothing here
-// shows one.
+// where the CAD has it until the carriage plate reaches its top face; the plate then presses keycap
+// and stem the switch's 4 mm (rig.js has the measurements).
 //
 // A pure function of the scroll (step, progress through it). Views are framed once with the
 // mechanism at rest and cached; the camera only blends between them. Reduced motion: no pushes
 // until the last step, and the views cut.
 import { createStage, cad } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
-import { loadMechanism, rigDrivetrain, linkage, clamp, smooth, lerp, sph, place, STROKE_DEG, TRAVEL, AX } from './rig.js';
+import { blendIn } from '/assets/js/lib/ease.js';
+import { loadMechanism, rigDrivetrain, linkage, travel, clamp, smooth, sph, place, STROKE_DEG, PHI_CAD, TRAVEL, KEY_TRAVEL, AX } from './rig.js';
 
 const ACCENT = '#ff6b35';
 const HIDE = ['lidScrews', 'logo', 'web', 'bars', 'barScrews', 'lidRing', 'guides'];
@@ -27,8 +28,11 @@ const STEPS = [
   { frame: /_3422_|_monkeybelt_/, az: 20, el: 55, pad: 1.15, lit: /_3422_|_monkeybelt_/ },
   { frame: /_Spur_Gear_/, az: 0, el: 50, pad: 1.2, lit: /_Spur_Gear_/ },
   { frame: /_Spur_Gear_12_|_Component69_1$|_Component52_1$/, az: -10, el: 62, pad: 1.25, lit: /_Spur_Gear_12_|_Component69_1$/ },
-  { frame: /_LS_MGN7_|_Component52_1$/, az: 28, el: 34, pad: 1.18, lit: /_LS_MGN7_Block_|_Component52_1$/ },
-  { frame: /_Component38_1$|_Bottom_1$|_Top_1$|_LS_MGN7_Block_|_Component52_1$/, az: 18, el: 62, pad: 1.3, wide: 1.3, lit: /_Component38_1$/ },
+  { frame: /_LS_MGN7_|_Component52_1$|_Component38_1$|_Bottom_1$|_Top_1$/, az: 28, el: 34, pad: 1.18, lit: /_LS_MGN7_Block_|_Component52_1$/ },
+  // the keycap step, close up from the front so the press reads as a push along the rail: framed on
+  // the keycap and switch, with the centre moved 10 mm back along the rail (STEP -X) so the plate is
+  // in view from where it meets the keycap
+  { frame: /_Component38_1$|_Bottom_1$|_Top_1$/, az: 12, el: 30, pad: 1.1, off: [-0.01, 0, 0], lit: /_Component38_1$/ },
 ];
 const P = (x, y, z) => cad.point([x, y, z]);
 
@@ -55,8 +59,8 @@ export async function mount(el, ctx) {
     key = `${a}|${fx}`;
     // a narrower readout on wide stages; phones keep the full-width strip from site.css
     hud.style.width = el.clientWidth >= 640 ? 'min(270px, calc(100% - 28px))' : '';
-    rig.set(STROKE_DEG);
-    views = STEPS.map((s, i) => sph(THREE, stage.frame(framed[i], { azimuth: s.az, elevation: s.el, pad: s.pad * (fx > 0 ? s.wide || 1 : 1), apply: false, refresh: true })));
+    rig.set(PHI_CAD);
+    views = STEPS.map((s, i) => sph(THREE, stage.frame(framed[i], { azimuth: s.az, elevation: s.el, pad: s.pad * (fx > 0 ? s.wide || 1 : 1), offset: s.off, apply: false, refresh: true })));
     return views;
   }
 
@@ -72,7 +76,7 @@ export async function mount(el, ctx) {
     [ov.label('MGN7 rail, 70 mm', P(-72, -50.4, -62.5), { ...C, side: 'l' }), ov.label('Carriage', [0, 0, 0], C)],
     [ov.label('Keycap', P(-3.7, -50.5, -40.3), C), ov.label('Cherry MX switch', P(8.5, -50.5, -41.9), { ...C, minW: 480 })],
   ];
-  const crankL = L[4][0], linkL = L[4][1], carL = L[5][1];
+  const crankL = L[4][0], linkL = L[4][1], carL = L[5][1], keyL = L[6][0];
 
   // the readout
   const hud = document.createElement('div');
@@ -81,6 +85,7 @@ export async function mount(el, ctx) {
     <div class="rx-hud-row rx-hud-x"><span>Servo</span><b class="num" data-k="servo"></b></div>
     <div class="rx-hud-row rx-hud-x"><span>Crank, 3 : 1 on the servo</span><b class="num" data-k="crank"></b></div>
     <div class="rx-hud-mini num" data-k="mini"></div>
+    <div class="rx-hud-row"><span>Keycap pressed</span><b class="num" data-k="key"></b></div>
     <div class="rx-hud-row rx-hud-big"><span>Carriage travel</span><b class="num" data-k="travel"></b><i><em data-k="bar"></em></i></div>`;
   ov.layer.append(hud);
   const K = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
@@ -102,29 +107,33 @@ export async function mount(el, ctx) {
     stage.setShift(fx, fx > 0 ? fy - 0.04 : fy);
     const v = viewsNow(fx);
     const last = step === STEPS.length - 1;
-    // one push per step once the camera has arrived; the last step pushes and holds
-    const t = clamp((stepP - 0.3) / (last ? 0.5 : 0.7), 0, 1);
-    const phi = reduced ? (last ? STROKE_DEG : 0) : last ? STROKE_DEG * smooth(0, 1, t) : STROKE_DEG * Math.sin(Math.PI * t) ** 2;
+    // one push and back per step once the camera has arrived; the last step pushes the key all the
+    // way in, holds it at the bottom of its travel, and lets it back out
+    const t = clamp((stepP - 0.34) / 0.64, 0, 1);
+    const phi = reduced ? (last ? STROKE_DEG : 0)
+      : last ? STROKE_DEG * (smooth(0, 0.42, t) - smooth(0.62, 1, t)) : STROKE_DEG * Math.sin(Math.PI * t) ** 2;
     const k = rig.set(phi);
     const prev = Math.max(0, step - 1);
-    const b = step === 0 || reduced ? 1 : smooth(0, 0.45, stepP);
+    const b = step === 0 || reduced ? 1 : blendIn(stepP, 0.5);
     const drift = reduced ? 0 : (stepP - 0.5) * 3;
     place(stage, v[prev], v[step], b, drift, 0);
     // highlights and labels follow the active step
     for (let i = 0; i < STEPS.length; i++) light(i, i === step ? b : i === prev && step !== prev ? 1 - b : 0);
     L.forEach((ls, i) => ls.forEach((l) => { l.a = i === step ? smooth(0.5, 1, b) : 0; }));
     // the moving labels: crank at the middle of the crank arm, link at the middle of the coupler
-    const dx = k.sx - linkage(STROKE_DEG).sx;
+    const dx = k.sx - linkage(PHI_CAD).sx;
+    const tr = travel(k);
     crankL.p.set(...P((AX.spur12.p[0] + k.px) / 2, (AX.spur12.p[1] + k.py) / 2, -57));
     linkL.p.set(...P((k.px + k.sx) / 2, (k.py - 50.3) / 2, -54));
     carL.p.set(...P(-49 + dx, -50.4, -46.5));
+    keyL.p.set(...P(-3.7 + tr.key, -50.5, -40.3));
     ov.update();
-    const travel = TRAVEL - (linkage(STROKE_DEG).sx - k.sx);
     put('servo', `${phi.toFixed(1)}°`);
     put('crank', `${(3 * phi).toFixed(1)}°`);
-    put('travel', `${Math.max(0, travel).toFixed(1)} mm`);
+    put('travel', `${Math.max(0, tr.car).toFixed(1)} mm`);
+    put('key', `${tr.key.toFixed(1)} of ${KEY_TRAVEL.toFixed(1)} mm`);
     put('mini', `Servo ${phi.toFixed(1)}°, crank ${(3 * phi).toFixed(1)}°`);
-    const w = `${(clamp(travel / TRAVEL, 0, 1) * 100).toFixed(1)}%`;
+    const w = `${(clamp(tr.car / TRAVEL, 0, 1) * 100).toFixed(1)}%`;
     if (shown.bar !== w) { K.bar.style.width = w; shown.bar = w; }
   }
   setProgress(0, 0, 0);

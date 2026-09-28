@@ -1,6 +1,8 @@
 // Carbon Fiber Ping Pong Paddle: a small page. The layup animation is illustration only (Jerry
 // never laid it up); ply count and fibre angles are not his and stay out of the copy.
 // Numbers marked "from the CAD" are measured from his paddle and mold models.
+// Jerry, Sept 27, 21:12: the plies ALSO run into the handle, not just the face, so each ply in the
+// animation follows the whole cavity, handle channel included.
 export default {
   summary: {
     stats: [
@@ -17,15 +19,15 @@ export default {
   hero: { layout: 'single', items: [{ i: '/assets/media/prints/paddle-render.webp', c: 'My render of the paddle: carbon fiber blade and handle, rubber on both faces' }] },
   sections: [
     {
-      type: 'scrolly', id: 'layup', module: 'layup', width: 'wide', side: 'right',
+      type: 'scrolly', id: 'layup', module: 'layup',
       h: 'The layup, as I designed it',
       poster: '/assets/media/cf-ping-pong-paddle/cad-mold.webp',
       steps: [
         { h: 'The mold', p: ['Two blocks, cavity side up: one for the handle, one for the head. The paddle\'s outline is sunk into their top faces.'] },
         { h: 'Keyed together', p: ['Two 8.8 mm pins on the handle block slide into 9.0 mm holes in the head block and line the two halves of the cavity up (cut open here at the pins\' centreline). From the CAD: the end faces meet while the pins are still 0.2 mm short of the bottom of their holes, so the blocks seat face to face and the pins never bottom out.'] },
-        { h: 'First ply', p: ['A sheet of dry carbon fiber cloth goes into the cavity, then gets wetted out with resin.'] },
-        { h: 'More plies', p: ['Each ply goes in on top of the last and is wetted as it goes. In a layup like this the weave usually turns from ply to ply, so the blade is stiff in every direction. The number of plies and their angles here are only for the animation.'] },
-        { h: 'The paddle', p: ['Out of the mold: the carbon fiber blade, then the rubber on both faces. This is the paddle from my CAD.'] },
+        { h: 'First ply', p: ['A sheet of dry carbon fiber cloth goes into the cavity, across the head and down into the handle channel, 12.6 mm deep (from the CAD), then gets wetted out with resin.'] },
+        { h: 'More plies', p: ['Every ply runs the whole paddle, face and handle, and is wetted as it goes. In a layup like this the weave usually turns from ply to ply; the count and angles here are only for the animation.'] },
+        { h: 'The paddle', p: ['Out of the mold: the carbon fiber blade and handle in one piece, then the rubber on both faces. This is the paddle from my CAD.'] },
       ],
     },
     {
@@ -37,7 +39,7 @@ export default {
       media: [{ i: '/assets/media/prints/paddle-mold-draft-analysis.webp', c: 'Draft analysis on both mold blocks in Fusion 360' }],
     },
     {
-      type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'left', length: '160vh',
+      type: 'scrolly', id: 'cad', module: '@turntable', length: '160vh',
       h: 'The CAD',
       p: [
         'The paddle, then the mold, from my CAD.',

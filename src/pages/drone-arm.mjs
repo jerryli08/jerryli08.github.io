@@ -6,7 +6,8 @@
 // questions.md: the servo model (the CAD and Jerry disagree, so no model is named), who designed the
 // claw, whether the joint hubs and bearings were parts from his other robots, any powered test,
 // the camera, and what he would change.
-// Scrollies: assets/js/pages/drone-arm/ (rig.js has the axes from the STEP and the IK).
+// Scrollies: assets/js/pages/drone-arm/ (rig.js has the axes from the STEP and the IK). Jerry (Sept 27,
+// 21:12): the CAD turntable is removed and the grab scrolly takes its place, right after the idea.
 // The servo-load calculation uses rig.js's axis points (S, E, G) and the CAD's 500 ml bottle; no
 // servo rating is compared because the servo model is held back. cad-side-bottle.webp is a render of
 // the real CAD (tools/pages/render.mjs, azimuth 0).
@@ -39,19 +40,17 @@ export default {
       { fix: 'Drones with propeller guards already exist, so it could be made safe. And the idea is not limited to senior homes: a drone that can carry household items generalizes to other jobs.', label: 'Answer' },
     ] },
 
-    { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', stepHeight: '90vh',
-      poster: `${M}/poster-cad.webp`, h: 'The drone and the arm, in CAD',
-      data: { models: [{ label: 'CAD', src: `${M}/drone.glb` }] },
+    { type: 'scrolly', id: 'grab', module: 'grab', width: 'full', stepHeight: '90vh',
+      poster: `${M}/poster-grab.webp`, h: 'How it would pick up a bottle',
+      p: ['This is the plan for a grab, animated on the real CAD. None of it ran: we pivoted before the arm went on the drone.'],
       steps: [
-        { h: 'Under an X500', view: { azimuth: 38, elevation: 16, pad: 0.86 }, p: [
-          'The arm hangs under the center of an X500 quadcopter and swings in the drone’s center plane, between the landing gear legs. In the CAD it is folded up, holding a 500 ml bottle of water.',
-        ] },
-        { h: 'Three joints', view: { focus: '^anim_arm_(?!1[2-5]_)', azimuth: 20, elevation: 4, pad: 1.3,
-          labels: [{ text: 'Shoulder', at: [0.3815, -0.0662, -0.1115] }, { text: 'Elbow', at: [0.5627, -0.2165, -0.1115] }, { text: 'Claw', at: [0.284, -0.207, -0.1115], side: 'l' }] }, p: [
-          'Three joints move: the shoulder and the elbow, each a servo, and the claw, whose two jaws turn together.',
-        ] },
+        { h: '1. Find the bottle', p: ['The drone flies in with the arm raised. A camera on the end of the arm finds the bottle and works out where it is relative to the drone.'] },
+        { h: '2. Close in and hold position', p: ['The drone flies closer and holds its position.'] },
+        { h: '3. Reach it with inverse kinematics', p: ['The claw opens, and the arm uses inverse kinematics to move it to the bottle: the IK target in orange, the two links in blue.'] },
+        { h: '4. Close the claw', p: ['The claw closes around the bottle. One servo turns both jaws, geared to each other at their pivots.'] },
+        { h: '5. Lift off with it', p: ['The drone lifts off with it, and the arm folds back to its pose in the CAD, holding the bottle under the middle of the drone.'] },
       ],
-      caption: 'Screws and the drone’s power board are left out of the model; nothing else is changed.' },
+      caption: 'The plan, animated: none of it ran, because we pivoted before the arm went on the drone. The table, the camera, its view and the detection box are drawn in; they are not in the CAD. The hover point, the path and the 25° jaw opening are choices for this animation.' },
 
     { type: 'prose', id: 'arm', h: 'The arm', p: [
       { h: 'Links from spare drone arms' },
@@ -85,18 +84,6 @@ export default {
         { i: 'cad-side-bottle.webp', c: 'The CAD from the side, in the pose it was saved in: the arm folded under the drone with the bottle in the claw, 97.5 mm across from the shoulder axis' },
       ] },
 
-    { type: 'scrolly', id: 'grab', module: 'grab', width: 'full', stepHeight: '90vh',
-      poster: `${M}/poster-grab.webp`, h: 'How it would pick up a bottle',
-      p: ['This is the plan for a grab, animated on the real CAD. None of it ran: we pivoted before the arm went on the drone.'],
-      steps: [
-        { h: '1. Find the bottle', p: ['The drone flies in with the arm raised. A camera on the end of the arm finds the bottle and works out where it is relative to the drone.'] },
-        { h: '2. Close in and hold position', p: ['The drone flies closer and holds its position.'] },
-        { h: '3. Reach it with inverse kinematics', p: ['The claw opens, and the arm uses inverse kinematics to move it to the bottle: the IK target in orange, the two links in blue.'] },
-        { h: '4. Close the claw', p: ['The claw closes around the bottle. One servo turns both jaws, geared to each other at their pivots.'] },
-        { h: '5. Lift off with it', p: ['The drone lifts off with it, and the arm folds back to its pose in the CAD, holding the bottle under the middle of the drone.'] },
-      ],
-      caption: 'The plan, animated: none of it ran, because we pivoted before the arm went on the drone. The table, the camera, its view and the detection box are drawn in; they are not in the CAD. The hover point, the path and the 25° jaw opening are choices for this animation.' },
-
     { type: 'prose', id: 'ik-math', h: 'The inverse kinematics', p: [
       'The arm moves in one vertical plane under the drone, so finding the joint angles for a target is the classic two-link problem. Put the shoulder at the origin, call the link lengths L1 = 235.4 mm (shoulder to elbow) and L2 = 278.9 mm (elbow to the middle of the claw), both measured in the CAD, and aim the claw at a target (u, v):',
       { pre: 'd  = sqrt(u^2 + v^2)\nq2 = -acos((d^2 - L1^2 - L2^2) / (2 L1 L2))\nq1 = atan2(v, u)\n     - atan2(L2 sin q2, L1 + L2 cos q2)' },
@@ -124,7 +111,7 @@ export default {
         media: [{ i: 'arm-joint-block-in-hand.webp', c: 'The shoulder mount and servo on the first link, with the elbow below' }, { i: 'arm-assembled-on-bed.webp', c: 'The assembled arm: the red shoulder wedge and servo, a carbon link, the elbow and the second link' }] },
       { label: 'Jul 15, 2025', title: 'More links and the claw parts', p: ['Spare drone arms with their motor mounts, and the printed claw parts on the desk behind them.'],
         media: [{ i: 'arm-links-drone-arms.webp', c: 'Spare carbon drone arms with their blue motor mounts, and red printed claw parts behind' }] },
-      { label: 'Then', title: 'We pivoted', p: ['The whole arm was built and almost ready to go on the drone when we pivoted to a new idea. The same team went on to build [Drone on Wheels](/projects/hybrid-vehicle): a drone and a ground rover that dock together, so each one can carry the other.'] },
+      { label: 'Then', title: 'We pivoted', p: ['The whole arm was built and almost ready to go on the drone when we pivoted to a new idea: [Drone on Wheels](/projects/hybrid-vehicle), a drone and a ground rover that dock together, so each one can carry the other. We felt it was the better idea because it would have more applications, and it was the surer bet in the time we had left, less than two weeks. The same team went on to build it.'] },
     ] },
   ],
 };

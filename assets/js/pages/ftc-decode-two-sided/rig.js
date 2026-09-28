@@ -34,8 +34,9 @@
 //  - the outer rows of 48 mm wheels (Jerry, Sept 27: fixed to the chassis, driven by the same PTO):
 //    along z through (27.0, 145.0) and (430.2, 145.0), eight wheels each, held between end plates
 //    fixed to the frame. Their drive in the CAD is carrier 2's 52T pulley -> 12T at G, a 4 mm shaft,
-//    a shaft coupler and a 20T pulley at the front (331.7, 20.0, z +6.5); the belt from that 20T
-//    pulley to the rows is not modelled, so the rows are shown turning with it
+//    a shaft coupler and a 20T pulley at the front (331.7, 20.0, z +6.5). Jerry, Sept 27 21:12: the
+//    rows are driven "through belts on the most outside", at a ratio that gives about 1,500+ RPM;
+//    those belts are not modelled, so the rows turn at the intended OUTER_RATIO of that pulley
 import * as THREE from 'three';
 
 export const MODEL = '/assets/models/ftc-decode-two-sided/robot.glb';
@@ -80,6 +81,10 @@ export function train(m1, m2) {
 }
 export const MOTOR_RPM = 5800; // goBILDA 5000-0002-0001, tested no-load speed at 12 V
 export const F_RATIO = 4 * 12 / 38; // roller drive at F per turn of carrier 2 (belt path, all 12T through the joints)
+// The outer rows per turn of the 20T pulley at the front: the intended ratio of the belts on the
+// robot's outermost sides, 20T to 120T (not in the CAD; picked so the rows run at about 1,500+ RPM:
+// 9,425 RPM at the 20T pulley / 6 = 1,571 RPM at full speed)
+export const OUTER_RATIO = 20 / 120;
 
 // ------------------------------------------------------------------ 4-bar kinematics
 const A = AX.A, B = AX.B, C0 = AX.C0, D0 = AX.D0;
@@ -210,11 +215,11 @@ export function rigRobot(stage, P, which = {}) {
       rig.f = f;
       rig.setRolls();
       // the side branch: 52T on carrier 2 -> 12T at G, the shaft and the 20T pulley at the front; the
-      // outer wheel rows (Jerry: driven by the same PTO) turn with that pulley, since the last belt
-      // from it to the rows is not in the CAD
+      // outer wheel rows (Jerry: driven by the same PTO, through belts on the outermost sides) turn at
+      // the intended OUTER_RATIO of that pulley (those belts are not in the CAD)
       const g = (52 / 12) * car2;
       piv.Gpul?.setAngle(g);
-      piv.sideL?.setAngle(g); piv.sideR?.setAngle(g);
+      piv.sideL?.setAngle(g * OUTER_RATIO); piv.sideR?.setAngle(g * OUTER_RATIO);
     },
     f: 0, arms: [0, 0],
     // Jerry: the roller drive at F is split to both rollers. The split (and its ratio) is not in the

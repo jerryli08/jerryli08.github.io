@@ -31,23 +31,14 @@ export default {
     ],
   },
   sections: [
-    { type: 'prose', id: 'five-bar', h: 'What a 5-bar is', p: [
-      'A 5-bar linkage has five links counting the base: the two motor arms, the two forearms, and the fixed distance between the motors. The motors sit side by side and each turns one arm. Each forearm hangs off the end of an arm, and the two forearms meet at the pen.',
-      'With both motors held still the loop is rigid, so two motor angles give exactly one pen position for a given way the loop is folded. That makes it a parallel robot: both motors share the job of placing one point, and neither motor rides on the other, so the only moving parts are four thin plates.',
-      'In the CAD the two motor shafts are 100 mm apart and all four links are 100 mm hole to hole. My code uses the same two constants, `BASE_SEPARATION = 100` and `ARM_LENGTH = 100`. Equal links make each side of the robot an isosceles triangle, which keeps the inverse kinematics down to a few lines of trigonometry.',
-    ],
-      media: [
-        { i: 'still-linkage-top-down.webp', c: 'From above: two motors, four links, five joints' },
-        { v: 'linkage-top-down.mp4', c: 'Both motors reshape the pentagon; the pen joint is where the two forearms meet' },
-      ] },
-
+    // Jerry (Sept 27, 21:12): the best CAD scroll animation sits right below the hero.
     { type: 'scrolly', id: 'plotter', module: 'plotter', stepHeight: '100vh', poster: `${M}/poster-plotter.webp`,
       h: 'The real linkage, writing my name',
       p: ['My CAD, turning about its real pivots. Scrolling is the program clock: at every moment the pen target is what my final sketch computes, my inverse kinematics turns it into two motor angles, and the ink follows the pen. The readout shows the numbers the Arduino works with.'],
       steps: [
         { h: 'Home', p: [
-          'Two NEMA 17s, 100 mm apart, each turn a 100 mm arm, and two 100 mm forearms meet at the pen. The code has no homing: when the program starts it calls this pose home, both arms straight out at 90° and the pen at (50, 186.6) mm, so the arms have to start here.',
-          'The faint dashed line is the path the program will follow. The blue dashed line is the fold line, where the two forearms fall into one straight line. It matters later.',
+          'Two NEMA 17s 100 mm apart turn 100 mm arms, and two 100 mm forearms meet at the pen. The code has no homing: it calls this pose home (both arms at 90°, pen at (50, 186.6) mm), so the arms must start here.',
+          'Faint dashes: the path to come. Blue dashes: the fold line, where the two forearms fall into one straight line.',
         ] },
         { h: 'J and e', p: [
           'From home the pen travels to the start of the J. The pen never lifts, so that travel is drawn too. Every stroke of the name takes 200 ms: on each pass through the loop the program works out how far through the stroke it is, puts the target that far along the straight line, solves the inverse kinematics and sends both motors there.',
@@ -74,6 +65,16 @@ export default {
         ] },
       ],
       caption: 'The linkage is my Fusion CAD with its real 100 mm links and pivot axes; the motion is my code\'s inverse kinematics, motor limits and path timing, with the scroll as the clock. The grid is 10 mm. The pen, paper and board are not in the CAD, so the ink is drawn on the table under the pen.' },
+
+    { type: 'prose', id: 'five-bar', h: 'What a 5-bar is', p: [
+      'A 5-bar linkage has five links counting the base: the two motor arms, the two forearms, and the fixed distance between the motors. The motors sit side by side and each turns one arm. Each forearm hangs off the end of an arm, and the two forearms meet at the pen.',
+      'With both motors held still the loop is rigid, so two motor angles give exactly one pen position for a given way the loop is folded. That makes it a parallel robot: both motors share the job of placing one point, and neither motor rides on the other, so the only moving parts are four thin plates.',
+      'In the CAD the two motor shafts are 100 mm apart and all four links are 100 mm hole to hole. My code uses the same two constants, `BASE_SEPARATION = 100` and `ARM_LENGTH = 100`. Equal links make each side of the robot an isosceles triangle, which keeps the inverse kinematics down to a few lines of trigonometry.',
+    ],
+      media: [
+        { i: 'still-linkage-top-down.webp', c: 'From above: two motors, four links, five joints' },
+        { v: 'linkage-top-down.mp4', c: 'Both motors reshape the pentagon; the pen joint is where the two forearms meet' },
+      ] },
 
     { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', stepHeight: '90vh', poster: `${M}/poster-cad.webp`,
       h: 'The CAD',

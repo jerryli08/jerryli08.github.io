@@ -1,8 +1,8 @@
 // FTC ULTIMATE GOAL robot (team 18996), 2020-21: rich page.
 // Jerry's checklist: "There's no CAD for this, only pictures and videos, so you can have a bit of
 // fun with this one ... a bit more fun and juvenile because this was like 2020". So: the same page
-// system, a lighter voice, "Level" section names, a build diary of photos by day, and a bloopers
-// strip. No CAD exists, so there is no 3D and no stand-in geometry. Jerry, Sept 27: real footage plays
+// system, a lighter voice, "Level" section names, and a build diary of photos by day (Jerry, Sept 27,
+// 21:12: the bloopers strip is removed). No CAD exists, so there is no 3D and no stand-in geometry. Jerry, Sept 27: real footage plays
 // as video ("the scrolling should only advance CAD animations"), and a scroll slideshow of separate
 // photos is awkward, so the three frame-by-frame blocks became the clips themselves (the cup close-up,
 // the run, the Driver Station) and the build photos are normal pictures. magazine-closeup.mp4 is
@@ -158,13 +158,6 @@ export default {
         ],
         result: 'All four wheels stayed within 7 counts of each other, and the gap never grew as the counts climbed from 20 to 2,395: the four wheels turned together.',
         note: 'Counts are as the code printed them; the motors and their counts per turn are not known, so this is not converted to a speed.' },
-    ] },
-
-    // ------------------------------------------------------------------ bloopers
-    { type: 'prose', id: 'bloopers', h: 'Bloopers', media: [
-      { v: 'blooper-camera-hit.mp4', c: 'The robot found the camera.' },
-    ], p: [
-      'Not every test was a clean run. Here the camera is sitting on the field floor. The robot rolls past it, and a few seconds later comes right at it.',
     ] },
   ],
 };

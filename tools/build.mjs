@@ -17,6 +17,14 @@ const p = (...a) => join(ROOT, ...a);
 // ---------------------------------------------------------------- helpers
 const esc = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const hashCache = new Map();
+// "three" plus every vendored addon under its own URL, so the 3D world's relative imports
+// (world.js, the addons importing each other) get content-hashed URLs and the year-long cache
+function vendorImportMap() {
+  const dir = join(ROOT, 'assets/vendor/addons'), imports = { three: v('/assets/vendor/three.module.min.js') };
+  const walkJs = (d, u) => { for (const n of readdirSync(d).sort()) { const f = join(d, n); if (statSync(f).isDirectory()) walkJs(f, `${u}/${n}`); else if (n.endsWith('.js')) imports[`${u}/${n}`] = v(`${u}/${n}`); } };
+  if (existsSync(dir)) walkJs(dir, '/assets/vendor/addons');
+  return `<script type="importmap">${JSON.stringify({ imports })}</script>`;
+}
 function v(url) { // cache-busting query from file contents
   const f = p(url.replace(/^\//, ''));
   if (!existsSync(f)) return url;
@@ -74,7 +82,14 @@ function mediaEl(m, { eager = false } = {}) {
 }
 
 // ---------------------------------------------------------------- shared chrome
-const FONT = 'https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&display=swap';
+// Mona Sans (GitHub, SIL OFL 1.1, assets/fonts/OFL.txt), self-hosted: the same variable woff2 files
+// and descriptors Google Fonts serves for latin and latin-ext, so the first paint waits on no other
+// origin and the latin file can be preloaded and cached for a year
+const FONT_FACES = [
+  ['mona-sans-latin-ext.woff2', 'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF'],
+  ['mona-sans-latin.woff2', 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD'],
+];
+const fontCss = () => FONT_FACES.map(([f, range]) => `@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(${v(`/assets/fonts/${f}`)}) format('woff2');unicode-range:${range}}`).join('');
 function head({ title, description, path, image = '/assets/img/og.jpg', extra = '' }) {
   const canonical = site.url + (path === '/' ? '/' : path);
   return `<!doctype html>
@@ -92,10 +107,11 @@ function head({ title, description, path, image = '/assets/img/og.jpg', extra = 
 <meta property="og:image" content="${site.url}${image}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0a09">
+<link rel="icon" href="${v('/assets/favicon-32.png')}" sizes="32x32" type="image/png">
 <link rel="icon" href="${v('/assets/favicon.svg')}" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONT}">
+<link rel="apple-touch-icon" href="${v('/assets/apple-touch-icon.png')}">
+<link rel="preload" href="${v('/assets/fonts/mona-sans-latin.woff2')}" as="font" type="font/woff2" crossorigin>
+<style>${fontCss()}</style>
 <link rel="stylesheet" href="${v('/assets/css/site.css')}">
 ${PREVIEW ? '<meta name="robots" content="noindex">\n' : ''}${extra}</head>`;
 }
@@ -216,7 +232,7 @@ function landing() {
     title: 'Jerry Li · Mechanical Engineering Portfolio',
     description: site.description,
     path: '/',
-    extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>
+    extra: `${vendorImportMap()}
 <link rel="preload" as="image" href="${v(stageStill)}" media="(min-width: 960px)" fetchpriority="high">
 <link rel="preload" as="image" href="${v('/assets/img/hero-still-m.webp')}" media="(max-width: 959px)" fetchpriority="high">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
@@ -258,7 +274,7 @@ ${nav({ home: true })}
     <div class="grid">${everything.map(card).join('\n')}</div>
   </section>
   ${shelf('concepts', 'Concepts', 'Designed in CAD, never built out.', concepts, 'shelf-concepts')}
-  ${shelf('archive', 'Archive', 'Before 2023: early robots and side builds.', archive)}
+  ${shelf('archive', 'Archive', '2023 and earlier: early robots and side builds.', archive)}
   ${objects.length ? `<section class="archive shelf-prints" id="prints" aria-labelledby="prints-h">
     <div class="archive-head"><h2 id="prints-h">Prints and small models</h2><p>Quick CAD and 3D printing experiments.</p></div>
     <div class="collage">${objects.map(printCard).join('\n')}</div>
@@ -269,7 +285,7 @@ ${nav({ home: true })}
       <div class="about-text">${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
       <div class="portrait"><img src="${v('/assets/media/jerry-portrait.webp')}" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
       <div class="contact-card">
-        <h3>Building something? I'd like to hear about it.</h3>
+        <h3>Always looking for cool projects to work on and interesting problems to solve. Let's connect!</h3>
         <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
       </div>
     </div>
@@ -296,7 +312,7 @@ function drivePage() {
     title: 'Drive the rover · Jerry Li',
     description: 'Drive the Drone on Wheels vehicle across Mars, rendered in real time from my Fusion 360 CAD. Press X to undock the drone and fly it.',
     path: '/drive',
-    extra: `<script type="importmap">{"imports":{"three":"${v('/assets/vendor/three.module.min.js')}"}}</script>\n`,
+    extra: `${vendorImportMap()}\n`,
   })}
 <body class="drive" data-dock="docked">
 <canvas class="drive-canvas" data-world="drive" data-hero="${v('/assets/js/world.js')}" data-assets="${worldAssets()}"></canvas>

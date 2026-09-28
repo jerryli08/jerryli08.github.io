@@ -78,6 +78,10 @@ export async function mount(el, ctx) {
       .rt-hud.rt-compact .rt-x{display:none}
       .rt-hud.rt-compact .rt-big{font-size:16px}
       .rt-hud.rt-compact .rt-chips{margin-top:3px}
+      .rt-hud.rt-col{padding:14px 16px 15px}
+      .rt-hud.rt-col .rt-g{grid-template-columns:1fr;gap:0}
+      .rt-hud.rt-col .rt-g>div+div{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)}
+      .rt-hud.rt-col .rt-log{white-space:pre-wrap}
     </style>
     <div class="rt-g">
       <div>
@@ -127,26 +131,36 @@ export async function mount(el, ctx) {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
     const phone = innerWidth <= 900;
-    let rx, ry, rw, rh; // the free region, clear of the step text
-    if (!phone) {
-      const gut = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 40;
-      const cardR = Math.max(gut, (W - 1180) / 2) + 540 + 28;
-      rx = cardR; ry = 18; rw = W - cardR - 20; rh = H - 36;
-    } else { rx = 10; ry = 8; rw = W - 20; rh = H - 16; }
-    const compact = rw < 520;
-    hud.classList.toggle('rt-compact', compact);
-    Object.assign(hud.style, { left: `${rx}px`, top: `${ry}px`, width: `${rw}px` });
-    const hh = hud.offsetHeight + 12;
-    const nh = rw < 520 ? 46 : 30; // room under the map for the note in the last step (two lines when narrow)
-    const mw = rw, mh = rh - hh - nh;
+    // el is already the part of the stage the step cards leave free (right of the cards on a
+    // desktop, the whole stage on a phone). With room, the course fills the middle of it and the
+    // telemetry stands as a column on the right; without that room, it sits above the course.
+    const pad = phone ? 10 : 20;
+    const hw = Math.round(clamp(W * 0.3, 230, 290));
+    const col = !phone && W - hw - 3 * pad >= 360;
+    const nh = col || W >= 380 ? 30 : 46; // room under the map for the note in the last step (two lines when narrow)
+    let mw, mh, mx, my;
+    hud.classList.toggle('rt-col', col);
+    if (col) {
+      hud.classList.remove('rt-compact');
+      Object.assign(hud.style, { left: `${W - pad - hw}px`, width: `${hw}px` });
+      const hh = hud.offsetHeight;
+      hud.style.top = `${Math.round(Math.max(pad, (H - hh) / 2))}px`;
+      mx = pad; my = pad; mw = W - hw - 3 * pad; mh = H - 2 * pad - nh;
+    } else {
+      const rw = W - 2 * pad;
+      hud.classList.toggle('rt-compact', rw < 520);
+      Object.assign(hud.style, { left: `${pad}px`, top: `${pad - 2}px`, width: `${rw}px` });
+      const hh = hud.offsetHeight + 12;
+      mx = pad; my = pad - 2 + hh; mw = rw; mh = H - 2 * pad + 2 - hh - nh;
+    }
     const s = Math.min(mw / (EXT.x1 - EXT.x0), mh / (EXT.y1 - EXT.y0));
     const w = (EXT.x1 - EXT.x0) * s, h = (EXT.y1 - EXT.y0) * s;
-    const ox = rx + (mw - w) / 2, oy = ry + hh + (mh - h) / 2;
+    const ox = mx + (mw - w) / 2, oy = my + (mh - h) / 2 + (col ? nh / 2 : 0);
     Lo = { W, H, dpr, s, ox, oy, phone };
     // map cm (y up) to canvas px
     Lo.X = (x) => ox + (x - EXT.x0) * s;
     Lo.Y = (y) => oy + (EXT.y1 - y) * s;
-    const nl = Math.round(Lo.X(-2.5));
+    const nl = col ? Math.round(Lo.X(-2.5)) : pad; // on a narrow stage the note starts at the edge, so it fits on one line
     Object.assign(note.style, { left: `${nl}px`, top: `${Math.round(oy + h + 4)}px`, maxWidth: `${W - nl - 10}px` });
     drawStatic();
     return true;

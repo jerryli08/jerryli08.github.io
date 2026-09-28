@@ -34,17 +34,7 @@ export default {
     ],
   },
   sections: [
-    { type: 'prose', id: 'how', h: 'How it works', p: [
-      'The paper lies on the die, a plate covered in small dimples, one for every dot position on the page. The gantry carries the pin over one dimple at a time: the Y axis slides the whole gantry beam along the frame, and the X axis slides a carriage along the beam. At each dot a servo swings the pin down and presses the paper into the dimple, so a dot stands up on the other side of the sheet.',
-      { h: 'The gantry' },
-      'I designed the gantry. Four 400 mm lengths of 2020 aluminum extrusion make the frame. Each side rail carries a carriage plate on four V-wheels, and the gantry beam, a fifth 400 mm extrusion, bolts across the top of both side carriages. A third carriage runs along the beam and carries the servo.',
-      'Three steppers drive it: one at the end of the beam for X, and one at the end of each side rail for Y, so both ends of the beam are pulled at once.',
-    ],
-      media: [
-        [{ i: 'still-frame-top-view.webp', c: 'The assembled gantry from above: two Y motors at the far end, the beam across the side rails and the red servo on its carriage. The floss runs along both side rails' },
-          { i: 'still-servo-carriage.webp', c: 'The red servo on the X carriage, on the gantry beam' }],
-      ] },
-
+    // Jerry (Sept 27, 21:12): the best CAD scroll animation sits right below the hero.
     { type: 'scrolly', id: 'emboss', module: 'emboss', stepHeight: '95vh', poster: `${M}/poster-emboss.webp`,
       h: 'How it writes, dot by dot',
       p: ['Our CAD, writing a word as you scroll: the gantry moves on its belt and floss, the servo swings the pin down its real arc, and the page comes out at the end to be read.'],
@@ -75,6 +65,17 @@ export default {
         ] },
       ],
       caption: 'My team\'s real CAD: the gantry, both drives, the servo arm and pin on their real arc, and the die grid the dots land on. The word, the path, the speeds, the paper and its dots are the animation\'s, and so is the floss, which is not in the CAD (the photos show it). The swing starts from the arm\'s position in the CAD, 2.3 mm above the page, and the animation stays inside the area the pin reaches in the CAD. Angles and distances are computed from the CAD, ignoring the paper\'s thickness.' },
+
+    { type: 'prose', id: 'how', h: 'How it works', p: [
+      'The paper lies on the die, a plate covered in small dimples, one for every dot position on the page. The gantry carries the pin over one dimple at a time: the Y axis slides the whole gantry beam along the frame, and the X axis slides a carriage along the beam. At each dot a servo swings the pin down and presses the paper into the dimple, so a dot stands up on the other side of the sheet.',
+      { h: 'The gantry' },
+      'I designed the gantry. Four 400 mm lengths of 2020 aluminum extrusion make the frame. Each side rail carries a carriage plate on four V-wheels, and the gantry beam, a fifth 400 mm extrusion, bolts across the top of both side carriages. A third carriage runs along the beam and carries the servo.',
+      'Three steppers drive it: one at the end of the beam for X, and one at the end of each side rail for Y, so both ends of the beam are pulled at once.',
+    ],
+      media: [
+        [{ i: 'still-frame-top-view.webp', c: 'The assembled gantry from above: two Y motors at the far end, the beam across the side rails and the red servo on its carriage. The floss runs along both side rails' },
+          { i: 'still-servo-carriage.webp', c: 'The red servo on the X carriage, on the gantry beam' }],
+      ] },
 
     { type: 'prose', id: 'floss', h: 'Out of belt: dental floss', p: [
       { problem: 'We ran out of timing belt. The X axis had its GT2 belt, but there was not enough left to run the Y axis the same way.', title: 'Out of belt' },

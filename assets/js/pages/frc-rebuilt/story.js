@@ -21,6 +21,8 @@ import { intake, fed, arrival, CONTACT, T_ORBIT, T_THROW } from './fuel-path.js'
 const DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+// quintic ease: starts and stops with no kick (zero speed and acceleration at both ends), for the camera
+const ease = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * t * (t * (6 * t - 15) + 10); };
 const lerp = (a, b, t) => a + (b - a) * t;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
@@ -139,7 +141,9 @@ export async function mount(el, ctx) {
 
   // ---------------------------------------------------------------- the story as a function of scroll
   const armAt = (step, t) => (step < 2 ? STOW : step === 2 ? lerp(STOW, 0, smooth(0.12, 0.88, t)) : 0);
-  const conveyor = (step, t) => (step < 5 ? 0 : step === 5 ? 0.8 * smooth(0.3, 1, t) : step === 6 ? lerp(0.8, 4.6, smooth(0.08, 0.95, t)) : 4.6);
+  // in the last step the fuel already in the air flies on out of the picture (every ball has left
+  // the shooter by 3.66; the last one is out of flight by about 7.6) instead of vanishing mid-air
+  const conveyor = (step, t) => (step < 5 ? 0 : step === 5 ? 0.8 * smooth(0.3, 1, t) : step === 6 ? lerp(0.8, 4.6, smooth(0.08, 0.95, t)) : lerp(4.6, 8, smooth(0, 0.6, t)));
 
   // camera for each step: target (model frame plus the robot offset), azimuth, elevation, and the size to fit
   const views = [
@@ -153,23 +157,30 @@ export async function mount(el, ctx) {
     (o) => ({ target: o.clone().add(V(0.3, 0.62, -0.1)), az: 122, el: 20, w: 1.5, h: 1.55 }),
     (o) => ({ target: o.clone().add(V(0.4, 0.22, -0.2)), az: 90, el: 0, w: 1.75, h: 0.72 }),
   ];
+  // Each view is placed once as a pose (target, azimuth, elevation, distance) and the camera eases
+  // from the last step's pose to this one's over most of the step (CAM_IN), so a change of view is
+  // one slow, even move that starts and stops gently. The distance is blended, not the sizes to fit,
+  // so the move has no kink where the fit switches from the width to the height.
+  const CAM_IN = [0, 0.85];
   const fov = stage.camera.fov * DEG;
-  function place(v, usableW) {
+  function pose(v, shift) {
     const aspect = el.clientWidth / Math.max(1, el.clientHeight);
     const tv = Math.tan(fov / 2), th = tv * aspect;
-    const dist = Math.max(v.h / (2 * tv * 0.94), v.w / (2 * th * usableW)) + 0.1;
-    const az = v.az * DEG, e = v.el * DEG;
-    const dir = V(Math.sin(az) * Math.cos(e), Math.sin(e), Math.cos(az) * Math.cos(e));
-    return { pos: v.target.clone().addScaledVector(dir, dist), target: v.target };
+    // the part of the stage the step cards leave free (the whole stage on a phone), with a margin
+    const fw = (1 - 2 * Math.min(0.4, Math.abs(shift[0]))) * 0.96, fh = (1 - 2 * Math.min(0.4, Math.abs(shift[1]))) * 0.94;
+    const dist = Math.max(v.h / (2 * tv * fh), v.w / (2 * th * fw)) + 0.1;
+    return { target: v.target, az: v.az, el: v.el, dist };
   }
-  function blend(a, b, t) {
+  function blend(a, b, k) {
     let dAz = b.az - a.az; while (dAz > 180) dAz -= 360; while (dAz < -180) dAz += 360;
-    return { target: a.target.clone().lerp(b.target, t), az: a.az + dAz * t, el: lerp(a.el, b.el, t), w: Math.exp(lerp(Math.log(a.w), Math.log(b.w), t)), h: Math.exp(lerp(Math.log(a.h), Math.log(b.h), t)) };
+    return { target: a.target.clone().lerp(b.target, k), az: a.az + dAz * k, el: lerp(a.el, b.el, k), dist: Math.exp(lerp(Math.log(a.dist), Math.log(b.dist), k)) };
   }
-  function blendView(step, t, o) {
-    const cur = views[step](o);
-    if (step === 0 || reduced) return cur;
-    return blend(views[step - 1](o), cur, smooth(0, 0.34, t));
+  function viewAt(step, t, o, shift) {
+    const cur = pose(views[step](o), shift);
+    const ps = step === 0 || reduced ? cur : blend(pose(views[step - 1](o), shift), cur, ease(CAM_IN[0], CAM_IN[1], t));
+    const az = ps.az * DEG, e = ps.el * DEG;
+    const dir = V(Math.sin(az) * Math.cos(e), Math.sin(e), Math.cos(az) * Math.cos(e));
+    return { pos: ps.target.clone().addScaledVector(dir, ps.dist), target: ps.target };
   }
 
   // labels: made once, moved and faded by the scroll (o: robot offset, a: arm angle)
@@ -178,7 +189,7 @@ export async function mount(el, ctx) {
   const PP = (o, x, y, z, a) => { const [yy, zz] = onPanel(y, z, a); return P(o, x, yy, zz); };
   const LAB = [
     [0, 'Intake folded inside the bumpers', (o, a) => PA(o, 0.6, AX.roller[0], AX.roller[1], a), 'l'],
-    [2, 'NEO, 25:1 MAXPlanetary, 12T sprocket', (o) => P(o, 0.59, AX.gearbox[0], AX.gearbox[1]), 'l'],
+    [2, 'NEO, 25:1 MAXPlanetary, 12T sprocket', (o) => P(o, 0.59, AX.gearbox[0], AX.gearbox[1]), 'l', 'NEO, 25:1, 12T'],
     [2, 'Encoder on a 24T sprocket', (o) => P(o, 0.59, AX.encoder[0], AX.encoder[1])],
     [2, '40T sprocket on the arm', (o) => P(o, 0.59, AX.pivot[0], AX.pivot[1]), 'l'],
     [2, 'Top panel, sprung', (o, a) => PP(o, 0.586, 0.45, 0.343, a)],
@@ -198,20 +209,37 @@ export async function mount(el, ctx) {
     [6, '4 in flywheels', (o) => P(o, 0.13, 0.43, -0.42), 'l'],
     [7, 'Robot 22.0 in', (o) => P(o, DX, (FLOOR + TOP) / 2, DZ), 'l'],
     [7, 'Trench opening 22.25 in', (o) => P(o, DX, TRENCH, -0.3)],
-  ].map(([step, text, at, side]) => ({ step, at, l: ov.label(text, [0, 0, 0], { color: '#fff1e2', side }) }));
+  ].map(([step, text, at, side, short]) => ({ step, at, text, short, l: ov.label(text, [0, 0, 0], { color: '#fff1e2', side }) }));
+  // a shorter text for a label that would run off a phone-width stage
+  let narrow = null;
+  const fitLabels = () => {
+    const n = el.clientWidth < 520;
+    if (n === narrow) return;
+    narrow = n;
+    for (const x of LAB) if (x.short) x.l.setText(n ? x.short : x.text);
+  };
 
-  // what is lit in each step (moving parts only; the static ones get labels)
+  // what is lit in each step (moving parts only; the static ones get labels). The lit parts and the
+  // labels of a step fade in once its view has nearly settled (SHOW), and fade out at the start of
+  // the next step (HIDE), so a hand-off between two cards never changes the picture.
   const HL = { 1: ['bumpers', 'swerve'], 2: ['gearboxSprocket', 'chain', 'encSprocket', 'fold'], 3: ['motorBelt', 'rollerBelt', 'motorPulley', 'pivotShaft'], 5: ['lower', 'upper'], 6: ['fly'] };
-  let hlStep = -1, unlight = null;
-  function highlightFor(step) {
-    if (step === hlStep) return;
-    hlStep = step;
-    unlight?.(); unlight = null;
-    if (HL[step]) {
-      unlight = stage.highlight(rig.parts(HL[step]), '#ff6b35', { intensity: 0.55 });
+  const SHOW = [0.45, 0.65], HIDE = [0, 0.14], GLOW = 0.55;
+  const lit = new Map(); // step -> { clear, mats, k }
+  function light(s, k) {
+    let h = lit.get(s);
+    if (!(k > 0.001)) { if (h) { h.clear(); lit.delete(s); rig.fixClear(); } return; }
+    if (!h) {
+      const ps = rig.parts(HL[s]);
+      const clear = stage.highlight(ps, '#ff6b35', { intensity: GLOW * k });
+      const mats = [];
+      for (const q of ps) q.traverse((m) => { if (m.isMesh) for (const x of [].concat(m.material)) if (x.emissive) mats.push(x); });
+      h = { clear, mats, k }; lit.set(s, h);
       rig.fixClear();
     }
+    if (h.k !== k) { h.k = k; for (const m of h.mats) m.emissiveIntensity = GLOW * k; stage.invalidate(false); }
   }
+  // how much of step s shows while step `step` is at t: its own things come in, the last step's go out
+  const shown = (s, step, t) => (s === step ? (reduced ? 1 : smooth(SHOW[0], SHOW[1], t)) : s === step - 1 && !reduced ? 1 - smooth(HIDE[0], HIDE[1], t) : 0);
 
   const tmp = new THREE.Vector3();
   let lastS = -1;
@@ -249,7 +277,7 @@ export async function mount(el, ctx) {
         const x = f.k - clamp(q - LANE_OFF[f.lane], 0, 9);
         const [y, z, sqz, d] = fed(x, T_PER, V0);
         m.position.set(o.x + LANES[f.lane], o.y + y, o.z + z);
-        m.visible = !(x < -1 && ((-1 - x) * T_PER > 1.1 || step >= 7));
+        m.visible = !(x < -1 && (-1 - x) * T_PER > 1.1);
         if (!m.visible) continue;
         sq = sqz; dir = d;
       }
@@ -263,36 +291,47 @@ export async function mount(el, ctx) {
     // camera: clear of the step cards on a desktop (they cover the left); the text is below on a phone
     const shift = ctx.shift();
     stage.setShift(...shift);
-    const view = place(blendView(step, t, o), shift[0] > 0 ? 0.7 : 0.96);
+    const view = viewAt(step, t, o, shift);
     // decor fuel in front of the camera fades so it never hides the mechanism
     const cam = view.pos, tgt = view.target;
     const ab = tgt.clone().sub(cam), len = ab.length(); ab.normalize();
+    // (graded, not switched, so no ball pops in or out as the camera moves past it)
+    const gone = step === 7 ? smooth(0, 0.35, t) : 0; // the last step is a clean side elevation
     for (const d of decor) {
       tmp.copy(d.m.position).sub(cam);
       const along = tmp.dot(ab), off = tmp.addScaledVector(ab, -along).length();
-      const block = along > 0 && along < len - 0.1 && off < FUEL_R + 0.06 * (along / len) + 0.02;
-      const near = len < 2.4 && along > 0 && along < len - 0.35; // close-ups: between the camera and the robot
-      d.m.material.opacity = block ? 0.08 : near ? 0.18 : 1;
-      d.m.visible = step < 7; // the last step is a clean side elevation
+      const r = FUEL_R + 0.06 * (along / len) + 0.02;
+      const inFront = smooth(0, 0.08, along) * (1 - smooth(len - 0.18, len - 0.04, along));
+      const block = inFront * (1 - smooth(r, r + 0.08, off));
+      // close-ups: between the camera and the robot
+      const near = (1 - smooth(2.2, 2.6, len)) * smooth(0, 0.08, along) * (1 - smooth(len - 0.45, len - 0.28, along));
+      const a = (1 - Math.max(0.92 * block, 0.82 * near)) * (1 - gone);
+      d.m.material.opacity = a;
+      d.m.visible = a > 0.005;
     }
 
-    // section: the intake step from the roller-motor side, the transfer step through the middle lane
-    const cutIn = smooth(0.04, 0.32, t);
+    // section: the intake step from the roller-motor side, the transfer step through the middle lane;
+    // each sweeps in during its step and back out at the start of the next, never switched off
+    const cutIn = smooth(0.04, 0.32, t), cutOut = reduced ? 1 : smooth(0, 0.3, t);
     if (step === 3) { cut.setNormal([1, 0, 0]); cut.set(lerp(0.9, 0.002, cutIn) - o.x); }
+    else if (step === 4 && cutOut < 1) { cut.setNormal([1, 0, 0]); cut.set(lerp(0.002, 0.9, cutOut) - o.x); }
     else if (step === 5) { cut.setNormal([-1, 0, 0]); cut.set(o.x + lerp(1.2, LANES[1], cutIn)); }
+    else if (step === 6 && cutOut < 1) { cut.setNormal([-1, 0, 0]); cut.set(o.x + lerp(LANES[1], 1.2, cutOut)); }
     else cut.set(1000);
 
-    highlightFor(step);
-    dims.visible = step === 7;
+    for (const s of Object.keys(HL)) light(+s, shown(+s, step, t));
+    const dimA = step === 7 ? shown(7, step, t) : 0;
+    dims.visible = dimA > 0.001;
+    lineMat.opacity = trenchMat.opacity = dimA;
     stage.setView(view);
-    const la = reduced ? 1 : smooth(0.3, 0.45, t);
-    for (const x of LAB) { x.l.a = x.step === step ? la : 0; if (x.l.a > 0) x.l.p.set(...x.at(o, a)); }
+    fitLabels();
+    for (const x of LAB) { x.l.a = shown(x.step, step, t); if (x.l.a > 0) x.l.p.set(...x.at(o, a)); }
     ov.update();
   }
 
   setProgress(0, 0, 0);
   return {
     setProgress,
-    dispose() { ov.dispose(); unlight?.(); kit.dispose(); floorTex.dispose(); floorMat.dispose(); lineMat.dispose(); trenchMat.dispose(); stage.dispose(); },
+    dispose() { ov.dispose(); for (const h of lit.values()) h.clear(); lit.clear(); kit.dispose(); floorTex.dispose(); floorMat.dispose(); lineMat.dispose(); trenchMat.dispose(); stage.dispose(); },
   };
 }

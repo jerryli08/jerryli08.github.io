@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 const args = process.argv.slice(2);
 const url = args.find((a) => /^https?:/.test(a));
 const ids = args.filter((a) => a.startsWith('#'));
-const opt = Object.fromEntries(args.filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
+const opt = Object.fromEntries(args.filter((a) => a.startsWith('--')).map((a) => { const [k, ...v] = a.slice(2).split('='); return [k, v.length ? v.join('=') : true]; }));
 const W = +(opt.w || 1440), H = +(opt.h || 900);
 const STEP = +(opt.step || 120); // px per wheel tick
 if (!url) { console.log('usage: node tools/pages/perf.mjs <url> [#id ...] [--w=1440 --h=900 --step=120]'); process.exit(1); }
@@ -77,15 +77,18 @@ const read = () => page.evaluate(() => {
 // wait for blocks to finish mounting, then until nothing has drawn for QUIET ms (the last live frame
 // and the refined frame after it can take several seconds each under software WebGL), at most 120 s
 const QUIET = +(opt.quiet || 3000);
+let gapMax = 0;
 const settle = async () => {
   await page.waitForFunction(() => ![...document.querySelectorAll('[data-rx-block]')].some((b) => b.dataset.state === 'loading'), null, { timeout: 180000 }).catch(() => {});
   const draws = () => page.evaluate(() => window.__perf.draws);
   const t0 = Date.now();
   let last = await draws(), since = Date.now();
+  // quiet means longer than twice the longest gap seen between draws (software WebGL on a busy
+  // machine can take 10 s and more per frame), at least QUIET, at most 30 s
   while (Date.now() - t0 < 120000) {
     await page.waitForTimeout(400);
     const d = await draws();
-    if (d !== last) { last = d; since = Date.now(); } else if (Date.now() - since >= QUIET) return;
+    if (d !== last) { gapMax = Math.max(gapMax, Date.now() - since); last = d; since = Date.now(); } else if (Date.now() - since >= Math.max(QUIET, Math.min(30000, 2 * gapMax))) return;
   }
   console.log('note: still drawing after 120 s of settling');
 };

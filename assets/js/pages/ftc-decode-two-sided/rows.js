@@ -6,7 +6,7 @@
 //   0 the four rows, named: two on the arms on top of the 4-bar, two outer rows fixed to the chassis
 //   1 carrier 2 turns: its belts run up the 4-bar to F and the rows on the arms turn; its side branch
 //     (52T -> 12T at G, the shaft forward and the 20T pulley at the front) turns too, and the outer
-//     rows turn with that pulley (the belt from it to the rows is not in the CAD)
+//     rows turn at the intended 20T to 120T of the belts on the outermost sides (not in the CAD)
 //   2 cut just in front of the arms: the servo right of F turns its 14T bevel, which turns the 28T
 //     bevel on the left arm, and the left arm swings down about F, half as far as the servo
 //   3 the servo left of F does the same for the right arm
@@ -16,7 +16,7 @@
 // servos turn the arms is not in the CAD.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
-import { loadRobot, rigRobot, looks, beltDots, mm, AX, DEG, F_RATIO, smooth, lerp, clamp, viewSet, frameBox, hud } from './rig.js';
+import { loadRobot, rigRobot, looks, beltDots, mm, AX, DEG, F_RATIO, OUTER_RATIO, smooth, lerp, clamp, viewSet, frameBox, hud } from './rig.js';
 
 const ORANGE = '#ff6b35', BLUE = '#27c7ff', YEL = '#ffd166';
 const ARM = 35 * DEG; // how far each arm swings down in the animation
@@ -86,11 +86,12 @@ export async function mount(el, ctx) {
     armR: ov.label('Right arm', mm(0, 0, -427.4), { color: ORANGE }),
   };
   const H = hud(ov.layer, [
-    ['f', 'F, to the rows on the 4-bar', true], ['g', 'G, toward the outer rows', true],
+    ['f', 'F, to the rows on the 4-bar', true], ['g', 'G, toward the outer rows', true], ['o', 'Outer rows (intended 20T to 120T)', true],
     ['aL', 'Left arm'], ['aR', 'Right arm'],
   ], true);
   H.put('f', `${F_RATIO.toFixed(2)} turns per turn of carrier 2`);
   H.put('g', `${(52 / 12).toFixed(2)} turns per turn of carrier 2`);
+  H.put('o', `${((52 / 12) * OUTER_RATIO).toFixed(2)} turns per turn of carrier 2`);
   const armText = (a) => (Math.abs(a) < 0.05 * DEG ? 'as in the CAD' : `${(Math.abs(a) / DEG).toFixed(1)}° down, its servo ${(2 * Math.abs(a) / DEG).toFixed(1)}°`);
   const onArm = (x, y, a) => { const c = Math.cos(a), s = Math.sin(a), dx = x - AX.F[0], dy = y - AX.F[1]; return [(AX.F[0] + c * dx - s * dy) / 1000, (AX.F[1] + s * dx + c * dy) / 1000]; };
 
@@ -152,7 +153,7 @@ export async function mount(el, ctx) {
     L.armL.a = L.armR.a = ia;
     H.put('aL', armText(rig.arms[0]));
     H.put('aR', armText(rig.arms[1]));
-    H.put('mini', step < 2 ? `F ${F_RATIO.toFixed(2)} and G ${(52 / 12).toFixed(2)} turns per turn of carrier 2`
+    H.put('mini', step < 2 ? `F ${F_RATIO.toFixed(2)}, outer rows ${((52 / 12) * OUTER_RATIO).toFixed(2)} turns per turn of carrier 2`
       : `Left arm ${(rig.arms[0] / DEG).toFixed(0)}°, right arm ${(-rig.arms[1] / DEG).toFixed(0)}°: each servo turns twice as far`);
     ov.update();
   }

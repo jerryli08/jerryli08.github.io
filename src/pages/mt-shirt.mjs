@@ -3,9 +3,12 @@
 // link lengths and sizes are measured from his CAD (monkeytype merch v22) and say so. The two
 // calculation blocks use only those CAD measurements (axes in assets/js/pages/mt-shirt/rig.js:
 // pulley axes 59.95 mm apart, spur axes 29.99 mm apart).
+// Jerry (Sept 27, 21:12): the rail block pushes the keycap on the switch to the end of the switch's
+// travel and back; the plate on the block meets the keycap's top face 33.02 mm past the CAD pose
+// (measured on the STEP), and the press uses Cherry's published 4 mm total travel (rig.js).
+// The "from the angle of the print" still is rendered from the camera fitted to the print (az -25.5,
+// el 43.5, nearly orthographic), checked by overlaying the print's lines on the render.
 // Held back until Jerry answers /home/claude/work/monkeytype-merch/questions.md:
-//  - what joins the carriage to the keycap (the export has no such part, so nothing shows one) and
-//    whether the keycap is pushed onto the switch or pressed like a key (Q1)
 //  - how the shirt came about and how the line art was made from the CAD (Q3)
 //  - servo model: the copy uses his "Axon Max Plus"; the CAD part is named Axon_MINI (Q4)
 //  - whether the mechanism was ever built or run (Q5): the copy only says it was designed in CAD
@@ -23,7 +26,7 @@ export default {
       { v: '1 servo', l: 'Drives the whole chain' },
     ],
     text: [
-      `I designed the Deconstructed T-Shirt on the [official Monkeytype store](${STORE}). The print is an exploded view of a small machine I designed in CAD, whose whole job is to push a keycap onto a keyboard switch.`,
+      `I designed the Deconstructed T-Shirt on the [official Monkeytype store](${STORE}). The print is an exploded view of a small machine I designed in CAD, whose whole job is to push a keycap on a keyboard switch all the way in.`,
       'One servo drives a bevel gear pair, a belt, a spur gear pair and a crank linkage that runs a carriage along a miniature linear rail. I made it far more complex than the job needs, on purpose, so the drawing has more to look at.',
     ],
   },
@@ -45,17 +48,17 @@ export default {
 
     { type: 'scrolly', id: 'drivetrain', module: 'drivetrain', width: 'full', stepHeight: '95vh', poster: `${M}/poster-drivetrain.webp`,
       h: 'One keycap, five stages',
-      p: ['The machine has one job: push a keycap onto a keyboard switch. Instead of doing that directly, I sent the servo\'s motion through a chain of different mechanisms, on purpose, for visual interest. Each one is one more thing to look at in the drawing. Here it runs in the exploded pose from the shirt, with the lid and the top frame lifted away.'],
+      p: ['The machine has one job: push a keycap on a keyboard switch all the way in, and let it back out. Instead of doing that directly, I sent the servo\'s motion through a chain of different mechanisms, on purpose, for visual interest. Each one is one more thing to look at in the drawing. Here it runs in the exploded pose from the shirt, with the lid and the top frame lifted away.'],
       steps: [
         { h: '1. The servo', p: ['An Axon Max Plus servo is the only actuator, wired to a 4xAA battery holder at the other end of the box. Its output shaft lies flat, pointing along the box.', 'In every step the servo makes one push and comes back, so each stage can be watched doing its part.'] },
         { h: '2. Bevel gears', p: ['Two identical bevel gears turn the servo\'s horizontal shaft into a vertical one at 1 : 1. From here on, every shaft stands straight up from the floor of the box.', 'In the exploded pose the pair is drawn apart along the explode axis like every other layer, so here they turn without touching.'] },
         { h: '3. Belt', p: ['A 20-tooth pulley on the bevel shaft drives a second 20-tooth pulley 60 mm away through an 80-tooth belt with a 2 mm pitch. Equal pulleys, so it is still 1 : 1: the belt is there to carry the motion across the box.'] },
         { h: '4. Spur gears', p: ['The second pulley shares its shaft with a 36-tooth gear, which drives a 12-tooth gear, module 1.25, with their centres 30 mm apart. That is a 3 : 1 step-up: the 12-tooth gear turns the opposite way to the 36-tooth gear and three times as far, so three times as far as the servo.'] },
-        { h: '5. Crank', p: ['The 12-tooth gear carries a 32 mm crank arm. A 33 mm link joins the crank to the carriage and turns the crank\'s rotation into a straight push.', 'The crank axis sits 24 mm off the line of the rail, so this is an offset slider-crank. The 45 degrees the crank turns in one push move the carriage 18.8 mm.'] },
-        { h: '6. Linear rail', p: ['The carriage rides a 70 mm MGN7 miniature linear guide, so the push stays straight. At the start of the push the block is at the back end of the rail; at the end it is where the CAD has it.'] },
-        { h: '7. The keycap', p: ['The whole chain is there for this: the keycap and the Cherry MX switch, lying on its side at the end of the rail. The job of the machine is to push the keycap onto the switch.', { note: 'Nothing in the exported CAD joins the carriage to the keycap, so the animation moves the carriage only and leaves the keycap where the CAD has it.' }] },
+        { h: '5. Crank', p: ['The 12-tooth gear carries a 32 mm crank arm. A 33 mm link joins the crank to the carriage and turns the crank\'s rotation into a straight push.', 'The crank axis sits 24 mm off the line of the rail, so this is an offset slider-crank. The 116 degrees the crank turns in one push move the carriage 55.9 mm.'] },
+        { h: '6. Linear rail', p: ['The carriage rides a 70 mm MGN7 miniature linear guide, so the push stays straight. The push starts with the block at the back end of the rail and runs it 55.9 mm, until the plate on the block has pressed the keycap all the way in.'] },
+        { h: '7. The keycap', p: ['The whole chain is there for this: a keycap on a Cherry MX switch, lying on its side at the end of the rail. The plate on the block meets the keycap 33 mm past where the CAD has the carriage, pushes it the switch\'s full 4 mm of travel to the bottom, then backs off and lets the key spring back out.'] },
       ],
-      caption: 'Tooth counts, centre distances and link lengths are measured from my CAD. One push here is 15 degrees at the servo: through the 3 : 1 spur stage that is 45 degrees at the crank, which moves the carriage 18.8 mm, from the back end of its rail to where it sits in the CAD.' },
+      caption: 'Tooth counts, centre distances, link lengths and the 33 mm from the plate to the keycap are measured from my CAD. One push here is 38.8 degrees at the servo: through the 3 : 1 spur stage that is 116 degrees at the crank, which runs the carriage 55.9 mm, from the back end of its rail to the bottom of the key\'s travel. The switch in the CAD is a simplified model with no working stop, so the press uses Cherry\'s published 4 mm of total travel.' },
 
     { type: 'scrolly', id: 'cad', module: '@turntable', width: 'wide', side: 'right', stepHeight: '90vh', poster: `${M}/poster-parts.webp`,
       h: 'What is in the box',
@@ -105,16 +108,31 @@ export default {
       { calc: 'Why 30 mm between the spur gears, and what 3 : 1 does',
         given: [
           ['Gears', '36 and 12 teeth, module 1.25', 'measured from the CAD'],
-          ['Crank turn for one push, from the back end of the rail to the carriage\'s place in the CAD', '45 degrees', 'the linkage, measured from the CAD'],
+          ['Crank turn for one push, from the back end of the rail to the bottom of the key\'s travel', '116.4 degrees', 'the linkage below, measured from the CAD'],
         ],
         work: [
           'Pitch diameters: 1.25 × 36 = 45 mm and 1.25 × 12 = 15 mm',
           'Meshing distance: (45 mm + 15 mm) / 2 = 30 mm, the distance between the two gear axes in the CAD',
           'Ratio: 36 / 12 = 3, so the 12-tooth gear and its crank turn 3 degrees for every degree of the 36-tooth gear, which turns with the servo (1 : 1 through the bevels and the belt)',
-          'Servo turn for one push: 45 / 3 = 15 degrees',
+          'Servo turn for one push: 116.4 / 3 = 38.8 degrees',
         ],
-        result: 'Module 1.25 gears with 36 and 12 teeth mesh at exactly 30 mm, and the 3 : 1 step-up lets 15 degrees at the servo swing the crank the 45 degrees one push needs.',
+        result: 'Module 1.25 gears with 36 and 12 teeth mesh at exactly 30 mm, and the 3 : 1 step-up lets 38.8 degrees at the servo swing the crank the 116 degrees one push needs.',
         note: 'Pitch circles; the backlash allowance in the CAD, if any, is left out.' },
+      { calc: 'Can the crank push the key all the way in?',
+        given: [
+          ['Crank, link, and the crank axis\'s offset from the rail line', '32.0 mm, 33.1 mm, 24.0 mm', 'measured from the CAD'],
+          ['Carriage pin ahead of the crank axis, in the CAD pose', '19.0 mm', 'measured from the CAD'],
+          ['Plate on the block to the keycap\'s top face, in the CAD pose', '33.0 mm', 'measured from the CAD'],
+          ['Cherry MX total travel', '4 mm', '[Cherry](https://www.cherry.de/en-us/product/mx2a-red)'],
+        ],
+        work: [
+          'Carriage pin ahead of the crank axis with the key at the bottom: 19.0 + 33.0 + 4 = 56.0 mm',
+          'Furthest the pin can get, with crank and link in line: √((32.0 + 33.1)² − 24.0²) = √(4238 − 576) = 60.5 mm',
+          'Crank angle at the bottom of the press: −44.0 degrees; in line (the dead point): −21.6 degrees',
+          'Link angle to the rail at the bottom: about 3 degrees',
+        ],
+        result: 'The press bottoms out 4.5 mm short of the linkage\'s dead point, with 22 degrees of crank to spare, and at the bottom the link pushes almost straight along the rail.',
+        note: 'Geometry only; crank angles from STEP +X about the 12-tooth axis.' },
     ],
       media: [
         { i: `${M}/still-top.webp`, c: 'The layout from above, with the lid, top frame and logo hidden: servo at the right, battery holder at the left, the belt and the gears between them, and the rail and keycap along the front' },
@@ -122,7 +140,7 @@ export default {
       ] },
 
     { type: 'prose', id: 'shirt', h: 'From CAD to a shirt', p: [
-      'The drawing on the shirt is the CAD itself: the same parts in the same exploded pose, seen from the front right and above. In the CAD every layer is lifted to its own height and the corner screws have guide lines down to their holes, so the whole mechanism reads in one white line drawing.',
+      'The drawing on the shirt is the CAD itself: the same parts in the same exploded pose, seen from the front left and above. In the CAD every layer is lifted to its own height and the corner screws have guide lines down to their holes, so the whole mechanism reads in one white line drawing.',
     ],
       media: [[{ i: `${M}/still-shirt-angle.webp`, c: 'My CAD, from the angle of the print' }, { i: 'shirt-print.webp', c: 'The print on the shirt' }]] },
 

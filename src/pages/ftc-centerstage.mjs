@@ -4,6 +4,7 @@
 // driven only by the scroll and built from the team's code:
 //   indexer  the backdrop and the deposit's sideways stops, values from the code
 //   auto     the autonomous path from the code's Road Runner poses
+// Jerry, Sept 27, 21:12: the best scroll animation sits right below the hero, so "auto" comes first.
 // Jerry, Sept 27: real footage plays as video ("the scrolling should only advance CAD animations"),
 // so "One cycle, start to finish" is text with the real clips beside it (the frame-by-frame cycle
 // scrolly and its stills were removed; cycle-lift-place.mp4 is the last 3.5 s of hero-auto-backdrop).
@@ -43,6 +44,20 @@ export default {
     ],
   },
   sections: [
+    // ------------------------------------------------------------------ the autonomous (right below the hero)
+    { type: 'scrolly', id: 'auto', module: 'auto', webgl: false, stepHeight: '80vh', poster: 'auto-purple-pixel.jpg',
+      h: 'The autonomous, from the code',
+      p: ['Each match opens with an autonomous period, when the robot drives itself. Ours finds the team prop with the camera, leaves the purple pixel on the matching spike mark and places the yellow one on the backdrop. This is our red close routine with the prop on the left, drawn from the Road Runner poses in our code (inches, heading in degrees).'],
+      steps: [
+        { h: 'Find the prop', p: ['While the robot waits for the start, the camera thresholds each frame in HSV for red, finds the largest blob and votes by where its center falls: left of 100 px, left of 437.5 px, or further right. It decides after 15 votes; here, LEFT.'] },
+        { h: 'Purple pixel on the spike', p: ['From the start pose (12, -61), facing into the field, the robot drives to (15, -41) and turns 30 degrees toward the left spike mark on one line, and the arm leaves the purple pixel there.'] },
+        { h: 'To the backdrop', p: ['One more line takes it to (42, -36), turning back to 0 degrees to square up to the backdrop. With the prop on the right it first detours through (36, -57).'] },
+        { h: 'Line up on the tag', p: ['The camera reads the center AprilTag, and the code splines to a pose 5.5 in short of it along the measured range, shifted 8.5 in to the left for a left prop (6.5 in to the right for a right one), then pauses 0.25 s.'] },
+        { h: 'Yellow pixel', p: ['The lift goes to its first height, 100 ticks, the arm tips to its drop angle and both grabbers open: the yellow pixel lands on the left side of the backdrop.'] },
+        { h: 'Back for more', p: ['The four official autonomous programs in the code stop there, with two pixels. An experimental routine goes on: reversed splines under the truss through (27, -6) and (-40, -6) to the stacks at (-62, -17), with the intake on and its front bar at the third stack height, then back to the backdrop.'] },
+      ],
+      caption: 'Robot poses, headings, offsets and thresholds are from our code; the robot is an 18 in footprint. Field elements are placed approximately, splines are drawn through the code\'s waypoints, and the tag step assumes the camera sees the center tag straight ahead, since the real pose comes from what it measures.' },
+
     // ------------------------------------------------------------------ the game
     { type: 'prose', id: 'game', h: 'The game, and the robot', p: [
       'In CENTERSTAGE, robots pick up hexagonal game pieces called pixels, from the floor or from stacks, carry them under the truss and place them on the backdrop, a slanted board of staggered rows. Three touching colored pixels, all one color or all different, score extra as a mosaic. Each match starts with an autonomous period and ends with launching a paper airplane drone and hanging from the rigging.',
@@ -215,23 +230,11 @@ export default {
       `Our robot code is public: [STATIC-CENTERSTAGE on GitHub](${REPO}). It is Java on FTCLib's command-based framework, with Road Runner for the autonomous paths.`,
       { ul: [
         '**Structure.** Each mechanism is a subsystem (intake, deposit, lift, and one for the drone and hang), and each driver button schedules a short sequence of commands, so a whole transfer, or a whole return to stasis, is one button press.',
-        '**Autonomous.** Before the start the camera looks for our team prop and votes left, middle or right. The robot pushes the purple pixel onto the matching spike mark, drives to the backdrop on a Road Runner path, and uses the center AprilTag on the backdrop to correct its final position before placing the yellow pixel. The next section draws it.',
+        '**Autonomous.** Before the start the camera looks for our team prop and votes left, middle or right. The robot pushes the purple pixel onto the matching spike mark, drives to the backdrop on a Road Runner path, and uses the center AprilTag on the backdrop to correct its final position before placing the yellow pixel. It is drawn [at the top of this page](#auto).',
         '**Touchpad placement.** One teleop lets the second driver pick a row and column for each pixel on the PS4 touchpad, shows the choice on a small LED display on the robot, and runs the lift, arm and sideways rail to both spots with one button.',
         '**Driver feel.** Our final teleop scales each stick to 87/95 of its input and adds a constant 0.08 in the direction it is pushed, the same idea as the lift\'s constant push. While intaking it turns the controls around, so the intake is the front.',
       ] },
     ], media: [{ i: 'portfolio-touchpad.webp', c: 'The touchpad subsystem as it appeared in our engineering portfolio' }] },
-    { type: 'scrolly', id: 'auto', module: 'auto', webgl: false, width: 'wide', side: 'right', stepHeight: '80vh', poster: 'auto-purple-pixel.jpg',
-      h: 'The autonomous, from the code',
-      p: ['Our red close routine with the team prop on the left, drawn from the Road Runner poses in the code (inches, heading in degrees).'],
-      steps: [
-        { h: 'Find the prop', p: ['While the robot waits for the start, the camera thresholds each frame in HSV for red, finds the largest blob and votes by where its center falls: left of 100 px, left of 437.5 px, or further right. It decides after 15 votes; here, LEFT.'] },
-        { h: 'Purple pixel on the spike', p: ['From the start pose (12, -61), facing into the field, the robot drives to (15, -41) and turns 30 degrees toward the left spike mark on one line, and the arm leaves the purple pixel there.'] },
-        { h: 'To the backdrop', p: ['One more line takes it to (42, -36), turning back to 0 degrees to square up to the backdrop. With the prop on the right it first detours through (36, -57).'] },
-        { h: 'Line up on the tag', p: ['The camera reads the center AprilTag, and the code splines to a pose 5.5 in short of it along the measured range, shifted 8.5 in to the left for a left prop (6.5 in to the right for a right one), then pauses 0.25 s.'] },
-        { h: 'Yellow pixel', p: ['The lift goes to its first height, 100 ticks, the arm tips to its drop angle and both grabbers open: the yellow pixel lands on the left side of the backdrop.'] },
-        { h: 'Back for more', p: ['The four official autonomous programs in the code stop there, with two pixels. An experimental routine goes on: reversed splines under the truss through (27, -6) and (-40, -6) to the stacks at (-62, -17), with the intake on and its front bar at the third stack height, then back to the backdrop.'] },
-      ],
-      caption: 'Robot poses, headings, offsets and thresholds are from our code; the robot is an 18 in footprint. Field elements are placed approximately, splines are drawn through the code\'s waypoints, and the tag step assumes the camera sees the center tag straight ahead, since the real pose comes from what it measures.' },
     { type: 'media', layout: 'row', items: [
       { v: 'auto-purple-pixel.mp4', c: 'Jan 27, 2024, from above: the robot turns toward the red team prop and the arm reaches out to leave a pixel on its spike mark, then it heads for the backdrop' },
       { v: 'hero-stack-cycle.mp4', c: 'An autonomous run under the truss to the pixel stacks at the far wall' },

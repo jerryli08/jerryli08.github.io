@@ -10,7 +10,7 @@
 // rollers do not spin.
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
-import { rigRobot, AX, FOLD, INTAKE, PIXEL } from './rig.js';
+import { rigRobot, AX, FOLD, INTAKE, PIXEL, SLIDE_FRONT, SLIDE_LEN } from './rig.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
@@ -88,12 +88,17 @@ function state(step, sp, reduced) {
   return { ext, fold, sA, sB, riding: step >= 3, spin: reduced ? 0 : integral(tabR, u), dspin: reduced ? 0 : integral(tabD, u) };
 }
 
-// per step: the view it settles on, whether it is a section, and its label
-const VIEW = ['wide', 'wide', 'intake', 'side', 'side', 'wide', 'transfer'];
-// Section plane x = -0.028, keeping the far side (x >= -0.028) and seen from -X: it cuts the ramp,
-// the counter roller, the pixels and the dumper's tray, and passes just outside the middle star
-// rollers and the nearer rear roller, which stay whole behind it.
-const CUT_X = -0.028, TOP_Y = 0.15;
+// per step: the view it settles on (and so its section cut)
+const VIEW = ['stow', 'reach', 'intake', 'side', 'side', 'stow', 'transfer'];
+// The stowed and extending side views (seen from -X) hide the left outer drive plate (plateL, model
+// x -0.1981 to -0.1949), so the left slides show whole where the plate covers them; slide A's outer
+// body is right behind it, from x -0.19488 (SLIDE_X). The intake and the transfer are cut by a
+// section plane at x = -0.028 (CUT_X), keeping x >= -0.028: it cuts the ramp, the counter roller,
+// the pixels and the dumper's tray, and passes just outside the middle star rollers and the nearer
+// rear roller, which stay whole behind it.
+const CUT_X = -0.028, SLIDE_X = -0.1949, TOP_Y = 0.15;
+const CUT_AT = { side: CUT_X, transfer: CUT_X };
+const PLATE_OFF = { stow: true, reach: true };
 
 export async function mount(el, ctx) {
   const stage = createStage(el, { controls: false, hint: false });
@@ -104,8 +109,10 @@ export async function mount(el, ctx) {
   const intake = stage.part(INTAKE, model);
 
   // ---- views, framed once at rest (extended, arm up; pixels at their start) and cached per aspect
-  const box = (z0, z1, y1) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.12, y1, z1 - z0)); m.position.set(0, y1 / 2, (z0 + z1) / 2); m.updateMatrixWorld(true); return m; };
+  const box = (z0, z1, y1, w = 0.12) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, y1, z1 - z0)); m.position.set(0, y1 / 2, (z0 + z1) / 2); m.updateMatrixWorld(true); return m; };
   const sideBox = box(0.9, 1.37, 0.19); // the intake from the side, with the pixels on the floor ahead
+  const stowBox = box(-0.26, 0.205, 0.43, 0.42); // the robot, front to back, floor to top of the lift, side to side
+  const reachBox = box(-0.26, 1.37, 0.43, 0.42); // the robot and the full reach, with the pixels ahead
   const transferBox = box(-0.27, 0.09, 0.17); // the dumper and the back of the retracted ramp
   const place = (v) => { const s = new THREE.Spherical().setFromVector3(v.pos.clone().sub(v.target)); return { t: v.target.clone(), s }; };
   const pA = [0, 0, 0], pB = [0, 0, 0];
@@ -129,7 +136,9 @@ export async function mount(el, ctx) {
     R.pose({ ext: 1 }); putPixels(state(0, 0, true)); // at rest, pixels at their start
     const fr = (obj, azimuth, elevation, pad) => place(stage.frame(obj, { azimuth, elevation, pad, apply: false, refresh: true }));
     views = {
-      wide: fr(model, -55, 24, portrait ? 0.96 : 1.12),
+      stow: fr(stowBox, -90, 3, portrait ? 1.0 : 1.04),
+      // a straight side view of the whole reach would be a thin sliver, so it is seen from the front quarter
+      reach: portrait ? fr(reachBox, -38, 24, 0.95) : fr(reachBox, -62, 14, 1.0),
       intake: fr([...intake, ...pixels], -48, 22, portrait ? 1.0 : 1.05),
       side: fr(sideBox, -90, 4, portrait ? 0.98 : 1.1),
       transfer: fr(transferBox, -90, 6, portrait ? 0.98 : 1.1),
@@ -146,17 +155,15 @@ export async function mount(el, ctx) {
     stage.setView({ pos: new THREE.Vector3().setFromSpherical(sph).add(target), target });
   }
 
-  // ---- section planes, made the first time they are needed and switched off when not cutting.
-  // The side cut keeps x >= CUT_X and sweeps in from outside the robot; for the transfer a second,
-  // level cut keeps y <= 0.15 m so the lift and the hubs above the dumper do not fill the picture.
-  let cut = null, top = null;
-  function setCut(amount, amountTop) {
-    if (amount <= 0.001) { if (cut) cut.enable(false); }
-    else {
-      if (!cut) cut = stage.sectionPlane([1, 0, 0], 1);
-      cut.enable(true);
-      cut.set(lerp(0.32, -CUT_X, amount)); // keeps x >= -constant
-    }
+  // ---- section planes, made at mount parked outside the model and switched off when not cutting.
+  // The side cut keeps x >= its plane (CUT_AT) and sweeps in from outside the robot (x = -0.32) or
+  // from one plane to the next; for the transfer a second, level cut keeps y <= 0.15 m so the lift
+  // and the hubs above the dumper do not fill the picture.
+  const OUT = -0.32;
+  let cut = stage.sectionPlane([1, 0, 0], -OUT, { enabled: false }), top = null;
+  function setCut(x, amountTop) {
+    if (x <= OUT + 0.001) cut.enable(false);
+    else { cut.enable(true); cut.set(-x); } // keeps x >= x
     if (amountTop <= 0.001) { if (top) top.enable(false); }
     else {
       if (!top) top = stage.sectionPlane([0, -1, 0], 1);
@@ -170,13 +177,17 @@ export async function mount(el, ctx) {
   const slideBox = new THREE.Box3().setFromObject(stage.part(/^anim_cx_slide3$/, model)[0]);
   const LBL = {
     1: ov.label('Pixels, 3 in across', [0, 0, 0], { side: 'l' }),
-    2: ov.label('Two-stage slide, one on each side', [0, 0, 0], { side: 'l' }),
+    2: ov.label('Three slides open in a row', [0, 0, 0], { side: 'l' }),
+    5: ov.label('Front ends in line', [SLIDE_X, 0.142, SLIDE_FRONT], { color: ORANGE, side: 'l' }),
+    6: ov.label('Back ends in line', [SLIDE_X, 0.122, SLIDE_FRONT - SLIDE_LEN], { color: ORANGE, side: 'l' }),
     3: ov.label('Front rollers fold down', [0, 0, 0], { side: 'l' }),
     4: ov.label('Counter roller', [0, 0, 0]),
     7: ov.label('Into the 4-bar dumper', [0, 0, 0]),
   };
   const fw = new THREE.Vector3();
   const ramp = stage.part(/^anim_cx_ramp$/, model), tray = stage.part(/^anim_cx_tray$/, model);
+  const plateL = stage.part(/^anim_cx_plateL$/, model);
+  let plateShown = true;
   let litNow = 0, unlit = [];
 
   function setProgress(p, step = 0, stepP = 0) {
@@ -190,15 +201,18 @@ export async function mount(el, ctx) {
     const cur = vs[VIEW[step]], prev = vs[VIEW[Math.max(0, step - 1)]];
     blend(prev, cur, step === 0 ? 1 : k);
     stage.setShift(...ctx.shift()); // the model right of the step cards
-    const isCut = (i) => VIEW[i] === 'side' || VIEW[i] === 'transfer';
-    const cA = step > 0 && isCut(step - 1) ? 1 : 0, cB = isCut(step) ? 1 : 0;
+    const cutX = (i) => CUT_AT[VIEW[i]] ?? OUT;
     const tA = step > 0 && VIEW[step - 1] === 'transfer' ? 1 : 0, tB = VIEW[step] === 'transfer' ? 1 : 0;
-    setCut(lerp(cA, cB, step === 0 ? 1 : k), lerp(tA, tB, step === 0 ? 1 : k));
+    setCut(lerp(cutX(Math.max(0, step - 1)), cutX(step), step === 0 ? 1 : k), lerp(tA, tB, step === 0 ? 1 : k));
+    // the left outer drive plate is hidden in the side views of the slides (switched halfway through the blend)
+    const offA = !!PLATE_OFF[VIEW[Math.max(0, step - 1)]], offB = !!PLATE_OFF[VIEW[step]];
+    const shown = !(step === 0 || k >= 0.5 ? offB : offA);
+    if (shown !== plateShown) { plateShown = shown; for (const o of plateL) o.visible = shown; stage.invalidate(); }
 
     // labels
     const dz = R.car.position.z;
     LBL[1].p.set(0, pA[1] + 0.02, (st.riding ? pA[0] + dz : pA[0]));
-    LBL[2].p.set(slideBox.min.x + 0.006, (slideBox.min.y + slideBox.max.y) / 2, slideBox.max.z - 0.25 + dz);
+    LBL[2].p.set(slideBox.min.x + 0.006, (slideBox.min.y + slideBox.max.y) / 2, slideBox.max.z - 0.1 + dz);
     R.groups.gF.getWorldPosition(fw); LBL[3].p.copy(fw);
     LBL[4].p.set(CUT_X, AX.C[1], AX.C[2] + dz);
     LBL[7].p.set(CUT_X, 0.1, -0.16);
@@ -211,7 +225,10 @@ export async function mount(el, ctx) {
     }
     const show = (i, a) => { LBL[i].a = a; };
     const kin = reduced ? 1 : smooth(0.35, 0.6, stepP), kout = reduced ? 1 : 1 - smooth(0.85, 1, stepP);
-    show(1, step === 0 ? 1 : 0);
+    const ends = step === 0 ? 1 : step === 5 ? (reduced ? 1 : smooth(0.88, 0.97, stepP)) : 0; // the slide ends, once closed
+    show(5, ends);
+    show(6, ends);
+    show(1, step === 1 ? 1 - kin : 0);
     show(2, step === 1 ? kin : 0);
     show(3, step === 2 ? kin : 0);
     show(4, step === 3 ? kin * kout : 0);

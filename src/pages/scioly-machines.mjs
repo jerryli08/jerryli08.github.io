@@ -24,13 +24,9 @@ export default {
     items: [{ i: 'still-device-full.webp', c: 'The finished device: two beams on two posts, joined by the link at the right end' }],
   },
   sections: [
-    { type: 'prose', id: 'event', h: 'The event', p: [
-      'Machines asks for a lever-based measuring device built before the tournament. Under the 2026 rules it has to be a class 1 lever connected directly, by a flexible or rigid link, to a class 2 or class 3 lever. Each beam can be at most 40.0 cm long, and no springs or electronics are allowed.',
-      'At the event you are given three test masses and report two ratios, A/B and B/C, as decimals. The device’s whole job is to turn "where do the two masses balance" into a number.',
-    ] },
-
     { type: 'scrolly', id: 'linkage', module: 'linkage', stepHeight: '85vh',
       poster: `${M}/poster-linkage.webp`, h: 'Two levers and a link',
+      p: ['My device for the 2025-26 Machines event, where you are given test masses and have to find the ratios between them. Scroll to see how its two levers move together.'],
       steps: [
         { h: 'The CAD', p: ['This is the CAD of the device: two beams on two posts, each beam a lever, joined at the right end by one rigid link.'] },
         { h: 'Class 1: the upper beam', p: ['The upper beam is the **class 1** lever: its fulcrum sits between the mass and the link. When the mass side goes down, the link side comes up.'] },
@@ -38,6 +34,11 @@ export default {
         { h: 'The link: 5 : 1', p: ['As the upper lever tips, watch the link: both link pins move up and down by the same amount, but one is 75 mm from its fulcrum and the other 375 mm, so the lower lever turns a fifth as far. That 5 : 1 is the whole trick of the device.'] },
       ],
       caption: 'Both levers turn about the real fulcrum axes in the CAD (the bearing bores); the tipping range is a visual limit, not a stop in the CAD.' },
+
+    { type: 'prose', id: 'event', h: 'The event', p: [
+      'Machines asks for a lever-based measuring device built before the tournament. Under the 2026 rules it has to be a class 1 lever connected directly, by a flexible or rigid link, to a class 2 or class 3 lever. Each beam can be at most 40.0 cm long, and no springs or electronics are allowed.',
+      'At the event you are given three test masses and report two ratios, A/B and B/C, as decimals. The device’s whole job is to turn "where do the two masses balance" into a number.',
+    ] },
 
     { type: 'prose', id: 'math', h: 'How the balance works', p: [
       'Each mass hangs at some distance from its own fulcrum: **a** for mass A on the upper lever, **b** for mass B on the lower one. With the device level, the moments on each lever cancel, and the link carries the same force T to both:',

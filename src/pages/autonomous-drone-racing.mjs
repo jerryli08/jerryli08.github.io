@@ -21,8 +21,10 @@ export default {
       { v: '52 s', l: 'Winning run, under half the second-best team’s time' },
       { v: 'Only team', l: 'to take off autonomously and finish the whole course in one run' },
       { v: '5', l: 'Person team, which I led' },
+      { v: '5.3%', l: 'Acceptance rate, MIT Beaver Works Summer Institute (BWSI)' },
     ],
     text: [
+      'This was the capstone of the Autonomous Air Vehicle Racing course at the MIT Beaver Works Summer Institute (BWSI), which has a 5.3% acceptance rate.',
       'I led a team of five writing the software for an autonomous drone race: a Holybro X500 quadcopter has to follow an LED line on the floor, past hoops, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and that becomes velocity commands for the flight controller. A forward camera is for obstacle avoidance: the hoops carry AprilTags.',
       'We won in 52 seconds, less than half the second-best team’s time, and we were the only team to take off autonomously and complete the whole course in one run. Below: our line follower flying a lap as you scroll, the drone from our CAD, and how the code turns a picture of the floor into a velocity command.',
     ],

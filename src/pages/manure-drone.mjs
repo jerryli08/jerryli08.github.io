@@ -45,19 +45,14 @@ export default {
     items: [{ i: 'cad-hero.webp', c: 'My CAD of the manure drone: the vacuum canister runs through the middle of the body, with six arms of coaxial motor pairs and 23 in props around it' }],
   },
   sections: [
-    // ------------------------------------------------------------------ the problem
-    { type: 'prose', id: 'problem', h: 'Why manure', p: [
-      'The town we planned for has a lot of cow farming, and methane was its main source of pollution. On a dairy farm, manure is one source of methane: stored wet in lagoons or slurry tanks, it breaks down without oxygen and gives it off, and methane is a much stronger greenhouse gas than CO2.',
-      'My idea was to collect the manure with a drone. For a lot of places it is much easier for an agricultural drone to fly to the site, vacuum the manure up, drop it at a depot and repeat than to deploy dedicated ground rovers.',
-    ] },
-
     // ------------------------------------------------------------------ the mission
+    // Jerry (Sept 27, 21:12): the best CAD scroll animation sits right below the hero.
     { type: 'scrolly', id: 'patrol', module: 'patrol', width: 'full', stepHeight: '95vh', poster: `${M}poster-patrol.webp`,
       h: 'How it would work',
       p: ['The real drone CAD, at real scale, flying the mission as you scroll.'],
       steps: [
         { h: 'Twelve props, six pairs', p: [
-          'The drone has twelve motors in six coaxial pairs, with 23 in props. Each lower prop is the mirror image of the one above it and turns the other way, so the two props on each arm cancel each other\'s torque.',
+          'Twelve motors in six coaxial pairs, with 23 in props. Each lower prop mirrors the one above it and turns the other way, so the pair on each arm cancels its torque.',
           'At 3 to 5 kg of recommended takeoff weight per motor ([Hobbywing X6 spec](' + X6 + ')), twelve motors are rated for 36 to 60 kg, before the loss from stacking two props on one axis.',
         ] },
         { h: 'Scan', p: ['It takes off and flies over the pasture while a downward camera looks for manure, and marks every pat it finds. No camera is in the CAD yet: this is the plan.'] },
@@ -69,6 +64,12 @@ export default {
         ] },
       ],
       caption: 'Illustrative: the pasture, the manure, the digester, the camera footprint, the streams and the fill level are drawn for the animation. The drone is my CAD at real scale, and each prop turns about its real hub axis, slowed down so you can see which way. The sources for the numbers in the readout are in the table below.' },
+
+    // ------------------------------------------------------------------ the problem
+    { type: 'prose', id: 'problem', h: 'Why manure', p: [
+      'The town we planned for has a lot of cow farming, and methane was its main source of pollution. On a dairy farm, manure is one source of methane: stored wet in lagoons or slurry tanks, it breaks down without oxygen and gives it off, and methane is a much stronger greenhouse gas than CO2.',
+      'My idea was to collect the manure with a drone. For a lot of places it is much easier for an agricultural drone to fly to the site, vacuum the manure up, drop it at a depot and repeat than to deploy dedicated ground rovers.',
+    ] },
 
     // ------------------------------------------------------------------ the CAD versions
     { type: 'scrolly', id: 'versions', module: '@turntable', width: 'wide', side: 'left', stepHeight: '90vh', poster: `${M}poster-versions.webp`,

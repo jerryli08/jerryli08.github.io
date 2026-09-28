@@ -7,9 +7,13 @@
 //  - the handle block's two pins (8.8 mm) end at x -39.8 mm; the head block's holes (9.0 mm) start
 //    at its end face, x -8.3 mm, and go 13.7 mm deep. Sliding the handle block +45.0 mm along x
 //    puts its end face on the head block's and each pin 0.2 mm short of the bottom of its hole.
-//  - a ply is the mold's own cavity floor (its up-facing faces 1.6 to 1.8 mm below the parting
-//    face, the head and the neck; the deep handle channel is left out) as a thin sheet, stacked
-//    0.25 mm apart. The number of plies and their fibre angles are for illustration only.
+//  - a ply is the mold's own cavity surface as a thin sheet, stacked 0.25 mm apart: the head's floor
+//    (1.7 mm below the parting face), the neck, and the handle channel (down to 12.6 mm below it)
+//    with its sides, because the plies run through the handle too, not just the face (Jerry, Sept 27,
+//    21:12). A face of the mold belongs to the cavity when it is below the parting face and open to
+//    the air above it: a point 1 mm out from it along its normal is above the mold's top surface
+//    (a height map of the joined blocks, 0.5 mm cells). That leaves out the pin holes, the block
+//    sides and the underside. The number of plies and their fibre angles are for illustration only.
 // The paddle model is not drawn inside the mold (the two files are in different frames and the
 // mold's head cavity is smaller than the paddle's head), so the last step crossfades to it.
 // Everything is a pure function of (step, stepP); nothing moves on its own.
@@ -90,10 +94,10 @@ export async function mount(el, ctx) {
     stage.invalidate();
   }
 
-  // ------------------------------------------------ plies from the mold's cavity floor
+  // ------------------------------------------------ plies from the mold's cavity surface
   mold.updateWorldMatrix(true, true);
   const inv = new THREE.Matrix4().copy(mold.matrixWorld).invert();
-  const floor = [];
+  const tris = []; // every triangle of both blocks, the handle block moved onto the head block's pins
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
   for (const [blk, dx] of [[head, 0], [handle, JOIN]]) blk.traverse((m) => {
     if (!m.isMesh) return;
@@ -103,27 +107,91 @@ export async function mount(el, ctx) {
     for (let i = 0; i < count; i += 3) {
       const ia = idx ? idx.getX(i) : i, ib = idx ? idx.getX(i + 1) : i + 1, ic = idx ? idx.getX(i + 2) : i + 2;
       a.fromBufferAttribute(pos, ia).applyMatrix4(M); b.fromBufferAttribute(pos, ib).applyMatrix4(M); c.fromBufferAttribute(pos, ic).applyMatrix4(M);
-      n.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a)).normalize();
-      const lo = -2.45 * MM, hi = -1.0 * MM;
-      if (n.y < 0.9 || [a, b, c].some((p) => p.y < lo || p.y > hi)) continue;
-      for (const p of [a, b, c]) floor.push(p.x + dx, p.y, p.z);
+      tris.push(a.x + dx, a.y, a.z, b.x + dx, b.y, b.z, c.x + dx, c.y, c.z);
     }
   });
+  // the joined mold's top surface seen from above: the highest up-facing face over each 0.5 mm cell
+  const CELL = 0.5 * MM;
+  let gx0 = Infinity, gz0 = Infinity, gx1 = -Infinity, gz1 = -Infinity;
+  for (let i = 0; i < tris.length; i += 3) { gx0 = Math.min(gx0, tris[i]); gx1 = Math.max(gx1, tris[i]); gz0 = Math.min(gz0, tris[i + 2]); gz1 = Math.max(gz1, tris[i + 2]); }
+  const GW = Math.ceil((gx1 - gx0) / CELL) + 1, GH = Math.ceil((gz1 - gz0) / CELL) + 1;
+  const top = new Float32Array(GW * GH).fill(-Infinity);
+  for (let t = 0; t < tris.length; t += 9) {
+    const ax = tris[t], ay = tris[t + 1], az = tris[t + 2], bx = tris[t + 3], by = tris[t + 4], bz = tris[t + 5], cx = tris[t + 6], cy = tris[t + 7], cz = tris[t + 8];
+    const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+    if ((bx - ax) * (cz - az) - (bz - az) * (cx - ax) >= 0 || Math.abs(d) < 1e-14) continue; // only up-facing faces make the top
+    const i0 = Math.max(0, Math.floor((Math.min(ax, bx, cx) - gx0) / CELL)), i1 = Math.min(GW - 1, Math.ceil((Math.max(ax, bx, cx) - gx0) / CELL));
+    const j0 = Math.max(0, Math.floor((Math.min(az, bz, cz) - gz0) / CELL)), j1 = Math.min(GH - 1, Math.ceil((Math.max(az, bz, cz) - gz0) / CELL));
+    for (let j = j0; j <= j1; j++) {
+      const z = gz0 + j * CELL;
+      for (let i = i0; i <= i1; i++) {
+        const x = gx0 + i * CELL;
+        const l1 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d, l2 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d, l3 = 1 - l1 - l2;
+        if (l1 < -1e-6 || l2 < -1e-6 || l3 < -1e-6) continue;
+        const y = l1 * ay + l2 * by + l3 * cy, k = j * GW + i;
+        if (y > top[k]) top[k] = y;
+      }
+    }
+  }
+  const topAt = (x, z) => {
+    const i = Math.round((x - gx0) / CELL), j = Math.round((z - gz0) / CELL);
+    return i < 0 || j < 0 || i >= GW || j >= GH ? -Infinity : top[j * GW + i];
+  };
+  // the cavity: faces below the parting face, not facing down, and open to the air above them
+  const PARTING = -0.6 * MM, OUT = 1 * MM;
+  const floor = [], fn = []; // cavity triangles and their face normals
+  let lx0 = Infinity, lx1 = -Infinity, lz1 = -Infinity; // the head's floor, for the ply labels
+  for (let t = 0; t < tris.length; t += 9) {
+    a.fromArray(tris, t); b.fromArray(tris, t + 3); c.fromArray(tris, t + 6);
+    n.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a));
+    if (n.lengthSq() < 1e-18) continue;
+    n.normalize();
+    const cy = (a.y + b.y + c.y) / 3;
+    if (n.y < -0.05 || cy > PARTING) continue;
+    const qx = (a.x + b.x + c.x) / 3 + n.x * OUT, qz = (a.z + b.z + c.z) / 3 + n.z * OUT;
+    const above = topAt(qx, qz);
+    if (above === -Infinity || cy + n.y * OUT < above - 0.05 * MM) continue; // off the mold (its sides), or under solid mold (a pin hole)
+    for (const p of [a, b, c]) floor.push(p.x, p.y, p.z);
+    fn.push(n.x, n.y, n.z);
+    if (n.y > 0.9 && a.x > 0) { lx0 = Math.min(lx0, a.x); lx1 = Math.max(lx1, a.x); lz1 = Math.max(lz1, a.z); }
+  }
+  // smooth vertex normals across the cavity's facets (area-weighted, vertices matched by position),
+  // so the ply drapes as one sheet over the channel's rounded sides instead of glinting facet by facet
+  const vn = new Float32Array(floor.length);
+  {
+    const acc = new Map(), keyOf = (i) => `${Math.round(floor[i] / 1e-5)},${Math.round(floor[i + 1] / 1e-5)},${Math.round(floor[i + 2] / 1e-5)}`;
+    const keys = [];
+    for (let i = 0; i < floor.length; i += 9) {
+      a.fromArray(floor, i); b.fromArray(floor, i + 3); c.fromArray(floor, i + 6);
+      n.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a)); // length = twice the area
+      for (let v = 0; v < 3; v++) {
+        const k = keyOf(i + v * 3); keys.push(k);
+        const s0 = acc.get(k) || [0, 0, 0]; s0[0] += n.x; s0[1] += n.y; s0[2] += n.z; acc.set(k, s0);
+      }
+    }
+    for (let v = 0; v < keys.length; v++) {
+      const s0 = acc.get(keys[v]), l = Math.hypot(s0[0], s0[1], s0[2]) || 1;
+      vn[v * 3] = s0[0] / l; vn[v * 3 + 1] = s0[1] / l; vn[v * 3 + 2] = s0[2] / l;
+    }
+  }
   const weave = weaveTexture(THREE);
   const plies = new THREE.Group();
   plies.name = 'plies';
   stage.root.add(plies);
-  let minX = Infinity, maxX = -Infinity, maxZ = -Infinity;
-  for (let i = 0; i < floor.length; i += 3) { minX = Math.min(minX, floor[i]); maxX = Math.max(maxX, floor[i]); maxZ = Math.max(maxZ, floor[i + 2]); }
   const ov = labelLayer(stage);
   const ply = ANGLES.map((deg, k) => {
     const g = new THREE.BufferGeometry();
     const P = new Float32Array(floor), N = new Float32Array(floor.length), UV = new Float32Array((floor.length / 3) * 2);
     const cs = Math.cos((deg * Math.PI) / 180), sn = Math.sin((deg * Math.PI) / 180);
     for (let i = 0, j = 0; i < P.length; i += 3, j += 2) {
-      P[i + 1] += PLY_T * (k + 1);
-      N[i + 1] = 1;
-      UV[j] = (P[i] * cs + P[i + 2] * sn) / TILE; UV[j + 1] = (-P[i] * sn + P[i + 2] * cs) / TILE;
+      const f = Math.floor(i / 9) * 3, ny = fn[f + 1], nx = fn[f], nz = fn[f + 2];
+      // stacked out along the (smoothed) surface normal: up on the floors, inward on the channel's sides
+      P[i] += vn[i] * PLY_T * (k + 1); P[i + 1] += vn[i + 1] * PLY_T * (k + 1); P[i + 2] += vn[i + 2] * PLY_T * (k + 1);
+      N[i] = vn[i]; N[i + 1] = vn[i + 1]; N[i + 2] = vn[i + 2];
+      // the weave is projected from above on floors, and from the side on the channel's walls
+      const u = ny > 0.5 ? P[i] : Math.abs(nz) > Math.abs(nx) ? P[i] : P[i + 2];
+      const v = ny > 0.5 ? P[i + 2] : P[i + 1];
+      UV[j] = (u * cs + v * sn) / TILE; UV[j + 1] = (-u * sn + v * cs) / TILE;
     }
     g.setAttribute('position', new THREE.BufferAttribute(P, 3));
     g.setAttribute('normal', new THREE.BufferAttribute(N, 3));
@@ -139,7 +207,7 @@ export async function mount(el, ctx) {
     plies.add(mesh);
     // the label rides on the ply, near its far edge
     const anchor = new THREE.Object3D();
-    anchor.position.set(minX + (maxX - minX) * (0.55 + 0.1 * k), -2.1 * MM + PLY_T * (k + 1), maxZ - 12 * MM);
+    anchor.position.set(lx0 + (lx1 - lx0) * (0.45 + 0.1 * k), -2.1 * MM + PLY_T * (k + 1), lz1 - 22 * MM);
     mesh.add(anchor);
     const label = ov.label(`Ply ${k + 1}`, anchor, { color: '#c9c9cf' });
     return { mesh, mat, label, last: '' };
@@ -171,7 +239,7 @@ export async function mount(el, ctx) {
     const apart = stage.frame(mold, { azimuth: 25, elevation: 40, pad: 1.08, apply: false, refresh: true });
     handle.position.x = handleX + JOIN;
     const joined = stage.frame(mold, { azimuth: 25, elevation: 40, pad: 1.12, apply: false, refresh: true });
-    const cavity = stage.frame(head, { azimuth: 20, elevation: 55, pad: 1.05, apply: false, refresh: true });
+    const cavity = stage.frame(mold, { azimuth: 20, elevation: 55, pad: 1.04, apply: false, refresh: true }); // head and handle: the plies run through both
     const blade = stage.frame(paddle, { azimuth: 30, elevation: 35, pad: 1.12, apply: false, refresh: true });
     handle.position.x = moved;
     handle.updateMatrixWorld(true);

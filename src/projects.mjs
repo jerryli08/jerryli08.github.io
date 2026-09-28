@@ -157,7 +157,7 @@ export const projects = [
   {
     slug: 'electric-vehicle', size: 'wide',
     kind: 'main',
-    title: 'Science Olympiad Electric Vehicle',
+    title: 'Science Olympiad Electric Vehicle 2025',
     subtitle: '2024-25 Electric Vehicle event',
     short: 'A precision-stopping race car that took 1st at regionals and 2nd of 72 at the UPenn Invitational.',
     org: 'Science Olympiad',
@@ -306,19 +306,19 @@ export const projects = [
     title: 'Autonomous Drone Racing',
     subtitle: 'Capstone race winner',
     short: 'Led a team of five writing vision-guided autonomy for a race drone. We won the capstone race in 52 s, under half the second-best team’s time.',
-    org: 'MIT Department of Aeronautics and Astronautics',
+    org: 'MIT Beaver Works Summer Institute (BWSI)',
     date: 'Jul to Aug 2025',
     year: '2025',
     role: 'Autonomous systems engineering intern',
     team: 'Team of 5, which I led',
     tools: ['Python (asyncio)', 'OpenCV', 'NumPy', 'Picamera2', 'MAVSDK', 'MAVLink', 'Raspberry Pi 5', 'ROS 2'],
     stats: [
-      { v: '1st of 5', l: 'Capstone autonomous drone race' },
+      { v: '1st of 5', l: 'MIT BWSI capstone autonomous drone race' },
       { v: '52 s', l: 'Under half the second-best team’s time' },
     ],
     body: [
       { h: 'Overview', p: [
-        'I led a team of five writing the software for a Holybro X500 quadcopter in an autonomous drone race: follow an LED line on the floor, past hoops with AprilTags on them, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and a forward camera is for obstacle avoidance.',
+        'At the MIT Beaver Works Summer Institute (BWSI), in its Autonomous Air Vehicle Racing course (5.3% acceptance rate), I led a team of five writing the software for a Holybro X500 quadcopter in an autonomous drone race: follow an LED line on the floor, past hoops with AprilTags on them, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and a forward camera is for obstacle avoidance.',
         'We won the race in 52 seconds, less than half the second-best team’s time, and we were the only team to take off autonomously and complete the whole course in one run.',
       ]},
     ],
@@ -354,10 +354,10 @@ export const projects = [
     cad: 'https://a360.co/46NPB1S',
   },
   {
-    slug: 'steam-carnival-robot',
+    slug: 'centerstage-offseason-robot',
     kind: 'main',
     draft: true,
-    title: 'STEAM Carnival Pitching Robot',
+    title: 'FTC CENTERSTAGE Offseason Robot',
     subtitle: 'Telescoping pitching arm',
     short: 'An FTC robot with a telescoping pitching arm, built in 4 days for the HoCo STEAM Carnival.',
     org: 'Howard County Library System',
@@ -404,7 +404,7 @@ export const projects = [
   },
   {
     slug: 'powerplay-offseason',
-    kind: 'main',
+    kind: 'archive',
     title: 'PowerPlay Off-Season Robot',
     subtitle: 'My first CAD-designed robot',
     short: 'An off-season FTC robot with string-driven drawer slides and a belted virtual four bar, and the first robot I ever designed in CAD.',
@@ -625,10 +625,10 @@ export const projects = [
     year: '2024',
     body: [{ h: 'Overview', p: [
       'After my FTC season ended and Cryptic advanced to the World Championship, I proposed a horizontal extension intake for them, since it was a clear edge that year, and designed it.',
-      'They did not use it: they chose to improve other parts of their robot, mainly its reliability.',
+      'It stayed a concept: the Worlds deadline was fast approaching, and it added too much risk for the reward, so they improved other parts of their robot, mainly its reliability. It was a fun design challenge.',
     ] }],
     tools: ['Fusion 360', 'Linear slides', 'Roller intakes', 'goBILDA'],
-    media: [{ i: 'cryptic-extendo/hero-cad.webp', c: 'The extension intake fully out, rendered from my CAD: a two-stage slide on each side carries it about a metre past the front of the robot' }],
+    media: [{ i: 'cryptic-extendo/hero-cad.webp', c: 'The extension intake fully out, rendered from my CAD: three slides on each side carry it about a metre past the front of the robot' }],
   },
   {
     slug: 'ftc-field-cnc',
@@ -641,8 +641,8 @@ export const projects = [
     year: '2024',
     tools: ['Fusion 360', 'SFU1605 ball screws', 'HIWIN HGH15 linear rails', 'NEMA 23 steppers'],
     body: [{ h: 'Overview', p: [
-      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the CENTERSTAGE FTC game field: six 2 ft lengths of 1 x 1 in extrusion make the frame. The gantry rides on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs along the gantry on two more rails and a third ball screw.',
-      'I did not build it: I got busy, and I realized I would not have a use for a CNC soon because I was going to college in a year.',
+      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the trusses of the CENTERSTAGE FTC game field: six 2 ft lengths of 1 x 1 in extrusion make the frame. The gantry rides on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs along the gantry on two more rails and a third ball screw.',
+      'Owning a CNC would have saved a lot compared with outsourcing parts, but I realized that what I would put into building it would be more than I would spend on CNC-cut parts before leaving for college, where I would have access to lots of manufacturing equipment, so I did not build it.',
     ] }],
     media: [{ i: 'ftc-field-cnc/cad-hero.webp', c: 'My CAD of the router: the field extrusion frame, the Y rails and ball screws along both sides, and the gantry with the X axis' }],
   },
@@ -788,6 +788,6 @@ export const about = {
   p: [
     'I study mechanical engineering at the University of Illinois Urbana-Champaign, with a minor in electrical and computer engineering.',
     'I have been building robots since 2020: four years as an FTC team captain, a season designing an FRC robot solo, and research at MIT Lincoln Laboratory on a drone that docks onto a ground rover. I am most interested in assistive technology, AI-driven robotics and electric vehicles, and I plan to pursue entrepreneurship.',
-    'At Illinois I am on Illini Electric Motorsports. On chassis I am leading the redesign of a lap-belt attachment from aluminum to composite, simulated in Ansys ACP. On circuit design I am building a data-acquisition sensor board in Altium.',
+    'At Illinois I am on Illini Electric Motorsports. On chassis I am leading the redesign of a lap-belt attachment from aluminum to composite, simulated in Ansys ACP.',
   ],
 };

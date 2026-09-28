@@ -40,6 +40,16 @@
   // Videos wait for the page: first paint gets the network to itself, posters show meanwhile.
   const afterLoad = new Promise((res) => (document.readyState === 'complete' ? res() : addEventListener('load', res, { once: true })))
     .then(() => new Promise((res) => (window.requestIdleCallback ? requestIdleCallback(res, { timeout: 1500 }) : setTimeout(res, 300))));
+  // posters: a hero video has its poster in the HTML; every other one (data-rx-poster) is set when
+  // the video comes within about a screen of view, so the page does not fetch every still up front
+  const late = vids.filter((v) => v.dataset.rxPoster && !v.poster);
+  if (late.length) {
+    const setPoster = (v) => { if (v.dataset.rxPoster) { v.poster = v.dataset.rxPoster; delete v.dataset.rxPoster; } };
+    if ('IntersectionObserver' in window) {
+      const pio = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { setPoster(e.target); pio.unobserve(e.target); } }, { rootMargin: '1000px 0px' });
+      for (const v of late) pio.observe(v);
+    } else late.forEach(setPoster);
+  }
   if (vids.length) {
     const ensure = (v) => { if (!v.src) { v.src = v.dataset.rxSrc; v.load(); } };
     const area = new Map(); // on-screen videos and how much of each shows
@@ -219,11 +229,14 @@
     }
   }
 
+  // 3D and module code wait for the page's load event, so the hero, the fonts and the CSS get the
+  // network first (a scrolly right under the hero shows its poster until then)
+  const pageLoaded = document.readyState === 'complete' ? Promise.resolve() : new Promise((res) => addEventListener('load', res, { once: true }));
   const nearIO = new IntersectionObserver((es) => {
     for (const e of es) {
-      const st = state.get(e.target);
+      const st = state.get(e.target), b = e.target;
       st.near = e.isIntersecting;
-      if (e.isIntersecting && e.target.dataset.state !== 'failed') mount(e.target);
+      if (e.isIntersecting && b.dataset.state !== 'failed') pageLoaded.then(() => { if (st.near) mount(b); });
       // arriving by a jump (a link, a reload part way down) sends no scroll event: measure now
       if (e.isIntersecting && e.target.dataset.rxBlock === 'scrolly') measure(e.target);
     }
@@ -238,21 +251,29 @@
   }
 
   // ---------------------------------------------------------------- scrolly progress
-  // Every scrolly is a full-width sticky stage. Each step owns a slot of scrolling (its li, the
-  // section's stepHeight): its card rises into place, stays pinned there (CSS position: sticky, at
-  // the top written below) while that step's animation runs, stepP 0 to 1, over the pinned part of
-  // the slot, then leaves as the next card arrives and pins in turn. On a desktop the cards sit over
-  // the left of the stage; up to 900 px wide they pin just under the stage (a card taller than the
-  // room there pins with its bottom at the screen's bottom).
+  // Every scrolly is a full-width sticky stage. Each step owns a slot of scrolling (its li): its
+  // card rises into place, stays pinned there (CSS position: sticky, at the top written below)
+  // while that step's animation runs, stepP 0 to 1, over the pinned part of the slot, then leaves
+  // as the next card arrives and pins in turn. On a desktop the cards sit over the left of the
+  // stage; up to 900 px wide they pin just under the stage (a card taller than the room there pins
+  // with its bottom at the screen's bottom).
   //   p      0..1 while the stage is pinned (continuous)
   //   step   the step whose card is pinned, or the nearer one during a hand-off
   //   stepP  0..1 through that step's pinned range; 0 before it pins, 1 after it lets go
   // The first card is in its pinned spot when p is 0, and the last lets go exactly when the stage
   // does (desktop) or before it (phone), so the last step always reaches stepP = 1.
+  // Pace (src/pace.mjs, written into data-pace by the build): each card stays pinned for pace x
+  // round 3's pinned range, max(slot / 2, slot - card - gap), and its own height plus the gap come
+  // on top, so only the animation gets longer; the hand-off to the next card is as before.
+  // Smoothness: the modules follow a damped copy of the scroll position (time constant TAU), so a
+  // wheel tick glides instead of jumping. The cards and the stage are placed by the real scroll;
+  // the loop runs only while the damped position is catching up and stops once it has (nothing
+  // renders at rest). A scroll the reader did not make (a script, a jump over two screens) snaps.
   // All positions are measured in layout(), on resize and when the page's height changes; the
   // scroll loop reads nothing but scrollY.
   const scrollies = blocks.filter((b) => b.dataset.rxBlock === 'scrolly');
   const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+  const paceOf = (b) => { const f = parseFloat(b.dataset.pace) || 2; return reduced ? Math.min(1, f) : f; };
   function callProgress(b, st, force) {
     if (!st.api?.setProgress) return;
     const key = `${st.progress.toFixed(5)}|${st.step}|${st.stepP.toFixed(4)}`;
@@ -264,6 +285,19 @@
   }
   const setStyle = (el, prop, val) => { if (el.style[prop] !== val) el.style[prop] = val; };
   const setVar = (el, name, val) => { if (el && el.style.getPropertyValue(name) !== val) el.style.setProperty(name, val); };
+  // A CSS length (--step-h, --len) in px, read from a hidden probe, so the slots never have to be
+  // reset to their CSS size to be measured (which would shrink the page for a moment)
+  function cssLen(b, body, h) {
+    const st = state.get(b);
+    if (!st.probe) {
+      st.probe = document.createElement('div');
+      st.probe.setAttribute('aria-hidden', 'true');
+      st.probe.style.cssText = 'position:absolute;top:0;left:0;width:1px;visibility:hidden;pointer-events:none';
+      body.appendChild(st.probe);
+    }
+    setStyle(st.probe, 'height', h);
+    return st.probe.offsetHeight;
+  }
   // Lay out one scrolly's slots and cache where everything pins, in document pixels.
   function layout(b) {
     const st = state.get(b);
@@ -273,16 +307,17 @@
     const steps = st.steps || (st.steps = [...b.querySelectorAll('[data-step]')]);
     const cards = st.cards || (st.cards = steps.map((s) => s.querySelector('.rx-step-card')));
     const vh = innerHeight;
+    const pace = paceOf(b);
     const ST = parseFloat(getComputedStyle(box).top) || 0; // the stage's sticky top (under the nav)
     const SH = box.offsetHeight;
     const sr = box.getBoundingClientRect();
     // desktop: the cards float over the stage (the list is pulled up over it); phone: below it
     const over = !!list && parseFloat(getComputedStyle(list).marginTop) < 0;
-    const g = { vh, vw: innerWidth, shift: [0, 0], starts: [], ends: [], cut: [] };
+    const g = { vh, vw: innerWidth, pace, over, shift: [0, 0], starts: [], ends: [], cut: [] };
     if (steps.length) {
       const gap = parseFloat(getComputedStyle(steps[0]).paddingBottom) || 0;
-      for (const s of steps) s.style.minHeight = ''; // each slot as the CSS gives it (--step-h)
-      const slot = steps.map((s) => s.offsetHeight);
+      const last = steps.length - 1;
+      const slot0 = cssLen(b, body, 'var(--step-h, 80vh)'), slot = steps.map(() => slot0); // each slot as the CSS gives it
       const C = cards.map((c) => c.offsetHeight);
       // where each card pins: over the stage, a little above its middle (a card taller than the
       // stage pins with its bottom 16 px above the stage's bottom); on a phone, just under the stage
@@ -292,15 +327,18 @@
         return c <= vh - below - 12 ? below : vh - c - 12;
       });
       cards.forEach((c, i) => setStyle(c, 'top', `${Math.round(T[i])}px`));
-      // a slot keeps at least half its length pinned: a tall card makes its slot longer
+      list.classList.add('rx-linked'); // card fades follow the scroll from here on (measure)
+      // each slot: the card's height and the gap (the hand-off), plus pace x round 3's pinned range
+      g.base = [];
       steps.forEach((s, i) => {
-        const need = C[i] + (i < steps.length - 1 ? gap : 0) + slot[i] * 0.5;
-        if (need > slot[i]) s.style.minHeight = `${Math.ceil(need)}px`;
+        const gp = i < last ? gap : 0;
+        const base = Math.max(slot[i] * 0.5, slot[i] - C[i] - gp);
+        g.base[i] = Math.round(base);
+        setStyle(s, 'height', `${Math.ceil(C[i] + gp + pace * base)}px`);
       });
       // the first card is in its pinned spot when the stage pins (p = 0); the last lets go when
       // the stage does (desktop) or just before it (phone, where the text is below the stage)
       const listTop0 = ST + (over ? 0 : SH); // the list's top on screen when p = 0
-      const last = steps.length - 1;
       setStyle(list, 'paddingTop', `${Math.round(Math.max(over ? 0 : 12, T[0] - listTop0))}px`);
       setStyle(list, 'paddingBottom', `${Math.round(over ? Math.max(0, ST + SH - T[last] - C[last]) : 0)}px`);
       // measure after writing (one layout); scrollY read after it, in case scroll anchoring moved it
@@ -319,7 +357,14 @@
       } else setVar(stageEl, '--rx-cover', '0px');
       // a step becomes the active one half way through the hand-off from the step before
       for (let i = 1; i < steps.length; i++) g.cut[i] = (g.ends[i - 1] + g.starts[i]) / 2;
-    } else setVar(stageEl, '--rx-cover', '0px');
+    } else {
+      // no steps: the stage stays pinned for pace x round 3's run (the section's length minus the
+      // stage's own height)
+      const run = Math.max(0, cssLen(b, body, 'var(--len, 180vh)') - SH);
+      g.base = [Math.round(run)];
+      setStyle(body, 'minHeight', `${Math.ceil(SH + pace * run)}px`);
+      setVar(stageEl, '--rx-cover', '0px');
+    }
     const bt = body.getBoundingClientRect().top + scrollY;
     g.p0 = bt - ST;
     g.p1 = Math.max(g.p0 + 1, bt + body.offsetHeight - SH - ST);
@@ -327,41 +372,74 @@
     st.geom = g;
     return g;
   }
+  // the damped scroll position the modules follow (document px), and the loop that moves it
+  let sy = scrollY;
   function measure(b, force) {
     const st = state.get(b);
     const g = st.geom || layout(b);
-    const y = scrollY;
-    const p = clamp01((y - g.p0) / (g.p1 - g.p0));
     const steps = st.steps;
+    const stepAt = (y) => { let i = 0; while (i < steps.length - 1 && y >= g.cut[i + 1]) i++; return i; };
+    // the module: the damped position
+    const y = sy;
+    const p = clamp01((y - g.p0) / (g.p1 - g.p0));
     let step = 0, stepP = p; // a scrolly without steps: one step, the whole way
     if (steps.length) {
-      while (step < steps.length - 1 && y >= g.cut[step + 1]) step++;
+      step = stepAt(y);
       stepP = clamp01((y - g.starts[step]) / (g.ends[step] - g.starts[step]));
     }
-    if (step !== st.step) {
-      steps.forEach((s, i) => s.classList.toggle('is-active', i === step));
-      b.dataset.step = String(step);
+    // the cards: the real position (they are placed by the real scroll)
+    if (steps.length) {
+      const ry = scrollY, on = stepAt(ry);
+      if (on !== st.on) {
+        st.on = on;
+        steps.forEach((s, i) => s.classList.toggle('is-active', i === on));
+      }
+      // the next card stays out of sight until the step before it has played out (Jerry: once a
+      // step's animation is done, scrolling carries its card away and brings the next one); it
+      // then fades in just under the leaving card as it rises, and the leaving one dims, both
+      // following the scroll (not a timed fade), and pins in turn
+      if (steps.length > 1) {
+        let k = 1;
+        while (k < steps.length && ry >= g.ends[k - 1]) k++;
+        if (k !== st.shown) { st.shown = k; st.cards.forEach((c, i) => c.classList.toggle('is-later', i >= k)); }
+        const lo = g.over ? 0.5 : 0.3, last = steps.length - 1;
+        const hand = (i) => clamp01((ry - g.ends[i]) / Math.max(1, (g.starts[i + 1] - g.ends[i]) * 0.6)); // 0..1 over the first 60 % of hand-off i -> i + 1
+        st.cards.forEach((c, i) => {
+          const o = ry < g.starts[i] ? (i === 0 ? 1 : hand(i - 1)) : ry <= g.ends[i] || i === last ? 1 : 1 - (1 - lo) * hand(i);
+          const v = o.toFixed(2);
+          if (c.rxO !== v) { c.rxO = v; c.style.setProperty('--o', v); }
+        });
+      }
     }
-    // the next card stays out of sight until the step before it has played out (Jerry: once a
-    // step's animation is done, scrolling carries its card away and brings the next one); it then
-    // fades in just under the leaving card and pins in turn
-    if (steps.length > 1) {
-      let k = 1;
-      while (k < steps.length && y >= g.ends[k - 1]) k++;
-      if (k !== st.shown) { st.shown = k; st.cards.forEach((c, i) => c.classList.toggle('is-later', i >= k)); }
-    }
-    st.progress = p; st.step = step; st.stepP = stepP;
+    if (step !== st.step) b.dataset.step = String(step);
+    st.progress = p; st.step = step; st.stepP = stepP; st.y = y;
     callProgress(b, st, force);
   }
   if (scrollies.length) {
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      // only scrollies near the screen: one far away keeps its last picture and is not drawn anyway
-      requestAnimationFrame(() => { ticking = false; for (const b of scrollies) if (state.get(b).near) measure(b); });
+    const TAU = reduced ? 0 : 0.12, TAU_TOUCH = 0.07; // seconds
+    let loop = 0, lastT = 0, glide = false, inputAt = -1e9, touch = false;
+    const input = (e) => { inputAt = performance.now(); touch = e.type === 'touchmove'; };
+    for (const t of ['wheel', 'touchmove', 'keydown', 'pointerdown']) addEventListener(t, input, { passive: true, capture: true });
+    const tick = (now) => {
+      loop = 0;
+      const y = scrollY, d = y - sy;
+      // real elapsed time, unclamped: on a device that draws slowly the glide finishes in as few
+      // frames as the time allows (a 0.5 s frame lands on the scroll position), never trailing
+      const dt = Math.max(0, (now - (lastT || now - 16.7)) / 1000);
+      lastT = now;
+      if (!glide || Math.abs(d) < 0.3 || Math.abs(d) > 2 * innerHeight) sy = y;
+      else sy += d * (1 - Math.exp(-dt / (touch ? TAU_TOUCH : TAU)));
+      for (const b of scrollies) if (state.get(b).near) measure(b);
+      if (sy !== y) loop = requestAnimationFrame(tick);
+      else { lastT = 0; glide = false; }
     };
-    addEventListener('scroll', onScroll, { passive: true });
+    // a glide starts only from the reader's own scrolling (wheel, keys, touch, a click on a link);
+    // a scroll made by a script (the page tools, a restored position) snaps, as before
+    const kick = () => {
+      if (!glide && TAU && performance.now() - inputAt < 800) glide = true;
+      if (!loop) { lastT = performance.now(); loop = requestAnimationFrame(tick); }
+    };
+    addEventListener('scroll', kick, { passive: true });
     // re-measure every slot when the layout moves: a resize (then re-send the progress, so the
     // modules can re-frame for the new shape), fonts arriving, anything above changing height
     let pending = 0, forceNext = false;
@@ -372,6 +450,7 @@
         pending = 0;
         const f = forceNext; forceNext = false;
         for (const b of scrollies) layout(b);
+        sy = scrollY; // positions moved (scroll anchoring may have moved scrollY with them): no glide across it
         for (const b of scrollies) { const st = state.get(b); if (st.near || f) measure(b, f && !!st.api); }
       });
     };
@@ -381,6 +460,7 @@
     for (const b of scrollies) for (const c of b.querySelectorAll('.rx-step-card')) ro.observe(c);
     document.fonts?.ready.then(() => relayout(false));
     for (const b of scrollies) layout(b);
+    sy = scrollY;
     for (const b of scrollies) measure(b);
   }
 })();

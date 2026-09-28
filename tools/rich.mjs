@@ -5,6 +5,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { paceOf } from '../src/pace.mjs';
 
 export const SECTION_TYPES = ['prose', 'media', 'demo', 'scrolly', 'split', 'iterations', 'callout', 'stats'];
 const MEDIA_LAYOUTS = ['grid', 'row', 'wide', 'collage'];
@@ -141,10 +142,18 @@ export function createRich(env) {
     const d = dims(r.src) || { w: 1600, h: 900 };
     const ar = +(d.w / d.h).toFixed(4);
     const alt = m.alt ?? plain(m.c);
-    const style = `--ar:${ar}${o.tilt != null ? `;--tilt:${o.tilt}deg` : ''}`;
+    // focus: what stays in view when a picture is cropped to fill its box ('50% 30%', 'top', ...)
+    const focus = m.focus != null && /^[\w\s.%-]+$/.test(String(m.focus)) ? `;--focus:${m.focus}` : '';
+    if (m.focus != null && !focus) ctx.warn(`focus "${m.focus}" is not a CSS position`);
+    const style = `--ar:${ar}${o.tilt != null ? `;--tilt:${o.tilt}deg` : ''}${focus}`;
     const cls = `rx-fig${m.tall ? ' rx-tall' : ''}`;
     if (r.type === 'video') {
-      return `<figure class="${cls}" style="${style}"><div class="rx-m"><video muted loop playsinline preload="none" data-rx-src="${v(r.src)}"${r.poster ? ` poster="${v(r.poster)}"` : ''} width="${d.w}" height="${d.h}" aria-label="${esc(alt || 'Video')}"></video></div>${cap}</figure>`;
+      // a hero video shows its poster at once (the first one is preloaded); every other poster waits
+      // until the video comes near the screen (project.js), so a page of clips does not fetch every
+      // still up front
+      if (o.eager && r.poster && ctx.preload && !ctx.preload.length) ctx.preload.push({ href: v(r.poster) });
+      const poster = r.poster ? ` ${o.eager ? 'poster' : 'data-rx-poster'}="${v(r.poster)}"` : '';
+      return `<figure class="${cls}" style="${style}"><div class="rx-m"><video muted loop playsinline preload="none" data-rx-src="${v(r.src)}"${poster} width="${d.w}" height="${d.h}" aria-label="${esc(alt || 'Video')}"></video></div>${cap}</figure>`;
     }
     let srcset = '';
     if (r.small) {
@@ -152,6 +161,7 @@ export function createRich(env) {
       srcset = ` srcset="${v(r.small)} ${sw}w, ${v(r.src)} ${d.w}w" sizes="${o.sizes || '100vw'}"`;
     }
     const load = o.eager ? ' fetchpriority="high"' : ' loading="lazy"';
+    if (o.eager && ctx.preload && !ctx.preload.length) ctx.preload.push(srcset ? { href: v(r.small || r.src), srcset: srcset.match(/srcset="([^"]*)"/)[1], sizes: o.sizes || '100vw' } : { href: v(r.src) });
     return `<figure class="${cls}" style="${style}"><a class="rx-m" href="${v(r.src)}" data-lb data-caption="${esc(plain(m.c))}" data-alt="${esc(alt)}"><img src="${v(r.small || r.src)}"${srcset} alt="${esc(alt)}" width="${d.w}" height="${d.h}"${load} decoding="async"></a>${cap}</figure>`;
   }
   function aspectOf(m, slug) {
@@ -162,7 +172,7 @@ export function createRich(env) {
     const list = arr(items);
     const sum = list.reduce((a, m) => a + aspectOf(m, ctx.slug), 0);
     const sizes = `(max-width: 640px) 100vw, ${Math.round(o.width || 1140 / Math.max(1, list.length))}px`;
-    return `<div class="rx-row${sum > 2 ? ' rx-stack-sm' : ''}" style="--sum:${+sum.toFixed(4)}">${list.map((m, i) => fig(m, ctx, { sizes, eager: o.eager && i === 0 })).join('')}</div>`;
+    return `<div class="rx-row${sum > 2 ? ' rx-stack-sm' : ''}" style="--sum:${+sum.toFixed(4)}">${list.map((m) => fig(m, ctx, { sizes, eager: o.eager })).join('')}</div>`;
   }
   function mediaLayout(layout, items, ctx, o = {}) {
     const list = arr(items);
@@ -244,11 +254,26 @@ export function createRich(env) {
       const media = arr(s.media);
       if (!media.length) return `${open('rx-prose', s, ctx, id)}<div class="rx-w"><div class="rx-col">${H2(s.h, id)}<div class="rx-text">${blocks(s.p, ctx)}</div></div></div></section>`;
       const runs = chunk(arr(s.p), media.length);
+      const itemsOf = (i) => (i === runs.length - 1 ? media.slice(i) : [media[i]]);
+      // every run's pictures are rows: the section reads like plain prose, heading and text in the
+      // reading column, each row of pictures full width under its text
+      const allRows = runs.every((_, i) => itemsOf(i).every((m) => Array.isArray(m) && m.length > 1));
       const rows = runs.map((run, i) => {
         const items = i === runs.length - 1 ? media.slice(i) : [media[i]]; // short text: extra pictures stack in the last row
-        const figs = items.map((m) => (Array.isArray(m) ? row(m, ctx, { width: 560 }) : fig(m, ctx, { sizes: '(max-width: 900px) 100vw, 560px' }))).join('');
-        return `<div class="rx-pm-row"><div class="rx-text">${blocks(run, ctx)}</div><div class="rx-pm-fig">${figs}</div></div>`;
+        // One picture beside its run of text is pinned and fills the column (cropped within limits,
+        // --focus picks what stays); a wide one gets a wider column. A row of several pictures would
+        // be tiny in that column (Jerry, Sept 27), so it goes under its text at a readable size,
+        // side by side the full width (the text keeps the section's left edge, or the reading
+        // column when every run is like that).
+        const singles = items.map((m) => (Array.isArray(m) && m.length === 1 ? m[0] : m)).filter((m) => !Array.isArray(m));
+        const multis = items.filter((m) => Array.isArray(m) && m.length > 1);
+        const under = multis.map((m) => `<div class="rx-pm-under">${row(m, ctx, { width: 1140 })}</div>`).join('');
+        if (!singles.length) return `<div class="rx-pm-solo">${allRows ? '<div class="rx-col">' : ''}<div class="rx-text">${blocks(run, ctx)}</div>${allRows ? '</div>' : ''}${under}</div>`;
+        const figs = singles.map((m) => fig(m, ctx, { sizes: '(max-width: 900px) 100vw, 640px' })).join('');
+        const one = singles.length === 1, wide = one && aspectOf(singles[0], ctx.slug) >= 1.45;
+        return `<div class="rx-pm-row${one ? ' rx-pm-one' : ''}${wide ? ' rx-pm-wide' : ''}"><div class="rx-text">${blocks(run, ctx)}</div><div class="rx-pm-fig">${figs}</div></div>${under}`;
       }).join('');
+      if (allRows) return `${open('rx-prose rx-pm', s, ctx, id)}<div class="rx-w">${s.h ? `<div class="rx-col">${H2(s.h, id)}</div>` : ''}${rows}</div></section>`;
       return `${open(`rx-prose rx-pm${s.side === 'left' ? ' rx-pm-left' : ''}`, s, ctx, id)}<div class="rx-w">${H2(s.h, id)}${rows}</div></section>`;
     },
     media(s, ctx) {
@@ -297,7 +322,7 @@ export function createRich(env) {
       const cls = `rx-scrolly${steps.length ? '' : ' rx-stepless'}`;
       return `<section class="rx-sec rx-scrolly-sec"${s.h ? ` aria-labelledby="${esc(id)}-h"` : ''}>
     <div class="rx-w">${head(s, id, ctx)}</div>
-    <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}"${dataAttr}${s.webgl === false ? ' data-webgl="false"' : ''}${style ? ` style="${style}"` : ''}>
+    <div class="${cls}" id="${esc(id)}" data-rx-block="scrolly" data-module="${mod.ok ? v(mod.path) : esc(mod.path)}" data-pace="${paceOf(ctx.slug, id)}"${dataAttr}${s.webgl === false ? ' data-webgl="false"' : ''}${style ? ` style="${style}"` : ''}>
       <div class="rx-scrolly-body">
         <div class="rx-scrolly-stage"><div class="rx-stage" data-rx-stage>${stageInner(s, ctx)}</div></div>
         ${list ? `<ol class="rx-steps">${list}</ol>` : ''}
@@ -369,6 +394,7 @@ export function createRich(env) {
     const ctx = {
       slug: x.slug,
       modules: false,
+      preload: [], // the hero's first picture (a poster or a photo), preloaded from the head
       warn: (m) => warnings.push(m),
       err: (m) => (PREVIEW ? `<div class="rx-w"><p class="rx-err">${esc(m)}</p></div>` : ''),
       uid(id, kind) {
@@ -432,7 +458,7 @@ export function createRich(env) {
       }
     });
     return {
-      head: ctx.modules ? importMap(x.slug) : '',
+      head: ctx.preload.map((p) => `<link rel="preload" as="image" href="${p.href}"${p.srcset ? ` imagesrcset="${esc(p.srcset)}" imagesizes="${esc(p.sizes)}"` : ''} fetchpriority="high">\n`).join('') + (ctx.modules ? importMap(x.slug) : ''),
       assets: esc(JSON.stringify(assetMap(x.slug, page.assets))),
       hero, summary, sections, warnings,
       stats: page.summary?.stats,

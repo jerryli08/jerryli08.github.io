@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
+const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => { const [k, ...v] = a.slice(2).split('='); return [k, v.length ? v.join('=') : true]; }));
 const [url, prefix, w = '1440', h = '900'] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const ONLY = flags.only ? flags.only.split(',') : null;
 const PS = flags.p ? flags.p.split(',').map(Number) : [0, 0.25, 0.5, 0.75, 1];

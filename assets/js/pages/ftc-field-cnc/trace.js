@@ -1,77 +1,140 @@
 // "The machine, cutting a real part" (scroll-driven): Jerry's gantry CAD runs a toolpath for the shorter
 // side plate of his e-bike (the drive-side plate), at its real size, from the plate's exact profile in
-// his e-bike CAD (ebike-drive-plate.json; path order in platepath.js). The gantry (Y) and the carriage
-// on it (X) move along their real axes and all three ball screws turn about theirs, 5 mm of travel per
-// turn (rig.js). The picture is a pure function of (step, progress through the step): scrolling back
-// runs the path backwards.
+// his e-bike CAD (ebike-drive-plate.json; path in platepath.js). The gantry (Y) and the carriage on it
+// (X) move along their real axes and all three ball screws turn about theirs, 5 mm of travel per turn
+// (rig.js). The picture is a pure function of (step, progress through the step): scrolling back runs
+// the path backwards.
 //
-// What is real and what is an overlay:
+// What is real and what is not:
 //  - the machine, its axes, lead and travel limits are the CNC CAD's; the plate's outline, holes and
 //    thickness (3.175 mm) are the e-bike CAD's, unscaled
-//  - there is no Z axis, spindle or bed in the CAD, so the tool point is a pointer just in front of the X
-//    carriage, and the stock sheet lies at the top of the lower frame extrusions (y = 50.8 mm); the
-//    stock, the pointer, the cut line, the rapid moves and the travel box are overlays, not parts
-//  - the path runs on the plate's own edges (no cutter is chosen, so no cutter offset); the three CAD
-//    slivers under 1.5 mm around are left out of the path and of the cut-out part
+//  - the Z axis, the spindle and the 1/8 in end mill are a generic unit (zaxis.js) that Jerry asked for
+//    this round; they are NOT in his CAD, and the caption says so. The unit bolts to the front of the X
+//    carriage blocks, so the tool point is the spindle's axis, 82 mm in front of them
+//  - the stock sheet lies at the top of the lower frame extrusions (y = 50.8 mm); the stock, the kerf
+//    (the end mill's full width, 3.175 mm), the rapid moves and the travel box are overlays, not parts
+//  - the path runs one cutter radius off the plate's edges (outside the outline, inside every hole),
+//    one pass to full depth; the three CAD slivers under 1.5 mm around are left out
 import { labelLayer } from '/assets/js/lib/labels.js';
 import * as THREE from 'three';
 import { loadCnc, viewSet, viewSetter, blendView, hud, smooth, clamp, lerp, mm, LEAD, STEPS_PER_TURN, TRAVEL } from './rig.js';
-import { buildPath } from './platepath.js';
+import { buildPath, CUTTER } from './platepath.js';
+import { buildZ, Z as ZU } from './zaxis.js';
 
 const ORANGE = '#ff6b35', BLUE = '#8fc3f5';
 const BED = 50.8; // mm: top of the lower field extrusions
-const TOOL = { x: 28.0, z: -365.0 }; // mm: the pointer's spot at X = Y = 0 (centre of the X carriage blocks, just in front of them)
+const TOOL = { x: ZU.x, z: ZU.axisZ }; // mm: the spindle axis at X = Y = 0
 const MARGIN = 12; // mm of stock drawn around the plate (overlay)
+const SPIN = 0.35; // end mill turn, radians per unit of path time (a picture of the spin, not a speed)
+
+// a box in model millimetres to frame a view on (never added to the scene)
+function region(x0, y0, z0, x1, y1, z1) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry((x1 - x0) / 1000, (y1 - y0) / 1000, (z1 - z0) / 1000));
+  m.position.set(...mm((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+  m.updateMatrixWorld(true);
+  return m;
+}
 
 export async function mount(el, ctx) {
   const [rig, plate] = await Promise.all([
     loadCnc(el),
     fetch(ctx.asset('/assets/models/ftc-field-cnc/ebike-drive-plate.json')).then((r) => r.json()),
   ]);
-  const { stage, base, P, setXY } = rig;
+  const { stage, base, P, carriage, setXY } = rig;
   const setView = viewSetter(stage);
   const reduced = ctx.reducedMotion;
   const TH = plate.thickness, TOP = BED + TH;
 
+  // ---------------------------------------------------------------- the generic Z axis and spindle
+  const zu = buildZ(THREE);
+  carriage.add(zu.fixed, zu.slide);
+
   // ---------------------------------------------------------------- the path
   const path = buildPath(plate);
-  const { P: PT, K, F, S, T, marks, stats } = path;
-  const L = S[S.length - 1];
+  const { P: PT, Z: PZ, K, F, S, T, marks, stats } = path;
+  const TEND = T[T.length - 1];
   const CUT = [0]; // cut length up to each point
   for (let i = 1; i < PT.length; i++) CUT.push(CUT[i - 1] + (K[i - 1] === 'cut' ? S[i] - S[i - 1] : 0));
   const seg = (arr, v) => { let lo = 1, hi = arr.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo; };
-  function atS(s) {
-    s = clamp(s, 0, L);
-    const i = seg(S, s), t = (s - S[i - 1]) / Math.max(1e-9, S[i] - S[i - 1]);
-    return { i, X: lerp(PT[i - 1][0], PT[i][0], t), Y: lerp(PT[i - 1][1], PT[i][1], t), cut: CUT[i - 1] + (K[i - 1] === 'cut' ? S[i] - S[i - 1] : 0) * t };
+  function atT(t) {
+    t = clamp(t, 0, TEND);
+    const i = seg(T, t), u = (t - T[i - 1]) / Math.max(1e-9, T[i] - T[i - 1]);
+    return {
+      i, t, X: lerp(PT[i - 1][0], PT[i][0], u), Y: lerp(PT[i - 1][1], PT[i][1], u), Z: lerp(PZ[i - 1], PZ[i], u),
+      cut: CUT[i - 1] + (K[i - 1] === 'cut' ? S[i] - S[i - 1] : 0) * u, s: lerp(S[i - 1], S[i], u),
+    };
   }
-  const sOfT = (t) => { t = clamp(t, 0, T[T.length - 1]); const i = seg(T, t); return S[i - 1] + ((t - T[i - 1]) / Math.max(1e-9, T[i] - T[i - 1])) * (S[i] - S[i - 1]); };
-  // per step: scroll time at its start and end
-  const STEPS = [[0, 0], [0, T[marks.yOnly]], [T[marks.yOnly], T[marks.xOnly]], [T[marks.xOnly], T[marks.holes]],
-    [T[marks.holes], T[marks.pockets]], [T[marks.pockets], T[marks.outline]], [T[marks.outline], T[marks.home]]];
-  // what the readout calls each cut feature: round holes by number, the slot by name, the lattice pockets by number
+  // per step: path time at its start and end (0 home, 1 Y alone, 2 X alone, 3 Z down and the first plunge,
+  // 4 round holes, 5 pockets, 6 outline, 7 home)
+  const M = marks;
+  const STEPS = [[0, 0], [0, T[M.yOnly]], [T[M.yOnly], T[M.xOnly]], [T[M.xOnly], T[M.plunge1]], [T[M.plunge1], T[M.holes]],
+    [T[M.holes], T[M.pockets]], [T[M.pockets], T[M.outline]], [T[M.outline], TEND]];
+  const SPIN_ON = T[M.xOnly], SPIN_OFF = T[M.outline] + (CUTTER.zHome - CUTTER.zSafe) / 3; // spindle running from Z down to Z up
+  // what the readout calls each cut feature
   const nHoles = stats.holes, nLattice = stats.pockets - stats.slots;
   const featName = [''];
   { let h = 0, q = 0; for (const f of path.order.slice(1)) featName.push(f.outer ? 'Outline' : f.round ? `Round hole ${++h} of ${nHoles}` : f.slot ? 'The slot' : `Pocket ${++q} of ${nLattice}`); }
 
   // ---------------------------------------------------------------- overlays
   const W = (X, Y, h) => new THREE.Vector3(...mm(TOOL.x + X, h, TOOL.z + Y));
-  // ribbons along the path on the stock: `upto[i]` = index count up to sample i
-  function ribbon(kind, width, lift, dash = 0, gap = 0) {
-    const step = 0.5, n = Math.ceil(L / step) + 1, w = width / 2;
+  // the kerf: the end mill's full width swept along every cut (quads along each cut segment, a disc at every
+  // plunge and sharp turn), in path-time order so a draw range shows exactly what has been cut
+  const kerf = (() => {
+    const r = CUTTER.D / 2, lift = TOP + 0.25, pos = [], pieces = []; // pieces: [t, first index, index count]
+    const idx = [];
+    const vert = (X, Y) => { const v = W(X, Y, lift); pos.push(v.x, v.y, v.z); return pos.length / 3 - 1; };
+    const disc = (X, Y, t) => {
+      const c = vert(X, Y), n = 18, s0 = idx.length;
+      for (let k = 0; k < n; k++) vert(X + r * Math.cos((2 * Math.PI * k) / n), Y + r * Math.sin((2 * Math.PI * k) / n));
+      for (let k = 0; k < n; k++) idx.push(c, c + 1 + k, c + 1 + ((k + 1) % n));
+      pieces.push([t, s0, idx.length - s0]);
+    };
+    let lastDir = null;
+    for (let j = 1; j < PT.length; j++) {
+      if (K[j - 1] === 'plunge') { disc(PT[j][0], PT[j][1], T[j]); lastDir = null; continue; }
+      if (K[j - 1] !== 'cut') { lastDir = null; continue; }
+      const [x0, y0] = PT[j - 1], [x1, y1] = PT[j], len = Math.hypot(x1 - x0, y1 - y0);
+      if (len < 1e-6) continue;
+      const dx = (x1 - x0) / len, dy = (y1 - y0) / len, nx = -dy * r, ny = dx * r;
+      if (lastDir && lastDir[0] * dx + lastDir[1] * dy < 0.996) disc(x0, y0, T[j - 1]); // a turn over 5 degrees: round the join
+      lastDir = [dx, dy];
+      const n = Math.max(1, Math.ceil(len / 0.6));
+      for (let m = 0; m < n; m++) {
+        const a = m / n, b = (m + 1) / n, s0 = idx.length;
+        const ax = lerp(x0, x1, a), ay = lerp(y0, y1, a), bx = lerp(x0, x1, b), by = lerp(y0, y1, b);
+        const v0 = vert(ax + nx, ay + ny), v1 = vert(ax - nx, ay - ny), v2 = vert(bx + nx, by + ny), v3 = vert(bx - nx, by - ny);
+        idx.push(v0, v1, v2, v1, v3, v2);
+        pieces.push([lerp(T[j - 1], T[j], b), s0, 6]);
+      }
+    }
+    pieces.sort((p, q) => p[0] - q[0]);
+    const sorted = [], tt = new Float64Array(pieces.length), upto = new Uint32Array(pieces.length);
+    for (let k = 0; k < pieces.length; k++) { const [t, s0, c] = pieces[k]; for (let q = 0; q < c; q++) sorted.push(idx[s0 + q]); tt[k] = t; upto[k] = sorted.length; }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(sorted);
+    g.setDrawRange(0, 0);
+    // index count drawn at path time t: every piece finished by t
+    const count = (t) => { let lo = 0, hi = tt.length; while (lo < hi) { const m = (lo + hi) >> 1; if (tt[m] <= t) lo = m + 1; else hi = m; } return lo ? upto[lo - 1] : 0; };
+    return { g, count };
+  })();
+  // rapid moves: a dashed ribbon on the stock, along the XY length of the path
+  const L = S[S.length - 1];
+  const atS = (s) => { s = clamp(s, 0, L); const i = seg(S, s), u = (s - S[i - 1]) / Math.max(1e-9, S[i] - S[i - 1]); return [lerp(PT[i - 1][0], PT[i][0], u), lerp(PT[i - 1][1], PT[i][1], u)]; };
+  const rapid = (() => {
+    const step = 0.5, n = Math.ceil(L / step) + 1, w = 0.65, dash = 5, gap = 4;
     const pos = new Float32Array(n * 6), idx = [], upto = new Uint32Array(n);
     let j = 1;
     for (let i = 0; i < n; i++) {
       const s = Math.min(L, i * step);
       const p = atS(s), q = atS(Math.min(L, s + 0.4)), b = atS(Math.max(0, s - 0.4));
-      let dx = q.X - b.X, dy = q.Y - b.Y; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
-      const a = W(p.X - dy * w, p.Y + dx * w, TOP + lift), c = W(p.X + dy * w, p.Y - dx * w, TOP + lift);
+      let dx = q[0] - b[0], dy = q[1] - b[1]; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+      const a = W(p[0] - dy * w, p[1] + dx * w, TOP + 1.2), c = W(p[0] + dy * w, p[1] - dx * w, TOP + 1.2);
       pos.set([a.x, a.y, a.z, c.x, c.y, c.z], i * 6);
       if (i > 0) {
         const sm = s - step / 2;
         while (j < S.length - 1 && S[j] < sm) j++;
-        const on = K[j - 1] === kind && (!dash || (sm % (dash + gap)) < dash);
-        if (on) { const k = (i - 1) * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+        if (K[j - 1] === 'rapid' && (sm % (dash + gap)) < dash) { const k = (i - 1) * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
       }
       upto[i] = idx.length;
     }
@@ -80,8 +143,7 @@ export async function mount(el, ctx) {
     g.setIndex(idx);
     g.setDrawRange(0, 0);
     return { g, upto, step, n };
-  }
-  const kerf = ribbon('cut', 1.6, 0.25), rapid = ribbon('rapid', 1.3, 1.2, 5, 4);
+  })();
   const kerfMesh = new THREE.Mesh(kerf.g, new THREE.MeshBasicMaterial({ color: '#15110d', transparent: true, depthWrite: false, side: THREE.DoubleSide }));
   const rapidMesh = new THREE.Mesh(rapid.g, new THREE.MeshBasicMaterial({ color: BLUE, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
   kerfMesh.renderOrder = 3; rapidMesh.renderOrder = 4;
@@ -151,28 +213,24 @@ export async function mount(el, ctx) {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     travel.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: '#d9d2c8', transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })));
   }
-  // the pointer: from the bottom of the lower X carriage block down to the stock, with a dot
-  const pointer = new THREE.Group();
-  const stemH = (158.8 - TOP) / 1000;
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0012, stemH, 10), new THREE.MeshBasicMaterial({ color: ORANGE }));
-  stem.position.y = stemH / 2;
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.0035, 16, 10), new THREE.MeshBasicMaterial({ color: ORANGE }));
-  pointer.add(stem, dot);
-  for (const o of [kerfMesh, rapidMesh, plan, travel, pointer]) o.traverse((m) => { m.castShadow = false; m.receiveShadow = false; });
-  const overlays = [stock, slugs, part, kerfMesh, rapidMesh, plan, travel, pointer];
+  for (const o of [kerfMesh, rapidMesh, plan, travel]) o.traverse((m) => { m.castShadow = false; m.receiveShadow = false; });
+  const overlays = [stock, slugs, part, kerfMesh, rapidMesh, plan, travel];
   for (const o of overlays) base.add(o);
-  const placePointer = (X, Y) => pointer.position.set(...mm(TOOL.x + X, TOP + 0.3, TOOL.z + Y));
+  stage.fitGround();
 
   // ---------------------------------------------------------------- views, framed once at rest
-  const whole = [P.frame, P.ymotors, P.gantry, P.xmotor];
+  const whole = [P.frame, P.ymotors, P.gantry, P.xmotor, zu.fixed];
+  const first = PT[M.xOnly]; // the first hole's entry point: where Z comes down
+  const zView = region(TOOL.x + first[0] - 75, BED, TOOL.z + first[1] - 120, TOOL.x + first[0] + 75, 392, TOOL.z + first[1] + 30);
   const V = viewSet(stage, el, [
     { obj: whole, azimuth: 32, elevation: 44, pad: 1.02 },   // 0 overview
     { obj: whole, azimuth: 70, elevation: 26, pad: 1.16 },   // 1 along the right Y screw
     { obj: whole, azimuth: 10, elevation: 32, pad: 1.16 },   // 2 the X axis, from the front
-    { obj: stock, azimuth: 8, elevation: 60, pad: 1.95 },    // 3 over the stock, for the cuts
-    { obj: stock, azimuth: 28, elevation: 40, pad: 1.75 },   // 4 the plate lifted out
+    { obj: zView, azimuth: 34, elevation: 12, pad: 1.45 },   // 3 the Z axis and spindle, close
+    { obj: stock, azimuth: 16, elevation: 56, pad: 1.9 },    // 4 over the stock, for the cuts
+    { obj: stock, azimuth: 28, elevation: 40, pad: 1.75 },   // 5 the plate lifted out
   ]);
-  const STEP_VIEW = [0, 1, 2, 3, 3, 3, 4];
+  const STEP_VIEW = [0, 1, 2, 3, 4, 4, 4, 5];
 
   const ov = labelLayer(stage);
   const lab = {
@@ -181,21 +239,27 @@ export async function mount(el, ctx) {
     ys: ov.label('Right Y ball screw', mm(516.4, 83.4, -120), { minW: 520 }),
     yl: ov.label('Left Y ball screw', mm(-37.1, 83.4, -200), { minW: 520 }),
     xs: ov.label('X ball screw', P.xscrew, { minW: 520 }),
-    tool: ov.label('Tool point: no Z axis yet', pointer, { color: ORANGE, minW: 520 }),
+    z: ov.label('Z axis and spindle: generic, not in my CAD', zu.motor, { color: ORANGE, side: 'l', minW: 520 }),
+    mill: ov.label('1/8 in end mill', zu.spin, { color: ORANGE, side: 'l', minW: 520 }),
     box: ov.label('Travel: about 417 x 460 mm', mm(TOOL.x + TRAVEL.x[1], BED, TOOL.z + TRAVEL.y[1]), { color: '#d9d2c8', minW: 520 }),
     plate: ov.label('E-bike side plate, real size', mm(TOOL.x + box.x[1] - 20, TOP, TOOL.z + box.y[1] - 40), { color: ORANGE, minW: 520 }),
     part: ov.label(`The plate: ${Math.round(plate.size[0])} x ${Math.round(plate.size[1])} mm`, mm(TOOL.x + (box.x[0] + box.x[1]) / 2, TOP + 30, TOOL.z + box.y[1] - 30), { color: ORANGE, minW: 520 }),
   };
-  const H = hud(ov.layer, [['now', 'Now'], ['x', 'X (carriage)'], ['y', 'Y (gantry)'], ['xs', 'X screw', true], ['ys', 'Y screws, together', true], ['cut', 'Cut so far', true]],
+  const H = hud(ov.layer, [['now', 'Now'], ['x', 'X (carriage)'], ['y', 'Y (gantry)'], ['z', 'Z (tip over the stock)', true], ['xs', 'X screw', true], ['ys', 'Y screws, together', true], ['cut', 'Cut so far', true]],
     `${LEAD} mm per screw turn, ${(LEAD / STEPS_PER_TURN).toFixed(3)} mm per full motor step (computed from the part numbers)`);
   const f1 = (v) => `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
-  const nowText = (i, step, done) => {
+  const fz = (v) => `${v < 0 ? '−' : v > 0 ? '+' : ''}${Math.abs(v).toFixed(1)}`;
+  const nowText = (at, step) => {
     if (step === 0) return 'Home';
-    if (K[i - 1] === 'cut') return featName[F[i - 1]];
-    return done && step === STEPS.length - 1 ? 'Home' : 'Rapid move';
+    const k = K[at.i - 1];
+    if (k === 'cut') return featName[F[at.i - 1]];
+    if (k === 'plunge') return 'Plunge';
+    if (PZ[at.i] > PZ[at.i - 1]) return at.t >= TEND ? 'Home' : 'Z up';
+    if (PZ[at.i] < PZ[at.i - 1]) return 'Z down';
+    return at.t >= TEND ? 'Home' : 'Rapid move';
   };
 
-  let lastS = -1, lastLift = -1;
+  let lastT = -1, lastLift = -1;
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, STEPS.length - 1);
     const [sx, sy] = ctx.shift();
@@ -203,15 +267,14 @@ export async function mount(el, ctx) {
     const last = step === STEPS.length - 1;
     const [t0, t1] = STEPS[step];
     const k = reduced ? 1 : smooth(0.06, last ? 0.5 : 0.82, stepP);
-    const s = sOfT(lerp(t0, t1, k));
-    const at = atS(s);
+    const at = atT(lerp(t0, t1, k));
     setXY(at.X, at.Y);
-    placePointer(at.X, at.Y);
-    if (s !== lastS) {
-      lastS = s;
-      const i = clamp(Math.round(s / kerf.step), 0, kerf.n - 1);
-      kerf.g.setDrawRange(0, kerf.upto[i]);
-      rapid.g.setDrawRange(0, rapid.upto[i]);
+    if (at.t !== lastT) {
+      lastT = at.t;
+      zu.setTip(TOP + at.Z);
+      zu.setSpin(reduced ? 0 : SPIN * (clamp(at.t, SPIN_ON, SPIN_OFF) - SPIN_ON));
+      kerf.g.setDrawRange(0, kerf.count(at.t));
+      rapid.g.setDrawRange(0, rapid.upto[clamp(Math.round(at.s / rapid.step), 0, rapid.n - 1)]);
       stage.invalidate();
     }
     // the plate lifted out of the sheet once the tool is home
@@ -234,17 +297,20 @@ export async function mount(el, ctx) {
     lab.ys.a = on(step === 1);
     lab.yl.a = on(step === 1);
     lab.xs.a = on(step === 2);
-    lab.tool.a = on(step === 2);
+    lab.z.a = on(step === 0 || step === 3);
+    lab.mill.a = on(step === 3);
     lab.box.a = on(step === 0);
     lab.plate.a = on(step === 0);
     lab.part.a = on(last && lift > 0.3);
-    H.put('now', nowText(at.i, step, k >= 1));
+    H.put('now', nowText(at, step));
     H.put('x', `${f1(at.X)} mm`);
     H.put('y', `${f1(at.Y)} mm`);
+    H.put('z', `${fz(at.Z)} mm`);
     H.put('xs', `${f1(at.X / LEAD)} turns`);
     H.put('ys', `${f1(at.Y / LEAD)} turns`);
     H.put('cut', `${Math.round(at.cut)} mm`);
-    H.put('mini', `X ${f1(at.X)} mm, Y ${f1(at.Y)} mm`);
+    H.put('mini', `X ${f1(at.X)}, Y ${f1(at.Y)}, Z ${fz(at.Z)} mm`);
+    base.updateMatrixWorld(true); // labels on moving parts read their world boxes now, not after the draw
     ov.update();
   }
   setProgress(0, 0, 0);
@@ -253,6 +319,7 @@ export async function mount(el, ctx) {
     dispose() {
       ov.dispose?.();
       for (const o of overlays) o.traverse((m) => { m.geometry?.dispose(); m.material?.dispose(); });
+      zu.dispose();
       stage.dispose();
     },
   };
