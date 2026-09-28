@@ -17,7 +17,7 @@ export default {
   summary: {
     stats: [
       { v: '4 days', l: 'First CAD to competition' },
-      { v: '15.5 oz', l: 'On the scale with the battery, under the 16 oz limit' },
+      { v: '439 g', l: 'On the scale with the battery, under the 454 g (1 lb) limit' },
       { v: '8,214 rpm', l: 'No-load weapon speed: 740 KV on 11.1 V, direct drive' },
       { v: '37.2 mm', l: 'Plate to plate in version 2, down from 48.0 mm (my CAD)' },
     ],
@@ -210,13 +210,13 @@ export default {
         { i: 'still-receiver-pads.webp', c: 'Leads soldered straight onto a board\'s pads, after midnight' },
       ] },
       { label: 'Jul 13, 2 AM', title: 'Weigh-in', p: [
-        '15.5 oz on my scale with the battery sitting on top: half an ounce under the 1 lb limit.',
+        '439 g on my scale with the battery sitting on top: 14 g under the 454 g (1 lb) limit.',
         { calc: 'How much room was left?',
-          given: [['On my scale, battery included', '15.5 oz', 'the weigh-in photo'], ['Class limit', '1 lb = 16 oz', 'the plastic antweight class'], ['One printed plate on the same scale', '38 g', 'my photo, Jul 10']],
-          work: ['16 oz - 15.5 oz = 0.5 oz', 'In grams: 15.5 oz x 28.35 g/oz = 439 g against 454 g, so 14 g to spare', '14 g / 454 g = 3 % of the limit, a bit over a third of one printed plate'],
+          given: [['On my scale, battery included', '15.5 oz = 439 g', 'the weigh-in photo (the scale reads ounces)'], ['Class limit', '1 lb = 454 g', 'the plastic antweight class'], ['One printed plate on the same scale', '38 g', 'my photo, Jul 10']],
+          work: ['15.5 oz x 28.35 g/oz = 439 g', '454 g - 439 g = 14 g to spare', '14 g / 454 g = 3 % of the limit, a bit over a third of one printed plate'],
           result: 'The robot came in 14 g, 3 %, under the limit.' },
       ], media: [
-        { i: 'weigh-in-15-5-oz.webp', c: 'The scale reads 0 lb 15.5 oz with the LiPo on top' },
+        { i: 'weigh-in-15-5-oz.webp', c: 'The scale reads 0 lb 15.5 oz (439 g) with the LiPo on top' },
       ] },
     ] },
 

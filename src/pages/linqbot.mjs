@@ -58,18 +58,23 @@ export default {
       ],
     },
     {
-      type: 'scrolly', id: 'vision', module: 'takeover', width: 'wide', side: 'left', stepHeight: '90vh', poster: `${M}/poster-vision.webp`,
+      // Jerry (Sept 28): the glasses' display on a 3D model of AR glasses, not two squares: the camera
+      // zooms into the lenses, clear, then the alert, then opaque into the top-down view of the arm.
+      type: 'scrolly', id: 'vision', module: 'takeover', stepHeight: '90vh', poster: `${M}/poster-vision.webp`,
       h: 'The plan, animated: autonomy fails, a human takes over',
-      p: ['One scroll step per control mode. The mode names across the top are the control modes in our repo’s product plan.'],
+      p: ['The mode names across the top are the control modes in our repo’s product plan. The glasses are a model of the Xreal One Pro, drawn for this page.'],
       steps: [
         { h: 'Planning', p: ['A text asks the arm to pick up a can and move it to the right, and the planner turns it into a list of robot moves.'] },
-        { h: 'Autonomous: the miss', p: ['The arm starts the pick on its own and reaches for where the plan expects the can. The can is not there: it stands a few centimetres to the side, so the jaw knocks it over and closes on nothing, the same miss as in our footage below.'] },
-        { h: 'Escalating', p: ['The grasp step fails, the sequence stops, and the robot pings an operator in the glasses: help, the grasp failed.'] },
-        { h: 'Human control', p: ['The operator takes over by hand, through the camera on the glasses: an open hand moves the gripper to the fallen can, a pinch closes the claw on it, and the hand carries it to the side.'] },
-        { h: 'Resuming', p: ['The operator makes a fist to hand control back.'] },
+        { h: 'Autonomous: the miss', p: ['The arm reaches for where the plan expects the can. The can stands a few centimetres to the side, so the jaw knocks it over and closes on nothing, the same miss as in our footage below.'] },
+        { h: 'Escalating: the operator’s glasses', p: ['The grasp step fails and the sequence stops. The robot asks for a person: an operator wearing Xreal One Pro AR glasses, with the Eye camera at the bridge that watches their hand.'] },
+        { h: 'Clear lenses', p: ['Until the robot needs them, the glasses are just glasses. Through the lenses the operator sees the room as it is: here the arm across the table, the can on its side.'] },
+        { h: 'The alert', p: ['The display in the lenses flags the operator: help, the grasp failed, take over? Our product plan also sends the alert as a text over Linq.'] },
+        { h: 'Human control: the robot’s view', p: ['The lenses go dark and become a screen: the view from a camera above the arm, with our status panel on top. Our product plan streams the robot’s camera to the glasses, so the operator can be anywhere.'] },
+        { h: 'Human control: by hand', p: ['The Eye camera tracks the operator’s hand: an open hand moves the gripper to the fallen can, a pinch closes the claw on it, and the hand carries it to the side.'] },
+        { h: 'Resuming', p: ['A fist hands control back, and the lenses clear again.'] },
         { h: 'Autonomous again', p: ['The robot finishes the job: it sets the can down, lets go and folds back.'] },
       ],
-      caption: 'An animation on our CAD, not footage. The plan and the replies in the chat are illustrative.',
+      caption: 'An animation on our CAD of the SO-101, not footage. The glasses are a model of the Xreal One Pro with the Eye camera, drawn for this page, not CAD; the view in the lenses is our CAD scene seen from a camera above the arm. The plan, the replies and the alert are illustrative; the status lines in the lens are the ones our glasses overlay shows.',
     },
     {
       type: 'split', id: 'autonomous', h: 'Mode 1: on its own',

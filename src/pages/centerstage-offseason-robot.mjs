@@ -50,11 +50,11 @@ export default {
         { h: '2. Reach', p: ['One 435 rpm motor drives a single belt through all four slide stages at once: 245 mm each, **979 mm** in all (from my CAD).'] },
         { h: '3. Grab', p: ['Each finger has its own servo and its own bumper on the second gamepad; the right trigger moves both. Two pixels, side by side.'] },
         { h: '4. Pull in', p: ['The slides come back in with both pixels before the arm moves. The code never enforced that order: see [what broke](#broke).'] },
-        { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm about 109 degrees to the up preset, 15 degrees past vertical over the back (from the code). The same button turns the wrist to face the backdrop.'] },
-        { h: '6. Reach again', p: ['The driver runs the slides out on the second gamepad\'s left stick until the claw is over the backdrop. Open loop: the code never knows how far out they are.'] },
-        { h: '7. Drop', p: ['The fingers open and both pixels drop onto the backdrop. Then slides in, arm down, and the next pair.'] },
+        { h: '5. Pitch', p: ['Two 43 rpm motors swing the arm about 109 degrees to the up preset, 15 degrees past vertical over the back (from the code). The same button turns the wrist so the pixels lie parallel to the backdrop\'s 60 degree face.'] },
+        { h: '6. Reach again', p: ['The driver runs the slides out on the second gamepad\'s left stick until the pixels are over the backdrop\'s bottom row. Open loop: the code never knows how far out they are.'] },
+        { h: '7. Drop', p: ['The fingers open and both pixels drop, still parallel to the face, into the notches of the bottom row. Then slides in, arm down, and the next pair.'] },
       ],
-      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels, the floor and the backdrop are added for the animation; they are not in the CAD. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
+      caption: 'My real CAD, rigged about its real axes: the arm turns about the line through both pivot motor shafts, the four slide stages run along the arm (each ball carriage at half its stage\'s speed, as in a real Viper-Slide), and the wrist and each finger turn about their servo output splines. The pixels and the floor are added for the animation. The backdrop is the official CENTERSTAGE backdrop from the field CAD (AndyMark am-5103), placed just behind the robot; in step 6 a cut through the middle of the claw shows a held pixel parallel to its face. The CAD has the belt only fully in and fully out, so it is hidden while the slides move.' },
 
     // ------------------------------------------------------------------ the brief
     { type: 'prose', id: 'brief', h: 'The brief', p: [
@@ -210,12 +210,10 @@ export default {
     { type: 'media', id: 'carnival', layout: 'row', h: 'At the STEAM Carnival',
       p: ['On Aug 3, 2024 the robot ran on a field with CENTERSTAGE backdrops and pixels, set up under a tent at the STEAM Carnival. Visitors from the community, children and adults, drove it.', 'It was there to recruit for the library system\'s FTC class, which I taught, and the class was overbooked. As part of the same internship I also wrote and taught a robotics curriculum.'],
       items: [
-        { v: 'hero-carnival-field.mp4', c: 'The field under the tent at the carnival, the robot mid-field with its arm up' },
-        { i: 'carnival-field-wide.webp', c: 'Aug 3: the field under the tent, with the robot on it' },
+        { v: 'hero-carnival-field.mp4', c: 'At the carnival: the robot on the field with its arm up' },
+        { i: 'carnival-field-wide.webp', c: 'Aug 3: the robot on the field, the backdrop behind it' },
       ] },
-    { type: 'media', layout: 'grid', cols: 3, items: [
-      { i: 'carnival-reach-topdown.webp', c: 'Aug 3: the slides reaching far out across the field tiles' },
-      { i: 'still-carnival-slides-out.webp', c: 'Aug 3: the slides lying all the way out across the field' },
+    { type: 'media', layout: 'row', items: [
       { i: 'still-carnival-robot.webp', c: 'Aug 3: the robot at the carnival, HOWARD COUNTY LIBRARY SYSTEM on its back plate' },
     ] },
 

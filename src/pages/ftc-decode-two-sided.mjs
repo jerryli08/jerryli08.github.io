@@ -336,8 +336,6 @@ export default {
 
     // ------------------------------------------------------------------ timeline
     { type: 'iterations', id: 'timeline', h: 'How the design developed', items: [
-      { label: 'Feb 2026', title: 'Geometry sketch', p: ['A 2D sketch of the 4-bar swinging out to either side and standing up in the middle to transfer.'],
-        media: [{ i: 'still-sketch-4bar-transfer.webp', c: 'The sketch in its transfer position: the 4-bar standing up between two 104 mm circles, a 100 mm coupler on top' }] },
       { label: 'Feb 28', title: 'Drivetrain test', p: ['A test chassis for the collinear mecanum drivetrain, the wheels in the middle, driven empty and then loaded.'],
         media: [{ i: 'test-chassis-frame.webp', c: 'The test chassis frame' }, { v: 'test-chassis-turning.mp4', c: 'It turned very well' }] },
       { label: 'Mar 8', title: 'Drive pods', p: ['The wheel pairs as two pods on half-round plates, with the intake gearbox as a block between them.'],

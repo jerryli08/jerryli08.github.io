@@ -244,7 +244,7 @@ export default {
         ],
         result: 'A scale error alone costs 11 to 18 points on this track out of the box, and under 4 once calibrated; heading drift adds to it, and its cost grows with every leg driven.',
         note: 'Estimate: a uniform scale error with the heading exact. The rated figures are SparkFun\'s, not measured on this robot.' },
-      { next: 'The OTOS sensor was bad and caused a lot of drift. It is the part of this robot I would improve.', title: 'Future improvement: the sensor' },
+      { next: ['Sensor selection. The OTOS datasheet lists its drift, but I assumed it would not matter much over a Robot Tour run, and it did. With wheels this grippy, the motor encoders and an IMU alone would have tracked the robot better.', 'It would also have been interesting to try some form of SLAM.'], title: 'Next time: sensor selection' },
     ], media: [{ v: 'clip-heading-drift.mp4', c: 'Sitting still, the heading reading creeps while the position holds' }] },
 
     { type: 'callout', id: 'after', h: 'After the season', p: [

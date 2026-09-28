@@ -1,0 +1,7 @@
+{
+  "about": "Input: the official FTC CENTERSTAGE backdrop (am-5103 Backdrop) from AndyMark's full-field STEP (am-5100 CenterStage Full Field.STEP, https://www.andymark.com/products/ftc-2023-24), tessellated by tools/cad/step2glb.py and prepared by /home/claude/work/hcls-2024-ftc-offseason-bot/prep-backdrop.mjs (fasteners and the bar under the tiles left out, Y up, origin on the floor under the scoring face's bottom edge, tessellation simplified to 0.6 mm, no shape change). The five BD_ groups stay separate (the page offsets the tape lines' depth).",
+  "prefix": "bd",
+  "remove": [],
+  "keep": ["^BD_"],
+  "finish": { "^BD_(BACK|FACE|FEET)$": "moulded" }
+}

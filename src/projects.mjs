@@ -403,7 +403,7 @@ export const projects = [
     ],
     media: [
       { v: 'battlebot/hero-table-spin.mp4', c: 'Finished: weapon spinning, then turning in place on a table' },
-      { i: 'images/battlebot-weighing.jpg', c: 'Weigh-in: 15.5 oz with the battery on the scale' },
+      { i: 'images/battlebot-weighing.jpg', c: 'Weigh-in: 439 g with the battery on the scale' },
       { i: 'battlebot/finished-front.webp', c: 'The finished robot' },
     ],
     cad: 'https://a360.co/3VZaphB',

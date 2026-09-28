@@ -12,7 +12,11 @@
 //   pivot   along X through (y 0.046, z 0): both pivot motor shafts and both hubs, 94 mm above the floor
 //   wrist   along X through (y 0.0703, z 1.3634), the wrist servo hub, in the CAD pose (slides out)
 //   fingers along Y (vertical in the CAD pose) through the finger servo hubs at
-//           (x 0.0532, z 1.3953) and (x -0.1312, z 1.3953)
+//           (x 0.0532, z 1.3953) and (x -0.1312, z 1.3953). The CAD pose is CLOSED: each finger
+//           runs forward from its hub along the outside of the claw (arms 175 mm apart) and hooks
+//           inward at its tip (tips 141 mm apart), in front of two 76.2 mm pixels side by side.
+//           Opening swings each tip outward: the +x finger turns about +Y by +angle (its tip, 86 mm
+//           out along +Z from the hub, goes toward +x), the -x finger by -angle.
 //   slides  each of the four stages travels 244.8 mm along the arm (matched part by part between the
 //           extended and the retracted copies of the kit); each ball carriage moves half as far as the
 //           stage it carries, and the claw rides the last stage: 979.2 mm in all.
@@ -77,8 +81,9 @@ export async function rigRobot(stage, { belts = true } = {}) {
     }
     arm.setAngle(-phi * DEG);
     wrist.setAngle(-w * DEG);
-    fR.setAngle(-grip[0] * DEG); // the +x finger opens toward +x
-    fL.setAngle(grip[1] * DEG); // the -x finger opens toward -x
+    // a turn about +Y by +a takes +Z toward +X: the +x finger's tip swings out to +x, the -x finger's to -x
+    fR.setAngle(grip[0] * DEG);
+    fL.setAngle(-grip[1] * DEG);
     stage.invalidate();
     return true;
   }
@@ -86,6 +91,7 @@ export async function rigRobot(stage, { belts = true } = {}) {
 }
 
 // ---------------------------------------------------------------- props (not in the CAD)
+export const PIXEL_T = 0.0127;
 // FTC CENTERSTAGE pixel: a hexagon 3 in (76.2 mm) across the flats and 0.5 in (12.7 mm) thick,
 // with a round hole in the middle. Lying flat, centred on its middle.
 export function pixelGeometry(THREE) {
@@ -101,50 +107,43 @@ export function pixelGeometry(THREE) {
   return geo;
 }
 
-// A CENTERSTAGE-style backdrop: a board leaning back 60 degrees from the floor, a hexagon grid on
-// its face, a low lip along its bottom edge and two posts under it. It is placed behind the robot
-// (-Z), where the arm's up preset brings the claw. Returns { group, plane: { point, normal, up } }.
-export function backdrop(THREE, { bottomY = 0.25, bottomZ = -0.19, width = 0.62, height = 0.52 } = {}) {
-  const g = new THREE.Group(); g.name = 'prop-backdrop';
-  const tilt = 60 * DEG; // from the floor
-  // up the face: toward -Z and +Y; the face looks toward +Z (the robot) and up
-  const up = new THREE.Vector3(0, Math.sin(tilt), -Math.cos(tilt));
-  const normal = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt));
-  const c = document.createElement('canvas'); c.width = 512; c.height = 430;
-  const x = c.getContext('2d');
-  x.fillStyle = '#2b2d33'; x.fillRect(0, 0, c.width, c.height);
-  x.strokeStyle = 'rgba(210, 215, 225, 0.55)'; x.lineWidth = 2.2;
-  const r = 20, w = Math.sqrt(3) * r;
-  for (let row = 0; row * 1.5 * r < c.height + r; row++) {
-    for (let col = -1; col * w < c.width + w; col++) {
-      const cx = col * w + (row % 2 ? w / 2 : 0) + 12, cy = c.height - (row * 1.5 * r + 14);
-      x.beginPath();
-      for (let i = 0; i < 6; i++) { const a = (i * Math.PI) / 3 + Math.PI / 6; x[i ? 'lineTo' : 'moveTo'](cx + r * 0.92 * Math.cos(a), cy + r * 0.92 * Math.sin(a)); }
-      x.closePath(); x.stroke();
-    }
-  }
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const board = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.008),
-    [0, 1, 2, 3].map(() => new THREE.MeshStandardMaterial({ color: '#2b2d33', roughness: 0.6 })).concat([
-      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55 }), new THREE.MeshStandardMaterial({ color: '#2b2d33', roughness: 0.6 })]));
-  const bottom = new THREE.Vector3(0, bottomY, bottomZ);
-  const centre = bottom.clone().addScaledVector(up, height / 2).addScaledVector(normal, -0.004);
-  board.position.copy(centre);
-  board.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
-  // keep the texture upright: the box's +Y should run up the face
-  const yNow = new THREE.Vector3(0, 1, 0).applyQuaternion(board.quaternion);
-  const twist = new THREE.Quaternion().setFromUnitVectors(yNow, up);
-  board.quaternion.premultiply(twist);
-  const dark = new THREE.MeshStandardMaterial({ color: '#1d1e22', roughness: 0.7 });
-  const lip = new THREE.Mesh(new THREE.BoxGeometry(width, 0.03, 0.012), dark);
-  lip.position.copy(bottom).addScaledVector(normal, 0.012);
-  lip.quaternion.copy(board.quaternion);
-  const postH = bottomY - FLOOR;
-  const posts = [-1, 1].map((s) => {
-    const p = new THREE.Mesh(new THREE.BoxGeometry(0.025, postH + height * Math.sin(tilt) * 0.5, 0.025), dark);
-    p.position.set(s * (width / 2 - 0.03), FLOOR + (postH + height * Math.sin(tilt) * 0.5) / 2, bottomZ - height * Math.cos(tilt) * 0.5 - 0.02);
-    return p;
+// ---------------------------------------------------------------- the backdrop (official field CAD)
+// FIRST's CENTERSTAGE backdrop, am-5103, from AndyMark's full-field STEP (am-5100 CenterStage Full
+// Field.STEP, the CAD file on andymark.com/products/ftc-2023-24; AndyMark makes FIRST's field kit),
+// prepared by /home/claude/work/hcls-2024-ftc-offseason-bot/prep-backdrop.mjs: fasteners left out,
+// Y up, origin on the floor the easel's legs stand on (outside the field), directly under the bottom
+// edge of the scoring face, centred across it; the face looks toward +Z. Measured on the model:
+//   the scoring face is flat and leans back 60.00 degrees from the floor; its bottom edge is 147.8 mm
+//   above the origin; the field tiles' top (the robot's floor) is 17.5 mm above the origin (the tiles
+//   are 15 mm thick in the same STEP, and the easel's lowest edge sits on them)
+//   the frame's bottom edge is notched for the first row: six notches, centres x = +-38, +-114,
+//   +-190 mm; a pixel (pointy end down) settles with its centre 58.2 mm up the face from its
+//   bottom edge, whichever notch
+//   the frame's lowest front edge stands 95.2 mm in front of the face's bottom edge
+export const BD_MODEL = '/assets/models/centerstage-offseason-robot/backdrop.glb';
+export const BD_TILT = 60; // degrees from the floor
+const BD_EDGE = 0.1478, BD_TILE = 0.0175, BD_REST = 0.0582;
+export const BD_LIP = 0.0952;
+
+// Loads it into `into` (the robot model, so it shares the robot's frame) with the face's bottom edge
+// at z = edgeZ, centred at x, standing on the robot's floor. Returns the scoring plane and the rest
+// pose of a pixel in a notch. The white tape lines lie only 0.1 mm proud of the face, so they are
+// drawn with a depth offset (no flicker).
+export async function loadBackdrop(stage, into, { x = 0, edgeZ = -0.34 } = {}) {
+  const { THREE } = stage;
+  const obj = await stage.load(BD_MODEL, { add: false });
+  obj.name = 'backdrop';
+  obj.position.set(x, FLOOR - BD_TILE, edgeZ);
+  into.add(obj);
+  obj.updateMatrixWorld(true);
+  for (const m of stage.part(/BD_LINES/, obj)) m.traverse((o) => {
+    if (o.isMesh) for (const mat of [].concat(o.material)) Object.assign(mat, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
   });
-  for (const m of [board, lip, ...posts]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
-  return { group: g, plane: { point: bottom, normal, up } };
+  const t = BD_TILT * DEG;
+  const normal = new THREE.Vector3(0, Math.cos(t), Math.sin(t)); // out of the face: toward +Z and up
+  const up = new THREE.Vector3(0, Math.sin(t), -Math.cos(t)); // up the face
+  const edge = new THREE.Vector3(x, FLOOR - BD_TILE + BD_EDGE, edgeZ); // on the face's bottom edge
+  // a pixel resting in a notch: its back face on the face, its centre half a pixel off it
+  const rest = (px) => edge.clone().setX(px).addScaledVector(up, BD_REST).addScaledVector(normal, PIXEL_T / 2);
+  return { obj, plane: { point: edge, normal, up }, rest };
 }

@@ -101,7 +101,7 @@ export default {
   hero: {
     layout: 'single',
     items: [
-      { i: 'still-htn-letters.webp', c: 'h, t and n: three folds of the real chain, from our demo video' },
+      { v: 'hero-htn-letters.mp4', c: 'From our demo video: the real chain folding into h, t and n' },
     ],
   },
   sections: [
@@ -111,7 +111,6 @@ export default {
       'I built the path from a text message to motion: iMessage in through the Linq API, a MiniLM intent classifier running on our laptop with GPT-4o-mini as a fallback, torque limits on the fold plans, the executor that drives the servos, and MuJoCo validation of every plan before the real robot moves. On the hardware side, all of the wiring runs inside the modules, so I spent 8 hours soldering USB-C breakout boards for the motor controller drivers. My teammates were Daniel Ganjali, Aydan Ling and Justin Rui.',
     ] },
     { type: 'media', layout: 'row', items: [
-      { v: 'hero-htn-letters.mp4', c: 'From our demo video: the real chain folding into h, t and n' },
       { v: 'hero-fold-sideview.mp4', c: 'The straight chain starting a fold, from the side' },
     ] },
 
