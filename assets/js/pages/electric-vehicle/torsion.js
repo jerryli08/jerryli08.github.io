@@ -188,9 +188,9 @@ export async function mount(el, ctx) {
     <div class="rx-hud-mini num" data-k="mini"></div>`);
   const legend = ov.card({ corner: 'br' });
   const grad = STOPS.map(([t, c]) => `rgb(${c.map((v) => Math.round(v * 255)).join(',')}) ${t * 100}%`).join(', ');
-  legend.innerHTML = `<div style="font-size:11.5px;letter-spacing:.04em;color:#b8b0a7;margin-bottom:5px">Bending stress at the surface</div>
-    <div style="height:8px;border-radius:4px;width:150px;background:linear-gradient(90deg, ${grad})"></div>
-    <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#b8b0a7;margin-top:4px"><span>0</span><span>${SMAX} MPa</span></div>`;
+  legend.innerHTML = `<div style="font-size:var(--rx-ov-small);letter-spacing:.04em;color:#b8b0a7;margin-bottom:6px">Bending stress at the surface</div>
+    <div style="height:10px;border-radius:5px;width:200px;max-width:100%;background:linear-gradient(90deg, ${grad})"></div>
+    <div style="display:flex;justify-content:space-between;font-size:var(--rx-ov-small);color:#b8b0a7;margin-top:4px"><span>0</span><span>${SMAX} MPa</span></div>`;
   legend.style.opacity = '1';
   const kL = F.lattice.torque, kS = F.solid.torque;
 

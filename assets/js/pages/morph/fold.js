@@ -38,7 +38,7 @@ export async function mount(el, ctx) {
     background: 'rgba(10, 8, 7, 0.74)', border: '1px solid rgba(255, 255, 255, 0.12)', opacity: 0,
     pointerEvents: 'none', display: 'grid', gap: '6px', justifyItems: 'center',
   });
-  mask.innerHTML = `${silhouetteSvg(heart.sil, { size: el.clientWidth < 640 ? 76 : 120, label: 'The heart\'s target drawing' })}<figcaption style="font-size:12px;color:var(--muted)">The target drawing</figcaption>`;
+  mask.innerHTML = `${silhouetteSvg(heart.sil, { size: el.clientWidth < 640 ? 112 : 210, label: 'The heart\'s target drawing' })}<figcaption style="font-size:var(--rx-ov-small);color:var(--muted)">The target drawing</figcaption>`;
   el.append(mask);
 
   // move index (0..n, fractional mid-move) for each step

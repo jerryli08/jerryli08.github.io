@@ -221,7 +221,7 @@ export default {
       { ul: [
         '**Lift and outtake.** In October the lift was a multi-stage slide with a printed bucket. In December it became a black band that unrolls from a drum into a rising tube, with a bucket on a printed truss arm at the top. In January the bucket became a scoop on a taller truss arm.',
         '**Specimens.** A claw on a truss arm clips specimens onto the high chamber.',
-        '**Climb.** In December the robot hooked the low rung and lifted itself off the floor ("this is historic", on the video). At Glen Allen the livestream called a level two climb.',
+        '**Climb.** In December the robot hooked the low rung and lifted itself off the floor. At Glen Allen the livestream called a level two climb.',
       ] },
     ], media: [
       { i: 'still-lift-at-basket.webp', c: 'Dec 2024, in the sample autonomous: the lift raised at the high basket' },

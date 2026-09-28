@@ -9,10 +9,12 @@
 // computed from the constants in TestTeleop.java. Dates are the photos' capture dates.
 // The 3D model is robot.glb, from that FBX (prep-robot.mjs in the notes folder, then
 // tools/optimize-cad.mjs with tools/cad/configs/centerstage-offseason-robot-robot.json).
-// Answered: the robot picked pixels up in front and scored over the back. Held back until Jerry
-// answers (questions.md): the "6 feet of extension" figure (the page uses the CAD's 979 mm of travel
-// and 1.49 m of reach instead), "4 days" (the page uses his checklist's "less than a week"), why each
-// pivot motor change was needed, which of the pivot's U-channels cracked and when (no photo of it is
+// Answered: the robot picked pixels up in front and scored over the back. Sept 28, 03:53: "less than
+// a week" is right; the extension figure he once gave is wrong and is never used (the page uses the
+// CAD's 979 mm of travel and 1.49 m of reach); at the carnival a bunch of kids from the community and
+// even some adults drove it; he was tasked with making a cool-looking robot to recruit for the library
+// system's FTC class, which was overbooked and which he taught (no kids' faces or names). Held back
+// until Jerry answers (questions.md): why each pivot motor change was needed, which of the pivot's U-channels cracked and when (no photo of it is
 // shown), how the sideplates broke and what he would cut them from next time, who else built or drove,
 // close shots of children, and the classroom photo.
 const M = '/assets/models/centerstage-offseason-robot';
@@ -27,8 +29,8 @@ export default {
       { v: 'About 109°', l: 'Between the arm\'s two presets, held by P control plus gravity feedforward' },
     ],
     text: [
-      'For my internship with the Howard County Library System, I was tasked with building a FIRST Tech Challenge robot to demo at the STEAM Carnival the library system hosts. Inspired by the FTC team KookyBotz, I designed a pitching claw robot for the CENTERSTAGE game: four-stage belt-driven Viper-Slides on a pivot, so one mechanism reaches out along the floor to grab two pixels, then swings up over the back of the robot to score them. I had less than a week for everything, so I used as many off-the-shelf goBILDA parts as I could.',
-      `It ran at the carnival on Aug 3, 2024. Two things broke: the small aluminum U-channel at the pivot, because the arm pivoted a few times at full extension, and the laser-cut acrylic sideplates, in the weeks after the demo. The code is [on GitHub](${REPO}).`,
+      'For my internship with the Howard County Library System, I was tasked with building an eye-catching FIRST Tech Challenge robot to demo at the STEAM Carnival the library system hosts, to recruit for the library system\'s FTC class, which I taught. Inspired by the FTC team KookyBotz, I designed a pitching claw robot for the CENTERSTAGE game: four-stage belt-driven Viper-Slides on a pivot, so one mechanism reaches out along the floor to grab two pixels, then swings up over the back of the robot to score them. I had less than a week for everything, so I used as many off-the-shelf goBILDA parts as I could.',
+      `It ran at the carnival on Aug 3, 2024, where visitors from the community, children and adults, drove it. Two things broke: the small aluminum U-channel at the pivot, because the arm pivoted a few times at full extension, and the laser-cut acrylic sideplates, in the weeks after the demo. The code is [on GitHub](${REPO}).`,
     ],
   },
   hero: {
@@ -56,7 +58,7 @@ export default {
 
     // ------------------------------------------------------------------ the brief
     { type: 'prose', id: 'brief', h: 'The brief', p: [
-      'The Howard County Library System hosts a STEAM Carnival, and as part of my internship there as a STEM instructor and youth peer intern, I was tasked with building a FIRST Tech Challenge robot to demo at it. I had less than a week for everything, so the plan was to use as many commercial off-the-shelf parts as possible and design only what I had to.',
+      'The Howard County Library System hosts a STEAM Carnival, and as part of my internship there as a STEM instructor and youth peer intern, I was tasked with making an eye-catching FIRST Tech Challenge robot to demo at it, to recruit for the library system\'s FTC class. I had less than a week for everything, so the plan was to use as many commercial off-the-shelf parts as possible and design only what I had to.',
       'The game was CENTERSTAGE, the 2023-24 FTC game: robots pick up hexagonal pixels and place them on the backdrop, a slanted board. I started from an older goBILDA robot, a Strafer chassis with cable-driven Viper-Slides, a claw and a wrist, took it apart and rebuilt it around a pitching arm, inspired by the FTC team KookyBotz. The slides rotate for horizontal extension and for height, so one mechanism reaches out across the floor for pixels and also lifts them to the backdrop. The claw in my CAD is still called "kooky claw v2".',
       { problem: 'The layout needed goBILDA dual blocks to put channels in the right places, and I did not have any.', title: 'No dual blocks' },
       { fix: 'I improvised the same positions from U-channels and quad blocks I had on hand.' },
@@ -206,9 +208,9 @@ export default {
 
     // ------------------------------------------------------------------ the carnival
     { type: 'media', id: 'carnival', layout: 'row', h: 'At the STEAM Carnival',
-      p: ['On Aug 3, 2024 the robot ran on a field with CENTERSTAGE backdrops and pixels, set up under a tent at the STEAM Carnival. As part of the same internship I also wrote and taught a robotics curriculum.'],
+      p: ['On Aug 3, 2024 the robot ran on a field with CENTERSTAGE backdrops and pixels, set up under a tent at the STEAM Carnival. Visitors from the community, children and adults, drove it.', 'It was there to recruit for the library system\'s FTC class, which I taught, and the class was overbooked. As part of the same internship I also wrote and taught a robotics curriculum.'],
       items: [
-        { v: 'hero-carnival-field.mp4', c: 'The field under the tent at the carnival, the robot at the backdrop with its arm up' },
+        { v: 'hero-carnival-field.mp4', c: 'The field under the tent at the carnival, the robot mid-field with its arm up' },
         { i: 'carnival-field-wide.webp', c: 'Aug 3: the field under the tent, with the robot on it' },
       ] },
     { type: 'media', layout: 'grid', cols: 3, items: [

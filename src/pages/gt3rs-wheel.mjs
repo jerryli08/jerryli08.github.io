@@ -1,18 +1,17 @@
 // GT3 RS Wheel Replica: a small page. Its one animation rolls the real CAD three turns about its
 // axle as you scroll, then pans around it (Jerry, Sept 27). Jerry, Sept 27, 21:12: no ruler, tick
 // marks or mark on the wheel, and no "upright like on a car" in the copy.
-// Facts from Jerry (21:12): printed in ABS on a Bambu Lab H2D, 275 mm radius, vapor smoothed (the
-// solvent is not stated, so it is not named). He remembered the car's wheels as 20 in front and 21 in
+// Facts from Jerry: printed in ABS on a Bambu Lab H2D (21:12); 275 mm is the print's DIAMETER, so the
+// print is about half scale of the 545 mm CAD (275 / 545 = 0.50), vapor smoothed with acetone, and no
+// photo of the print exists (Sept 28, 03:53). He remembered the car's wheels as 20 in front and 21 in
 // rear: Porsche's technical data confirms 10 J x 20 front and 13 J x 21 rear. The CAD's bead seats
-// (about 507 mm across, a circle fitted to the barrel) and depth (264 mm) match the front wheel.
-// His 275 mm against the CAD's 272.5 mm lip radius: both are given, and the numbers use the CAD.
-// Held back (questions.md Q2): how a 550 mm wheel was printed on the H2D (in pieces? at what scale?),
-// how the smoothing came out, and photos of the print.
+// (about 507 mm across, a circle fitted to the barrel) and depth (264 mm) match the front wheel, so
+// the CAD is the full-size wheel. The animation and the numbers on it are the CAD's.
 const PORSCHE = 'https://newsroom.porsche.com/dam/jcr:1d390f77-93c3-49c0-89c7-634f5f02b26a/S22_3515_en.pdf';
 export default {
   summary: {
     text: [
-      'A replica of the Porsche 911 GT3 RS front wheel, which I printed in ABS on a Bambu Lab H2D and then vapor smoothed. By my number it is 275 mm in radius; measured in my CAD, the lips come to 272.5 mm (545 mm across), within 1 % of that, and the wheel is 264 mm deep: split spokes running out from a single centre bore to a deep barrel.',
+      'A replica of the Porsche 911 GT3 RS front wheel, which I printed in ABS on a Bambu Lab H2D and then vapor smoothed with acetone. The print is 275 mm across, about half scale: my CAD is the full-size wheel, 545 mm across the lips and 264 mm deep (275 / 545 = 0.50), with split spokes running out from a single centre bore to a deep barrel.',
     ],
   },
   hero: null,
@@ -60,7 +59,7 @@ export default {
             'Tyre diameter: 508 mm + 2 × 96.3 mm = 700.5 mm, so one turn = π × 0.7005 m = 2.20 m',
             '296 km/h = 82.2 m/s; 82.2 m/s / 2.20 m = 37.4 turns a second',
           ],
-          result: 'At top speed the front wheel turns about 37 times a second, about 2,240 rpm. Rolling on its bare lips, my replica covers 1.71 m a turn (π × 545 mm).',
+          result: 'At top speed the front wheel turns about 37 times a second, about 2,240 rpm. Rolling on its bare lips, the full-size wheel in my CAD covers 1.71 m a turn (π × 545 mm); my half-scale print, 275 mm across, covers about 0.86 m (π × 275 mm).',
           note: 'Nominal tyre size, ignoring tyre growth and squash under load; rounded.' },
       ],
       media: [{ i: '/assets/media/gt3rs-wheel/cad-wheel-tight.webp', c: 'The wheel, rendered from my CAD' }],

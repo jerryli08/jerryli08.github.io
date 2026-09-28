@@ -23,6 +23,8 @@
 // modelled). Why it was never built, in his words: construction, friction and play and slop issues he
 // foresaw, little meaningful benefit on a real robot, so the old robot was improved instead (twice the
 // transfer power and so speed, and a turret). The PTO scrolly sits right below the hero.
+// Sept 28, 03:53 (Jerry): the 4-bar arms are animated correctly now (Q12 closed), so no copy calls
+// their angle "for the animation" or unknown.
 const M = '/assets/models/ftc-decode-two-sided/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff', PINK = '#ff2bd6';
 
@@ -254,7 +256,7 @@ export default {
         { h: 'The left arm\'s servo', p: ['Cut just in front of the arms. The servo right of F turns its 14-tooth bevel, which turns the 28-tooth bevel on the left arm: the arm swings about F, half as far as the servo.'] },
         { h: 'The right arm\'s servo', p: ['The servo left of F does the same for the right arm: two servos, two arm angles.'] },
       ],
-      caption: 'The outer plates, the side walls and everything above the arms are left out, and cut faces are hatched. The belts, pulleys, rows, bevels and arms turn about their axes in the CAD; the dots on the belts are an overlay. The belts from the 20-tooth pulley to the outer rows are not modelled; those rows turn at the intended 6 : 1 from that pulley. The split from F to the rows on the arms is not modelled either, so those rows turn with F. The arm angles are for the animation.' },
+      caption: 'The outer plates, the side walls and everything above the arms are left out, and cut faces are hatched. The belts, pulleys, rows, bevels and arms turn about their axes in the CAD; the dots on the belts are an overlay. The belts from the 20-tooth pulley to the outer rows are not modelled; those rows turn at the intended 6 : 1 from that pulley. The split from F to the rows on the arms is not modelled either, so those rows turn with F.' },
     { type: 'prose', id: 'arms', h: 'A servo for each arm', p: [
       'On the 4-bar, the two servos with bevels set the angles of the two arms that hold its rows of wheels. Each arm turns about F with a 28-tooth bevel on it, and each Axon MAX turns a 14-tooth bevel that meshes one of them: the servo right of F turns the left arm, the other the right.',
       { calc: 'What does the 2:1 bevel give each arm?',
@@ -320,7 +322,6 @@ export default {
     { type: 'prose', id: 'test-chassis', h: 'Testing it first', p: [
       { problem: 'Would a collinear mecanum drivetrain, all four mecanum wheels on one line, drive straight and turn well?', title: 'An untested collinear mecanum drivetrain' },
       { fix: 'Before the drivetrain CAD, we built a quick test chassis out of goBILDA channel with the wheels bunched in the middle, and drove it on foam tiles at home: empty first, then with a bag on top for weight. It drove, and it turned very well.' },
-      { quote: 'Turning is crazy. That\'s good at turning.', by: 'On the test video' },
     ],
       media: [[
         { i: 'test-chassis-parts.webp', c: 'February 28, 2026: goBILDA channel, two mecanum wheels and two motors for the test chassis' },
@@ -353,7 +354,7 @@ export default {
 
     // ------------------------------------------------------------------ outcome
     { type: 'prose', id: 'outcome', h: 'Why it was never built', p: [
-      'It was cool to make this concept, and working out in CAD how to make the differential PTOs actually work was a good problem-solving exercise: two motors, two differentials, a worm and five belt stages up a moving linkage, packed into an 18 in cube. But the further the design got, the more I could see what building it would take.',
+      'Working out in CAD how to make the differential PTOs work was a useful design exercise: two motors, two differentials, a worm and five belt stages up a moving linkage, packed into an 18 in cube. But the further the design got, the more I could see what building it would take.',
       { problem: [
         'I foresaw a lot of construction issues. Everything on this page has to be built, aligned and kept aligned: two bevel differentials tied together by a row of four spur gears and a belt, a worm set, a bevel pair on each arm, belts up the passive link and along the coupler, the side branch to the outer rows, and walls on linear rails, all between carbon fiber plates.',
         'I also foresaw a lot of friction, and a lot of play and slop. Every gear mesh, bearing and belt in a drive takes a little of the power and adds a little play, and in this intake the power to the rows on the 4-bar goes through a gear train, a differential and five belts in a row, so all of it adds up.',

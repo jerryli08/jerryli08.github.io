@@ -303,7 +303,7 @@ const css = (el, s) => { Object.assign(el.style, s); return el; };
 export function tags(stage) {
   const layer = css(document.createElement('div'), {
     position: 'absolute', inset: '0', zIndex: '2', pointerEvents: 'none', overflow: 'hidden',
-    font: '550 13px/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3',
+    font: '550 var(--rx-ov-label, 14px)/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3', // site.css floor for labels
   });
   layer.className = 'hv-tags';
   stage.el.appendChild(layer);
@@ -317,7 +317,7 @@ export function tags(stage) {
       background: o.hollow ? 'rgba(20,16,13,.9)' : color, border: o.hollow ? `2px solid ${color}` : '0', boxShadow: '0 0 0 3px rgba(10,8,7,.55)',
     });
     const pill = css(document.createElement('span'), {
-      position: 'absolute', top: '-12px', padding: '3px 10px', borderRadius: '999px',
+      position: 'absolute', top: 'calc(-0.625em - 4px)', padding: '3px 10px', borderRadius: '999px',
       background: 'rgba(10,8,7,.78)', border: '1px solid rgba(255,255,255,.15)',
     });
     el.append(dot, pill);
@@ -339,7 +339,7 @@ export function tags(stage) {
       if (!on) continue;
       const txt = narrow ? t.short : t.text;
       if (txt !== t.txt) { t.pill.textContent = txt; t.txt = txt; }
-      const w = t.w[txt] || (t.w[txt] = t.pill.offsetWidth || txt.length * 7 + 22);
+      const w = t.w[txt] || (t.w[txt] = t.pill.offsetWidth || txt.length * 8 + 24);
       const x = Math.round(((v.x + 1) / 2) * W * 2) / 2, y = Math.round(((1 - v.y) / 2) * H * 2) / 2;
       let side = t.side;
       if (side === 'l' && x - w - 12 < Math.max(4, freeLeft)) side = 'r';

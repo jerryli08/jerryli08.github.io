@@ -35,21 +35,21 @@ const THREAD = [
 const TYPING = [[0.28, 0.46], [1.52, 1.66], [5.8, 5.9]];
 
 const CSS = `
-.gr-thread { position: absolute; right: 14px; bottom: 14px; width: min(310px, 36%); display: flex; flex-direction: column; gap: 6px;
+.gr-thread { position: absolute; right: 14px; bottom: 14px; width: min(var(--rx-inset-w), 40%); display: flex; flex-direction: column; gap: 6px;
   padding: 12px; border-radius: 16px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 13.5px; line-height: 1.35; color: var(--text); }
+  font-size: var(--rx-ov-text); line-height: 1.35; color: var(--text); }
 .gr-thread-head { display: flex; align-items: center; gap: 9px; padding-bottom: 8px; margin-bottom: 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-.gr-thread-head span { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #f2c833; color: #2a2006; font-weight: 800; font-size: 13px; }
-.gr-thread-head b { display: block; font-size: 13px; line-height: 1.2; }
-.gr-thread-head small { display: block; font-size: 11.5px; color: var(--muted); }
+.gr-thread-head span { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #f2c833; color: #2a2006; font-weight: 800; font-size: 13px; }
+.gr-thread-head b { display: block; font-size: var(--rx-ov-text); line-height: 1.2; }
+.gr-thread-head small { display: block; font-size: var(--rx-ov-small); color: var(--muted); }
 .gr-thread .gr-msg { max-width: 88%; padding: 6px 11px; border-radius: 16px; overflow-wrap: anywhere; }
 .gr-thread .gr-out { align-self: flex-end; background: #0a84ff; color: #fff; border-bottom-right-radius: 5px; }
 .gr-thread .gr-in { align-self: flex-start; background: #3a3a3c; color: #f2f2f7; border-bottom-left-radius: 5px; }
 .gr-thread .gr-dots { display: inline-flex; gap: 4px; padding: 10px 12px; }
 .gr-thread .gr-dots i { width: 6px; height: 6px; border-radius: 50%; background: #9a9aa0; }
-.gr-thread-empty { font-size: 12px; color: var(--muted); text-align: center; }
+.gr-thread-empty { font-size: var(--rx-ov-small); color: var(--muted); text-align: center; }
 @media (max-width: 640px) {
-  .gr-thread { right: 8px; bottom: auto; top: 8px; width: min(250px, 72%); padding: 7px; gap: 4px; font-size: 12px; }
+  .gr-thread { right: 8px; bottom: auto; top: 8px; width: min(280px, 76%); padding: 8px; gap: 5px; }
   .gr-thread-head, .gr-thread-empty { display: none; }
   .gr-thread .gr-old { display: none; }
 }

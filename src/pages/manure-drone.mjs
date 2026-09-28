@@ -145,7 +145,7 @@ export default {
       { problem: 'By the same IPCC data, manure lying on a pasture releases only about 1 % of its methane potential, because it breaks down with air around it.', title: 'Manure left on grass makes little methane' },
       { fix: 'The methane the drone saves is the methane the manure would have made in a lagoon or slurry tank, where 66 % of it escapes. For manure that would have stayed on the grass, the gain is the energy from the digester rather than avoided methane.', label: 'What it changes' },
       { problem: 'One cow makes about 38 kg of manure a day, so a 100-cow herd on pasture would need about 150 full trips a day.', title: 'Scale' },
-      { fix: 'One drone can only cover part of a farm: a real system needs several, or aims at the places ground machines cannot reach easily. That is where flying wins: the drone does not need roads, lanes or a flat barn floor.', label: 'Where it still works' },
+      { fix: 'One drone can only cover part of a farm: a real system needs several, or aims at the places ground machines cannot reach easily. That is where a drone has the advantage: it does not need roads, lanes or a flat barn floor.', label: 'Where it still works' },
       { h: 'Hover power' },
       { calc: 'How much power does it take to hover?',
         given: [

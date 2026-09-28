@@ -81,8 +81,8 @@ const follow = (t) => { const u = clamp((t - T0) / (T - T0), 0, 1) * NS, i = Mat
 
 // ------------------------------------------------------------------ the readout
 const CSS = `
-.bp-hud { width: 318px; }
-.bp-hud .bp-lab { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #9a948c); }
+.bp-hud { width: 360px; }
+.bp-hud .bp-lab { font-size: var(--rx-ov-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #9a948c); }
 .bp-hud .bp-typed { font-size: 24px; line-height: 1.15; font-weight: 650; color: var(--text, #f3efe9); letter-spacing: .02em; min-height: 28px; margin: 2px 0 8px; }
 .bp-hud .bp-typed u { text-decoration: none; opacity: .35; }
 .bp-hud .bp-caret { display: inline-block; width: 2px; height: 22px; margin-left: 2px; vertical-align: -3px; background: ${ACCENT}; }
@@ -96,7 +96,7 @@ const CSS = `
 .bp-hud .bp-cell i.o { background: rgba(255,255,255,.07); }
 .bp-hud .bp-cell.off i.p, .bp-hud .bp-cell.off i.o { box-shadow: none; background: rgba(255,255,255,.04); }
 .bp-hud .bp-chars { display: flex; gap: 7px; margin-top: 1px; }
-.bp-hud .bp-chars span { width: 23px; text-align: center; font-size: 10.5px; color: var(--muted, #9a948c); }
+.bp-hud .bp-chars span { width: 23px; text-align: center; font-size: var(--rx-ov-small); color: var(--muted, #9a948c); }
 .bp-hud .bp-mir { overflow: hidden; }
 .bp-hud .bp-sub { margin-top: 8px; }
 .bp-hud .bp-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; margin-top: 9px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.1); }
@@ -104,7 +104,7 @@ const CSS = `
 .bp-hud .bp-nums b { color: var(--text, #f3efe9); font-weight: 650; }
 .bp-letters { position: absolute; inset: 0; pointer-events: none; }
 .bp-letters span { position: absolute; left: 0; top: 0; transform: translate(-50%, 0); font: 650 15px/1 var(--font, system-ui, sans-serif); color: #1a1715; background: rgba(242,238,230,.92); padding: 3px 6px; border-radius: 6px; white-space: nowrap; opacity: 0; }
-.bp-letters span.cap { font-size: 11px; font-weight: 600; color: #6b645c; }
+.bp-letters span.cap { font-size: var(--rx-ov-small); font-weight: 600; color: #6b645c; }
 @media (max-width: 640px) {
   .bp-hud { width: auto; }
   .bp-hud .bp-lab, .bp-hud .bp-chars { display: none; }
@@ -112,9 +112,9 @@ const CSS = `
   .bp-hud .bp-typed { font-size: 18px; min-height: 21px; margin: 0 0 4px; }
   .bp-hud .bp-caret { height: 17px; }
   .bp-hud .bp-row, .bp-hud .bp-chars { gap: 4px; }
-  .bp-hud .bp-cell { grid-template-columns: 5px 5px; grid-template-rows: 5px 5px 5px; gap: 2px; padding: 2px; }
-  .bp-hud .bp-cell i { width: 5px; height: 5px; }
-  .bp-hud .bp-chars span { width: 16px; font-size: 9.5px; }
+  .bp-hud .bp-cell { grid-template-columns: 6px 6px; grid-template-rows: 6px 6px 6px; gap: 2px; padding: 2px; }
+  .bp-hud .bp-cell i { width: 6px; height: 6px; }
+  .bp-hud .bp-chars span { width: 18px; font-size: 12px; }
   .bp-hud .bp-nums { grid-template-columns: 1fr 1fr; margin-top: 5px; padding-top: 5px; }
   .bp-hud .bp-sub { margin-top: 4px; }
   .bp-letters span { font-size: 12px; padding: 2px 4px; }

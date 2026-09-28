@@ -20,13 +20,12 @@ const MITER = '[goBILDA miter gears](https://www.gobilda.com/clamping-steel-mite
 export default {
   summary: {
     stats: [
-      { v: '1st place', l: 'Sustain Award, FIRST World Championship' },
-      { v: '8,000+', l: 'FTC teams worldwide' },
+      { v: '1st / 8,000+ teams worldwide', l: 'Sustain Award, FIRST World Championship' },
       { v: '$100,000+', l: 'Raised through a Legislative Bond Initiative' },
       { v: '50,000+', l: 'Views on our build content' },
     ],
     text: [
-      'I captained Alphabots, FTC team 26115, through the 2025-26 season, DECODE. I designed our first robot entirely by myself: a mecanum chassis, a full-width intake, a ramp that stores three balls and a fixed flywheel shooter.',
+      'I captained Alphabots, FTC team 26115, through the 2025-26 season, DECODE. I designed our first robot myself: a mecanum chassis, a full-width intake, a ramp that stores three balls and a fixed flywheel shooter.',
       'For the World Championship we kept that chassis and put a turret shooter on top that aims from the robot\'s odometry pose, so it can shoot from anywhere on the field. The engineering decisions were mine; a student who had never used CAD did the modelling while I guided him through every step. Our team of 11 went from not qualifying for regionals to the 1st place Sustain Award at the FIRST World Championship.',
     ],
   },
@@ -52,7 +51,7 @@ export default {
 
     { type: 'prose', id: 'overview', h: 'Two robots, one chassis', p: [
       'DECODE is the 2025-26 FIRST Tech Challenge game. Robots pick up purple and green balls, 5 in across (127 mm in the CAD), and shoot them into their alliance\'s goal. I was the team captain.',
-      'We ran two robots on one chassis. I designed V1 entirely by myself in the fall of 2025, and it played our four events in January and February 2026. For the World Championship we replaced its fixed shooter with a turret. I made the engineering decisions for the new shooter; a student who had never used CAD before did the modelling, and I guided him through every step.',
+      'We ran two robots on one chassis. I designed V1 myself in the fall of 2025, and it played our four events in January and February 2026. For the World Championship we replaced its fixed shooter with a turret. I made the engineering decisions for the new shooter; a student who had never used CAD before did the modelling, and I guided him through every step.',
       { fig: [
         { i: 'v1-portrait-field.webp', c: 'V1 from the back: the flywheel with a motor on each end, and the Limelight below it' },
         { i: 'v2-three-quarter.webp', c: 'V2 on the bench: the turret shooter on top, its ring gear underneath and a 90-tooth gear at the left' },
@@ -140,7 +139,7 @@ export default {
       'V2 adds four TPU spinners along the sides of the ramp, on continuous rotation servos, that push the balls up into the turret.',
       { h: 'Aiming from the odometry pose' },
       'The turret aims from the robot\'s odometry pose alone. The odometry computer knows where the robot is on the field and which way it faces, so the code works out the direction to the goal, subtracts the robot\'s heading and turns the turret to that angle.',
-      'We planned to fuse the Limelight\'s AprilTag readings with odometry, but odometry was very good on its own. The Limelight was only there to relocalize the robot after a minute or more, with a button or with a mode that relocalizes on the next AprilTag it sees. In practice we did not use it: our software lead did not get relocalization working in time.',
+      'We planned to fuse the Limelight\'s AprilTag readings with odometry, but odometry was very good on its own. The Limelight was only there to relocalize the robot after a minute or more, with a button or with a mode that relocalizes on the next AprilTag it sees. In practice we did not use it, because relocalization was not working in time.',
     ],
       media: [
         { v: 'hero-worlds-robot-orbit.mp4', c: 'V2, the World Championship robot: a turret shooter on the chassis I designed for V1' },
@@ -302,7 +301,7 @@ export default {
     { type: 'prose', id: 'next', h: 'What I would change', p: [
       'V2 is the robot we finished the season with, so this is about V2.',
       { next: 'Add flanges to the gears so they cannot skip. At Worlds we were pushing down on a printed mount to keep them in mesh, and that is where it broke.', title: 'Gear flanges' },
-      { next: 'Take over the software myself sooner. The turret code went weeks with a problem that nobody found.', title: 'Own the software earlier' },
+      { next: 'Take on the software myself sooner. The turret code had a problem that went unfound for weeks.', title: 'Own the software earlier' },
     ] },
   ],
   assets: ['/assets/models/ftc-decode/'],

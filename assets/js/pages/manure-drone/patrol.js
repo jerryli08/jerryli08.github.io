@@ -360,14 +360,14 @@ export async function mount(el, ctx) {
   hud.innerHTML = `
     <div class="rx-hud-row"><span>Phase</span><b data-k="phase"></b></div>
     <div class="rx-hud-row" data-r="lift"><span>Rated takeoff weight</span><b class="num">36 to 60 kg</b></div>
-    <div class="rx-hud-x" data-r="lift" style="font-size:11.5px;color:var(--muted)">12 motors x 3 to 5 kg each, Hobbywing X6 spec, before the loss from stacking props</div>
+    <div class="rx-hud-x" data-r="lift" style="font-size:var(--rx-ov-small);color:var(--muted)">12 motors x 3 to 5 kg each, Hobbywing X6 spec, before the loss from stacking props</div>
     <div class="rx-hud-row" data-r="found"><span>Pats found</span><b class="num" data-k="found"></b></div>
     <div class="rx-hud-row" data-r="fill"><span>Canister</span><b class="num" data-k="fill"></b><i><em data-k="fillBar"></em></i></div>
-    <div class="rx-hud-x" data-r="fill" style="font-size:11.5px;color:var(--muted)">Full, taking the half below the arms: about 26 L, about 26 kg (volume from the CAD, density 990 kg/m³ from ASAE D384.1)</div>
+    <div class="rx-hud-x" data-r="fill" style="font-size:var(--rx-ov-small);color:var(--muted)">Full, taking the half below the arms: about 26 L, about 26 kg (volume from the CAD, density 990 kg/m³ from ASAE D384.1)</div>
     <div class="rx-hud-row" data-r="cow"><span>Manure, one dairy cow</span><b class="num">38 kg a day</b></div>
-    <div class="rx-hud-x" data-r="cow" style="font-size:11.5px;color:var(--muted)">Feces only, a 640 kg cow; ASAE D384.1</div>
+    <div class="rx-hud-x" data-r="cow" style="font-size:var(--rx-ov-small);color:var(--muted)">Feces only, a 640 kg cow; ASAE D384.1</div>
     <div class="rx-hud-row" data-r="cow"><span>Methane, at most</span><b class="num">1.3 m³ a day</b></div>
-    <div class="rx-hud-x" data-r="cow" style="font-size:11.5px;color:var(--muted)">About 13 kWh; IPCC 2006, dairy cow, North America</div>`;
+    <div class="rx-hud-x" data-r="cow" style="font-size:var(--rx-ov-small);color:var(--muted)">About 13 kWh; IPCC 2006, dairy cow, North America</div>`;
   ov.layer.append(hud);
   const K = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
   const RW = {}; for (const r of hud.querySelectorAll('[data-r]')) (RW[r.dataset.r] ||= []).push(r);

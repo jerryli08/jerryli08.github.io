@@ -109,7 +109,7 @@ export async function loadRig(stage) {
 const CSS = `
 .sm-labs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
 .sm-lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;
-  font: 550 12px/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; opacity: 0; }
+  font: 550 var(--rx-ov-label)/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; opacity: 0; }
 .sm-lab i { width: 7px; height: 7px; border-radius: 50%; background: #eee9e3; box-shadow: 0 0 0 2px rgba(11,10,9,.7); flex: none; }
 .sm-lab b { font-weight: 550; padding: 3px 7px; border-radius: 6px; background: rgba(11,10,9,.8); border: 1px solid rgba(237,232,226,.18); }
 .sm-lab.l { flex-direction: row-reverse; }
@@ -122,7 +122,7 @@ const CSS = `
 .sm-lab.k b { background: rgba(242,193,78,.92); border-color: rgba(255,255,255,.35); color: #171003; }
 .sm-lab.a i { background: #ff6b35; } .sm-lab.b i { background: #58b0ff; } .sm-lab.k i { background: #f2c14e; }
 .sm-lab.dimtag i { display: none; }
-@media (max-width: 600px) { .sm-lab { font-size: 11px; } .sm-lab b { padding: 2px 6px; } .sm-lab.mass b { padding: 4px 8px; } }
+@media (max-width: 600px) { .sm-lab b { padding: 2px 6px; } .sm-lab.mass b { padding: 4px 8px; } }
 `;
 let styled = false;
 function style() { if (styled) return; const s = document.createElement('style'); s.textContent = CSS; document.head.append(s); styled = true; }

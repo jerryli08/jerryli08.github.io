@@ -89,7 +89,7 @@ export default {
       h: 'The telescoping arm',
       p: ['The arm has to reach 355 mm into the printer and fold back into a 400 mm frame so it can turn.'],
       steps: [
-        { h: 'Folded into the frame', p: ['Each side runs on a 400 mm, three-member ball slide (SAR340 in my CAD): the outer member bolted to the side plate, the inner member to the carriage’s 2020 extrusion, the middle member riding between them.'] },
+        { h: 'Folded into the frame', p: ['Each side runs on a MISUMI SAR340, a 400 mm, three-member aluminum ball slide: the outer member bolted to the side plate, the inner member to the carriage’s 2020 extrusion, the middle member riding between them.'] },
         { h: 'Inside a slide', p: ['Cut through the upper balls. Each row of balls rolls at the mean speed of the two members around it: as the carriage moves out, the middle member goes half as far, the two ball rows three quarters and a quarter as far.'] },
         { h: 'Two open belts', p: ['Each side has its own NEMA 17 at the back of the frame and its own GT2 belt. The belt is open, both ends clamped to the back of the carriage: as the motor turns, one run shortens, the other lengthens, and the carriage moves.'] },
         { h: 'Out to 355 mm', p: ['In the CAD each motor has an 80-tooth GT2 pulley, which moves 160 mm of belt per turn: the full 355 mm stroke is about 2.2 motor turns.'] },
@@ -137,7 +137,7 @@ export default {
 
     { type: 'prose', id: 'turntable', h: 'The turntable', p: [
       'The turntable carries the whole arm, both extension motors and a plate held up to 355 mm out, so its bearing takes a large tipping load as well as the weight. I designed it from small off-the-shelf bearings, shown below from my CAD.',
-      { problem: 'The first time I tested the turntable it made a horrible grinding noise, and screws caught on each other because there was not enough room between the layers.', title: 'Grinding' },
+      { problem: 'The first time I tested the turntable it made a loud grinding noise, and screws caught on each other because there was not enough room between the layers.', title: 'Grinding' },
       { fix: 'I rebuilt the bearing stack with new spacers and fastened the standoffs with different screws. After that it spun smoothly.' },
     ],
       media: [{ i: 'turntable-bearing-ring.webp', c: 'The eight bearing posts around the printed pulley disc (March 2024)' }] },
@@ -169,7 +169,7 @@ export default {
       caption: 'From my CAD. The stepper driver modules are not in it; the perfboard they plug into is. The tiny surface-mount parts on the boards are left out to keep it light.' },
     { type: 'prose', id: 'drivers', h: 'Stepper drivers', p: [
       { problem: 'I started with TMC5160 drivers and fried all of them with bad soldering.', title: 'Fried drivers' },
-      { fix: 'I realized I did not need drivers that powerful and switched to TMC2209s. They also just take step and direction pulses, with no SPI setup, which made the code simpler.' },
+      { fix: 'I realized I did not need drivers that powerful and switched to TMC2209s. They also take plain step and direction pulses, with no SPI setup, which made the code simpler.' },
       { problem: 'The two extension motors have to move exactly together. When I ran both from one driver it had problems I could not debug.', title: 'Two motors, one axis' },
       { fix: 'Each extension motor got its own TMC2209 (I added the third driver in August), and I wired both drivers to the same step and direction pins with separate enable pins, so the firmware drives them as one axis.' },
     ],
@@ -202,7 +202,6 @@ export default {
         { h: '`replace()`', p: ['Back to the printer at 0, reach in, magnets off, pull back. The printer is ready for the next job, and `loop()` is empty.'] },
         { h: 'No homing', p: [
           { problem: 'No limit switches or other homing: I zeroed both axes by hand and kept speeds and accelerations low so the motors would never skip and lose count.', title: 'Homing' },
-          { next: 'A real homing method, so a skipped step cannot put the arm in the wrong place.' },
         ] },
       ],
       caption: 'Step positions and the magnet pin as my final sketch drives them. Time runs left to right, worked out for ideal moves at the speed and acceleration limits set in the sketch.' },
@@ -269,7 +268,7 @@ export default {
     ] },
 
     { type: 'prose', id: 'results', h: 'Results', p: [
-      'The full cycle runs with nobody there: reach in, grab, pull out, park the used plate, pick up a fresh one, load it. My team’s usable print time went from about 7 hours a day to 24. Replac3d finished in the top 12 of 2,042 projects worldwide in Hack Club Arcade (summer 2024) and won a $300 Polymaker sponsorship.',
+      'The full cycle runs autonomously, and it successfully changes the build plate. My FTC team’s usable print time went from about 7 hours a day to 24. Replac3d finished in the top 12 of 2,042 projects worldwide in Hack Club Arcade (summer 2024), winning over $700 in prizes, and won a $300 Polymaker sponsorship.',
     ] },
     { type: 'media', layout: 'row', items: [
       { i: 'final-setup.webp', c: 'The finished setup: printer, robot and both plate holders (Aug 22, 2024)' },
@@ -277,29 +276,30 @@ export default {
     ] },
 
     { type: 'prose', id: 'next', h: 'What I would change', p: [
-      { next: 'Grab the plate instead of using electromagnets. I chose electromagnets partly because they were cool; gripping the plate, or hooking the two small holes it already has, would have been the better design.', title: 'Grip' },
-      { next: 'Far less CNC. Almost none of these parts had any business being CNC machined.', title: 'Make it simpler' },
-      { next: 'Find a better way to home both axes than setting them by hand.', title: 'Homing' },
-      { next: 'Build it much lighter. At full reach the slides limit it to about 40 N (9 lb), not 1,000 lb, while the machined plates around them only reach their limit at 120 to 840 N: most of their metal is weight the slides can never use.', title: 'Stop overbuilding' },
-      { fig: { i: 'fea-full-reach.webp', c: 'FEA of my CAD at full reach with 55 N at the magnets. The darkest spot, at the allowed stress, is each slide’s middle member between its two ball cages; the plates reach at most about half of theirs.' }, wide: true },
+      { next: 'Make it gripper based. Electromagnets are not a reliable way to hold a build plate.', title: 'A gripper, not magnets' },
+      { next: 'Make it far less mechanically complex and overbuilt. The FEA below shows that the slides, not the plates, set the limit: about 40 N (9 lb) at full reach, while the machined side plates and magnet plate would only reach theirs at 300 and 960 N. Most of that metal is strength the slides can never use, and most of the parts did not need to be CNC machined.', title: 'Simpler and lighter' },
+      { fig: { i: 'fea-full-reach.webp', c: 'FEA of my CAD at full reach with 56 N at the magnets. The darkest spot, at the allowed stress, is each slide’s middle member between its two ball cages; the steel bottom plate reaches about 80% of its allowed stress, the aluminum plates at most about a fifth.' }, wide: true },
       { calc: 'How much can the arm hold at full reach?',
         given: [
           ['Reach', '355 mm, both slides at full stroke', 'measured from the CAD'],
           ['Load', 'straight down at the build plate’s center, shared by the four magnets, plus the arm’s own weight', 'magnet positions from the CAD'],
-          ['Magnet, side and bottom plates', 'aluminum, taken as 6061-T6: minimum yield 240 MPa', '[6061 aluminium](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
-          ['2020 extrusions and the slides', 'aluminum, taken as 6063-T5: minimum yield 97 MPa', '[6063 aluminium](https://en.wikipedia.org/wiki/6063_aluminium_alloy)'],
-          ['Slides', 'MISUMI SAR340, rated 49 N for a pair, fully extended (460 mm), load at the middle of the inner rails', '[PLEX Robotics](https://plexrobotics.com/en/products/misumi-telescopic-slides), [MISUMI](https://jp.misumi-ec.com/tech-info/categories/technical_data/td06/x0673.html)'],
+          ['Slides', 'MISUMI SAR340: clear-anodized aluminum alloy rails, rated 49 N for a pair, fully extended (460 mm), load at the middle of the inner rails', '[MISUMI catalog](https://uk.misumi-ec.com/pdf/fa/2014/P1_0631-0632_F09_EN.pdf)'],
+          ['Slide rails and 2020 extrusions', 'aluminum, taken as 6063-T5: minimum yield 97 MPa', '[6063 aluminium](https://en.wikipedia.org/wiki/6063_aluminium_alloy)'],
+          ['Magnet and side plates', 'aluminum, taken as 6061-T6: minimum yield 240 MPa', '[6061 aluminium](https://en.wikipedia.org/wiki/6061_aluminium_alloy)'],
+          ['Bottom plate', '3 mm laser-cut steel (1008 sheet at this thickness, no set minimum yield), taken at the low end of mild steel’s published range: 172 MPa (25 ksi)', '[Fabworks](https://www.fabworks.com/resources/materials/sheet/steel), [SendCutSend](https://sendcutsend.com/materials/mild-steel/)'],
           ['Carriage riding on the slides', 'about 0.93 kg, 9 N: magnet plate 212 g and extrusions 370 g (CAD volume × 2.70 g/cm³), four 84 g magnets', 'the CAD, [Adafruit 3874](https://www.adafruit.com/product/3874)'],
         ],
         work: [
           'FEA of my CAD: the magnet plate, both carriage extrusions, all three members of each slide, the side plates and the bottom plate, in 10-node tetrahedra, solved in CalculiX. Bolted joints are bonded, each ball cage is a row of links along the balls’ lines of contact, and the bottom plate is held at the eight turntable standoffs',
-          'Safety factor 2: each part may reach half its minimum yield, 120 MPa for the plates and 48.5 MPa for the extrusions and slides',
-          'Weakest part: each slide’s middle member, in the 36 mm between its two ball cages, where it alone carries the arm’s bending. It reaches 48.5 MPa at 55 N (12 lb) at the magnets; refining the slides’ mesh from 6 to 3.6 mm elements changed that by 3%',
-          'The rest reach their limit much later: bottom plate about 120 N, side plates 200 N, carriage extrusions 210 N, magnet plate 840 N',
+          'Safety factor 2: each part may reach half its minimum yield: 48.5 MPa for the slides and extrusions, 86 MPa for the steel bottom plate, 120 MPa for the aluminum plates',
+          'Weakest part: each slide’s middle member, in the 36 mm between its two ball cages, where it alone carries the arm’s bending. It reaches 48.5 MPa at 56 N (12.5 lb) at the magnets; refining the slides’ mesh from 6 to 3.6 mm elements changed that by 5%',
+          'Outside the slides, the steel bottom plate is next at about 70 N (refining its mesh from 7.2 to 3 mm changed that by 5%), then the carriage extrusions at 210 N, the side plates at 300 N and the magnet plate at 960 N',
           'The maker’s rating is lower still: 49 N − 9 N of carriage = 40 N at the magnets. My load sits 236 mm past the ends of the fixed rails, less than the 260 mm of the rated case, so the rating is on the safe side',
         ],
-        result: 'About 40 N (9 lb) at full reach, set by the slides; the FEA’s 55 N agrees. My 1.6 kg steel plate is 16 N of that, which leaves about 24 N (2.4 kg) for the print.',
-        note: 'FEA estimate from my CAD, not a test. The aluminum grades were not recorded, so I used the weaker common grades at their minimum yield; at 6063-T5’s typical 145 MPa the slides’ limit is about 86 N. The ball cages sit where they roll to at 355 mm; in a real slide the middle member floats between its stops.' },
+        result: 'About 40 N (9 lb) at full reach, set by the slides’ rating; the FEA’s 56 N agrees. My 1.6 kg steel plate is 16 N of that, which leaves about 24 N (2.4 kg) for the print.',
+        note: 'FEA estimate from my CAD, not a test. The ball cages sit where they roll to at 355 mm; in a real slide the middle member floats between its stops.' },
+      { next: 'Connect it to the printer over MQTT for reliable wireless operation, since the start button sometimes failed to actuate.', title: 'Start over MQTT' },
+      { next: 'Build a magazine with several build plates, for true self-reloading.', title: 'A plate magazine' },
     ] },
   ],
 };

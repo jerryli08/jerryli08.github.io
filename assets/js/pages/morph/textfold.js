@@ -104,13 +104,13 @@ export async function mount(el, ctx) {
   const node = (tag, style, cls) => { const n = document.createElement(tag); if (cls) n.className = cls; Object.assign(n.style, style); return n; };
   const bubble = (me) => node('p', {
     margin: me ? '0 0 0 auto' : '10px auto 0 0', width: 'fit-content', maxWidth: '92%', padding: '7px 12px', borderRadius: '16px',
-    whiteSpace: 'pre-line', fontSize: '13.5px', lineHeight: '1.4', overflowWrap: 'anywhere',
+    whiteSpace: 'pre-line', fontSize: 'var(--rx-ov-text)', lineHeight: '1.4', overflowWrap: 'anywhere',
     background: me ? '#0a84ff' : 'rgba(255,255,255,0.1)', color: me ? '#fff' : 'var(--text)',
     [me ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: '5px',
   }, me ? '' : 'rx-hud-x');
   const me = bubble(true);
   const clf = node('div', { marginTop: '10px' }, 'rx-hud-x');
-  const clfHead = node('div', { fontSize: '11px', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)' });
+  const clfHead = node('div', { fontSize: 'var(--rx-ov-small)', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)' });
   const rows = [0, 1, 2].map(() => {
     const r = node('div', { marginTop: '5px' }, 'rx-hud-row');
     r.innerHTML = '<span></span><b class="num"></b><i><em></em></i>';
@@ -125,15 +125,15 @@ export async function mount(el, ctx) {
   const moveBar = moveRow.querySelector('em');
   const mini = node('div', {}, 'rx-hud-mini');
   const fig = node('figure', { margin: '10px 0 0', display: 'flex', alignItems: 'center', gap: '12px' }, 'rx-hud-x');
-  const figArt = node('div', { flex: 'none', width: '88px' });
-  const figCap = node('figcaption', { fontSize: '11.5px', color: 'var(--muted)', lineHeight: '1.4' });
+  const figArt = node('div', { flex: 'none', width: '124px' });
+  const figCap = node('figcaption', { fontSize: 'var(--rx-ov-small)', color: 'var(--muted)', lineHeight: '1.4' });
   fig.append(figArt, figCap);
   hud.append(me, clf, bot, moveRow, mini, fig);
 
   const shown = new Map();
   const put = (n, key, v) => { if (shown.get(n)?.[key] !== v) { (shown.get(n) || shown.set(n, {}).get(n))[key] = v; if (key === 'text') n.textContent = v; else if (key === 'html') n.innerHTML = v; else n.style[key] = v; } };
   const drawings = new Map();
-  const drawing = (s) => { if (!drawings.has(s.id)) drawings.set(s.id, silhouetteSvg(s.sil, { size: 88, label: `Target drawing for ${s.id}` })); return drawings.get(s.id); };
+  const drawing = (s) => { if (!drawings.has(s.id)) drawings.set(s.id, silhouetteSvg(s.sil, { size: 124, label: `Target drawing for ${s.id}` })); return drawings.get(s.id); };
 
   function readout(i, sp, t) {
     const s = seq[i], ex = s.ex, n = s.moves.length;

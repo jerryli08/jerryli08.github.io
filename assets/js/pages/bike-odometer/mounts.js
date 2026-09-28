@@ -132,8 +132,8 @@ export async function mount(el, ctx) {
   if (!document.getElementById('odo-mounts-css')) {
     const st = document.createElement('style');
     st.id = 'odo-mounts-css';
-    st.textContent = '.rx-odo-hud { width: min(270px, calc(100% - 28px)); } .rx-odo-hud .rx-hud-row + .rx-hud-row { margin-top: 5px; } .rx-odo-hud small { margin-top: 6px; }'
-      + ' @media (max-width: 640px) { .rx-odo-hud { top: auto; bottom: 10px; right: 10px; width: auto; max-width: calc(100% - 20px); padding: 7px 10px 8px; font-size: 11.5px; } }';
+    st.textContent = '.rx-odo-hud { width: min(320px, calc(100% - 28px)); } .rx-odo-hud .rx-hud-row + .rx-hud-row { margin-top: 5px; } .rx-odo-hud small { margin-top: 6px; }'
+      + ' @media (max-width: 640px) { .rx-odo-hud { top: auto; bottom: 10px; right: 10px; width: auto; max-width: calc(100% - 20px); padding: 7px 10px 8px; } }';
     document.head.appendChild(st);
   }
   const hud = document.createElement('div');

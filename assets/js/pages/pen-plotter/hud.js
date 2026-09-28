@@ -6,27 +6,27 @@ import * as K from './kin.js';
 import { COLORS } from './rig.js';
 
 const CSS = `
-.pp-hud { width: min(330px, calc(100% - 28px)); top: auto; bottom: 14px; padding-top: 10px; padding-bottom: 10px; }
+.pp-hud { width: min(var(--rx-hud-w), calc(100% - 28px)); top: auto; bottom: 14px; padding-top: 10px; padding-bottom: 10px; }
 .pp-hud .pp-joints { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.08); }
-.pp-hud .pp-joints div { display: flex; flex-direction: column; gap: 1px; font-size: 11px; color: var(--muted); }
-.pp-hud .pp-joints b { font-size: 13.5px; color: var(--text); font-weight: 650; }
+.pp-hud .pp-joints div { display: flex; flex-direction: column; gap: 1px; font-size: var(--rx-ov-small); color: var(--muted); }
+.pp-hud .pp-joints b { font-size: var(--rx-ov-text); color: var(--text); font-weight: 650; }
 .pp-hud .pp-in { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.12); }
-.pp-hud .pp-in b { font-size: 17px; color: var(--text); font-weight: 650; }
+.pp-hud .pp-in b { font-size: 19px; color: var(--text); font-weight: 650; }
 .pp-hud table { margin-top: 2px; }
 .pp-hud td, .pp-hud th { padding-top: 3px; padding-bottom: 3px; }
-.pp-hud .pp-log { margin-top: 7px; font: 500 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); white-space: pre; }
+.pp-hud .pp-log { margin-top: 7px; font: 500 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); white-space: pre; }
 .pp-hud .pp-log b { color: var(--text-2); font-weight: 600; }
 .pp-hud .pp-stiff { margin-top: 6px; padding-top: 6px; }
-.pp-hud .pp-stiff b { font-size: 18px; }
+.pp-hud .pp-stiff b { font-size: 21px; }
 .pp-hud.pp-fold .pp-stiff b { color: ${COLORS.fold}; }
 .pp-hud.pp-fold .pp-stiff i em { background: ${COLORS.fold}; }
 .pp-hud .rx-hud-mini { white-space: pre-line; }
 .pp-hud .pp-flag { display: none; margin-top: 5px; color: ${COLORS.fold}; font-weight: 600; }
 .pp-hud.pp-fold .pp-flag { display: block; }
-.pp-hud .pp-lib { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 2px 0 9px; }
-.pp-hud .pp-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 3px; border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.1); color: var(--muted); font-size: 9.5px; line-height: 1.1; text-align: center; }
-.pp-hud .pp-chip svg { width: 30px; height: 24px; overflow: visible; }
+.pp-hud .pp-lib { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin: 2px 0 9px; }
+.pp-hud .pp-chip { display: flex; align-items: center; gap: 5px; padding: 3px 5px; border-radius: 8px; min-width: 0;
+  border: 1px solid rgba(255,255,255,.1); color: var(--muted); font-size: 12.5px; line-height: 1.1; white-space: nowrap; }
+.pp-hud .pp-chip svg { flex: none; width: 24px; height: 20px; overflow: visible; }
 .pp-hud .pp-chip path { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .pp-hud .pp-chip.on { color: var(--text); border-color: ${COLORS.ink}; background: rgba(255,107,53,.14); }
 .pp-hud .pp-chip.on path { stroke: ${COLORS.ink}; }
@@ -34,11 +34,11 @@ const CSS = `
 @media (max-width: 640px) {
   .pp-hud { width: auto; top: 8px; bottom: auto; }
   .pp-hud .pp-in, .pp-hud .pp-log, .pp-hud .pp-stiff, .pp-hud .pp-joints { display: none; }
-  .pp-hud .pp-lib { margin: 0 0 4px; gap: 3px; }
-  .pp-hud .pp-chip { font-size: 0; padding: 3px 1px; gap: 0; }
+  .pp-hud .pp-lib { grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0 0 4px; gap: 3px; }
+  .pp-hud .pp-chip { justify-content: center; font-size: 0; padding: 3px 1px; gap: 0; }
   .pp-hud .pp-chip svg { width: 24px; height: 18px; }
-  .pp-hud .rx-hud-mini { font-size: 11.5px; line-height: 1.4; }
-  .pp-hud.pp-fold .pp-flag { font-size: 11.5px; margin-top: 2px; }
+  .pp-hud .rx-hud-mini { font-size: 12.5px; line-height: 1.4; }
+  .pp-hud.pp-fold .pp-flag { font-size: 12.5px; margin-top: 2px; }
 }
 `;
 let styled = false;

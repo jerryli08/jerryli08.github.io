@@ -57,26 +57,26 @@ export async function mount(el, ctx) {
     <style>
       .rt-hud{position:absolute;right:auto;bottom:auto;box-sizing:border-box;padding:11px 14px 12px}
       .rt-hud .rt-g{display:grid;grid-template-columns:0.95fr 1fr 1.15fr;gap:4px 18px}
-      .rt-hud .rt-h{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8c847b;margin-bottom:3px}
+      .rt-hud .rt-h{font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8c847b;margin-bottom:3px}
       .rt-hud .rx-hud-row{margin-top:1px}
-      .rt-hud .rt-mono{font:11.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:#eee9e3}
+      .rt-hud .rt-mono{font:12.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:#eee9e3}
       .rt-hud .rt-note{color:#8c847b}
-      .rt-hud .rt-big{font-size:21px;font-weight:650;color:#eee9e3;line-height:1.1}
+      .rt-hud .rt-big{font-size:24px;font-weight:650;color:#eee9e3;line-height:1.1}
       .rt-hud .rt-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-      .rt-hud .rt-chip{font-size:11px;font-weight:650;padding:1px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#8c847b}
+      .rt-hud .rt-chip{font-size:12px;font-weight:650;padding:1px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:#8c847b}
       .rt-hud .rt-chip.on{background:rgba(34,197,94,.2);border-color:#22c55e;color:#bbf7d0}
       .rt-hud .rt-w{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-top:1px}
       .rt-hud .rt-w b{color:#eee9e3;font-weight:650;min-width:3.4em;text-align:right}
       .rt-hud .rt-bar{position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.12)}
       .rt-hud .rt-bar em{position:absolute;top:0;bottom:0;left:50%;border-radius:3px;background:#ff6b35}
       .rt-hud .rt-bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(255,255,255,.35)}
-      .rt-hud .rt-log{margin-top:6px;padding-top:5px;border-top:1px solid rgba(255,255,255,.1);white-space:pre;overflow:hidden;color:#b8b0a7;font-size:11px}
+      .rt-hud .rt-log{margin-top:6px;padding-top:5px;border-top:1px solid rgba(255,255,255,.1);white-space:pre;overflow:hidden;color:#b8b0a7;font-size:12px}
       .rt-hud .ok{color:#86efac}
       .rt-hud .dim{color:#8c847b;font-weight:500}
       .rt-hud.rt-compact{padding:7px 10px 8px}
       .rt-hud.rt-compact .rt-g{grid-template-columns:auto 1fr;gap:2px 14px}
       .rt-hud.rt-compact .rt-x{display:none}
-      .rt-hud.rt-compact .rt-big{font-size:16px}
+      .rt-hud.rt-compact .rt-big{font-size:18px}
       .rt-hud.rt-compact .rt-chips{margin-top:3px}
       .rt-hud.rt-col{padding:14px 16px 15px}
       .rt-hud.rt-col .rt-g{grid-template-columns:1fr;gap:0}
@@ -86,7 +86,7 @@ export async function mount(el, ctx) {
     <div class="rt-g">
       <div>
         <div class="rt-h">Move</div>
-        <div class="rt-big num"><span data-k="n"></span><span style="font-size:13px;color:#8c847b"> / 45</span></div>
+        <div class="rt-big num"><span data-k="n"></span><span style="font-size:var(--rx-ov-small);color:#8c847b"> / 45</span></div>
         <div class="rt-mono" data-k="name"></div>
         <div class="rt-mono rt-note rt-x" data-k="note"></div>
         <div class="rt-chips" data-k="chips"></div>
@@ -135,7 +135,7 @@ export async function mount(el, ctx) {
     // desktop, the whole stage on a phone). With room, the course fills the middle of it and the
     // telemetry stands as a column on the right; without that room, it sits above the course.
     const pad = phone ? 10 : 20;
-    const hw = Math.round(clamp(W * 0.3, 230, 290));
+    const hw = Math.round(clamp(W * 0.32, 250, 330)); // readable at the site.css overlay floors
     const col = !phone && W - hw - 3 * pad >= 360;
     const nh = col || W >= 380 ? 30 : 46; // room under the map for the note in the last step (two lines when narrow)
     let mw, mh, mx, my;
@@ -189,11 +189,11 @@ export async function mount(el, ctx) {
       rect(gz.x0, gz.y0, gz.x1, gz.y0 + 2.5); rect(gz.x0, gz.y1 - 2.5, gz.x1, gz.y1);
       rect(gz.x0, gz.y0, gz.x0 + 2.5, gz.y1); rect(gz.x1 - 2.5, gz.y0, gz.x1, gz.y1);
       c.fillStyle = 'rgba(134,239,172,.9)';
-      c.font = `650 ${Math.max(11, 7 * s)}px ${font}`;
+      c.font = `650 ${Math.max(13, 7 * s)}px ${font}`;
       c.textAlign = 'center'; c.textBaseline = 'middle';
       const cx = X((gz.x0 + gz.x1) / 2), cy = Y((gz.y0 + gz.y1) / 2);
       c.fillText(gz.id, cx + (gz.id === 'A' || gz.id === 'B' ? 0 : 0), cy - (gz.last ? 5 * s : 0));
-      if (gz.last) { c.font = `650 ${Math.max(9, 4 * s)}px ${font}`; c.fillText('LAST', cx, cy + 5 * s); }
+      if (gz.last) { c.font = `650 ${Math.max(11, 4 * s)}px ${font}`; c.fillText('LAST', cx, cy + 5 * s); }
     }
     // the 2x4s
     c.fillStyle = WOOD;
@@ -202,7 +202,7 @@ export async function mount(el, ctx) {
     c.fillStyle = GREEN; c.beginPath(); c.arc(X(START[0]), Y(START[1]), Math.max(3, 1.8 * s), 0, 2 * Math.PI); c.fill();
     c.fillStyle = RED; c.fillRect(X(TARGET[0] - 1.25), Y(TARGET[1] + 1.25), 2.5 * s, 2.5 * s);
     c.fillStyle = '#b8b0a7';
-    c.font = `500 ${Math.max(10, 3.8 * s)}px ${font}`;
+    c.font = `500 ${Math.max(12, 3.8 * s)}px ${font}`;
     c.textAlign = 'right'; c.textBaseline = 'middle';
     c.fillText('Start', X(-3.5), Y(START[1] + 9));
     c.textAlign = 'left';
@@ -269,7 +269,7 @@ export async function mount(el, ctx) {
     if (ghostEnd) {
       const la = smooth(0.95, 1, driftK);
       g.globalAlpha = la;
-      g.font = `600 ${Math.max(11, 4 * s)}px ${font}`; g.textBaseline = 'middle';
+      g.font = `600 ${Math.max(12, 4 * s)}px ${font}`; g.textBaseline = 'middle';
       const tag = (text, x, y, col, align) => {
         g.textAlign = align;
         const w = g.measureText(text).width, px = align === 'right' ? x - w - 6 : x - 6;

@@ -125,7 +125,7 @@ export async function mount(el, ctx) {
     <div class="rx-hud-row rx-hud-big"><span>m<sub>A</sub> / m<sub>B</sub> = b / 5a</span><b class="num" data-k="r"></b></div>
     <div class="rx-hud-row rx-hud-x" style="margin-top:8px"><span>Link force</span><b class="num" data-k="t"></b></div>
     <div class="rx-hud-row rx-hud-x"><span>Error if each ruler is off 1 mm</span><b class="num" data-k="e"></b></div>
-    <div style="margin-top:8px;font-size:11px;color:var(--muted)">Ideal balance, example masses (not the official ones)</div>`;
+    <div style="margin-top:8px;font-size:var(--rx-ov-small);color:var(--muted)">Ideal balance, example masses (not the official ones)</div>`;
   const KK = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
   const shown = {};
   const put = (k, t) => { if (shown[k] !== t) { KK[k].textContent = t; shown[k] = t; } };

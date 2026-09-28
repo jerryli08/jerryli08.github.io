@@ -72,27 +72,30 @@ const CSS = `
 .uw-dial { width: 100%; height: 100%; min-height: 0; }
 .uw-dial svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .uw-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.uw-code { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(8, 7, 6, 0.9); border: 1px solid var(--line); font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.uw-code { margin: 0; padding: 10px 12px; border-radius: 12px; background: rgba(8, 7, 6, 0.9); border: 1px solid var(--line); font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
 .uw-code span { display: block; padding: 1px 6px; margin: 0 -6px; border-radius: 5px; transition: none; }
 .uw-code span.on { color: #fff1e2; background: rgba(255, 107, 53, 0.18); }
-.uw-read { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 14px; padding: 10px 12px; border-radius: 12px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px; }
-.uw-read dt { color: var(--muted); font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.uw-read { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 14px; padding: 10px 12px; border-radius: 12px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.12); font-size: var(--rx-ov-text); }
+.uw-read dt { color: var(--muted); font: var(--rx-ov-small)/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .uw-read dd { margin: 0; text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.6; }
 .uw-read dd.fwd { color: #5fd38d; } .uw-read dd.back { color: #ff6b6b; }
 .uw-loop { position: absolute; left: 20px; right: 20px; bottom: 16px; height: 66px; }
-.uw-loop p { margin: 0 0 5px; font-size: 12px; color: var(--muted); }
+.uw-loop p { margin: 0 0 5px; font-size: var(--rx-ov-small); color: var(--muted); }
 .uw-loop svg { width: 100%; height: 40px; display: block; }
 .uw-chart { position: absolute; inset: 18px 20px 18px; opacity: 0; pointer-events: none; }
 .uw-chart svg { width: 100%; height: 100%; display: block; }
-.uw-note { position: absolute; left: 20px; top: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.14); font-size: 12px; color: var(--text-2); }
+.uw-note { position: absolute; left: 20px; top: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.14); font-size: var(--rx-ov-small); color: var(--text-2); }
 .uw.narrow .uw-main { inset: 10px 10px 74px; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); gap: 10px; }
 .uw.narrow .uw-code { display: none; }
-.uw.narrow .uw-read { font-size: 11.5px; padding: 7px 9px; gap: 2px 8px; }
-.uw.narrow .uw-read dt { font-size: 10.5px; }
+.uw.narrow .uw-read { font-size: 12.5px; padding: 7px 9px; gap: 2px 8px; }
+.uw.narrow .uw-read dt { font-size: 12px; }
 .uw.narrow .uw-loop { left: 10px; right: 10px; bottom: 8px; height: 58px; }
-.uw.narrow .uw-loop p { font-size: 10.5px; }
+.uw.narrow .uw-loop p { font-size: 12px; }
 .uw.narrow .uw-chart { inset: 8px; }
-.uw.narrow .uw-note { left: 10px; top: 8px; font-size: 10.5px; }
+.uw.narrow .uw-note { left: 10px; top: 8px; font-size: 12px; }
+/* the dial is drawn at about 0.75 px per unit on a phone: its text at the 12 px floor */
+.uw.narrow .uw-chart text { font-size: 13.5px; }
+.uw.narrow .uw-tick { font-size: 15px; } .uw.narrow .uw-dt { font-size: 16px; } .uw.narrow .uw-ds { display: none; }
 `;
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -134,7 +137,7 @@ export function mount(el, ctx) {
   }
   for (const a of [0, 90, 180, 270]) {
     const [x, y] = pt(a, R + 21);
-    const t = s('text', { x, y: y + 3.2, 'text-anchor': 'middle', fill: 'rgba(238,233,227,0.6)', 'font-size': 9, 'font-family': 'ui-monospace, monospace' }, svg);
+    const t = s('text', { class: 'uw-tick', x, y: y + 3.2, 'text-anchor': 'middle', fill: 'rgba(238,233,227,0.6)', 'font-size': 9, 'font-family': 'ui-monospace, monospace' }, svg);
     t.textContent = `${a}°`;
   }
   const realArcs = s('g', { fill: 'none', stroke: 'rgba(238,233,227,0.35)', 'stroke-width': 2, 'stroke-dasharray': '3 3' }, svg);
@@ -144,8 +147,8 @@ export function mount(el, ctx) {
   s('line', { x1: C, y1: C, x2: C, y2: C - R + 12, stroke: '#ff6b35', 'stroke-width': 3.2, 'stroke-linecap': 'round' }, arrow);
   s('path', { d: `M${C - 6} ${C - R + 15}L${C} ${C - R + 4}L${C + 6} ${C - R + 15}Z`, fill: '#ff6b35' }, arrow);
   s('circle', { cx: C, cy: C, r: 5.5, fill: '#1a1512', stroke: '#ff6b35', 'stroke-width': 2 }, svg);
-  const dialText = s('text', { x: C, y: C + 26, 'text-anchor': 'middle', fill: '#fff1e2', 'font-size': 11, 'font-weight': 700, 'font-family': 'ui-monospace, monospace' }, svg);
-  const dialSub = s('text', { x: C, y: C + 38, 'text-anchor': 'middle', fill: 'rgba(238,233,227,0.55)', 'font-size': 7.5, 'font-family': 'ui-sans-serif, system-ui, sans-serif' }, svg);
+  const dialText = s('text', { class: 'uw-dt', x: C, y: C + 26, 'text-anchor': 'middle', fill: '#fff1e2', 'font-size': 11, 'font-weight': 700, 'font-family': 'ui-monospace, monospace' }, svg);
+  const dialSub = s('text', { class: 'uw-ds', x: C, y: C + 38, 'text-anchor': 'middle', fill: 'rgba(238,233,227,0.55)', 'font-size': 9, 'font-family': 'ui-sans-serif, system-ui, sans-serif' }, svg);
   dialSub.textContent = 'sensor reading';
 
   const side = h('div', 'uw-side');

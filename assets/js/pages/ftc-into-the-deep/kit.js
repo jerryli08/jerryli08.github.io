@@ -6,9 +6,9 @@
 const BASE = `
 .itd { position: absolute; inset: 0; color: var(--text); font-family: inherit; }
 .itd *, .itd *::before, .itd *::after { box-sizing: border-box; }
-.itd-chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; background: rgba(10, 8, 7, 0.76); border: 1px solid rgba(255, 255, 255, 0.14); font-size: 13px; line-height: 1.35; color: var(--text-2); }
+.itd-chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; background: rgba(10, 8, 7, 0.76); border: 1px solid rgba(255, 255, 255, 0.14); font-size: var(--rx-ov-small); line-height: 1.35; color: var(--text-2); }
 .itd-chip b { color: var(--text); font-weight: 650; }
-.itd-kicker { margin: 0; font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.itd-kicker { margin: 0; font-size: var(--rx-ov-small); font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .itd-box { position: absolute; overflow: hidden; }
 .itd-box > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; opacity: 0; }
 .itd [hidden] { display: none !important; }

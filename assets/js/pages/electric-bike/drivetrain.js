@@ -129,7 +129,7 @@ export async function mount(el, ctx) {
   // belt 2 = 100 / 0.0573 = 1,745 N; belt 1 carries the jackshaft torque, 100 / 3.6 = 27.8 N·m, so 485 N
   pulls.append(bar('Belt 1', '485 N', 1 / STAGE2, PALE), bar('Belt 2', '1,745 N', 1, ACCENT));
   const pullNote = document.createElement('div');
-  pullNote.style.cssText = 'margin-top:7px;color:#b8b0a7;font-size:11.5px';
+  pullNote.style.cssText = 'margin-top:7px;color:#b8b0a7;font-size:var(--rx-ov-small)';
   pullNote.textContent = 'Torque ÷ the 72T pulley\'s pitch radius, no losses.';
   pulls.append(pullNote);
 

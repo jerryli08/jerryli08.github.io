@@ -14,7 +14,7 @@ export default {
       type: 'scrolly', id: 'cad', module: 'drawers', length: '140vh',
       h: 'The CAD',
       p: ['The body and its two inserts, one for each pencil, from my CAD. Scroll and the inserts slide out of the end like drawers, first the OHTO, then the Orenz, and back in together.'],
-      caption: 'The holder and its two inserts, from my CAD. How far the inserts slide out is chosen for the animation',
+      caption: 'The holder and its two inserts, from my CAD. Each insert slides out about 80% of its length: about 130 mm of its 162 mm',
       poster: '/assets/media/voronoi-pencil-holder/cad-pencil-holder.webp',
     },
   ],

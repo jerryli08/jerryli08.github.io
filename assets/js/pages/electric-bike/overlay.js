@@ -6,7 +6,7 @@ export function overlayLayer(stage) {
   const { THREE } = stage;
   const layer = css(document.createElement('div'), {
     position: 'absolute', inset: '0', zIndex: '2', pointerEvents: 'none', overflow: 'hidden',
-    font: '500 12.5px/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3',
+    font: '500 var(--rx-ov-label, 14px)/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3', // site.css floor for labels
   });
   layer.className = 'eb-overlay';
   stage.el.appendChild(layer);
@@ -21,7 +21,7 @@ export function overlayLayer(stage) {
       background: o.color || '#ff6b35', boxShadow: '0 0 0 3px rgba(10,8,7,.55)',
     });
     const pill = css(document.createElement('span'), {
-      position: 'absolute', top: '-11px', padding: '3px 9px', borderRadius: '999px',
+      position: 'absolute', top: 'calc(-0.625em - 4px)', padding: '3px 10px', borderRadius: '999px',
       background: 'rgba(10,8,7,.74)', border: '1px solid rgba(255,255,255,.14)', backdropFilter: 'blur(6px)',
     });
     if (o.side === 'l') pill.style.right = '10px'; else pill.style.left = '10px';
@@ -35,16 +35,16 @@ export function overlayLayer(stage) {
   /** A small card pinned to a corner of the canvas. */
   function card(o = {}) {
     const el = css(document.createElement('div'), {
-      position: 'absolute', top: '14px', right: '14px', maxWidth: 'min(300px, 70%)', padding: '11px 13px',
+      position: 'absolute', top: '14px', right: '14px', maxWidth: 'min(380px, 70%)', padding: '12px 14px',
       borderRadius: '12px', background: 'rgba(10,8,7,.74)', border: '1px solid rgba(255,255,255,.12)',
-      backdropFilter: 'blur(8px)', opacity: '0', transition: 'opacity .25s', fontSize: '12.5px', lineHeight: '1.4',
+      backdropFilter: 'blur(8px)', opacity: '0', transition: 'opacity .25s', fontSize: 'var(--rx-ov-text, 15px)', lineHeight: '1.4',
     });
     layer.appendChild(el);
     return el;
   }
   function chip(color, text) {
     const row = css(document.createElement('div'), { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' });
-    const sw = css(document.createElement('span'), { width: '10px', height: '10px', borderRadius: '3px', background: color, flex: 'none' });
+    const sw = css(document.createElement('span'), { width: '12px', height: '12px', borderRadius: '3px', background: color, flex: 'none' });
     const t = document.createElement('span'); t.textContent = text;
     row.append(sw, t);
     return row;

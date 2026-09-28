@@ -21,7 +21,7 @@ export default {
   summary: {
     stats: [
       { v: '1st', l: 'FTC season' },
-      { v: '1', l: 'Programmer on the team: me' },
+      { v: '1', l: 'Programmer on the team (me)' },
       { v: '3', l: 'Rings stacked in the shooter\'s cup' },
       { v: '1.3 s', l: 'Between shots in the run at the top (measured from the video)' },
     ],
@@ -39,15 +39,15 @@ export default {
   },
   sections: [
     // ------------------------------------------------------------------ level 1
-    { type: 'prose', id: 'field', h: 'Level 1: the home field', media: [
-      { i: 'still-cardboard-goal.webp', c: 'Official goal? No. A Home Depot box with an opening cut in it, taped at the corners? Yes.' },
+    { type: 'prose', id: 'field', h: 'The home field', media: [
+      { i: 'still-cardboard-goal.webp', c: 'The goal: a Home Depot box with an opening cut in it, taped at the corners' },
     ], p: [
       'In ULTIMATE GOAL, robots shoot orange foam rings at goals on the far wall, and carry **wobble goals**, poles with a black dome on top, into taped target zones.',
       'Our practice field was homemade: plywood walls, gray foam floor tiles, red tape for the target zones and white tape for the lines. The goal was a cardboard box with an opening cut in the front.',
     ] },
 
     // ------------------------------------------------------------------ level 2
-    { type: 'split', id: 'build', h: 'Level 2: the build, in twenty days of photos', items: [
+    { type: 'split', id: 'build', h: 'The build, in twenty days of photos', items: [
       { h: 'Day 1: the agenda, and the options', media: [
         { i: 'whiteboard-agenda.webp', c: 'Day 1, the plan: *work faster* crossed out and fixed to *work smarter*, then intake and conveyor' },
         { i: 'whiteboard-intake-ideas.webp', c: 'Day 1: conveyor A and B, four numbered ideas, and a ring\'s path sketched in the corner' },
@@ -57,14 +57,14 @@ export default {
         { note: 'Our photos, in the order they were taken, cropped to hands and hardware. Days are counted from the first photo in the album.' },
       ] },
       { h: 'Day 10: cardboard tubes, and wires everywhere', media: [
-        { i: 'tube-arcs-on-table.webp', c: 'Day 10, concrete tube! Arcs cut from a cardboard concrete-form tube, next to plywood with curved slots' },
+        { i: 'tube-arcs-on-table.webp', c: 'Day 10: arcs cut from a cardboard concrete-form tube, next to plywood with curved slots' },
         { i: 'code-before-chassis.webp', c: 'Day 10: loose motors and servos wired up on the field floor, with a laptop and a gamepad' },
       ], p: [
         'Arcs cut from a cardboard concrete-form tube, the round kind used to pour concrete posts, next to a plywood plate with curved slots cut into it.',
         'A laptop, a gamepad, and motors and servos wired up loose on the field floor, next to a plywood deck with a motor in each corner.',
       ] },
       { h: 'Day 11: two prototypes', media: [
-        { i: 'rail-prototype-ring.webp', c: 'Day 11, ring vs. curve: a tube arc standing in a curved slot, a ring held up to it' },
+        { i: 'rail-prototype-ring.webp', c: 'Day 11: a tube arc standing in a curved slot, a ring held up to it' },
         { i: 'conveyor-prototype.webp', c: 'Day 11: a hardboard tower with timing belts up its walls' },
       ], p: [
         'A tube arc standing in a curved slot in plywood, with a ring held up to it. And a tall hardboard tower with timing belts running up its walls.',
@@ -73,12 +73,12 @@ export default {
         'The shooter comes together on the carpet, off the robot: a black wheel, a white cup with a ring in it, and a curved rail around the edge of the plate.',
       ] },
       { h: 'Day 20: a whole robot', media: { i: 'robot-18996-finished.webp', c: 'Day 20: number plate on, wired up, a phone on the deck' }, p: [
-        'Number plate on, a phone screen glowing on the deck, wires in every direction. It is a robot!',
+        'Number plate on, a phone screen glowing on the deck, wires in every direction: the robot, assembled.',
       ] },
     ] },
 
     // ------------------------------------------------------------------ level 3
-    { type: 'prose', id: 'shooter', h: 'Level 3: the ring shooter', media: [
+    { type: 'prose', id: 'shooter', h: 'The ring shooter', media: [
       { v: 'shooter-plate-top.mp4', c: 'Over the top of the shooter plate: the black wheel, the white cup, and the curved rail at the edge' },
     ], p: [
       'The shooter is a tilted plywood plate standing on threaded rods above the drive base. On it: a black wheel lying flat, a white cup that holds a stack of three rings lying flat, a curved rail along the edge of the plate, and a small servo on a bracket beside the cup.',
@@ -95,7 +95,7 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ level 4
-    { type: 'prose', id: 'run', h: 'Level 4: the run', media: [
+    { type: 'prose', id: 'run', h: 'The run', media: [
       { v: 'hero-three-rings-and-wobble.mp4', c: 'The run from the top of the page: three rings toward the box on the right, then a lap with the wobble goal on board' },
     ], p: [
       'The run from the top of the page, move by move. Ring times are the frames where each ring first shows in the air, measured on the 4K original.',
@@ -104,7 +104,7 @@ export default {
         '**1.7 s**: ring two, 1.3 s after the first.',
         '**3.0 s**: ring three, another 1.3 s later. Three rings out.',
         'Then it turns and heads up the field with the wobble goal, the black-domed pole, riding upright on its side.',
-        'On the way back it rolls over a ring lying on the field, and half a second later there is a ring in the white cup. Ring four?',
+        'On the way back it rolls over a ring lying on the field, and half a second later there is a ring in the white cup.',
         'It ends the clip among the taped squares near the camera, the wobble goal still on board.',
       ] },
       { calc: 'How fast does it empty the cup?',
@@ -127,7 +127,7 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ level 5
-    { type: 'prose', id: 'code', h: 'Level 5: the part I did (code)', media: [
+    { type: 'prose', id: 'code', h: 'My part: the code', media: [
       { i: 'still-opmode-list.webp', c: 'The Driver Station list of autonomous programs: TestAutoV2 to TestAutoV12, with a TurnLeft and a TurnRight version of V12' },
       { v: 'ds-encoder-telemetry.mp4', c: 'TestAutoV12TurnLeft running: *Mode: waiting*, play, *Mode: running*, and the four drive encoder counts climbing together' },
     ], p: [

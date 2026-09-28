@@ -120,8 +120,9 @@ export async function mount(el, ctx) {
 
   // the real belt, as a print over the stage (step 1)
   const inset = document.createElement('figure');
-  Object.assign(inset.style, { position: 'absolute', right: '14px', top: '14px', width: 'min(24%, 250px)', margin: '0', opacity: '0', zIndex: '2', pointerEvents: 'none' });
-  inset.innerHTML = `<img alt="Version 1 in my hand: a servo and its belt" decoding="async" style="display:block;width:100%;border-radius:12px;box-shadow:0 20px 40px -20px rgba(0,0,0,.9)"><figcaption style="margin-top:6px;font-size:12px;color:#b8b0a7">The real belt, Dec 29, 2024</figcaption>`;
+  inset.className = 'rx-inset rx-inset-photo'; // site.css: at least --rx-inset-w wide
+  Object.assign(inset.style, { top: '14px', bottom: 'auto', width: 'min(var(--rx-inset-w), 30vh, 42vw)', opacity: '0' }); // a portrait photo: held to 30 % of the screen's height
+  inset.innerHTML = `<img alt="Version 1 in my hand: a servo and its belt" decoding="async"><figcaption>The real belt, Dec 29, 2024</figcaption>`;
   inset.querySelector('img').src = ctx.asset(`/assets/media/${ctx.slug}/photo-v1-belt-side-s.webp`);
   el.appendChild(inset);
 

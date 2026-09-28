@@ -56,17 +56,17 @@ const CAPS = {
 const TAG = { raw: 'Raw', mask: 'Mask', fit: 'Fit', blobs: 'Mask' };
 
 const CSS = `
-.adr-fl .rx-hud { width: min(300px, calc(100% - 28px)); }
+.adr-fl .rx-hud { width: min(340px, calc(100% - 28px)); }
 .adr-fl .adr-state { color: var(--text); font-weight: 650; }
 .adr-fl .adr-state.warn { color: #ffb454; }
-.adr-fl .adr-state.illus::after { content: 'illustrative stand-in'; display: block; margin-top: 2px; font-size: 11px; font-weight: 550; color: var(--muted); }
+.adr-fl .adr-state.illus::after { content: 'illustrative stand-in'; display: block; margin-top: 2px; font-size: var(--rx-ov-small); font-weight: 550; color: var(--muted); }
 .adr-fl tr.adr-off td { opacity: .45; }
-.adr-inset { position: absolute; right: 14px; bottom: 14px; width: min(40%, 380px); margin: 0; border-radius: 12px; overflow: hidden;
+.adr-inset { position: absolute; right: 14px; bottom: 14px; width: max(var(--rx-inset-w), min(40%, 420px)); margin: 0; border-radius: 12px; overflow: hidden;
   background: #000; border: 1px solid rgba(255, 255, 255, .16); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
 .adr-inset canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
-.adr-inset figcaption { padding: 6px 10px 7px; font-size: 11.5px; line-height: 1.35; color: var(--text-2); background: rgba(20, 18, 16, .94); }
+.adr-inset figcaption { padding: 7px 11px 8px; font-size: var(--rx-ov-small); line-height: 1.35; color: var(--text-2); background: rgba(20, 18, 16, .94); }
 @media (max-width: 640px) {
-  .adr-inset { right: 8px; bottom: 8px; width: 46%; border-radius: 9px; }
+  .adr-inset { right: 8px; bottom: 8px; width: 52%; border-radius: 9px; }
   .adr-inset figcaption { display: none; }
 }
 `;

@@ -22,8 +22,8 @@ export default {
       { v: 'Round 2', l: 'Playoffs, 7th alliance' },
     ],
     text: [
-      'I designed this whole robot by myself for FRC team 2856, Planetary Drive, from Paul Laurence Dunbar High School in Lexington, Kentucky. I had a friend on the team, and the team had never used CAD. It was my first FRC season, and I did all of it from Maryland.',
-      'It has a pivoting roller intake that carries the front of the hopper with it, three independent shooters and a swerve drive, and it stands 22.0 in tall so it drives under the trench. I planned small test iterations the team could actually do, and the robot basically worked on the first try. At the 2026 Smoky Mountains Regional we ranked 21st of 46, were picked onto the 7th alliance and went out in the second round of the playoffs.',
+      'I designed this robot on my own for FRC team 2856, Planetary Drive, from Paul Laurence Dunbar High School in Lexington, Kentucky. I had a friend on the team, and the team had never used CAD. It was my first FRC season, and I worked on it remotely from Maryland.',
+      'It has a pivoting roller intake that carries the front of the hopper with it, three independent shooters and a swerve drive, and it stands 22.0 in tall so it drives under the trench. I planned small test iterations sized to the time the team had, and the design did not change after Feb 18. At the 2026 Smoky Mountains Regional we ranked 21st of 46, were picked onto the 7th alliance and went out in the second round of the playoffs.',
     ],
   },
   hero: {
@@ -55,7 +55,7 @@ export default {
       { problem: 'I was in Maryland for the whole season and the team was in Kentucky. I could never stand next to the robot, and the team had never used CAD.', title: 'Remote, with a team new to CAD' },
       { fix: 'I shared the model through Fusion 360 links, so anyone on the team could open it, and sent DXF files for the flat parts. Bill, a machinist in the shop, waterjet cut all of the aluminum plates from them. Some of the build happened over video calls, like the one pictured here.' },
       { problem: 'The team was not very competitive, and syncing a timeline for design iterations was hard.', title: 'No shared schedule' },
-      { fix: 'I asked how much time they actually had and planned small test iterations they could really do in it. Through those small iterations I essentially got the design in one shot: the robot basically worked on the first try.' },
+      { fix: 'I asked how much time the team had and planned small test iterations that fit it. The design settled through those iterations: nothing changed between the Feb 18 model and the final CAD.' },
     ],
       media: [
         { i: 'build-pulley-call.webp', c: 'Mar 10, a screenshot from a video call with the shop: the intake pivot sprocket and its chain going on beside an upright' },
@@ -82,7 +82,7 @@ export default {
       { h: 'Three independent shooters, no turret' },
       { problem: 'The shooter had to be something this team could build and keep running.', title: 'What shooter' },
       { fix: 'Three independent shooters, one per lane. I thought three separate shooters would be more reliable than one big full-width shooter, a single set of wheels across the whole robot. The team was not experienced, so a turret was out.' },
-      { next: 'In hindsight the best teams used the full-width shooter, and we did not have time to test enough to find that out ourselves. Next time I would take out the separators between the shooters, because they cause jams, and run one big bar all the way across.' },
+      { next: 'In hindsight the strongest teams used the full-width shooter, and we did not have time to test enough to find that out ourselves. Next time I would take out the separators between the shooters, because they cause jams, and run one big bar all the way across.' },
       { h: '22.0 inches tall' },
       'The opening under each trench on the REBUILT field is 22.25 in. I kept the whole robot to 22.0 in so it could drive under the trench, and it did.',
       { h: 'MAXSwerve' },
@@ -220,7 +220,7 @@ export default {
           media: [{ i: 'cad-v3-feb18.webp', c: 'The Feb 18 model' }] },
         { label: 'Mar 5 to 10', title: 'Built', p: ['The robot assembled from the model, wiring in progress. On Mar 10 the intake pivot sprocket went on while I was on a video call with the shop.'],
           media: [{ i: 'build-assembled-rear.webp', c: 'The assembled robot from the back' }, { i: 'build-pulley-call.webp', c: 'The intake pivot sprocket going on, seen over a video call' }] },
-        { label: 'Mar 19', title: 'Competition', p: ['At the Smoky Mountains Regional. It basically worked on the first try.'],
+        { label: 'Mar 19', title: 'Competition', p: ['At the Smoky Mountains Regional: 21st of 46 in qualifications, then picked onto the 7th alliance.'],
           media: [{ i: 'robot-regional.webp', c: 'The robot at the regional, with the team behind it' }] },
       ],
     },
@@ -228,13 +228,8 @@ export default {
     { type: 'prose', id: 'results', h: 'At the Smoky Mountains Regional', p: [
       'We ranked 21st of 46 in qualifications and were picked onto the 7th alliance. We went out in the second round of the playoffs, in a lower bracket match the 6th alliance won 134 to 110.',
     ] },
-    { type: 'media', layout: 'row', items: [
+    { type: 'media', layout: 'wide', items: [
       { v: 'hero-playoff-auto.mp4', c: 'Autonomous in that match, from the event broadcast. We were Alliance 7, in red.' },
-      { v: 'playoff-final-seconds.mp4', c: 'The last seconds of the match' },
-    ] },
-    { type: 'media', layout: 'row', items: [
-      { i: 'still-playoff-title.webp', c: 'Match 6, the second round of the playoffs' },
-      { i: 'still-playoff-result.webp', c: 'Final score: 6th alliance 134, 7th alliance 110' },
     ] },
 
     { type: 'callout', id: 'next', h: 'What I would change', p: [

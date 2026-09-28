@@ -23,13 +23,12 @@ const WALL_H = 0.1;
 const HOLD = 0.88; // each step plays its part of the run over this much of the step, then holds
 
 const CSS = `
-.rx-hud.bb-hud { top: auto; bottom: 14px; width: min(270px, calc(100% - 28px)); }
-.bb-hud .bb-big b { font-size: 26px; line-height: 1; }
+.rx-hud.bb-hud { top: auto; bottom: 14px; width: min(320px, calc(100% - 28px)); }
+.bb-hud .bb-big b { font-size: var(--rx-ov-big); line-height: 1; }
 .bb-hud .bb-big { margin-bottom: 6px; }
-.bb-hud .bb-note { margin-top: 8px; font-size: 11px; color: var(--muted); }
+.bb-hud .bb-note { margin-top: 8px; font-size: var(--rx-ov-small); color: var(--muted); }
 @media (max-width: 640px) {
   .rx-hud.bb-hud { top: 8px; bottom: auto; width: auto; }
-  .bb-hud .bb-big b { font-size: 18px; }
   .bb-hud .bb-note { display: none; }
 }`;
 let styled = false;

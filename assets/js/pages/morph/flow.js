@@ -56,7 +56,7 @@ export function mount(el, ctx) {
     hud.className = 'rx-hud';
     Object.assign(hud.style, { top: 'auto', bottom: '14px', zIndex: 6 });
     const max = Math.max(...d.tally.rows.map((r) => r.v));
-    hud.innerHTML = `<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">${esc(d.tally.title || '')}</div>${
+    hud.innerHTML = `<div style="font-size:var(--rx-ov-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">${esc(d.tally.title || '')}</div>${
       d.tally.rows.map((r) => `<div class="rx-hud-row rx-hud-x" style="margin-top:7px"><span>${esc(r.l)}</span><b class="num">${r.v.toLocaleString('en-US')}</b><i><em style="width:0"></em></i></div>`).join('')
     }<div class="rx-hud-mini num"></div>`;
     tallyRows = [...hud.querySelectorAll('.rx-hud-row')].map((row, i) => ({ row, bar: row.querySelector('em'), f: d.tally.rows[i].v / max, at: d.tally.rows[i].at, shown: '' }));
@@ -123,8 +123,8 @@ export function mount(el, ctx) {
             edges[i] = `M${x0.toFixed(1)} ${ym.toFixed(1)}H${(x1 - 7).toFixed(1)}`;
             let lab = '';
             if (o.edge) {
-              const ls = wrap(o.edge, gap + bw * 0.55, 11.5, 500, family);
-              lab = text(x - gap / 2, top - 8 - (ls.length - 1) * 13, ls, 11.5, 500, C.muted, 'middle');
+              const ls = wrap(o.edge, gap + bw * 0.55, 12.5, 500, family);
+              lab = text(x - gap / 2, top - 8 - (ls.length - 1) * 14, ls, 12.5, 500, C.muted, 'middle');
             }
             parts.push(['e', i, `<path d="${edges[i]}" stroke="${C.arrow}" stroke-width="1.6" fill="none"/>${arrowHead(x1, ym, 'right', C.arrow)}${lab}`]);
           }
@@ -139,13 +139,13 @@ export function mount(el, ctx) {
           let s = o.branch.into
             ? `<path d="M${x + bw / 2} ${by - 3}V${top + bh + 9}" stroke="${col}" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>${arrowHead(x + bw / 2, top + bh + 3, 'up', col)}`
             : `<path d="M${x + bw / 2} ${top + bh + 3}V${by - 8}" stroke="${col}" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>${arrowHead(x + bw / 2, by - 3, 'down', col)}`;
-          if (o.branch.edge) s += text(x + bw / 2 + 8, top + bh + 24, [o.branch.edge], 11.5, 500, C.muted);
+          if (o.branch.edge) s += text(x + bw / 2 + 8, top + bh + 24, [o.branch.edge], 12.5, 500, C.muted);
           s += rect(x, by, bw, B.h, { ...o.branch, dashed: true }) + boxText(x, by, B, o.branch.tone);
           const j = o.branch.back != null ? i - c + o.branch.back : -1; // back into a box of the same row
           if (j > i && Math.floor(j / cols) === r && j < n) {
             const xj = (j % cols) * (bw + gap) + bw / 2;
             s += `<path d="M${x + bw} ${by + B.h / 2}H${xj}V${top + bh + 9}" stroke="${C.arrow}" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>${arrowHead(xj, top + bh + 3, 'up', C.arrow)}`;
-            if (o.branch.backEdge) s += text((x + bw + xj) / 2, by + B.h / 2 - 7, [o.branch.backEdge], 11.5, 500, C.muted, 'middle');
+            if (o.branch.backEdge) s += text((x + bw + xj) / 2, by + B.h / 2 - 7, [o.branch.backEdge], 12.5, 500, C.muted, 'middle');
           }
           parts.push(['r', i, s]);
           bmax = Math.max(bmax, 40 + B.h);
@@ -157,7 +157,7 @@ export function mount(el, ctx) {
           const lastX = (row.length - 1) * (bw + gap) + bw, ym = top + bh / 2;
           const chan = y + 20;
           edges[next] = `M${(lastX + 3).toFixed(1)} ${ym.toFixed(1)}H${lastX + mR - 4}V${chan.toFixed(1)}H${(bw / 2).toFixed(1)}V${(chan + 36 - 9).toFixed(1)}`;
-          parts.push(['e', next, `<path d="${edges[next]}" stroke="${C.arrow}" stroke-width="1.6" fill="none" stroke-linejoin="round"/>${arrowHead(bw / 2, chan + 36 - 3, 'down', C.arrow)}${boxes[next].edge ? text((lastX + mR + bw / 2) / 2, chan - 7, [boxes[next].edge], 11.5, 500, C.muted, 'middle') : ''}`]);
+          parts.push(['e', next, `<path d="${edges[next]}" stroke="${C.arrow}" stroke-width="1.6" fill="none" stroke-linejoin="round"/>${arrowHead(bw / 2, chan + 36 - 3, 'down', C.arrow)}${boxes[next].edge ? text((lastX + mR + bw / 2) / 2, chan - 7, [boxes[next].edge], 12.5, 500, C.muted, 'middle') : ''}`]);
           y = chan + 36 - 34;
         }
       }
@@ -167,7 +167,7 @@ export function mount(el, ctx) {
       boxes.forEach((o, i) => {
         if (i > 0) {
           edges[i] = `M22 ${y + 2}V${y + 30}`;
-          parts.push(['e', i, `<path d="${edges[i]}" stroke="${C.arrow}" stroke-width="1.6" fill="none"/>${arrowHead(22, y + 36, 'down', C.arrow)}${o.edge ? text(36, y + 23, wrap(o.edge, W - 50, 11.5, 500, family).slice(0, 1), 11.5, 500, C.muted) : ''}`]);
+          parts.push(['e', i, `<path d="${edges[i]}" stroke="${C.arrow}" stroke-width="1.6" fill="none"/>${arrowHead(22, y + 36, 'down', C.arrow)}${o.edge ? text(36, y + 23, wrap(o.edge, W - 50, 12.5, 500, family).slice(0, 1), 12.5, 500, C.muted) : ''}`]);
           y += 38;
         }
         const L = layoutBox(o, W);
@@ -176,7 +176,7 @@ export function mount(el, ctx) {
         let s = rect(0, y, W, L.h + extra, o) + boxText(0, y, L);
         if (BL) {
           const by = y + L.h + 20;
-          s += text(14, by - 6, [`${o.branch.edge ? `${o.branch.edge}:` : ''}`], 11.5, 500, C.muted);
+          s += text(14, by - 6, [`${o.branch.edge ? `${o.branch.edge}:` : ''}`], 12.5, 500, C.muted);
           s += rect(14, by, W - 28, BL.h, { dashed: true, tone: o.branch.tone }) + boxText(14, by, BL, o.branch.tone);
         }
         parts.push(['b', i, s]);

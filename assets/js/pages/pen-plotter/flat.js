@@ -38,19 +38,18 @@ const CSS = `
 .pp-flat .slide { stroke: ${COLORS.fold}; stroke-width: 2.5; fill: none; }
 .pp-flat .target { fill: none; stroke: rgba(238,233,227,.75); stroke-width: 2; }
 .pp-flat .target.out { stroke: #8c847b; stroke-dasharray: 3 3; }
-.pp-flat .lbl { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: 12.5px;
+.pp-flat .lbl { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 2px 9px; border-radius: 999px; font-size: var(--rx-ov-label);
   background: rgba(10,8,7,.78); border: 1px solid rgba(255,255,255,.14); pointer-events: none; will-change: transform; }
 .pp-flat .card { position: absolute; padding: 11px 14px; border-radius: 12px; background: rgba(10,8,7,.8); border: 1px solid rgba(255,255,255,.12);
-  font: 500 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #b8b0a7; white-space: pre; pointer-events: none; }
+  font: 500 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #b8b0a7; white-space: pre; pointer-events: none; }
 .pp-flat .card b { color: #eee9e3; font-weight: 650; }
 .pp-flat .card .l { color: ${COLORS.ink}; } .pp-flat .card .r { color: ${COLORS.fold}; } .pp-flat .card .w { color: ${COLORS.warn}; } .pp-flat .card .g { color: #7be08f; }
 .pp-flat .card.tl { top: 14px; left: 14px; } .pp-flat .card.tr { top: 14px; right: 14px; }
 .pp-flat .card.bl { bottom: 14px; left: 14px; } .pp-flat .card.br { bottom: 14px; right: 14px; }
 @media (max-width: 640px) {
-  .pp-flat .card { font-size: 10.5px; padding: 7px 9px; line-height: 1.45; }
+  .pp-flat .card { font-size: 12px; padding: 7px 9px; line-height: 1.45; white-space: pre-wrap; max-width: calc(100% - 16px); } /* 12 px floor: long formula lines wrap instead of running off */
   .pp-flat .card.tl, .pp-flat .card.tr { top: 8px; } .pp-flat .card.tl { left: 8px; } .pp-flat .card.tr { right: 8px; }
   .pp-flat .card.bl, .pp-flat .card.br { bottom: 8px; } .pp-flat .card.bl { left: 8px; } .pp-flat .card.br { right: 8px; }
-  .pp-flat .lbl { font-size: 11px; }
   .pp-flat .arm { stroke-width: 4.5; } .pp-flat .fore { stroke-width: 3.5; }
 }
 `;

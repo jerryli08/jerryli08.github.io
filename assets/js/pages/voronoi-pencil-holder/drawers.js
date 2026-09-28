@@ -8,8 +8,9 @@
 //    body at +x, and is an open trough along its length that the body closes over
 //  - the inserts' bores and features are all on STEP X (tools/cad-axes.py on the STEP: every
 //    cylinder of both inserts has its axis along X), so they slide along GLB +x, out of the capped end
-// The CAD has no stop, so how far "full travel" is was chosen for the animation: 110 mm, about two
-// thirds of an insert, which leaves 50 mm of it in the body (see TRAVEL).
+// Full travel (Jerry, Sept 28, 03:53): each insert slides out about 80% of its overall length. Both
+// inserts measure 162.00 mm along x in the CAD (this GLB and the raw export agree), so the travel is
+// 0.8 x 162 = 129.6 mm, which leaves about 30 mm of each insert inside the body (see TRAVEL).
 // Every picture is a pure function of the scroll progress p; nothing moves on its own.
 import { createStage } from '/assets/js/lib/stage.js';
 
@@ -18,7 +19,8 @@ const ease = (x) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 const DEG = Math.PI / 180;
 
-const TRAVEL = 0.110; // full travel of each insert along +x, m (chosen: the CAD has no stop)
+const LEN = 0.162; // each insert's length along its slide axis (x), m, measured in the CAD
+const TRAVEL = 0.8 * LEN; // full travel along +x, m: about 80% of the insert's length (Jerry)
 const RUN = 0.34; // share of the scroll one insert takes to run out
 const A0 = 0.06; // the first insert starts
 const THIRD = 0.3877; // the eased run reaches 1/3 of its travel at this fraction of RUN: 3t^2 - 2t^3 = 1/3

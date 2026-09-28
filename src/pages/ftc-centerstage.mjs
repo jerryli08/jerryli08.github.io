@@ -90,7 +90,7 @@ export default {
     { type: 'prose', id: 'hubs', p: [
       'Fabworks cut our sheet parts. A box on Nov 18 held a lattice-cut plate like the chassis sides, and a later order lists the arm link, the intake arms, a lift mount and an intake motor side plate in the same aluminum, plus mounts for MGN rail blocks in 1008 steel, all laser cut with hole operations.',
       { problem: 'On my POWERPLAY off-season robot earlier in 2023, my first project in CAD, I printed the bores straight into the pulleys, and they stripped out completely on the 5 mm hex shafts.', title: 'Printed bores strip' },
-      { fix: 'Aluminum hubs bolted into the 3D-printed pulleys. I never made that mistake again: on this robot the printed pulleys and spools are built around aluminum hubs, so the hex shaft drives metal instead of plastic.', title: 'Aluminum hubs inside printed pulleys' },
+      { fix: 'Aluminum hubs bolted into the 3D-printed pulleys. I carried that lesson forward: on this robot the printed pulleys and spools are built around aluminum hubs, so the hex shaft drives metal instead of plastic.', title: 'Aluminum hubs inside printed pulleys' },
       'Printed parts still had their limits. On Jan 12, the night before our second qualifier, a printed pulley cracked through beside its aluminum hub.',
     ], media: [
       [{ i: 'fabworks-sheet-parts.webp', c: 'Nov 18, 2023: laser-cut parts from Fabworks: a perforated plate, a lattice-cut side plate and small brackets' }, { i: 'still-fabworks-order.webp', c: 'Our Fabworks order: the curved arm link in 6061-T6 aluminum and MGN rail block mounts in 1008 steel' }],

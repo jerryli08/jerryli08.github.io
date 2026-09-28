@@ -23,7 +23,7 @@ export default {
     ],
     text: [
       'In four days I designed, printed and wired a 1 lb horizontal spinner and took it to my first combat robotics event, MACRO\'s Ides of July. The first version never left CAD: I ran a design review and redrew it thinner, with a one-piece TPU frame and an asymmetrical blade.',
-      'What knocked me out was electrical: a contact inside one of the N20 drive motors broke off because I had crammed the wiring in around it. I placed in the middle, which I am happy with for a first event.',
+      'What knocked me out was electrical: a contact inside one of the N20 drive motors broke off because I had packed the wiring too tightly around it. I placed in the middle.',
     ],
   },
   hero: {
@@ -164,7 +164,7 @@ export default {
       { h: 'Either way up' },
       'The wheels stand 10 mm past the top plate and 10 mm past the bottom plate, and the blade\'s mid-plane sits 1 mm below the axle line. So whichever side it lands on, the wheels still reach the floor and the blade stays within 2 mm of the same height (from the CAD).',
       { h: 'Packing it' },
-      'Everything else lives in the space between the wheels: the LiPo, the ESCs and all of the wiring. That is the part that caught up with me at the event.',
+      'Everything else lives in the space between the wheels: the LiPo, the ESCs and all of the wiring. That packing is what failed at the event.',
     ] },
     { type: 'media', layout: 'row', items: [
       { i: 'tpu-frame-flex.webp', c: 'The TPU frame bending in my hand' },
@@ -227,8 +227,8 @@ export default {
         { v: 'match-floor-launch.mp4', c: 'Ides of July, from the livestream: trading hits, then launched' },
         { v: 'match-floor-stood-on-end.mp4', c: 'Stood on end, dropped back down, still driving' },
       ] },
-      { problem: 'My robot was knocked out by its electronics. The Pololu N20 drive motors have small tabs on the back for their leads, and I had crammed all of the wiring into the frame around them. A contact broke off inside one of the motors.', title: 'A contact broke inside a drive motor' },
-      'I placed in the middle. For my first event, with a robot I designed and built in four days, I am happy with that.',
+      { problem: 'My robot was knocked out by its electronics. The Pololu N20 drive motors have small tabs on the back for their leads, and I had packed all of the wiring into the frame tightly around them. A contact broke off inside one of the motors.', title: 'A contact broke inside a drive motor' },
+      'I placed in the middle, at my first event, with a robot designed and built in four days.',
     ] },
     { type: 'media', layout: 'row', items: [
       { i: 'n20-leads-soldered.webp', c: 'Jul 11: an N20\'s leads soldered straight onto its back tabs, with the wiring packed around it' },

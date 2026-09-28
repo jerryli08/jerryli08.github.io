@@ -80,7 +80,7 @@ export function mount(el, ctx) {
     g.moveTo(cx + r0 * Math.cos(t), cy + r0 * Math.sin(t)); g.lineTo(cx + r1 * Math.cos(t), cy + r1 * Math.sin(t)); g.stroke();
   }
   function text(s, x, y, o = {}) {
-    g.font = `${o.weight || 500} ${o.size || 13}px ${font}`;
+    g.font = `${o.weight || 500} ${Math.max(12.5, o.size || 13)}px ${font}`; // the site.css overlay floor
     g.fillStyle = o.color || COL.text; g.textAlign = o.align || 'left'; g.textBaseline = o.base || 'alphabetic';
     g.fillText(s, x, y);
   }

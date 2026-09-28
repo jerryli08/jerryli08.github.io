@@ -31,7 +31,7 @@ export default {
         { h: 'The CAD', p: ['This is the CAD of the device: two beams on two posts, each beam a lever, joined at the right end by one rigid link.'] },
         { h: 'Class 1: the upper beam', p: ['The upper beam is the **class 1** lever: its fulcrum sits between the mass and the link. When the mass side goes down, the link side comes up.'] },
         { h: 'Class 2: the lower beam', p: ['The lower beam is the **class 2** lever: its fulcrum is at one end, the link at the other, and the mass hangs in between.'] },
-        { h: 'The link: 5 : 1', p: ['As the upper lever tips, watch the link: both link pins move up and down by the same amount, but one is 75 mm from its fulcrum and the other 375 mm, so the lower lever turns a fifth as far. That 5 : 1 is the whole trick of the device.'] },
+        { h: 'The link: 5 : 1', p: ['As the upper lever tips, watch the link: both link pins move up and down by the same amount, but one is 75 mm from its fulcrum and the other 375 mm, so the lower lever turns a fifth as far. That 5 : 1 is the key to the device.'] },
       ],
       caption: 'Both levers turn about the real fulcrum axes in the CAD (the bearing bores); the tipping range is a visual limit, not a stop in the CAD.' },
 

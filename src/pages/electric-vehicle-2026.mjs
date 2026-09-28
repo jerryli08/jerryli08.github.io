@@ -22,7 +22,7 @@ export default {
     ],
     text: [
       'My second Science Olympiad electric vehicle. For 2025-26 the event stopped rewarding speed: a run is scored on how close the car stops to the target, how close it comes to a target time of 10 to 20 seconds, and a new bonus for driving between two cans set about a meter off the straight line. Earning that bonus means driving a curve, so this car came down to steering precisely.',
-      'It went through two versions. I designed the first in less than a day, just to have something for competition; it steered with a servo, and the backlash in the servo made the steering horribly inaccurate. For the second I chose caliper steering: a linkage on a digital caliper sets the steering angle quite precisely.',
+      'It went through two versions. I designed the first in less than a day, to have a car ready for competition; it steered with a servo, and the backlash in the servo made the steering inaccurate. For the second I chose caliper steering: a linkage on a digital caliper sets the steering angle precisely.',
     ],
   },
   hero: {
@@ -105,9 +105,9 @@ export default {
     ] },
 
     { type: 'prose', id: 'version-1', h: 'Version 1: servo steering', p: [
-      'I designed version 1 in less than a day, just to have something for the competition. It is two modules on a short 3D printed chassis. The rear module carries the brushless motor and the driven rear axle. The front module is a printed fork holding one wheel, and the fork bolts straight to the horn of a 25 kg servo (a DS3225MG in my CAD), so the servo’s output shaft is the steering axis. The eight AA batteries ride on top. Wheelbase 142 mm, width 130 mm (in my CAD).',
+      'I designed version 1 in less than a day, to have a car ready for the competition. It is two modules on a short 3D printed chassis. The rear module carries the brushless motor and the driven rear axle. The front module is a printed fork holding one wheel, and the fork bolts straight to the horn of a 25 kg servo (a DS3225MG in my CAD), so the servo’s output shaft is the steering axis. The eight AA batteries ride on top. Wheelbase 142 mm, width 130 mm (in my CAD).',
       'In the code the steering setting is a whole number of degrees, written to the servo once at startup, with 90 as straight ahead.',
-      { problem: 'The backlash in the servo made the steering horribly inaccurate. That play sits right on the steering axis, and on a 142 mm wheelbase the settings the can bonus needs run from about half a degree to a degree, each with a few hundredths of a degree to spare (computed, table above). Whole degrees were too coarse as well: 1° is already an 8.1 m radius and 2° is 4.1 m (computed).', title: 'Backlash in the servo' },
+      { problem: 'The backlash in the servo made the steering inaccurate. That play sits right on the steering axis, and on a 142 mm wheelbase the settings the can bonus needs run from about half a degree to a degree, each with a few hundredths of a degree to spare (computed, table above). Whole degrees were too coarse as well: 1° is already an 8.1 m radius and 2° is 4.1 m (computed).', title: 'Backlash in the servo' },
       { fix: 'Version 2 takes the servo out of the steering completely and sets the angle with a caliper and a linkage.' },
     ],
       media: [{ i: 'render-v1-servo-front.webp', c: 'The fork bolts directly to the servo, so the servo’s shaft is the steering axis' }] },
@@ -135,7 +135,7 @@ export default {
     ] },
 
     { type: 'prose', id: 'version-2', h: 'Version 2: caliper steering', p: [
-      'For version 2 I chose caliper steering. A digital caliper sits along the car’s spine, and a linkage turns the position of its sliding jaw into a steering angle. It let us change the steering angle quite precisely. How it works, from my CAD:',
+      'For version 2 I chose caliper steering. A digital caliper sits along the car’s spine, and a linkage turns the position of its sliding jaw into a steering angle. It let us set the steering angle precisely. How it works, from my CAD:',
       { ol: [
         '**Same fork, new pivot.** I kept version 1’s printed fork, wheel and axle. Where the fork’s four screws went into the servo horn, they now go into a printed bearing holder that turns on a 6202 ball bearing (14 mm bore, 35 mm outside, per the part in my CAD). The steering axis is a bearing now instead of the servo’s gearbox.',
         '**Arm, link, slider.** The bearing holder has a 50 mm arm pointing back along the car. A printed link, 89.4 mm between its pins, joins the end of that arm to a clamp on the caliper’s sliding jaw. The clamp’s pin slides along a line 44.2 mm to one side of the steering axis.',
@@ -160,8 +160,8 @@ export default {
         { h: 'Steeper near the end', p: ['It gets steeper as the link and the arm come into line, which in my CAD happens at about 4.5 mm of opening; at 4.2 mm, one millimeter is already about 8° (computed). The settings a track needs, about 1 to 2 mm either way, sit in the gentle part.'] },
         { h: 'One count on the caliper', p: ['Back at 1.21 mm, then five counts of 0.01 mm, one count on the caliper each. Each turns the wheel about 0.024°. The table above gives version 2 between ±0.07° and ±0.14° of room, so several counts (computed).'] },
         { h: 'A printed link', p: [
-          { problem: 'The linkage bar was 3D printed, so it was not that accurate.', title: 'A printed link' },
-          'It was still way better than the servo.',
+          { problem: 'The link was 3D printed, which limited its accuracy.', title: 'A printed link' },
+          'It was still much more accurate than the servo.',
         ] },
       ],
       caption: 'My CAD of version 2. The link and the fork follow the real pivot axes. Angles and radii are computed from the linkage in my CAD (50 mm arm, 89.4 mm link, 44.2 mm offset) and the 452 mm wheelbase, with zero at the CAD pose. The orange line on the floor is an annotation that follows the wheel’s heading; the pale one is straight ahead.' },
@@ -217,7 +217,7 @@ export default {
       ] },
       { pre: 'distance += -(Δangle / 360) × (π × 2.875 in) / 6        the encoder counts backwards\nif distance < targetDist - 5 cm:\n    power = speedPID(targetDist / targetTime - speed)\nelse:\n    power = positionPID(targetDist - distance)\nesc pulse = 1500 µs + 500 µs × (power + 0.08 if power > 0)' },
       'The settings that change for each track sit together at the top of the file under ADJUSTABLE PARAMETERS (EASY ACCESS): the target distance, the target time and, for version 1, the steering angle. In `finalCompCode.ino` a comment says the servo isn’t used anymore; on version 2 the caliper sets the steering.',
-      { problem: 'Set to 15 s, a run might take 16. In the final code I left a note that the timing did not work that well, and that maybe our battery was just low at Penn.', title: 'Runs came out long' },
+      { problem: 'Set to 15 s, a run might take 16. In the final code I left a note that the timing was not reliable, and that our battery may have been low at Penn.', title: 'Runs came out long' },
       { fix: 'We corrected by hand: if a layout needed 15 s, enter 14. I also suggested keeping a spreadsheet of track layouts, each with the can’s sideways offset and the distance, and the settings that worked.' },
     ],
       media: [

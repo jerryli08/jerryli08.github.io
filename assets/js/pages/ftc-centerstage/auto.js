@@ -70,7 +70,7 @@ const CSS = `
 .fc-au svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; font-family: var(--font); }
 .fc-au .rx-hud { top: auto; right: auto; width: auto; }
 .fc-au .rx-hud td { font-variant-numeric: tabular-nums; }
-.fc-au-mini { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; display: none; padding: 6px 10px; border-radius: 10px; background: rgba(10,8,7,0.82); border: 1px solid rgba(255,255,255,0.12); font-size: 12px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-au-mini { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; display: none; padding: 6px 10px; border-radius: 10px; background: rgba(10,8,7,0.82); border: 1px solid rgba(255,255,255,0.12); font-size: var(--rx-ov-text); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fc-au-narrow .fc-au-mini { display: block; }
 .fc-au-narrow .rx-hud { display: none; }
 `;
@@ -105,12 +105,13 @@ export function mount(el, ctx) {
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     const narrow = W < 700;
     root.classList.toggle('fc-au-narrow', narrow);
-    const side = narrow ? Math.min(W - 16, H - 48) : Math.min(H - 56, W - 330);
-    const fx = narrow ? (W - side) / 2 : 28, fy = narrow ? 8 : (H - side) / 2;
+    // on a phone the labels above the field and left of it need room at the 12 px floor
+    const side = narrow ? Math.min(W - 40, H - 66) : Math.min(H - 56, W - 330);
+    const fx = narrow ? (W - side) / 2 : 28, fy = narrow ? 22 : (H - side) / 2;
     if (!narrow) Object.assign(hudEl.style, { left: `${fx + side + 24}px`, top: `${fy + side * 0.3}px`, width: `${Math.min(270, W - fx - side - 48)}px` });
     const k = side / 144;
     const X = (x) => fx + (x + 72) * k, Y = (y) => fy + (72 - y) * k;
-    const fs = Math.max(9.5, Math.min(12.5, k * 1.9));
+    const fs = narrow ? 13 : Math.max(13, Math.min(14.5, k * 2.2)); // labels: at least 12 px (site.css overlay floor)
     const t = (parent, str, x, y, attrs = {}) => { const e = s(parent, 'text', { x, y, 'font-size': fs, fill: '#8c847b', ...attrs }); e.textContent = str; return e; };
     // field and tiles
     s(svg, 'rect', { x: fx, y: fy, width: side, height: side, rx: 6, fill: '#22201e', stroke: 'rgba(237,232,226,0.3)', 'stroke-width': 1.5 });
@@ -140,7 +141,8 @@ export function mount(el, ctx) {
     for (const [n, x, y, hd] of starts) {
       if (n === 'red close') continue;
       s(svg, 'rect', { x: X(x - 9), y: Y(y + 9), width: 18 * k, height: 18 * k, fill: 'none', stroke: 'rgba(237,232,226,0.22)', 'stroke-dasharray': '3 3' });
-      t(svg, `${n} (${x}, ${y}, ${hd}°)`, X(x), Y(y) + (y > 0 ? -12 * k : 12 * k) + (y > 0 ? 0 : fs), { 'text-anchor': 'middle', 'font-size': fs - 1 });
+      // a phone has room for the names only (two labels share each edge of the field)
+      t(svg, narrow ? n : `${n} (${x}, ${y}, ${hd}°)`, X(x), Y(y) + (y > 0 ? -12 * k : 12 * k) + (y > 0 ? 0 : fs), { 'text-anchor': 'middle', 'font-size': fs - 1 });
     }
     // paths: history (faint), current (dashed ahead, solid behind)
     const P = (path) => path.map((p, i) => `${i ? 'L' : 'M'}${X(p.x).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');

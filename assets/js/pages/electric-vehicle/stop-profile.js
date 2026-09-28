@@ -92,7 +92,7 @@ export function mount(el, ctx) {
     const m = { l: narrow ? 40 : 58, r: narrow ? 14 : 30, t: narrow ? H.el.offsetHeight + 40 : 64, b: 46 };
     const X = (x) => m.l + ((x - X0) / (X1 - X0)) * (W - m.l - m.r);
     const Y = (p) => m.t + ((Y1 - p) / (Y1 - Y0)) * (Ht - m.t - m.b);
-    if (!narrow) Object.assign(H.el.style, { top: 'auto', right: 'auto', left: `${m.l + 16}px`, bottom: `${m.b + 22}px`, width: 'min(300px, 40%)' });
+    if (!narrow) Object.assign(H.el.style, { top: 'auto', right: 'auto', left: `${m.l + 16}px`, bottom: `${m.b + 22}px`, width: 'min(340px, 40%)' });
     // grid and axes
     const grid = mk('g', {});
     for (const p of [0, 0.25, 0.5, 0.75, 1]) {

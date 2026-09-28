@@ -114,7 +114,7 @@ export async function loadArm(stage) {
 const CSS = `
 .da-labs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
 .da-lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;
-  font: 550 12px/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; opacity: 0; }
+  font: 550 var(--rx-ov-label)/1.2 var(--font, system-ui, sans-serif); color: #eee9e3; will-change: transform; opacity: 0; }
 .da-lab i { width: 7px; height: 7px; border-radius: 50%; background: #eee9e3; box-shadow: 0 0 0 2px rgba(11,10,9,.7); flex: none; }
 .da-lab b { font-weight: 550; padding: 3px 7px; border-radius: 6px; background: rgba(11,10,9,.8); border: 1px solid rgba(237,232,226,.18); }
 .da-lab.l { flex-direction: row-reverse; }
@@ -122,7 +122,7 @@ const CSS = `
 .da-lab.ik b { color: #7fd4ff; } .da-lab.ik i { background: #7fd4ff; }
 .da-lab.scene b { color: #b8b0a7; background: rgba(11,10,9,.6); }
 .da-lab.dim i { display: none; }
-@media (max-width: 600px) { .da-lab { font-size: 11px; } .da-lab b { padding: 2px 6px; } }
+@media (max-width: 600px) { .da-lab b { padding: 2px 6px; } }
 `;
 let styled = false;
 export function style() { if (styled) return; const s = document.createElement('style'); s.textContent = CSS; document.head.append(s); styled = true; }

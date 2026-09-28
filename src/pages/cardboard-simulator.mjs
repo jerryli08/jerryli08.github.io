@@ -24,7 +24,6 @@ export default {
       { v: '11', l: 'My age when I built it' },
       { v: '2 versions', l: 'Filmed a day apart' },
       { v: '1 Makey Makey', l: 'A board that shows up as a keyboard' },
-      { v: '0', l: 'Real racing-wheel parts' },
     ],
     text: [
       'When I was 11, I built a racing simulator out of cardboard. The wheel and the pedals are **cardboard, duct tape and conductive tape**, wired with alligator clips to a **Makey Makey**, a small board that plugs in over USB and shows up as a keyboard. To the racing game on the screen, my cardboard wheel was just someone pressing keys.',

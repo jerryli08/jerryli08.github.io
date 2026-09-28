@@ -2,7 +2,7 @@
 // lattice cell, '#' = a cube), exactly the mask the shape search started from.
 export function silhouetteSvg(lines, { size = 132, label = '' } = {}) {
   const h = lines.length, w = Math.max(...lines.map((l) => l.length));
-  const s = Math.min(22, (size - 12) / Math.max(w, h));
+  const s = Math.min(34, (size - 12) / Math.max(w, h)); // up to 34 px a cell, so an inset drawing reads (site.css overlay rule)
   const W = Math.round(w * s + 12), H = Math.round(h * s + 12);
   let sq = '', n = 0;
   lines.forEach((row, y) => [...row].forEach((ch, x) => {

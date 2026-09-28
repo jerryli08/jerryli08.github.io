@@ -18,6 +18,8 @@
 // copies put the retracted intake). Travel per body in rig.js.
 // Outcome (Jerry, Sept 27, 21:12): the Worlds deadline was fast approaching and it added too much
 // risk for the reward, but it was a fun design challenge.
+// Sept 28, 03:53 (Jerry): the front star rollers reaching about 37 mm past the robot's front when
+// stowed is fine (Q9 closed); the page does not treat it as a problem.
 const M = '/assets/models/cryptic-extendo/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff';
 const INTAKE = '^anim_cx_(carriage|ramp|omni|arm|rollF|rollP|rollR|rollC|gear40)$';
@@ -31,7 +33,7 @@ export default {
       { v: '40T : 15T', l: 'Servo gear to counter roller: 2.67 times the servo\'s speed' },
     ],
     text: [
-      'After my FTC season ended and team Cryptic advanced to the World Championship, I proposed a horizontal extension intake for their robot, since it was a clear edge that year, and designed it.',
+      'After my FTC season ended and team Cryptic advanced to the World Championship, I proposed a horizontal extension intake for their robot, since it was a clear advantage that year, and designed it.',
       'Three slides on each side, opening one after another, push the intake about a metre out in front of the robot. Its front rollers fold down to the tiles, star rollers and a counter roller pull pixels up a ramp, and when the slides pull it back in, the ramp lines up with the robot\'s 4-bar dumper for the handoff. It stayed a concept: with Worlds coming up fast, it added too much risk for the reward.',
     ],
   },
@@ -58,7 +60,7 @@ export default {
     // ------------------------------------------------------------------ why
     { type: 'prose', id: 'why', h: 'Why an extension intake', p: [
       'In CENTERSTAGE, the 2023-24 FTC game, robots pick up pixels, flat hexagons 3 in across and half an inch thick, and score them on a backdrop.',
-      'An intake on horizontal slides reaches out for pixels while the robot stays where it is, then pulls them back inside in one motion. I thought that was a clear edge that season, so after my own season ended and Cryptic advanced to Worlds, I proposed one for their robot and designed it.',
+      'An intake on horizontal slides reaches out for pixels while the robot stays where it is, then pulls them back inside in one motion. I thought that was a clear advantage that season, so after my own season ended and Cryptic advanced to Worlds, I proposed one for their robot and designed it.',
       'It was never built, so every picture on this page is my CAD. The CAD holds the whole robot with the intake built in; the intake and its slides are my design. The pixels in the animations are added to show their path and are not part of the CAD.',
     ],
       media: [{ i: 'still-stowed.webp', c: 'Stowed, rendered from the CAD: the slides closed up inside the robot along both sides of the drivetrain, and the intake inside its front, between them' }] },
@@ -138,8 +140,8 @@ export default {
       caption: 'Cut faces are hatched. Screws, nuts and e-clips are left out, and so are seven stray copies of robot parts that sat inside the intake\'s component in the file. Every other part is the CAD as modelled.' },
 
     // ------------------------------------------------------------------ outcome
-    { type: 'prose', id: 'outcome', h: 'This remained just a concept', p: [
-      'Cryptic did not use it. The Worlds deadline was coming up fast, and a new intake added too much risk for the reward, so they put their time into other parts of their robot, mainly its reliability. It was still a fun design challenge.',
+    { type: 'prose', id: 'outcome', h: 'It remained a concept', p: [
+      'Cryptic did not use it. The Worlds deadline was coming up fast, and a new intake added too much risk for the reward, so they put their time into other parts of their robot, mainly its reliability.',
       '[See my own team\'s 2023-24 robot](/projects/ftc-centerstage)',
     ] },
   ],

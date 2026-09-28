@@ -49,18 +49,18 @@ const CSS = `
 .lq-btn[hidden] { display: none !important; }
 .lq-cam-card .lq-btn { font-size: 15px; padding: 10px 20px; }
 .lq-hud { position: absolute; z-index: 4; top: 12px; right: 12px; margin: 0; padding: 9px 12px; border-radius: 10px; list-style: none;
-  font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; background: rgba(0, 0, 0, 0.72); border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; }
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; background: rgba(0, 0, 0, 0.72); border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; }
 .lq-hud .ok { color: #3ee06b; } .lq-hud .warn { color: #ffe14d; } .lq-hud .dim { color: #8d8d8d; }
-.lq-goal { position: absolute; z-index: 4; left: 12px; top: 12px; margin: 0; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 650;
+.lq-goal { position: absolute; z-index: 4; left: 12px; top: 12px; margin: 0; padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 650;
   color: #f3eee8; background: rgba(12, 10, 9, 0.75); border: 1px solid rgba(255, 255, 255, 0.14); pointer-events: none; transition: background .3s, color .3s; }
 .lq-goal.done { background: #3ee06b; color: #06220f; border-color: #3ee06b; }
-.lq-pip { position: absolute; z-index: 4; left: 12px; bottom: 12px; width: 240px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
+.lq-pip { position: absolute; z-index: 4; left: 12px; bottom: 12px; width: clamp(260px, 24vw, 380px); aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
   background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 12px 28px -14px rgba(0, 0, 0, .9); }
 .lq-pip canvas { display: block; width: 100%; height: 100%; }
-.lq-pip-tag { position: absolute; left: 8px; top: 6px; font: 600 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; pointer-events: none; text-shadow: 0 1px 2px #000; }
+.lq-pip-tag { position: absolute; left: 8px; top: 6px; font: 600 12.5px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; pointer-events: none; text-shadow: 0 1px 2px #000; }
 .lq-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .lq-note { flex: 1 1 100%; margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
-@media (max-width: 640px) { .lq-hud { font-size: 10.5px; padding: 6px 8px; top: 8px; right: 8px; } .lq-goal { font-size: 12px; left: 8px; top: 8px; } .lq-pip { width: 40%; left: 8px; bottom: 8px; } }
+@media (max-width: 640px) { .lq-hud { font-size: 12px; padding: 6px 8px; top: 8px; right: 8px; } .lq-goal { font-size: 12.5px; left: 8px; top: 8px; } .lq-pip { width: 50%; left: 8px; bottom: 8px; } .lq-pip-tag { font-size: 12px; } }
 `;
 
 /** hand_tracker.py after MediaPipe: size gate, hold-over, fist latch */

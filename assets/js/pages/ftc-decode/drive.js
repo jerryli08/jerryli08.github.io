@@ -180,16 +180,18 @@ export async function mount(el, ctx) {
   const goalXY = mapXY(AIM.x, AIM.z);
   const trace = [];
   for (let i = 0; i <= 200; i++) { const q = poseAt((i / 200) * N); trace.push(mapXY(q.x, q.z).join(',')); }
+  // an inset at the site.css size (.rx-inset, bottom right, clear of the step cards); square, so it
+  // is also held to about a third of the stage's height
   const inset = document.createElement('div');
-  inset.className = 'rx-hud';
-  Object.assign(inset.style, { left: '14px', right: 'auto', top: 'auto', bottom: '14px', width: 'auto', padding: '8px' });
-  inset.innerHTML = `<svg viewBox="-70 -70 140 140" width="132" height="132" aria-hidden="true" style="display:block">
+  inset.className = 'rx-inset';
+  Object.assign(inset.style, { width: 'min(var(--rx-inset-w), 36vh)', padding: '10px 12px' });
+  inset.innerHTML = `<svg viewBox="-70 -70 140 140" aria-hidden="true">
     <polygon points="${corners.join(' ')}" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.3)"/>
     <polyline points="${trace.join(' ')}" fill="none" stroke="rgba(255,255,255,.22)" stroke-dasharray="2 3"/>
     <circle cx="${goalXY[0]}" cy="${goalXY[1]}" r="5" fill="#2f6fe0"/>
     <line data-k="aim" stroke="#ff00ff" stroke-width="2"/>
     <g data-k="bot"><rect x="-5.1" y="-5.9" width="10.2" height="11.8" rx="1.5" fill="#eee9e3"/><path d="M0 -9 L3 -5.9 L-3 -5.9 Z" fill="#ff6b35"/></g>
-  </svg><div style="font-size:11px;color:var(--muted);text-align:center;margin-top:2px">From above; the notch is the front</div>`;
+  </svg><small style="text-align:center;margin-top:4px">From above; the notch is the front</small>`;
   ov.layer.append(inset);
   const aimLine = inset.querySelector('[data-k="aim"]'), bot = inset.querySelector('[data-k="bot"]');
   const drawn = {};

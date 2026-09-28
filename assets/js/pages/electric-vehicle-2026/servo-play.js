@@ -116,7 +116,7 @@ export function mount(el, ctx) {
     g.globalAlpha = 1;
   }
   function text(str, x, y, color, o = {}) {
-    g.font = `${o.weight || 600} ${o.size || 12}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+    g.font = `${o.weight || 600} ${Math.max(12.5, o.size || 12.5)}px system-ui, -apple-system, "Segoe UI", sans-serif`; // the site.css overlay floor
     g.fillStyle = color; g.textAlign = o.align || 'center'; g.textBaseline = o.base || 'middle';
     g.globalAlpha = o.alpha ?? 1;
     g.fillText(str, x, y);

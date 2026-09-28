@@ -136,7 +136,7 @@ export default {
         { i: 'wired-on-floor.webp', c: 'Sensor, Nano and LCD wired together on the floor, before the mounts were printed' },
       ],
     ], p: [
-      'The brain is an **Arduino Nano** on a small perfboard, and the perfboard is soldered straight onto the back of the LCD\'s header. The Nano, the LCD and the wiring are one stack that mounts as a unit, and the sensor cable plugs into a green pluggable terminal on the board.',
+      'The controller is an **Arduino Nano** on a small perfboard, and the perfboard is soldered straight onto the back of the LCD\'s header. The Nano, the LCD and the wiring are one stack that mounts as a unit, and the sensor cable plugs into a green pluggable terminal on the board.',
       'The sensor talks to the Nano over **I2C**. The LCD runs in **4-bit mode on six pins** (RS on 12, E on 11, D4 to D7 on 5, 4, 3 and 2), and the code sets the LCD\'s contrast itself, with PWM on pin 6 at 75 out of 255.',
     ] },
 

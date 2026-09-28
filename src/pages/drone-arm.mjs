@@ -22,7 +22,7 @@ export default {
       { v: 'Carbon', l: 'Links made from spare drone arms' },
     ],
     text: [
-      'An arm that hangs under a quadcopter and grabs things, like a bottle of water off a table. The idea was a drone that could fetch household items in a place like a senior home, because a drone is so much more flexible than a ground robot.',
+      'An arm that hangs under a quadcopter and grabs things, like a bottle of water off a table. The idea was a drone that could fetch household items in a place like a senior home, because a drone is more flexible than a ground robot.',
       'I designed it in CAD and built the whole arm as part of the MIT Beaver Works Summer Institute: two servo joints driving the links directly, links made from spare carbon fiber drone arms, and a 3D-printed claw. It was almost ready to go on the drone when we pivoted, and the same team went on to build [Drone on Wheels](/projects/hybrid-vehicle).',
     ],
   },
@@ -35,7 +35,7 @@ export default {
   },
   sections: [
     { type: 'prose', id: 'idea', h: 'The idea', p: [
-      'That summer at the MIT Beaver Works Summer Institute, our main objective was software only, and I wanted to do an additional hardware project with my team. I already had the idea of an arm on a drone that could grab things. My teammates took it further: a drone that could work in a place like a senior home and fetch household items, because a drone is so much more flexible than a ground robot.',
+      'That summer at the MIT Beaver Works Summer Institute, our main objective was software only, and I wanted to do an additional hardware project with my team. I already had the idea of an arm on a drone that could grab things. My teammates took it further: a drone that could work in a place like a senior home and fetch household items, because a drone is more flexible than a ground robot.',
       { problem: 'A drone with spinning propellers flying around people is an obvious safety concern.', title: 'Safety' },
       { fix: 'Drones with propeller guards already exist, so it could be made safe. And the idea is not limited to senior homes: a drone that can carry household items generalizes to other jobs.', label: 'Answer' },
     ] },

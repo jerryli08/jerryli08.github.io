@@ -12,7 +12,8 @@ export function labelLayer(stage) {
   const { THREE } = stage;
   const layer = css(document.createElement('div'), {
     position: 'absolute', inset: '0', zIndex: '2', pointerEvents: 'none', overflow: 'hidden',
-    font: '500 12.5px/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3',
+    // text size: the shared floor for labels over a stage (site.css --rx-ov-label: 14 px, 12.5 on a phone)
+    font: '500 var(--rx-ov-label, 14px)/1.25 var(--font, system-ui, sans-serif)', color: '#eee9e3',
   });
   layer.className = 'rx-labels';
   stage.el.appendChild(layer);
@@ -31,7 +32,7 @@ export function labelLayer(stage) {
       background: o.color || '#ff6b35', boxShadow: '0 0 0 3px rgba(10,8,7,.55)',
     });
     const pill = css(document.createElement('span'), {
-      position: 'absolute', top: '-11px', padding: '3px 9px', borderRadius: '999px',
+      position: 'absolute', top: 'calc(-0.625em - 4px)', padding: '3px 10px', borderRadius: '999px',
       background: 'rgba(10,8,7,.74)', border: '1px solid rgba(255,255,255,.14)',
     });
     if (o.side === 'l') pill.style.right = '10px'; else pill.style.left = '10px';
@@ -47,9 +48,9 @@ export function labelLayer(stage) {
   function card(o = {}) {
     const c = o.corner || 'tr';
     const el = css(document.createElement('div'), {
-      position: 'absolute', maxWidth: 'min(300px, 70%)', padding: '11px 13px',
+      position: 'absolute', maxWidth: 'min(380px, 70%)', padding: '12px 14px',
       borderRadius: '12px', background: 'rgba(10,8,7,.74)', border: '1px solid rgba(255,255,255,.12)',
-      opacity: '0', fontSize: '12.5px', lineHeight: '1.4',
+      opacity: '0', fontSize: 'var(--rx-ov-text, 15px)', lineHeight: '1.4',
     });
     el.style[c[0] === 't' ? 'top' : 'bottom'] = '14px';
     el.style[c[1] === 'r' ? 'right' : 'left'] = '14px';
@@ -58,7 +59,7 @@ export function labelLayer(stage) {
   }
   function chip(color, text) {
     const row = css(document.createElement('div'), { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' });
-    const sw = css(document.createElement('span'), { width: '10px', height: '10px', borderRadius: '3px', background: color, flex: 'none' });
+    const sw = css(document.createElement('span'), { width: '12px', height: '12px', borderRadius: '3px', background: color, flex: 'none' });
     const t = document.createElement('span'); t.textContent = text;
     row.append(sw, t);
     return row;

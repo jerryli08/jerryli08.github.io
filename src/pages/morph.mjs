@@ -99,15 +99,14 @@ export default {
     ],
   },
   hero: {
-    layout: 'row',
+    layout: 'single',
     items: [
       { i: 'still-htn-letters.webp', c: 'h, t and n: three folds of the real chain, from our demo video' },
-      { i: 'booth-standing-fold.webp', c: 'At the booth: a fold that stands up off the table' },
     ],
   },
   sections: [
     { type: 'prose', id: 'idea', h: 'A robot that is not one shape', p: [
-      'Most robots commit to a body: a dog, an arm, a wheeled box. That commitment is also a ceiling. When we were picking what to build at Hack the North, we wanted a robot that did not conform to any one form.',
+      'Most robots have a fixed body: a dog, an arm, a wheeled box. When we were picking what to build at Hack the North, we wanted a robot that was not tied to any one form.',
       'Morph is one open chain of identical cubes. Lying straight it is a line. After a handful of 120 degree turns it is a heart, a letter, a hook. The hardware never changes; the shape is the output.',
       'I built the path from a text message to motion: iMessage in through the Linq API, a MiniLM intent classifier running on our laptop with GPT-4o-mini as a fallback, torque limits on the fold plans, the executor that drives the servos, and MuJoCo validation of every plan before the real robot moves. On the hardware side, all of the wiring runs inside the modules, so I spent 8 hours soldering USB-C breakout boards for the motor controller drivers. My teammates were Daniel Ganjali, Aydan Ling and Justin Rui.',
     ] },
@@ -205,7 +204,7 @@ export default {
         ['Playable at the booth on the 17-cube chain', '88 names', 'our booth library'],
         ['Public in the repo today', '20 shapes', '`cubot-v2/handoff-17`, the ones the demo above folds'],
       ] } },
-      'Drawn masks threaded far more often than generated atlases: about 39% against about 1.6% in the 27-cube study. Not every name is a museum-quality drawing. Some are simply the best 17-cell path this roll word can thread.',
+      'Drawn masks threaded far more often than generated atlases: about 39% against about 1.6% in the 27-cube study. Not every shape is a faithful drawing: some are the closest 17-cell path this roll word can thread.',
     ] },
     { type: 'media', layout: 'wide', items: [
       { i: 'shape-library-88.webp', c: 'The 88 playable shapes of the booth library, each as its cells seen from above' },
@@ -297,7 +296,7 @@ export default {
         ['`imessage/`', 'The Linq webhook bridge, the intent model and its training, the GPT fallback, the reply captions, the servo executor and the MuJoCo replay'],
       ] } },
       'My part, as the history shows it: `imessage/` (the bridge, the classifier and its corpus, the fallback, the hardware executor, the MuJoCo replay with the real servo timing), the planner\'s holding-load gate and stricter profile, the path-quality audit, and building the 17-cube library the booth played.',
-      'Three things in it I would point an engineer at. The kinematics are integer lookups: 24 cube orientations, a table of where each joint state sends the next cube, and an independent floating-point check of the same thing. The fold search checks edges lazily, as above. And the bridge treats a text as data from start to finish: the only thing that can leave the language layer is one label from a fixed list.',
+      'Three design choices in it. The kinematics are integer lookups: 24 cube orientations, a table of where each joint state sends the next cube, and an independent floating-point check of the same thing. The fold search checks edges lazily, as above. And the bridge treats a text as data from start to finish: the only thing that can leave the language layer is one label from a fixed list.',
     ] },
 
     { type: 'scrolly', id: 'servos', module: 'flow', webgl: false, width: 'wide', side: 'left', length: '140vh', data: servo,
@@ -345,7 +344,7 @@ export default {
     { type: 'prose', id: 'results', h: 'Results', p: [
       { ul: [
         'Top 30 of 1,000+ hackers at Hack the North 2026, after 36 hours.',
-        'A text-to-motion loop that ran at a public booth: a local language model, planned and checked folds, every servo on one bus, a live simulation mirror, and plain-English replies, including honest ones when something failed.',
+        'A text-to-motion loop that ran at a public booth: a local language model, planned and checked folds, every servo on one bus, a live simulation mirror, and plain-English replies, including when something failed.',
         '88 playable shapes on the 17-cube chain, each one a planned path the robot and the simulator replay the same way.',
       ] },
     ] },

@@ -22,21 +22,20 @@ const LOCAL_CSS = `
 .itd-w-lead { fill: none; stroke: #ff9a6b; stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
 .itd-w-dot { fill: #ff6b35; }
 .itd-w-chip { position: absolute; transform: translate(-50%, -100%); display: grid; gap: 1px; padding: 7px 12px 8px; border-radius: 12px; background: rgba(10, 8, 7, 0.82); border: 1px solid rgba(255, 107, 53, 0.6); white-space: nowrap; }
-.itd-w-chip i { font-style: normal; font-size: 12.5px; color: var(--text-2); }
+.itd-w-chip i { font-style: normal; font-size: var(--rx-ov-small); color: var(--text-2); }
 .itd-w-chip b { font-size: 24px; font-weight: 800; font-stretch: 112%; letter-spacing: -0.01em; color: var(--text); line-height: 1.05; }
 .itd-w .rx-hud { z-index: 3; }
 .itd-w .rx-hud-row + .rx-hud-row { margin-top: 6px; }
 .itd-w .rx-hud i em { transition: none; }
 .itd-w-date { position: absolute; right: 16px; bottom: 16px; z-index: 3; }
 @media (min-width: 641px) {
-  .itd-w .rx-hud { left: 16px; right: auto; top: 16px; width: min(270px, calc(100% - 32px)); }
+  .itd-w .rx-hud { left: 16px; right: auto; top: 16px; width: min(320px, calc(100% - 32px)); }
 }
 @media (max-width: 640px) {
   .itd-w-layer { inset: 6px; }
   .itd-w-chip b { font-size: 17px; }
-  .itd-w-chip i { font-size: 11px; }
   .itd-w-chip { padding: 5px 9px 6px; }
-  .itd-w-date { right: 8px; bottom: 8px; font-size: 11.5px; padding: 3px 9px; }
+  .itd-w-date { right: 8px; bottom: 8px; font-size: 12px; padding: 3px 9px; }
 }
 `;
 

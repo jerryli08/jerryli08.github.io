@@ -13,39 +13,41 @@ const MODES = [['Planning', 0, 2], ['Autonomous', 2, 7], ['Escalating', 7, 9.5],
 const PLAN = ['move_cartesian forward 0.20 m', 'move_cartesian down 0.10 m', 'set_gripper closed', 'move_cartesian up 0.15 m', 'move_cartesian right 0.20 m', 'set_gripper open'];
 
 const CSS = `
-.lq-tv { --chat-w: 270px; }
+.lq-tv { --chat-w: 300px; }
 .lq-tv-modes { position: absolute; z-index: 5; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 0; padding: 0; list-style: none; pointer-events: none; }
-.lq-wide .lq-tv-modes { left: calc(var(--chat-w) + 24px); }
-.lq-tv-modes li { padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 650; color: rgba(243, 238, 232, .55); background: rgba(12, 10, 9, .66); border: 1px solid rgba(255, 255, 255, .1); }
+.lq-tv-modes { left: calc(var(--rx-cover, 0px) + 12px); }
+.lq-wide .lq-tv-modes { left: calc(var(--rx-cover, 0px) + var(--chat-w) + 24px); }
+.lq-tv-modes li { padding: 3px 10px; border-radius: 999px; font-size: var(--rx-ov-small); font-weight: 650; color: rgba(243, 238, 232, .55); background: rgba(12, 10, 9, .66); border: 1px solid rgba(255, 255, 255, .1); }
 .lq-tv-modes li.on { color: #1a0b04; background: var(--accent); border-color: var(--accent); }
 .lq-tv-modes li.human.on { background: #3ee06b; border-color: #3ee06b; color: #06220f; }
 .lq-tv-modes li.esc.on { background: #ff4b3e; border-color: #ff4b3e; color: #fff; }
-.lq-tv-chat { display: none; flex-direction: column; gap: 6px; padding: 10px; border-radius: 16px; background: rgba(14, 12, 11, .9); border: 1px solid rgba(255, 255, 255, .12); font-size: 12.5px; line-height: 1.4; pointer-events: none; }
-.lq-wide .lq-tv-chat { display: flex; position: absolute; z-index: 5; left: 12px; top: 12px; width: var(--chat-w); max-height: calc(100% - 60px); overflow: hidden; }
+.lq-tv-chat { display: none; flex-direction: column; gap: 6px; padding: 10px; border-radius: 16px; background: rgba(14, 12, 11, .9); border: 1px solid rgba(255, 255, 255, .12); font-size: 14px; line-height: 1.4; pointer-events: none; }
+.lq-wide .lq-tv-chat { display: flex; position: absolute; z-index: 5; left: calc(var(--rx-cover, 0px) + 12px); top: 12px; width: var(--chat-w); max-height: calc(100% - 60px); overflow: hidden; }
 .lq-tv-chat .b { max-width: 94%; padding: 6px 10px; border-radius: 14px; white-space: pre-wrap; }
 .lq-tv-chat .u { align-self: flex-end; background: #0a84ff; color: #fff; border-bottom-right-radius: 4px; }
 .lq-tv-chat .r { align-self: flex-start; background: #3a3a3c; color: #f2f2f7; border-bottom-left-radius: 4px; }
 .lq-tv-chat .r.bad { background: #4a1f1c; color: #ffd6d2; }
 .lq-tv-chat .r.good { background: #173a22; color: #d3f5dc; }
-.lq-tv-chat small { display: block; font-size: 10.5px; color: rgba(255, 255, 255, .55); margin-bottom: 2px; }
+.lq-tv-chat small { display: block; font-size: 12px; color: rgba(255, 255, 255, .55); margin-bottom: 2px; }
 .lq-tv-chat ol { margin: 0; padding-left: 18px; }
-.lq-tv-chat li { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: rgba(242, 242, 247, .7); }
+.lq-tv-chat li { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: rgba(242, 242, 247, .7); }
 .lq-tv-chat li.now { color: #fff; font-weight: 700; }
 .lq-tv-chat li.hand { color: #7ee2a0; }
 .lq-tv-chat li.fail { color: #ff8a80; }
 .lq-tv-glass { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-.lq-tv-hud { position: absolute; z-index: 5; margin: 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, .6); list-style: none; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; pointer-events: none; }
+.lq-tv-hud { position: absolute; z-index: 5; margin: 0; padding: 6px 10px; border-radius: 8px; background: rgba(0, 0, 0, .6); list-style: none; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; pointer-events: none; }
 .lq-tv-hud .bad { color: #ff5a4f; font-weight: 700; } .lq-tv-hud .ok { color: #3ee06b; } .lq-tv-hud .warn { color: #ffe14d; } .lq-tv-hud .dim { color: #9a9a9a; }
-.lq-tv-handc { position: absolute; z-index: 5; width: 168px; height: 126px; pointer-events: none; border-radius: 8px; background: rgba(0, 0, 0, .45); }
+.lq-tv-handc { position: absolute; z-index: 5; width: 200px; height: 150px; pointer-events: none; border-radius: 8px; background: rgba(0, 0, 0, .45); }
 .lq-tv-toast { position: absolute; z-index: 6; left: 50%; top: 46px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 14px;
-  background: rgba(38, 38, 40, .94); border: 1px solid rgba(255, 255, 255, .14); color: #f2f2f7; font-size: 13px; box-shadow: 0 16px 30px -16px #000; white-space: nowrap; pointer-events: none; }
+  background: rgba(38, 38, 40, .94); border: 1px solid rgba(255, 255, 255, .14); color: #f2f2f7; font-size: 14px; box-shadow: 0 16px 30px -16px #000; white-space: nowrap; pointer-events: none; }
 .lq-tv-toast b { color: #fff; }
 .lq-tv-toast i { width: 22px; height: 22px; border-radius: 6px; background: #34c759; flex: none; }
-.lq-tv-label { position: absolute; z-index: 5; left: 12px; bottom: 12px; max-width: calc(100% - 24px); margin: 0; padding: 5px 11px; border-radius: 10px; font-size: 12px; line-height: 1.4; color: var(--text-2); background: rgba(12, 10, 9, .75); border: 1px solid rgba(255, 255, 255, .12); pointer-events: none; }
-.lq-wide .lq-tv-label { left: calc(var(--chat-w) + 24px); max-width: calc(100% - var(--chat-w) - 36px); }
+.lq-tv-label { position: absolute; z-index: 5; left: 12px; bottom: 12px; max-width: calc(100% - 24px); margin: 0; padding: 5px 11px; border-radius: 10px; font-size: var(--rx-ov-small); line-height: 1.4; color: var(--text-2); background: rgba(12, 10, 9, .75); border: 1px solid rgba(255, 255, 255, .12); pointer-events: none; }
+.lq-tv-label { left: calc(var(--rx-cover, 0px) + 12px); max-width: calc(100% - var(--rx-cover, 0px) - 24px); }
+.lq-wide .lq-tv-label { left: calc(var(--rx-cover, 0px) + var(--chat-w) + 24px); max-width: calc(100% - var(--rx-cover, 0px) - var(--chat-w) - 36px); }
 @media (max-width: 640px) {
   .lq-tv-modes li { display: none; } .lq-tv-modes li.on { display: block; }
-  .lq-tv-hud { font-size: 10px; } .lq-tv-handc { width: 96px; height: 72px; } .lq-tv-toast { font-size: 11.5px; top: 40px; }
+  .lq-tv-hud { font-size: 12px; } .lq-tv-handc { width: 120px; height: 90px; } .lq-tv-toast { font-size: 12.5px; top: 40px; }
 }
 `;
 
@@ -157,11 +159,15 @@ export async function mount(el, ctx) {
   const label = h('p', 'lq-tv-label', 'The plan, animated, not a recording. Our repo lists this handoff loop as the next thing to build.');
   el.append(modes, glass, hud, handC, toast, label, chat);
 
-  let wide = false, last = '';
+  let wide = false, last = '', fxFree = 0;
   function layout() {
-    wide = el.clientWidth >= 760;
+    // the step cards cover the left of a desktop stage (--rx-cover); the chat goes right of them
+    // and the glasses and the arm take what is left, or the chat is dropped when that is too narrow
+    const W = el.clientWidth, H = el.clientHeight, cover = Math.round(ctx.shift()[0] * 2 * W);
+    wide = W >= 760 && W - cover - 324 >= 440;
     el.classList.toggle('lq-wide', wide);
-    const W = el.clientWidth, H = el.clientHeight, left = wide ? 270 + 24 : 0;
+    const left = cover + (wide ? 300 + 24 : 0); // --chat-w + margins
+    fxFree = left > 0 ? Math.min(0.4, left / (2 * W)) : 0;
     const w = Math.min((W - left) * 0.44, 460), hh = Math.min(H * 0.5, w * 0.72), gap = Math.min(40, w * 0.12);
     const cx = left + (W - left) / 2, y = H > W ? H * 0.3 : H * 0.2;
     const x1 = cx - gap / 2 - w, x2 = cx + gap / 2;
@@ -234,7 +240,7 @@ export async function mount(el, ctx) {
     if (key === last) return;
     last = key;
     const phone = el.clientWidth < 640;
-    stage.setShift(wide ? 0.13 : 0, wide ? 0 : phone ? -0.02 : 0.04);
+    stage.setShift(fxFree, fxFree > 0 ? 0 : phone ? -0.02 : 0.04); // centred between the chat (or the cards) and the right edge
     const v = view();
     placeView(stage, v, v, 0, reduced ? 0 : (t / 24 - 0.5) * 0.25);
     render(t, s);

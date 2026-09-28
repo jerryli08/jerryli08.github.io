@@ -111,7 +111,7 @@ export function hud(layer, rows, foot = '') {
   el.className = 'rx-hud';
   el.innerHTML = rows.map(([k, label, x]) => `<div class="rx-hud-row${x ? ' rx-hud-x' : ''}"><span>${label}</span><b class="num" data-k="${k}"></b></div>`).join('')
     + '<div class="rx-hud-mini num" data-k="mini"></div>'
-    + (foot ? `<div class="rx-hud-x" style="margin-top:8px;font-size:11.5px;color:var(--muted)">${foot}</div>` : '');
+    + (foot ? `<div class="rx-hud-x" style="margin-top:8px;font-size:var(--rx-ov-small);color:var(--muted)">${foot}</div>` : '');
   layer.append(el);
   const K = Object.fromEntries([...el.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
   const shown = {};

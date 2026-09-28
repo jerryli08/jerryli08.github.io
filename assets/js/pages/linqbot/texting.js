@@ -29,24 +29,24 @@ const MSGS = [
 const DAY_REPLY = 'Robot sequence stopped at step 1 of 2; 0 actions were completed:\n1. [FAILED] Cartesian IK failed: target unreachable';
 
 const CSS = `
-.lq-sms { position: absolute; z-index: 4; left: 14px; top: 14px; bottom: 14px; width: min(340px, 38%); display: flex; flex-direction: column; justify-content: flex-end; gap: 7px;
-  padding: 12px; border-radius: 18px; overflow: hidden; background: rgba(14, 12, 11, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13.5px; pointer-events: none; }
+.lq-sms { position: absolute; z-index: 4; left: calc(var(--rx-cover, 0px) + 14px); top: 14px; bottom: 14px; width: min(360px, 30%); display: flex; flex-direction: column; justify-content: flex-end; gap: 7px;
+  padding: 12px; border-radius: 18px; overflow: hidden; background: rgba(14, 12, 11, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); font-size: var(--rx-ov-text); pointer-events: none; }
 .lq-sms-head { position: absolute; left: 0; right: 0; top: 0; z-index: 1; display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: rgba(20, 18, 17, 0.97); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 .lq-sms-head i { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #34c759; color: #04220d; font-style: normal; font-weight: 800; font-size: 13px; }
-.lq-sms-head b { font-size: 13.5px; } .lq-sms-head small { display: block; font-size: 11px; color: var(--muted); }
+.lq-sms-head b { font-size: var(--rx-ov-text); } .lq-sms-head small { display: block; font-size: var(--rx-ov-small); color: var(--muted); }
 .lq-msg { max-width: 92%; padding: 7px 11px; border-radius: 16px; line-height: 1.35; overflow-wrap: anywhere; white-space: pre-wrap; flex: none; }
 .lq-out { align-self: flex-end; background: #0a84ff; color: #fff; border-bottom-right-radius: 5px; }
-.lq-in { align-self: flex-start; background: #3a3a3c; color: #f2f2f7; border-bottom-left-radius: 5px; font-size: 12.5px; }
-.lq-in em { display: block; margin-bottom: 3px; font-style: normal; font-size: 10.5px; font-weight: 650; letter-spacing: 0.03em; color: rgba(255, 255, 255, 0.55); }
+.lq-in { align-self: flex-start; background: #3a3a3c; color: #f2f2f7; border-bottom-left-radius: 5px; font-size: 14px; }
+.lq-in em { display: block; margin-bottom: 3px; font-style: normal; font-size: 12px; font-weight: 650; letter-spacing: 0.03em; color: rgba(255, 255, 255, 0.55); }
 .lq-in .f { color: #ff8a80; font-weight: 650; } .lq-in .k { color: #7ee2a0; font-weight: 650; }
 .lq-dots { align-self: flex-start; display: flex; gap: 4px; padding: 11px 12px; border-radius: 16px; background: #3a3a3c; flex: none; }
 .lq-dots b { width: 6px; height: 6px; border-radius: 50%; background: #9a9aa0; }
 .lq-sms [hidden] { display: none; }
 @media (max-width: 640px) {
-  .lq-sms { left: 8px; right: 8px; top: 8px; bottom: auto; width: auto; max-height: 46%; padding: 8px; font-size: 12px; gap: 5px; }
+  .lq-sms { left: 8px; right: 8px; top: 8px; bottom: auto; width: auto; max-height: 46%; padding: 8px; gap: 5px; }
   .lq-sms-head { display: none; }
   .lq-sms .lq-old { display: none; }
-  .lq-in { font-size: 11px; }
+  .lq-in { font-size: 12.5px; }
 }
 `;
 
@@ -227,6 +227,8 @@ export async function mount(el, ctx) {
     return { out, dots: dotsEl, inn };
   });
   el.append(box);
+  // the width left for the arm right of the cards and the thread (px)
+  const freeW = () => el.clientWidth - box.getBoundingClientRect().right + el.getBoundingClientRect().left;
 
   const view = cachedView(stage, el, fitBox(stage, [-0.24, 0, -0.06], [0.1, 0.32, 0.48]), { azimuth: 245, elevation: 20, pad: (a) => (a < 1 ? 1.0 : 1.32) });
   const shown = new Map();
@@ -260,7 +262,9 @@ export async function mount(el, ctx) {
       set(`x${i}`, old, (v) => { b.out.classList.toggle('lq-old', v); b.inn.classList.toggle('lq-old', v); });
     });
     const phone = el.clientWidth < 640;
-    stage.setShift(phone ? 0 : 0.19, phone ? -0.2 : 0);
+    // the thread sits right of the step cards (Jerry: popups big enough, never under the cards); the
+    // arm is centred in what is left, and stage.frame fits it to that width by itself
+    stage.setShift(phone ? 0 : Math.min(0.4, (el.clientWidth - freeW()) / (2 * el.clientWidth)), phone ? -0.2 : 0);
     const v = view();
     placeView(stage, v, v, 0, reduced ? 0 : ((s + f) / 4 - 0.5) * 0.25);
     ov.update();

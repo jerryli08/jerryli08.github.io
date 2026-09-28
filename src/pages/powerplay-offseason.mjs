@@ -31,7 +31,7 @@ export default {
     ],
     text: [
       'This was the **first robot I ever designed in CAD**: an off-season robot for my FTC team, S.T.A.T.I.C. (FTC 18996), after the 2022-23 POWERPLAY season. It lifts with **two towers of string-driven drawer slides** and swings the cone with a **belted virtual four bar** on top of them.',
-      'It went from my first drivetrain CAD in April 2023 to the lift moving beside a junction pole on Aug 29. Most of what I learned came from what went wrong: printed pulley bores that stripped, string that frayed and broke, and planetary gearbox stages with a lot of friction. I never printed a bore into a pulley again.',
+      'It went from my first drivetrain CAD in April 2023 to the lift moving beside a junction pole on Aug 29. Most of what I learned came from what went wrong: printed pulley bores that stripped, string that frayed and broke, and planetary gearbox stages with a lot of friction. On later robots I stopped printing bores into pulleys.',
     ],
   },
   hero: {
@@ -111,10 +111,10 @@ export default {
 
     { type: 'prose', id: 'lift-problems', h: 'What went wrong in the lift', p: [
       { problem: 'I printed the bores straight into the pulleys, and they stripped out completely on the 5 mm shafts.', title: 'Printed bores stripped' },
-      { fix: 'Aluminum hubs bolted into the printed pulleys. I never made this mistake again: on [my 2023-24 robot](/projects/ftc-centerstage#hubs) the printed spools are built around aluminum hubs, so the shaft drives metal instead of plastic.', title: 'Aluminum hubs', label: 'Fixed on later robots' },
-      { problem: 'I was really bad at stringing it, our tensioning was really bad, and the string we used was bad: it frayed and broke.', title: 'String, stringing and tension' },
+      { fix: 'Aluminum hubs bolted into the printed pulleys. I carried that forward: on [my 2023-24 robot](/projects/ftc-centerstage#hubs) the printed spools are built around aluminum hubs, so the shaft drives metal instead of plastic.', title: 'Aluminum hubs', label: 'Fixed on later robots' },
+      { problem: 'My stringing was poor, our tensioning was poor, and the string we used frayed and broke.', title: 'String, stringing and tension' },
       { fix: 'Belt. In my later FTC seasons I used belt instead of string.', title: 'Belt instead of string', label: 'Changed on later robots' },
-      { problem: 'I used REV planetary gearboxes, and they had a lot of friction. They are individual stages that you assemble into a gearbox yourself, and doing that with REV stages has the potential to go badly.', title: 'Friction in the planetary gearboxes' },
+      { problem: 'I used REV planetary gearboxes, and they had a lot of friction. They are individual stages that you assemble into a gearbox yourself, and assembling REV stages that way is easy to get wrong.', title: 'Friction in the planetary gearboxes' },
       { next: 'Go with goBILDA gearboxes, which do not come as individual stages you assemble.' },
     ], media: [
       { i: 'still-dyneema-spool.webp', c: 'Aug 23, 2023, while stringing the lift: a spool of 1.0 mm Dyneema whipping twine' },

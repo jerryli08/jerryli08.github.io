@@ -9,15 +9,15 @@ import { THREE, loadArm, props, fitBox, cachedView, placeView, style, h, writer,
 import { runHand, STEPS, FPS, BONES, C, ASPECT } from './handsim.js';
 
 const CSS = `
-.lq-cam { position: absolute; z-index: 3; left: 14px; top: 14px; width: clamp(190px, 31%, 330px); aspect-ratio: ${512} / ${378};
+.lq-cam { position: absolute; z-index: 3; left: calc(var(--rx-cover, 0px) + 14px); top: 14px; width: clamp(240px, 25vw, 360px); aspect-ratio: ${512} / ${378};
   border-radius: 12px; overflow: hidden; background: #111; border: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 16px 30px -18px #000; pointer-events: none; }
 .lq-cam canvas { display: block; width: 100%; height: 100%; }
-.lq-cam b { position: absolute; left: 9px; top: 7px; font: 600 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; text-shadow: 0 1px 2px #000; }
+.lq-cam b { position: absolute; left: 9px; top: 7px; font: 600 12.5px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8e8; text-shadow: 0 1px 2px #000; }
 .lq-hud-h td:first-child { transition: none; }
 .lq-hud-h tr.on td { color: var(--text); }
 .lq-hud-h tr.on td:first-child { box-shadow: inset 3px 0 0 var(--accent); padding-left: 8px; }
 .lq-hud-h .lq-ok { color: #3ee06b; } .lq-hud-h .lq-warn { color: #ffd23f; } .lq-hud-h .lq-dim { color: var(--muted); }
-@media (max-width: 640px) { .lq-cam { width: 42%; left: 8px; top: auto; bottom: 8px; } }
+@media (max-width: 640px) { .lq-cam { width: 54%; left: 8px; top: auto; bottom: 8px; } }
 `;
 
 // which readout row each step is about: 0 none, 1 across + height, 2 reach, 3 pinch, 4 clutch, 5 all
@@ -74,7 +74,7 @@ export async function mount(el, ctx) {
     const key = `${f.t.toFixed(3)}|${step}|${cw}`;
     if (key === lastDraw || !cw) return;
     lastDraw = key;
-    const W = cw, H = ch, u = W / 330;
+    const W = cw, H = ch, u = W / 330, px = cw / Math.max(1, cam.clientWidth); // px: canvas pixels per CSS pixel (text floors are CSS px)
     g2.imageSmoothingEnabled = false;
     g2.drawImage(noise, 0, 0, W, H);
     const lm = f.lm;
@@ -86,11 +86,11 @@ export async function mount(el, ctx) {
       g2.strokeStyle = 'rgba(255,107,53,0.95)'; g2.lineWidth = 2 * u; g2.setLineDash([5 * u, 4 * u]);
       g2.beginPath(); g2.moveTo(ox, oy); g2.lineTo(P[0][0], P[0][1]); g2.stroke(); g2.setLineDash([]);
       g2.beginPath(); g2.arc(ox, oy, 5 * u, 0, Math.PI * 2); g2.stroke();
-      g2.fillStyle = '#ff6b35'; g2.font = `600 ${11 * u}px ui-monospace, Menlo, monospace`;
+      g2.fillStyle = '#ff6b35'; g2.font = `600 ${Math.max(12 * px, 11 * u)}px ui-monospace, Menlo, monospace`;
       g2.fillText('origin', ox + 8 * u, oy + 16 * u);
     }
     if (!P) {
-      g2.fillStyle = 'rgba(240,240,240,0.75)'; g2.font = `600 ${13 * u}px ui-monospace, Menlo, monospace`;
+      g2.fillStyle = 'rgba(240,240,240,0.75)'; g2.font = `600 ${Math.max(12.5 * px, 13 * u)}px ui-monospace, Menlo, monospace`;
       g2.fillText('Hand: MISSING', 10 * u, H - 12 * u);
       return;
     }
@@ -110,7 +110,7 @@ export async function mount(el, ctx) {
       g2.strokeStyle = '#6cc4ff'; g2.lineWidth = 3 * u;
       g2.beginPath(); g2.moveTo(...P[4]); g2.lineTo(...P[8]); g2.stroke();
     }
-    g2.fillStyle = 'rgba(240,240,240,0.85)'; g2.font = `600 ${12 * u}px ui-monospace, Menlo, monospace`;
+    g2.fillStyle = 'rgba(240,240,240,0.85)'; g2.font = `600 ${Math.max(12 * px, 12 * u)}px ui-monospace, Menlo, monospace`;
     g2.fillText(`${hud.clutched ? 'CLUTCH' : 'Hand'} · ${hud.gesture}`, 10 * u, H - 12 * u);
   }
 

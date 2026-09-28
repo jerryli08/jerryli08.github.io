@@ -727,7 +727,7 @@ a.rx-m:hover > img { transform: scale(1.02); }
 .rx-status, .rx-note, .rx-hint {
   position: absolute; z-index: 4; display: inline-flex; align-items: center; gap: 9px; margin: 0;
   padding: 6px 12px; border-radius: 999px; background: rgba(10, 8, 7, 0.66); border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 12.5px; color: var(--text-2);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: var(--rx-ov-small); color: var(--text-2);
 }
 .rx-status { left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0; pointer-events: none; }
 [data-state="loading"] .rx-status { opacity: 1; transition: opacity 0.3s 0.25s; }
@@ -793,32 +793,60 @@ a.rx-m:hover > img { transform: scale(1.02); }
 /* a scrolly without steps: the stage stays pinned for --len of scrolling */
 .rx-stepless .rx-scrolly-body { min-height: var(--len, 180vh); }
 
+/* Readable overlays (Jerry, Sept 28: a popup was "too small. whenever you do popups like these
+   make sure they are big enough"). The floors for everything drawn over a stage: readouts (.rx-hud),
+   insets (.rx-inset: a diagram, a photo, a second view), legends and cards, labels pinned to the
+   model. Page modules use these variables for overlay text, never a smaller px size of their own. */
+:root {
+  --rx-ov-text: 15px;    /* body text of a readout, inset, legend or card */
+  --rx-ov-small: 13px;   /* the smallest text over a stage: notes, units, captions, uppercase heads */
+  --rx-ov-label: 14px;   /* labels pinned to the model */
+  --rx-ov-big: 30px;     /* a readout's headline number */
+  --rx-hud-w: 400px;     /* a readout's width */
+  --rx-inset-w: clamp(300px, 26vw, 460px);  /* an inset's width: at least a quarter of a 1200 px stage */
+}
+@media (max-width: 640px) {
+  :root { --rx-ov-text: 13px; --rx-ov-small: 12px; --rx-ov-label: 12.5px; --rx-ov-big: 20px; --rx-inset-w: min(56%, 260px); }
+}
+
 /* a small instrument panel over a scroll-driven stage (numbers that follow the scroll) */
 .rx-hud {
-  position: absolute; top: 14px; right: 14px; width: min(350px, calc(100% - 28px)); padding: 12px 14px 13px;
+  position: absolute; top: 14px; right: 14px; width: min(var(--rx-hud-w), calc(100% - 28px)); padding: 13px 16px 14px;
   border-radius: 14px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 12.5px; line-height: 1.35; color: var(--text-2);
+  font-size: var(--rx-ov-text); line-height: 1.35; color: var(--text-2);
 }
-.rx-hud table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-.rx-hud th { padding: 0 0 4px 10px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: right; }
-.rx-hud td { padding: 5px 0 5px 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); text-align: right; font-weight: 650; color: var(--text); white-space: nowrap; }
-.rx-hud td:first-child { padding-left: 0; text-align: left; font-weight: 550; color: var(--text-2); white-space: normal; }
-.rx-hud small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+.rx-hud table, .rx-inset table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.rx-hud th, .rx-inset th { padding: 0 0 4px 10px; font-size: var(--rx-ov-small); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.rx-hud td, .rx-inset td { padding: 5px 0 5px 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); text-align: right; font-weight: 650; color: var(--text); white-space: nowrap; }
+.rx-hud td:first-child, .rx-inset td:first-child { padding-left: 0; text-align: left; font-weight: 550; color: var(--text-2); white-space: normal; }
+.rx-hud small, .rx-inset small { display: block; font-size: var(--rx-ov-small); font-weight: 500; color: var(--muted); }
 .rx-hud-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
 .rx-hud-row b, .rx-hud-bars b { color: var(--text); font-weight: 650; }
-.rx-hud i { display: block; flex-basis: 100%; height: 5px; margin-top: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-.rx-hud i em { display: block; width: 0; height: 100%; border-radius: 3px; background: var(--accent); }
+.rx-hud i, .rx-inset i { display: block; flex-basis: 100%; height: 6px; margin-top: 4px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.rx-hud i em, .rx-inset i em { display: block; width: 0; height: 100%; border-radius: 3px; background: var(--accent); }
 .rx-hud-big { margin-top: 10px; padding-top: 9px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
-.rx-hud-big b { font-size: 26px; line-height: 1; }
+.rx-hud-big b { font-size: var(--rx-ov-big); line-height: 1; }
 .rx-hud-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
 .rx-hud-bars > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; }
 .rx-hud-mini { display: none; }
+/* an inset: a diagram, a photo or a second view of the scene, at least --rx-inset-w wide, in the
+   bottom-right corner (clear of the step cards, which sit over the left of the stage) */
+.rx-inset {
+  position: absolute; right: 14px; bottom: 14px; z-index: 2; width: var(--rx-inset-w); margin: 0; padding: 12px 14px;
+  border-radius: 14px; background: rgba(10, 8, 7, 0.82); border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: var(--rx-ov-text); line-height: 1.35; color: var(--text-2); pointer-events: none;
+}
+.rx-inset > img, .rx-inset > canvas, .rx-inset > svg { display: block; width: 100%; height: auto; border-radius: 8px; }
+.rx-inset figcaption { margin-top: 8px; font-size: var(--rx-ov-small); line-height: 1.4; color: var(--text-2); }
+.rx-inset.rx-inset-photo { padding: 0; background: none; border: 0; }
+.rx-inset.rx-inset-photo > img { border-radius: 12px; box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.9); }
+.rx-inset.rx-inset-photo figcaption { display: inline-block; padding: 3px 10px; border-radius: 999px; background: rgba(10, 8, 7, 0.8); }
 @media (max-width: 640px) {
-  .rx-hud { top: 8px; right: 8px; left: 8px; width: auto; padding: 7px 10px 8px; font-size: 12px; }
-  .rx-hud .rx-hud-x, .rx-hud table { display: none; }
+  .rx-hud { top: 8px; right: 8px; left: 8px; width: auto; padding: 8px 11px 9px; }
+  .rx-hud .rx-hud-x, .rx-hud table, .rx-inset .rx-hud-x { display: none; }
   .rx-hud-mini { display: block; margin-top: 4px; color: var(--text); font-weight: 600; }
   .rx-hud-big { margin-top: 4px; padding-top: 4px; }
-  .rx-hud-big b { font-size: 18px; }
+  .rx-inset { right: 8px; bottom: 8px; padding: 8px 10px; }
 }
 
 /* split: picture and text side by side, alternating */

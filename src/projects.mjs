@@ -75,7 +75,7 @@ export const projects = [
     ],
     body: [
       { h: 'Overview', p: [
-        'I captained Alphabots through the 2025-26 DECODE season. I designed our first robot entirely by myself; for the World Championship we put a turret shooter on its chassis that aims from the robot\'s odometry pose. The engineering decisions on the new shooter were mine, and a student who had never used CAD modelled it while I guided him through every step.',
+        'I captained Alphabots through the 2025-26 DECODE season. I designed our first robot myself; for the World Championship we put a turret shooter on its chassis that aims from the robot\'s odometry pose. The engineering decisions on the new shooter were mine, and a student who had never used CAD modelled it while I guided him through every step.',
         'At the FIRST World Championship in May 2026 we won the 1st place Sustain Award, which recognizes building a program that outlasts its founders. Our build videos reached more than 50,000 views across Instagram, YouTube and TikTok.',
       ]},
     ],
@@ -215,7 +215,7 @@ export const projects = [
     ],
     body: [{ h: 'Overview', p: [
       'My car for the 2025-26 Science Olympiad Electric Vehicle event, the season after my first electric vehicle. The rules added a bonus for driving between two cans about a meter off the straight line, so the car has to drive a precise curve.',
-      'I designed version 1 in less than a day, with a servo steering the front wheel; the backlash in the servo made the steering horribly inaccurate. Version 2 steers with a digital caliper and a linkage, which set the steering angle quite precisely. Its linkage bar was 3D printed, so it was not that accurate, but it was still way better than the servo.',
+      'I designed version 1 in less than a day, with a servo steering the front wheel; the backlash in the servo made the steering inaccurate. Version 2 steers with a digital caliper and a linkage, which set the steering angle precisely. Its link was 3D printed, which limited its accuracy, but it was still much more accurate than the servo.',
     ] }],
     links: [
       { label: 'Code on GitHub', href: 'https://github.com/jerryli08/sciolyev2026' },
@@ -259,7 +259,7 @@ export const projects = [
     ],
     body: [
       { h: 'Overview', p: [
-        'I converted a 2019 Trek Dual Sport 2 into a 5.3 kW mid-drive electric bike for my mom. Two 2.6 kW SKP 6465 motors (150 KV) share one serpentine belt, and two belt stages (16.2 : 1 overall) on two jackshaft axles bring the drive to a 20-tooth sprocket that drives the bike\'s own chain with 100 N·m of torque. It does about 35 mph with about 20 miles of range on a 48 V pack and a VESC controller.',
+        'I converted a 2019 Trek Dual Sport 2 into a 5.3 kW mid-drive electric bike. Two 2.6 kW SKP 6465 motors (150 KV) share one serpentine belt, and two belt stages (16.2 : 1 overall) on two jackshaft axles bring the drive to a 20-tooth sprocket that drives the bike\'s own chain with 100 N·m of torque. It does about 35 mph with about 20 miles of range on a 48 V pack and a VESC controller.',
         'I designed all of the custom parts. The brackets and outer plates are laser cut from 5052 aluminum and powder coated, with the brackets bent on a press brake, the carbon fiber plates were cut by an outside shop, one adapter plate is stainless steel, and I 3D printed the spacers and the idler mount. The cranks freewheel, so the pedals stay still under power.',
       ]},
     ],
@@ -318,7 +318,7 @@ export const projects = [
     ],
     body: [
       { h: 'Overview', p: [
-        'At the MIT Beaver Works Summer Institute (BWSI), in its Autonomous Air Vehicle Racing course (5.3% acceptance rate), I led a team of five writing the software for a Holybro X500 quadcopter in an autonomous drone race: follow an LED line on the floor, past hoops with AprilTags on them, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and a forward camera is for obstacle avoidance.',
+        'At the MIT Beaver Works Summer Institute (BWSI), in its Autonomous Air Vehicle Racing course (5.8% acceptance rate), I led a team of five writing the software for a Holybro X500 quadcopter in an autonomous drone race: follow an LED line on the floor, past hoops with AprilTags on them, with nobody flying it. A downward camera finds the line in every frame with color segmentation and a least-squares line fit on a Raspberry Pi 5, and a forward camera is for obstacle avoidance.',
         'We won the race in 52 seconds, less than half the second-best team’s time, and we were the only team to take off autonomously and complete the whole course in one run.',
       ]},
     ],
@@ -630,8 +630,8 @@ export const projects = [
     date: 'Mar 2024',
     year: '2024',
     body: [{ h: 'Overview', p: [
-      'After my FTC season ended and Cryptic advanced to the World Championship, I proposed a horizontal extension intake for them, since it was a clear edge that year, and designed it.',
-      'It stayed a concept: the Worlds deadline was fast approaching, and it added too much risk for the reward, so they improved other parts of their robot, mainly its reliability. It was a fun design challenge.',
+      'After my FTC season ended and Cryptic advanced to the World Championship, I proposed a horizontal extension intake for them, since it was a clear advantage that year, and designed it.',
+      'It stayed a concept: the Worlds deadline was fast approaching, and it added too much risk for the reward, so they improved other parts of their robot, mainly its reliability.',
     ] }],
     tools: ['Fusion 360', 'Linear slides', 'Roller intakes', 'goBILDA'],
     media: [{ i: 'cryptic-extendo/hero-cad.webp', c: 'The extension intake fully out, rendered from my CAD: three slides on each side carry it about a metre past the front of the robot' }],
@@ -647,7 +647,7 @@ export const projects = [
     year: '2024',
     tools: ['Fusion 360', 'SFU1605 ball screws', 'HIWIN HGH15 linear rails', 'NEMA 23 steppers'],
     body: [{ h: 'Overview', p: [
-      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the trusses of the CENTERSTAGE FTC game field: six 2 ft lengths of 1 x 1 in extrusion make the frame. The gantry rides on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs along the gantry on two more rails and a third ball screw.',
+      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the trusses of the CENTERSTAGE FTC game field, meant for cutting aluminum, but also MDF and Delrin. Six 2 ft lengths of 1 x 1 in extrusion make the frame. The gantry rides on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs along the gantry on two more rails and a third ball screw.',
       'Owning a CNC would have saved a lot compared with outsourcing parts, but I realized that what I would put into building it would be more than I would spend on CNC-cut parts before leaving for college, where I would have access to lots of manufacturing equipment, so I did not build it.',
     ] }],
     media: [{ i: 'ftc-field-cnc/cad-hero.webp', c: 'My CAD of the router: the field extrusion frame, the Y rails and ball screws along both sides, and the gantry with the X axis' }],
@@ -749,7 +749,7 @@ export const projects = [
     org: 'S.T.A.T.I.C., FTC 18996',
     date: 'Sep 2021 to Jan 2022',
     year: '2022',
-    body: [{ h: 'Overview', p: ['The 2021-22 robot. Unfortunately it was not finished in time, so we did not compete that season.'] }],
+    body: [{ h: 'Overview', p: ['The 2021-22 robot. It was not finished in time, so we did not compete that season.'] }],
     media: [{ v: 'videos/ftc-2022.mp4', c: 'The 2021-22 robot' }],
     links: [{ label: 'Official record', href: 'https://ftc-events.firstinspires.org/2021/team/18996' }],
   },

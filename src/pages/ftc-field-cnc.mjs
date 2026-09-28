@@ -18,8 +18,8 @@
 // pinned card links the e-bike instead. New facts from Jerry: the extrusion came from the trusses of
 // the CENTERSTAGE game field; why he designed it and why he did not build it; ball screws and rails
 // for the best stiffness and rigidity, the industry standard; what he would do next time.
-// Still open (/home/claude/work/upcycled-cnc-router/questions.md): what he wanted to cut and with which
-// spindle (Q5); the page names no material or spindle of his.
+// Sept 28, 03:53: the goal was cutting aluminum, but also MDF and Delrin (on the page). Still open
+// (/home/claude/work/upcycled-cnc-router/questions.md Q5): which spindle; the page names none of his.
 const M = '/assets/models/ftc-field-cnc/';
 const ORANGE = '#ff6b35', BLUE = '#27c7ff';
 const MOTOR = 'https://www.omc-stepperonline.com/nema-23-bipolar-1-8deg-1-9nm-269oz-in-2-8a-3-2v-57x57x76mm-4-wires-23hs30-2804s';
@@ -35,7 +35,7 @@ export default {
       { v: '417 x 460 mm', l: 'X and Y travel, measured in the CAD' },
     ],
     text: [
-      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the trusses of the CENTERSTAGE FTC game field. The whole gantry rides front to back on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs side to side along the gantry on two more rails and a third ball screw.',
+      'A benchtop CNC router I designed to be made out of the aluminum extrusions from the trusses of the CENTERSTAGE FTC game field, meant for cutting aluminum, but also MDF and Delrin. The whole gantry rides front to back on two profile rails, pushed by two ball screws with a stepper motor each, and the carriage runs side to side along the gantry on two more rails and a third ball screw.',
       `I did not build it. What exists is the X and Y gantry in CAD. On this page it moves about its real axes as you scroll, with a simple Z axis and spindle added (they are not in my CAD), milling an example part: the shorter side plate of my [electric bike](${EBIKE}).`,
     ],
   },
@@ -52,7 +52,7 @@ export default {
         { h: 'Three axes', p: ['The whole gantry, the bridge across the machine, moves front to back: Y. The carriage on it moves side to side: X. Each is a ball screw turned by a stepper motor.', 'The dashed box is the X and Y travel in the CAD, about 417 x 460 mm. The e-bike plate, 287 x 187 mm, is drawn on a sheet in the middle of it.'] },
         { h: 'Y: two screws, two motors', p: ['The gantry moves forward on its own first, out to the row of the first hole. Each side has its own ball screw and NEMA 23, turning together, so the gantry is pushed at both ends while its four carriage blocks slide along the two 600 mm rails.'] },
         { h: 'X: one screw, riding on the gantry', p: ['Then the carriage moves on its own, over to the first hole. The X screw, its motor, its BK12 support and its two 550 mm rails all ride on the gantry, so the whole X axis travels with every Y move.'] },
-        { h: 'Z: down to the stock', p: ['The spindle comes down 73 mm to 5 mm over the stock, spinning, and plunges through the 3.175 mm plate. The first hole is 3.3 mm, only about 0.15 mm wider than the 1/8 in (3.175 mm) end mill, so a plunge is all it takes.'] },
+        { h: 'Z: down to the stock', p: ['The spindle comes down 73 mm to 5 mm over the stock, spinning, and plunges through the 3.175 mm plate. The first hole is 3.3 mm, only about 0.15 mm wider than the 1/8 in (3.175 mm) end mill, so a single plunge cuts it.'] },
         { h: 'Round holes first', p: ['The 14 round holes go first, nearest next each time. The six 3.3 mm holes are plunges. The six 6.2 mm holes and the two 35.1 mm bores are cut around, with the end mill\'s centre 1.6 mm inside the edge, so the black kerf falls inside the hole.'] },
         { h: 'Then the pockets', p: ['Next the slot and the 15 lattice pockets, nearest first again. Their inside corners are 3 mm radius arcs and the slot is 6.2 mm wide (CAD), so the 3.175 mm end mill reaches into every corner.'] },
         { h: 'The outline last', p: ['Then the outside, 804 mm around, with the end mill 1.6 mm outside the edge. Cutting it last keeps the plate held in the sheet while every hole and pocket is cut.'] },
@@ -62,7 +62,7 @@ export default {
 
     // ------------------------------------------------------------------ the part is the e-bike's
     { type: 'media', id: 'plate', layout: 'collage', items: [
-      { i: 'ebike-plate-card.webp', c: `This part is from my e-bike project! [Check it out here →](${EBIKE})`, alt: 'The shorter side plate of my e-bike, drawn from its CAD: a lattice of triangular pockets, two large bores and small holes' },
+      { i: 'ebike-plate-card.webp', c: `The shorter side plate of my electric bike. [See the project →](${EBIKE})`, alt: 'The shorter side plate of my e-bike, drawn from its CAD: a lattice of triangular pockets, two large bores and small holes' },
     ] },
 
     // ------------------------------------------------------------------ the idea
@@ -74,7 +74,7 @@ export default {
     // ------------------------------------------------------------------ why
     { type: 'prose', id: 'why', h: 'Why I designed it, and why it stayed in CAD', p: [
       { problem: 'I was making a lot of projects that needed CNC-cut parts, and having all of them cut for me adds up.', title: 'Outsourcing every CNC part' },
-      { fix: 'Owning a CNC would save a lot compared with outsourcing, so I designed one around extrusion I could get for free: the trusses of the CENTERSTAGE game field.' },
+      { fix: 'Owning a CNC would save a lot compared with outsourcing, so I designed one around extrusion I could get for free: the trusses of the CENTERSTAGE game field. The goal was cutting aluminum, but also MDF and Delrin.' },
       { problem: 'Then I realized that what I would put into building it would be more than everything I would spend on CNC-cut parts between finishing it and leaving for college, where I would have access to lots of manufacturing equipment.', title: 'It would not pay for itself in time' },
       { fix: 'So I did not build it. The design stops at the X and Y gantry in CAD.' },
     ], media: [{ i: 'field-trusses.webp', c: 'My team\'s CENTERSTAGE practice field: the trusses are the aluminum A-frames that hold up the rigging and the yellow stage door (a frame from a video of our robot)' }] },
@@ -143,7 +143,7 @@ export default {
         caption: 'Travel: X stops when the carriage blocks reach the end of their rails; Y stops when the gantry plates reach the Y motor plates at the back and when the carriage blocks reach the end of the rails at the front. Per step: 5 mm over 200 full steps of a 1.8° motor.',
       } },
       { h: 'Why ball screws and profile rails' },
-      'I chose ball screws and profile rails because they give the best stiffness and rigidity, and they are the industry standard for CNC machines. A ball screw also turns a motor\'s torque into a large push along the axis.',
+      'I chose ball screws and profile rails for their stiffness and rigidity; they are the industry standard for CNC machines. A ball screw also turns a motor\'s torque into a large push along the axis.',
       { calc: 'How hard can one Y screw push the gantry?',
         given: [
           ['Motor holding torque', '1.9 N·m', `[23HS30-2804S datasheet](${MOTOR})`],
@@ -164,7 +164,7 @@ export default {
     // ------------------------------------------------------------------ status
     { type: 'callout', id: 'status', h: 'Where it stopped', p: [
       'The CAD is the X and Y gantry only: there is no Z axis, spindle, bed or electronics in it (the Z axis and spindle in the animation are a stand-in).',
-      { next: 'Next time I would not use an aluminum frame. Either a steel frame for an industry-standard, very capable machine, or, for an upcycled one, cheaper parts: maybe lots of 3D-printed parts, maybe even my Ryobi rotary tool as the spindle.' },
+      { next: 'Next time I would not use an aluminum frame: either a steel frame for a more capable, industry-standard machine, or, for an upcycled one, cheaper parts, such as more 3D-printed parts and possibly my Ryobi rotary tool as the spindle.' },
     ] },
   ],
 };

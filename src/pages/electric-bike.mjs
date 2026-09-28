@@ -5,11 +5,13 @@
 // is V1 (aluminum-mounted idler) and V2 (polycarbonate idler mount, latest).
 // Riders (Sept 27, 21:12): green pants are always Jerry's dad (never on the site); every other rider
 // is Jerry. Every clip and still here was checked frame by frame: none shows green pants.
-// Road speed (Sept 27, 21:12): Schwalbe Super Moto-X, "27.5, I think 2.4 inches wide" (replaces the
-// earlier "27 in rim with a standard tire", 694 mm), on the stock cassette from Trek's spec page.
-// Bracket temper: Fabworks' 5052 is H32. Held back until Jerry answers: how the second-belt failure
-// was finally fixed. The idler flange calculation is measured from the V1 STEP (notes in
+// Road speed: Schwalbe Super Moto-X 27.5 x 2.4 (confirmed Sept 28, 03:53; replaces the earlier
+// "27 in rim with a standard tire", 694 mm), on the stock cassette from Trek's spec page.
+// Bracket temper: Fabworks' 5052 is H32. The second-belt failure was never fixed (Sept 28, 03:53: it
+// happened right before winter, during college applications). The idler flange calculation is measured from the V1 STEP (notes in
 // /home/claude/work/ebike/r3/); the fold in the iterations scrolly is his request (illustrative).
+// Sept 28: the V2 idler mount FEA ('v2-load') is held back from the page pending Jerry (support of the jockey bolt); section saved in /home/claude/work/ebike/r4/fea/v2-load-section-held.mjs; documented in /home/claude/work/ebike/r4/fea/README.md;
+// never say the bike was for his mom (Jerry); copy kept understated (no hype, no self-praise).
 const M = '/assets/models/electric-bike';
 // the carbon fibre parts in the CAD (same list as assets/js/pages/electric-bike/bike.js)
 const CARBON = 'motor_mount|4mm_drive_side_bearing_plate|2mm_non_drive_side_bearing_plate|2mm_bearing_retaining_plate|battery_door|cf_CSK_battery_holder|drive_side_static_battery_plate';
@@ -23,8 +25,8 @@ export default {
       { v: 'About 35 mph', l: 'About 20 miles of range on 48 V' },
     ],
     text: [
-      'I turned a 2019 Trek Dual Sport 2 into a 5.3 kW mid-drive e-bike for my mom, and designed the whole powertrain from scratch. Two 2.6 kW brushless motors share one serpentine belt, two jackshaft axles carry the drive through a second belt, and a 20-tooth sprocket drives the bike\'s own chain with 100 N·m of torque.',
-      'It does about 35 mph with about 20 miles of range on a 48 V, 16 Ah pack and a VESC controller. I did the CAD in about two days and the build on my own, with carbon fiber plates cut by an outside shop, bent and powder-coated 5052 aluminum, a stainless adapter plate, and parts I 3D printed.',
+      'I converted a 2019 Trek Dual Sport 2 into a 5.3 kW mid-drive e-bike and designed its powertrain. Two 2.6 kW brushless motors share one serpentine belt, two jackshaft axles carry the drive through a second belt, and a 20-tooth sprocket drives the bike\'s own chain with 100 N·m of torque.',
+      'It reaches about 35 mph, with about 20 miles of range on a 48 V, 16 Ah pack and a VESC controller. The CAD took about two days, and I did the build on my own, with carbon fiber plates cut by an outside shop, bent and powder-coated 5052 aluminum, a stainless adapter plate, and parts I 3D printed.',
     ],
   },
   hero: {
@@ -39,13 +41,13 @@ export default {
       h: 'How the drivetrain works',
       p: ['Five section views of my CAD, from the motors to the chain. The drive turns as you scroll, every part at the speed its tooth count gives it.'],
       steps: [
-        { h: '1. Two big, low-KV motors', p: [
+        { h: '1. Two low-KV motors', p: [
           'Two [SKP 6465](https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW each and 5.3 kW together. At 150 KV on a 48 V pack their nominal no-load speed is about **7,200 rpm** (150 x 48), and the two belt stages bring that down to about 444 rpm at the chain sprocket.',
           'The cut goes straight across both motors through the middle of the stator. The 12-tooth stator stays still, and the rotor, a ring of 14 magnets, spins around it and turns the shaft. Each shaft carries a 16-tooth HTD 5M belt pulley on the other side of the motor mount.',
         ] },
         { h: '2. The first belt: a serpentine', p: [
           'Stage one is **4.5 : 1**. Both 16T motor pulleys sit on one 115-tooth HTD 5M belt (575 mm) that drives a 72T pulley.',
-          'The belt path took a good amount of design work. Two backside idlers, each a stack of four 626 bearings, bend the belt into an S between the motors, so it wraps motor 1\'s pulley 135 degrees and motor 2\'s 207 degrees. A plain triangle around the same three pulleys would wrap them only 68 and 99 degrees: 3 and 4 teeth in mesh instead of 6 and 9.',
+          'Two backside idlers, each a stack of four 626 bearings, bend the belt into an S between the motors, so it wraps motor 1\'s pulley 135 degrees and motor 2\'s 207 degrees. A plain triangle around the same three pulleys would wrap them only 68 and 99 degrees: 3 and 4 teeth in mesh instead of 6 and 9.',
           'Both motors ride the same belt, so they always turn at exactly the same speed.',
         ] },
         { h: '3. The jackshaft axles: making standards work together', p: [
@@ -64,7 +66,7 @@ export default {
       ] },
 
     { type: 'scrolly', id: 'throttle', module: 'runup', stepHeight: '90vh', poster: `${M}/poster-throttle.webp`,
-      h: 'Rev it up',
+      h: 'Spin-up on the stand',
       p: ['This is the bike on its repair stand with the rear wheel off the ground, the way I tested it. Scroll to open the thumb throttle. Both motors, both belts, every pulley, the idlers and the chain sprocket turn about their real axes in my CAD, each at the speed its tooth counts give it, and the readout follows speed and torque through the reduction.'],
       steps: [
         { h: 'Throttle closed', p: ['Everything at rest. The two motors share the first belt, so they always turn together, and the 16.2 : 1 reduction sits between them and the chain sprocket.'] },
@@ -75,7 +77,7 @@ export default {
           'On the road, drag and weight hold it well below the stand numbers: it tops out at about 35 mph.',
         ] },
       ],
-      caption: 'Motor speed tops out at the nominal no-load speed, 150 KV x 48 V = 7,200 rpm. Torque is split through the ratios with no losses, and the spin-up is a simple model; the parts turn with your scroll, slowed down, while the numbers are the real speeds. Road speed is an estimate: my Schwalbe Super Moto-X tire, which I believe is 27.5 x 2.4 in, taken as 708 mm across, on the stock cassette of a 2019 Trek Dual Sport 2, a [Shimano HG31 11-32 eight-speed](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/dual-sport-bikes/dual-sport/dual-sport-2/p/23067/). At 7,200 rpm that is about 23 mph in the 32T cog and about 67 mph in the 11T, wheel off the ground. The chain and rear wheel are not in the CAD; the videos below show them.' },
+      caption: 'Motor speed tops out at the nominal no-load speed, 150 KV x 48 V = 7,200 rpm. Torque is split through the ratios with no losses, and the spin-up is a simple model; the parts turn with your scroll, slowed down, while the numbers are the real speeds. Road speed is an estimate: my Schwalbe Super Moto-X 27.5 x 2.4 in tire, taken as 708 mm across, on the stock cassette of a 2019 Trek Dual Sport 2, a [Shimano HG31 11-32 eight-speed](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/dual-sport-bikes/dual-sport/dual-sport-2/p/23067/). At 7,200 rpm that is about 23 mph in the 32T cog and about 67 mph in the 11T, wheel off the ground. The chain and rear wheel are not in the CAD; the videos below show them.' },
 
     { type: 'media', layout: 'row', items: [
       { v: 'test-drive-wide.mp4', c: 'The real drive on the stand: the whole rear drivetrain under power' },
@@ -84,7 +86,7 @@ export default {
 
     { type: 'prose', id: 'build', h: 'The build, in depth', p: [
       { h: 'The goal' },
-      'I built this for my mom, and I did the whole design and build myself. It is a mid-drive: the motors sit in the front triangle and drive the bike\'s own chain, so their torque goes through the rear gears.',
+      'The goal was a mid-drive: the motors sit in the front triangle and drive the bike\'s own chain, so their torque goes through the rear gears. I did the design and the build myself.',
       { h: 'Measuring and layout' },
       'I started from the stock bike, a 2019 Trek Dual Sport 2. I measured the frame tubes and clearances with a ruler, calipers and 3D-printed test pieces, then put a photo of the bike into Fusion 360 as a canvas and laid the pulleys out over it. I sketched the chain routing over a photo of the drivetrain: the chain wraps a drive sprocket and runs around jockey wheels. The CAD took about two days.',
     ],
@@ -138,7 +140,7 @@ export default {
           ['Belt stages', '16T to 72T, 20T to 72T', 'counted in my CAD'],
           ['Chain sprocket', '20T', 'counted in my CAD'],
           ['Peak torque at the sprocket', '100 N·m', 'my build'],
-          ['Rear tire', 'Schwalbe Super Moto-X, 27.5 x 2.4 in (as I remember it), ETRTO 62-584', 'my bike; size code from [Schwalbe](https://www.schwalbetires.com/Super-Moto-X-11101112.01)'],
+          ['Rear tire', 'Schwalbe Super Moto-X, 27.5 x 2.4 in, ETRTO 62-584', 'my bike; size code from [Schwalbe](https://www.schwalbetires.com/Super-Moto-X-11101112.01)'],
           ['Rear cogs', '11T to 32T', 'stock cassette of a 2019 Dual Sport 2, a Shimano HG31 11-32 ([Trek](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/dual-sport-bikes/dual-sport/dual-sport-2/p/23067/))'],
         ],
         work: [
@@ -218,7 +220,7 @@ export default {
           view: { version: 0, focus: 'Jockey_Wheel|91273A403', azimuth: 215, elevation: -62, pad: 2.3, bend: true,
             labels: [{ text: 'Bend line: 4.75 mm 5052-H32', at: [0.0455, -0.2089, -0.0307] }] },
           p: [
-            { problem: 'The flange was bent from a flat pattern on a press brake, and about 6 kW of drive easily bent it out of shape. At 100 N·m on the sprocket the chain pulls the upper jockey with about 4,300 N, 10 mm out from the flange: 32 N·m on a bend that [starts to yield at 18](#idler-load).', title: 'The idler mount bent' },
+            { problem: 'The flange was bent from a flat pattern on a press brake, and about 6 kW of drive bent it out of shape. At 100 N·m on the sprocket the chain pulls the upper jockey with about 4,300 N, 10 mm out from the flange: 32 N·m on a bend that [starts to yield at 18](#idler-load).', title: 'The idler mount bent' },
             { note: 'The fold is drawn larger than life; the chain is drawn in, it is not in my CAD.' },
           ] },
         { h: 'V2, my latest: one jockey on a tall printed mount',
@@ -277,10 +279,13 @@ export default {
       { problem: 'In my words from the inspection: "This bearing slips out of here, so I have to add a spacer in here, \'cause there\'s play in this axis."', title: 'Axial play in the axles' },
       { fix: 'I added spacers to take the play out.' },
       { problem: [
-        'The spacers bent the outer aluminum plates slightly. The flanges bent on the press brake are not exactly 90 degrees either. Together they pulled the second belt out of line, and on a top speed run to 35 mph it destroyed itself.',
+        'The spacers bent the outer aluminum plates slightly. The flanges bent on the press brake are not exactly 90 degrees either. Together they pulled the second belt out of line, and on a top-speed run to 35 mph it stripped a section of its teeth.',
         'This is the harder-working of the two belts: at 100 N·m on the sprocket it pulls about 1,750 N, 3.6 times the first belt (from the pulley sizes in my CAD).',
       ], title: 'The second belt misaligned and stripped' },
-      { next: 'My note from the same inspection: "I need to add a tensioner in here for the second belt that carries more torque."', title: 'A tensioner for the second belt', label: 'Planned' },
+      { next: [
+        'I never fixed it. The belt failed right before winter, and I was working on my college applications and did not have time to work on the bike.',
+        'My note from the same inspection: "I need to add a tensioner in here for the second belt that carries more torque."',
+      ], title: 'Never fixed: a tensioner for the second belt' },
     ],
       media: [
         { v: 'failure-fix-narration-sq.mp4', c: 'The inspection: the bearing that slips out of the carbon plate' },
@@ -292,7 +297,7 @@ export default {
     ] },
 
     { type: 'prose', id: 'results', h: 'Results', p: [
-      'It rides: about 35 mph and about 20 miles of range, with 100 N·m at the sprocket.',
+      'Before the second belt failed, it rode at about 35 mph with about 20 miles of range, and 100 N·m at the sprocket.',
     ] },
     { type: 'media', layout: 'row', items: [
       { v: 'hero-launch.mp4', c: 'Me pulling away from a stop' },
@@ -300,12 +305,12 @@ export default {
     ] },
 
     { type: 'callout', id: 'lessons', h: 'The common thread', p: [
-      'Both failures came back to the bent aluminum. The idler flange, bent from a flat pattern on a press brake, bent further under about 6 kW of drive. The press-brake flanges are not exactly 90 degrees, and with the outer plates bent slightly by the spacers, they pulled the second belt out of line. The idler fix was a tall printed polycarbonate mount, and one jockey turned out to be enough.',
+      'Both failures came back to the bent aluminum. The idler flange, bent from a flat pattern on a press brake, bent further under about 6 kW of drive. The press-brake flanges are not exactly 90 degrees, and with the outer plates bent slightly by the spacers, they pulled the second belt out of line. The idler fix was a tall printed polycarbonate mount, and one jockey turned out to be enough. The second belt was never fixed.',
     ] },
 
     { type: 'media', id: 'gallery', h: 'More pictures', layout: 'grid', cols: 3, items: [
       { i: 'finished-carbon-low.webp', c: 'Carbon fiber plates and powder-coated brackets in the sun' },
-      { i: 'finished-jerry-with-bike.webp', c: 'Me with the finished bike, ready to ride' },
+      { i: 'finished-jerry-with-bike.webp', c: 'Me with the finished bike' },
       { i: 'still-carbon-bearing-plate.webp', c: 'A carbon fiber bearing plate holding the axle bearings' },
     ] },
   ],

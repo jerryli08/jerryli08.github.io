@@ -98,8 +98,8 @@ export default {
       'The same step up that gives the arms their swing has a cost: a little play at a 7-tooth pinion becomes a lot of play at the doors. That is the story of the iterations further down.',
     ],
       media: [
+        { i: 'rover-on-foam.webp', c: 'The finished rover: the two latches on its deck, doors closed, behind the AprilTag' },
         { v: 'latch-doors-by-hand.mp4', c: 'The finished latches worked by hand: pushing one arm open swings all four arms through the gears, then the doors are pressed down and spring back' },
-        { i: 'landing-gear-latched.webp', c: 'The printed landing-gear mounts and tubes held in both latches, off the drone' },
       ] },
 
     { type: 'scrolly', id: 'latch', module: 'latch', poster: `${M}/poster-latch.webp`,
@@ -150,7 +150,7 @@ export default {
       { label: 'Version 1', title: 'Module 1 gears: the teeth skipped',
         p: [
           'My first geartrain used fine red gears at module 1. I modelled it and drove the joints in Fusion to check that the arms swung the way I wanted, then printed it.',
-          { problem: 'The module was way too small. Once printed, the gears skipped.', title: 'Gears skipped' },
+          { problem: 'The module was too small. Once printed, the gears skipped.', title: 'Gears skipped' },
           { fix: 'Much bigger teeth: version 2 is the black coarse gear. The gears in my final CAD measure module 2, twice the tooth size of version 1.' },
         ],
         media: [
@@ -250,7 +250,7 @@ export default {
 
     { type: 'prose', id: 'turning', h: 'Why turning split the surfaces', p: [
       'A skid-steered rover has no steering linkage: to turn in place, one side drives forward and the other backward, and all four wheels have to scrub sideways over the ground. How easily they scrub depends on the surface.',
-      { calc: 'How close to a perfect turn did the rover get?',
+      { calc: 'How close to an ideal turn did the rover get?',
         given: [
           ['Track width, wheel centre to wheel centre', '135.2 mm', 'measured from the CAD'],
           ['Straight-line and turning speeds per surface', 'Table 1', '[our poster](/assets/docs/drone-on-wheels-poster.pdf)'],
@@ -284,12 +284,11 @@ export default {
         ],
         result: 'In a straight vertical pull each latch holds about 4.5 times its share of the rover hanging still.',
         note: 'From the pull test, which pulled straight up. Accelerating, tilting or an off-center rover all eat into that margin.' },
-      { problem: 'That is with a perfectly vertical pull. With the rover off-center or the drone rolling, it unlatches more easily.', title: 'Off-axis loads' },
+      { problem: 'That is with a purely vertical pull. With the rover off-center or the drone rolling, it unlatches more easily.', title: 'Off-axis loads' },
     ] },
 
     { type: 'media', layout: 'row', items: [
       { i: 'still-carry-flight-cage.webp', c: 'Carrying the rover across the flight cage' },
-      { i: 'rover-on-foam.webp', c: 'The finished rover on the foam mats' },
     ] },
 
     { type: 'prose', id: 'research', h: 'Research', p: [

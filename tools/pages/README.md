@@ -27,6 +27,10 @@ Pages are written independently: **a page writer only touches their own files**.
   at rest (`stage.frame(..., { apply: false })`, cached), then blend between cached views. Framing a
   moving part's bounds makes the picture shake.
 - Scroll step text is 22 px (1.4x, set in site.css); keep it in new layouts.
+- **Popups, insets and readouts must be big enough to read** (Jerry, Sept 28: "whenever you do popups
+  like these make sure they are big enough"). Anything drawn over a stage follows the floors in
+  site.css (see Readable overlays below): no overlay text under 13 px on a desktop or 12 px on a
+  phone, and an inset (a diagram, a photo, a second view) at least a quarter of a desktop stage wide.
 
 | You write | What it is |
 |---|---|
@@ -427,6 +431,41 @@ For numbers that follow the scroll (speeds, torques), put a `<div class="rx-hud"
 rows `.rx-hud-row` (label, `<b>` value, `<i><em>` bar), a `<table>`, `.rx-hud-big` for the headline
 number, and `.rx-hud-x` on anything to hide on phones. `assets/js/pages/electric-bike/runup.js` is
 the example.
+
+### Readable overlays (Jerry, Sept 28)
+
+A popup he could not read ("the little pop up on the bottom left corner showing the differential
+drivetrain output is too small. whenever you do popups like these make sure they are big enough")
+set these floors for everything drawn over a stage. They live in site.css as variables; use the
+variables (or the classes that use them), never a smaller px size of your own:
+
+| variable | desktop | phone (up to 640 px) | for |
+|---|---|---|---|
+| `--rx-ov-text` | 15 px | 13 px | body text of a readout, inset, legend or card |
+| `--rx-ov-small` | 13 px | 12 px | the smallest text allowed: notes, units, captions, uppercase heads |
+| `--rx-ov-label` | 14 px | 12.5 px | labels pinned to the model (`labels.js` uses it) |
+| `--rx-ov-big` | 30 px | 20 px | a readout's headline number (`.rx-hud-big b`) |
+| `--rx-hud-w` | 400 px | full width | a readout's width |
+| `--rx-inset-w` | clamp(300px, 26vw, 460px) | min(56%, 260px) | an inset's width |
+
+- **Insets** (a diagram, a photo of the real part, a picture-in-picture camera, a mini map): a
+  `<figure class="rx-inset">` (add `rx-inset-photo` for a bare photo with a caption chip) in the
+  bottom-right corner, clear of the step cards, which sit over the left of the stage. It is at least
+  `--rx-inset-w` wide (about a quarter of a 1440 px stage); a square one may also be held to about a
+  third of the stage's height (`width: min(var(--rx-inset-w), 36vh)`), a portrait photo to 30 %
+  (`min(var(--rx-inset-w), 30vh, 42vw)`), so it does not bury the model. Inside: `img`, `canvas` or
+  `svg` fill the width; `figcaption` and `small` use `--rx-ov-small`; `.rx-hud-row`, bars and tables
+  work as in `.rx-hud`. Never an inset in the bottom-left or top-left of a stage with steps (the
+  cards are there; a panel that must sit on the left starts at `calc(var(--rx-cover) + 14px)`, the
+  cards' right edge, as the LinqBot chat panels do), and never one smaller than the floor to make room: frame or lift the model
+  instead (`stage.setShift(fx, fy + lift)` after framing; `hybrid-vehicle/drive.js` does this).
+- **Text inside an SVG or canvas** counts too: size it in CSS px at the floors (an SVG scaled into a
+  small box shrinks its text, so check the rendered size), and floor canvas text in CSS px
+  (`Math.max(12, ...)`, times the canvas's pixel ratio if the context is not scaled).
+- **One readout, not two**: a diagram that goes with a readout goes inside it (as the hybrid
+  vehicle's skid-steer diagram does) rather than as a second small box.
+- Check every overlay at 1440 x 900 and 390 x 844, and on a short wide screen (1280 x 720), that it
+  reads and does not cover the step cards or the part of the model the step talks about.
 
 ## `ui.js`
 

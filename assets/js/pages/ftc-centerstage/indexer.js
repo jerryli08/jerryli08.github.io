@@ -64,16 +64,15 @@ const CSS = `
 .fc-ix-strip { position: absolute; z-index: 3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-radius: 14px; background: rgba(10,8,7,0.82); border: 1px solid rgba(255,255,255,0.12); overflow: hidden; }
 .fc-ix-strip > div { padding: 9px 12px 10px; border-left: 1px solid rgba(255,255,255,0.08); min-width: 0; }
 .fc-ix-strip > div:first-child { border-left: 0; }
-.fc-ix-strip span { display: block; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.fc-ix-strip span { display: block; font-size: var(--rx-ov-small); font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
 .fc-ix-strip b { display: block; margin-top: 3px; font-size: 15px; font-weight: 650; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.fc-ix-strip small { display: block; font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-ix-strip small { display: block; font-size: var(--rx-ov-small); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fc-ix-strip .hot b { color: var(--accent); }
 @media (max-width: 640px) {
   .fc-ix-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fc-ix-strip > div { padding: 5px 9px 6px; }
   .fc-ix-strip > div:nth-child(3) { border-left: 0; }
   .fc-ix-strip > div:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,0.08); }
-  .fc-ix-strip span { font-size: 9.5px; }
   .fc-ix-strip b { font-size: 13px; margin-top: 1px; }
   .fc-ix-strip small { display: none; }
 }
@@ -115,7 +114,7 @@ export function mount(el, ctx) {
     const k = Math.min((x1 - x0) / 12.6, (bottom - top) / 10.8);
     const cx = (x0 + x1) / 2, by = bottom - 2.1 * k;
     const X = (u) => cx + u * k, Y = (v) => by - v * k;
-    const fs = Math.max(10, Math.min(13, k * 0.24));
+    const fs = Math.max(12, Math.min(15, k * 0.28)); // labels: at least 12 px (site.css overlay floor)
     // text with a dark halo, so letters stay readable where they cross the grid
     const t = (parent, str, x, y, attrs = {}) => { const e = s(parent, 'text', { x, y, 'font-size': fs, fill: '#8c847b', stroke: '#15120f', 'stroke-width': 3, 'paint-order': 'stroke', 'stroke-linejoin': 'round', ...attrs }); e.textContent = str; return e; };
 

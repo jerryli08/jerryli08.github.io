@@ -30,7 +30,7 @@ export default {
     ],
     text: [
       'At CTY in the summer of 2023 we built a game console on a breadboard: an **Arduino Uno**, a **16x2 character LCD** and push buttons. It runs two games: **Run**, where you press a button to jump over the blocks coming at you, and **Pong**, where two players each get a button and a ball crosses the screen between them.',
-      'It was a long time ago and I have forgotten most of the details, so this page lets the footage do the talking.',
+      'It was a long time ago and I no longer remember most of the details, so this page is built mostly from the footage.',
     ],
   },
   hero: {
@@ -71,7 +71,7 @@ export default {
         { i: 'still-game-over.webp', c: '"GAME OVER", "Jerry WINS"' },
       ],
     ], p: [
-      'The first Pong just said PLAYER1 and PLAYER2. The final version turned it into a proper console. It opens on "Run or Pong?". For Pong, each player scrolls through a list of names and picks their own, the screen shows who is playing whom, and then "PING PONG, PRESS A BUTTON".',
+      'The first Pong just said PLAYER1 and PLAYER2. The final version turned it into a complete console. It opens on "Run or Pong?". For Pong, each player scrolls through a list of names and picks their own, the screen shows who is playing whom, and then "PING PONG, PRESS A BUTTON".',
       'After every point it shows the score, at the end it shows "GAME OVER" and the winner, and "Show Score?" then lists how many games each player has won, adding up from game to game.',
       'Up close, a rally is one dot crossing the 16 characters of a line, with a thumb on the button.',
     ] },

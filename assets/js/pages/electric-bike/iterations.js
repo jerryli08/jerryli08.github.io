@@ -301,7 +301,7 @@ export async function mount(el, ctx) {
     </tbody></table>
     <div class="rx-hud-mini num" data-k="mini"></div>
     <div class="rx-hud-row rx-hud-big"><span data-k="state"></span></div>
-    <p class="rx-hud-x" style="margin:8px 0 0;font-size:11px;color:var(--muted)">Fold drawn larger than life. The chain is drawn in; it is not in my CAD.</p>`;
+    <p class="rx-hud-x" style="margin:8px 0 0;font-size:var(--rx-ov-small);color:var(--muted)">Fold drawn larger than life. The chain is drawn in; it is not in my CAD.</p>`;
   const K = Object.fromEntries([...hud.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
   const shown = {};
   const put = (k, text) => { if (shown[k] !== text) { K[k].textContent = text; shown[k] = text; } };

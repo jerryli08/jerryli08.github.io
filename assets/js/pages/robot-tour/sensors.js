@@ -89,18 +89,19 @@ export async function mount(el, ctx) {
 
   // the real sensor, as a print over the stage (step 1)
   const inset = document.createElement('figure');
-  Object.assign(inset.style, { position: 'absolute', right: '14px', bottom: '14px', width: 'min(32%, 250px)', margin: '0', opacity: '0', zIndex: '2', pointerEvents: 'none' });
-  inset.innerHTML = `<img alt="The underside of the robot: the red OTOS between the gears and the front caster" decoding="async" style="display:block;width:100%;border-radius:12px;box-shadow:0 20px 40px -20px rgba(0,0,0,.9)"><figcaption style="margin-top:6px;font-size:12px;color:#b8b0a7">The real one</figcaption>`;
+  inset.className = 'rx-inset rx-inset-photo'; // site.css inset, bottom right; a portrait photo is held to 30 % of the screen's height
+  Object.assign(inset.style, { width: 'min(var(--rx-inset-w), 30vh, 42vw)', opacity: '0' });
+  inset.innerHTML = `<img alt="The underside of the robot: the red OTOS between the gears and the front caster" decoding="async"><figcaption>The real one</figcaption>`;
   inset.querySelector('img').src = ctx.asset(`/assets/media/${ctx.slug}/photo-otos-underside-s.webp`);
   el.appendChild(inset);
 
   // readouts: the first code's arithmetic (step 0), the offset (step 2)
   const hud0 = document.createElement('div');
   hud0.className = 'rx-hud';
-  Object.assign(hud0.style, { width: 'min(250px, calc(100% - 28px))', opacity: '0' });
+  Object.assign(hud0.style, { width: 'min(300px, calc(100% - 28px))', opacity: '0' });
   hud0.innerHTML = `
     <div style="display:flex;gap:12px;align-items:center">
-      <svg viewBox="-50 -50 100 100" width="74" height="74" aria-hidden="true" style="flex:none">
+      <svg viewBox="-50 -50 100 100" width="92" height="92" aria-hidden="true" style="flex:none">
         <circle r="44" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
         <circle r="44" fill="none" stroke="${ORANGE}" stroke-width="3" data-k="rim" style="opacity:0"/>
         <path d="M0 -44 V -36 M44 0 H36 M0 44 V36 M-44 0 H-36" stroke="rgba(255,255,255,.4)" stroke-width="2"/>
@@ -116,13 +117,13 @@ export async function mount(el, ctx) {
     <div class="rx-hud-row rx-hud-big"><span>Distance</span><b class="num" data-k="d"></b></div>`;
   const hud2 = document.createElement('div');
   hud2.className = 'rx-hud';
-  Object.assign(hud2.style, { width: 'min(270px, calc(100% - 28px))', opacity: '0' });
+  Object.assign(hud2.style, { width: 'min(320px, calc(100% - 28px))', opacity: '0' });
   hud2.innerHTML = `
     <div class="rx-hud-row"><span>Heading</span><b class="num" data-k="h"></b></div>
     <div class="rx-hud-row"><span>Sensor has moved</span><b class="num" data-k="arc"></b></div>
     <div class="rx-hud-row rx-hud-x"><span>Dowel has moved</span><b class="num" data-k="darc"></b></div>
     <div class="rx-hud-row rx-hud-big"><span>Reported x, y</span><b class="num">0, 0 mm</b></div>
-    <div class="rx-hud-x" style="margin-top:8px;font:12px/1.4 ui-monospace,Menlo,monospace;color:#eee9e3">setOffset({0, 0.0303 m, -90°})</div>`;
+    <div class="rx-hud-x" style="margin-top:8px;font:13px/1.4 ui-monospace,Menlo,monospace;color:#eee9e3">setOffset({0, 0.0303 m, -90°})</div>`;
   ov.layer.append(hud0, hud2);
   const o0 = readout(hud0), o2 = readout(hud2);
   const shown = {};
