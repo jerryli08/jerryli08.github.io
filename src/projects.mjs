@@ -294,7 +294,7 @@ export const projects = [
     team: 'S.T.A.T.I.C., FTC 18996',
     tools: ['Fusion 360', '3D printing', 'goBILDA', 'Linear slides', 'Cable carrier'],
     stats: [
-      { v: '1st place', l: 'Think Award, FIRST Chesapeake Championship' },
+      { v: '1st place', l: 'Think Award, FIRST Chesapeake Regional Championship' },
       { v: 'Semifinalist', l: 'Division playoffs' },
     ],
     body: [
@@ -741,7 +741,7 @@ export const projects = [
     title: 'Exercise Bike Odometer',
     short: 'An odometer for my family\'s stationary bike, built in a 12-hour, one-day challenge.',
     org: 'Personal project',
-    date: 'Jun 21, 2026',
+    date: 'Jun 2026', // one day, Jun 21; shown as the month like every other project (Jerry, Sept 29)
     year: '2026',
     hours: '12 h',
     tools: ['Fusion 360', '3D printing (FDM)', 'Arduino Nano (C++)', 'MT6701 magnetic angle sensor', '16x2 character LCD', 'Perfboard soldering'],

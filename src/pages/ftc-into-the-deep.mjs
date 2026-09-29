@@ -32,7 +32,7 @@ export default {
     stats: [
       { v: '80% narrower', l: 'My horizontal extension, 15 in wide in the first design to 3 in in the final' },
       { v: '5', l: 'Intake versions in one season' },
-      { v: '1st place', l: 'Think Award, FIRST Chesapeake Championship' },
+      { v: '1st place', l: 'Think Award, FIRST Chesapeake Regional Championship' },
       { v: 'Semifinalist', l: 'Division playoffs' },
     ],
     text: [
@@ -104,7 +104,7 @@ export default {
         { label: 'Feb 22, 2025', title: 'Intake version 5, built', p: [], media: [
           { i: 'intake-v5-built.webp', c: 'Ten days after its first hand-held prototype' }] },
         { label: 'Mar 2, 2025 · FIRST Chesapeake Championship', title: '1st place Think Award', p: [], media: [
-          { i: 'still-extension-out-venue.webp', c: 'Fully extended on a practice field at the championship' }] },
+          { i: 'still-extension-out-venue.webp', c: 'Fully extended on a practice field at the Chesapeake Championship' }] },
       ] },
 
     { type: 'prose', id: 'extension-built', h: 'From CAD to the robot', p: [
@@ -189,7 +189,7 @@ export default {
         { v: 'intake-v4-angle-test.mp4', c: 'Feb 2025: holding a new prototype over a sample at different angles' },
       ] },
       { label: 'Version 5 · Feb 12 to Mar 2025', title: 'Two top-down spinners', p: [
-        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. In our autonomous run there, the head came down on each blue sample and picked it up, and the extension swung it over to the observation zone for the human player. The rows below go through it up close.',
+        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the Chesapeake Championship on Mar 2. In our autonomous run there, the head came down on each blue sample and picked it up, and the extension swung it over to the observation zone for the human player. The rows below go through it up close.',
       ], media: [
         { v: 'intake-v5-auto-picks.mp4', c: 'Mar 2, 2025, from the autonomous run at the top of the page: the head comes down on a blue sample and picks it up, the extension swings it over to the observation zone and lets it go, then it does the same with the next sample' },
       ] },
@@ -211,7 +211,7 @@ export default {
         { i: 'intake-v5-built.webp', c: 'Feb 22, 2025: version 5 built, two compliant star wheels on aluminum hubs beside a servo in a printed frame' },
         { i: 'intake-v5-on-extension.webp', c: 'Feb 27, 2025: version 5 on the end of the extension, with the cable carrier alongside' },
       ], h: 'Built and mounted', p: [
-        'The assembled head is from Feb 22. By Feb 27 it was mounted on the end of the extension, three days before the championship. On the robot the whole head rides on a wrist at the tip of the extension.',
+        'The assembled head is from Feb 22. By Feb 27 it was mounted on the end of the extension, three days before the Chesapeake Championship. On the robot the whole head rides on a wrist at the tip of the extension.',
       ] },
       { media: { v: 'intake-v5-color-reject.mp4', c: 'Bench test, Feb 2025: a red sample, the wrong color for this test, goes in and the wheels throw it straight back out' }, h: 'Spitting out the wrong color', p: [
         { fix: '"Rejecting less powerful" had been on the whiteboard. In a bench test of version 5 we fed it a red sample on purpose, and the wheels threw it straight back out.', title: 'Rejection that works' },

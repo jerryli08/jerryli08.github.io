@@ -18,7 +18,7 @@
 // what each of the six servos drives, what the chain and the springs do, the gear ratios, why each
 // claw was replaced and which ran at each event, whether parking and stacking was the plan from the
 // start, whether the full run is the autonomous program, what changed between Jan 21 and Jan 28, what
-// went wrong at the Championship, what the Feb 7 and Feb 8 measurements were for, and every "next
+// went wrong at the Chesapeake Championship, what the Feb 7 and Feb 8 measurements were for, and every "next
 // time" item. IMG_4509 (team 7393's robot) is never used. "We" throughout; "I" only as captain.
 const RESULTS = 'https://ftc-events.firstinspires.org/2022/team/18996';
 
@@ -162,7 +162,7 @@ export default {
     ] },
 
     // ------------------------------------------------------------------ measuring the arm
-    { type: 'prose', id: 'measuring', h: 'Measuring the arm, the week of the Championship', p: [
+    { type: 'prose', id: 'measuring', h: 'Measuring the arm, the week of the Chesapeake Championship', p: [
       'Four days before the Chesapeake Championship we measured the arm. On February 7 we set a digital angle gauge on the arm\'s links and on the chassis and photographed each reading: more than 50 photos in twenty minutes.',
       'The next day we held the Driver Hub up next to the arm and read off every servo\'s position, pose by pose. The screen lists the six servos by name, on the hub\'s network, 18996-RC.',
       'In this side view from the same week the arm reaches down to the floor on one side of the robot, then both links go straight up.',
@@ -196,14 +196,14 @@ export default {
         { i: 'score-q38.webp', c: 'Qualification 38: 157-106' },
       ], wide: true },
       'In the semifinal, with G-FORCE (2818), ranked 1st, and Lions (12718), we won one of three matches, 186-177, and went out (131-181, 186-177, 134-166).',
-      { problem: 'At the Championship two weeks later we won one of our five counted matches and finished 23rd of 26 in our division. One of our six matches there was a surrogate match that did not count, and the closest loss was the last one, 142-148.', title: 'The Championship' },
+      { problem: 'At the Chesapeake Championship two weeks later we won one of our five counted matches and finished 23rd of 26 in our division. One of our six matches there was a surrogate match that did not count, and the closest loss was the last one, 142-148.', title: 'The Chesapeake Championship' },
       { table: {
         head: ['Event', 'Qualification matches, our alliance\'s score first'],
         rows: [
           ['Glen Allen', 'Q4 70-72, Q8 99-112, **Q13 88-64**, Q19 78-93, Q26 46-243'],
           ['Harrisonburg', 'Q2 39-46, **Q13 87-35**, Q22 61-134, **Q32 100-74**, Q45 43-108'],
           ['Union Bridge', '**Q3 97-43**, **Q10 133-48**, **Q20 125-101**, **Q29 157-87**, **Q38 157-106**'],
-          ['Championship', 'Q3 81-123, **Q9 138-118**, Q14 119-67 (surrogate, did not count), Q21 125-264, Q28 127-228, Q33 142-148'],
+          ['Chesapeake Championship', 'Q3 81-123, **Q9 138-118**, Q14 119-67 (surrogate, did not count), Q21 125-264, Q28 127-228, Q33 142-148'],
         ],
         caption: 'Wins in bold.',
       } },
