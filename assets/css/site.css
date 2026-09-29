@@ -85,7 +85,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   margin-top: 36px; padding: 28px; border-radius: var(--radius-lg);
   background: var(--bg-raise); border: 1px solid var(--line);
 }
-.contact-card h3 { font-size: clamp(24px, 2.4vw, 34px); font-weight: 750; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.05; }
 .contact-card .links-inline { margin-top: 18px; }
 .footer { padding: 40px 0 36px; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
@@ -264,14 +263,33 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .work { padding: 64px var(--gutter) 24px; scroll-margin-top: 56px; }
 .work-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; margin-bottom: 22px; }
 .work-head h2 { font-size: clamp(26px, 2.6vw, 38px); font-weight: 800; font-stretch: 120%; letter-spacing: -0.025em; }
-.filter-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; }
-.filter-label { font-size: 13.5px; color: var(--muted); white-space: nowrap; }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.filters button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 13.5px; color: var(--text-2); transition: background 0.2s, color 0.2s, border-color 0.2s; }
-.filters button .num { font-size: 12px; color: var(--muted); }
-.filters button:hover { color: var(--text); border-color: var(--text-2); }
-.filters button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
-.filters button[aria-pressed="true"] .num { color: rgba(10, 8, 7, 0.55); }
+/* the sort: one segmented control; the pressed option only changes colour, so nothing shifts */
+.sort { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sort-l { font-size: 13.5px; color: var(--muted); }
+.sort-g { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, 0.02); }
+.sort-g button { min-height: 32px; padding: 5px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; transition: background 0.2s, color 0.2s; }
+.sort-g button:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+.sort-g button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.sort-g button:focus-visible { outline-offset: 1px; }
+/* the default order's groups; Concepts is the quieter subsection at the end */
+.wgroup + .wgroup { margin-top: clamp(48px, 5vw, 72px); }
+.wgroup-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 18px; }
+.wgroup-head h3 { font-size: clamp(19px, 1.6vw, 24px); font-weight: 750; font-stretch: 115%; letter-spacing: -0.015em; }
+.wgroup-head p { font-size: 14px; color: var(--muted); }
+.wgroup-concepts { padding-top: clamp(28px, 3vw, 40px); border-top: 1px solid var(--line); }
+.wgroup-concepts .wgroup-head { margin-bottom: 16px; }
+.wgroup-concepts .wgroup-head h3 { font-size: clamp(16px, 1.25vw, 18px); font-weight: 650; font-stretch: 110%; letter-spacing: 0; color: var(--text-2); }
+.wgroup-concepts .wgroup-head p { font-size: 13.5px; }
+.grid-concepts .card-img > img { filter: saturate(0.8) brightness(0.9); }
+.grid-concepts .card:hover .card-img > img, .grid-concepts .card:focus-visible .card-img > img { filter: none; }
+.grid-concepts .card-body b { font-size: 15.5px; color: var(--text-2); }
+.grid-concepts .card:hover .card-body b { color: var(--accent); }
+/* a quiet tag on short projects and concepts, only in the date-sorted list */
+.card-g { display: none; position: absolute; z-index: 2; left: 10px; bottom: 10px; padding: 2px 9px; border-radius: 999px; background: rgba(10, 8, 7, 0.72); border: 1px solid rgba(255, 255, 255, 0.16); color: var(--text-2); font-size: 12px; font-weight: 600; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.work-flat .card-g { display: block; }
+.work-flat .pin { display: none; } /* pins order the default groups only */
+.grid[hidden], .work-groups[hidden] { display: none; }
+main [tabindex="-1"]:focus { outline: none; }
 .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px 18px; }
 @media (max-width: 1199px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 899px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; } }
@@ -363,8 +381,16 @@ a.chip:hover { color: var(--text); border-color: var(--text-2); }
 .about-text p:nth-child(2) { margin-top: 0; }
 .portrait { grid-area: photo; border-radius: var(--radius-lg); overflow: hidden; aspect-ratio: 4 / 5; background: var(--bg-raise); }
 .portrait img { width: 100%; height: 100%; object-fit: cover; }
-.contact-card { grid-area: contact; margin-top: 36px; padding: 26px 28px; border-radius: var(--radius-lg); background: rgba(20, 18, 16, 0.8); border: 1px solid var(--line); }
-.contact-card h3 { font-size: clamp(22px, 2.2vw, 32px); font-weight: 750; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.05; }
+.contact-card { grid-area: contact; margin-top: 36px; padding: 26px 28px; border-radius: var(--radius-lg); background: rgba(20, 18, 16, 0.8); border: 1px solid var(--line); scroll-margin-top: 96px; }
+/* the contact line: calm, not shouted (Jerry, Sept 28: "slightly less bold") */
+.contact-card .contact-line { font-size: clamp(19px, 1.55vw, 23px); font-weight: 500; font-stretch: 104%; letter-spacing: -0.01em; line-height: 1.35; color: var(--text); max-width: 40ch; }
+.contact-mail { display: grid; gap: 6px; margin-top: 16px; font-size: 16px; }
+.contact-mail li { display: flex; flex-wrap: wrap; gap: 2px 8px; }
+.cm-l { min-width: 5.2em; color: var(--muted); }
+.contact-mail a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.25); text-underline-offset: 4px; transition: color 0.2s, text-decoration-color 0.2s; overflow-wrap: anywhere; }
+.contact-mail a:hover { color: var(--accent); text-decoration-color: currentColor; }
+.footer-mail { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.footer-mail a:hover { color: var(--text); }
 .links-inline { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 16px; font-size: 15px; color: var(--text-2); }
 .links-inline a { display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s; }
 .links-inline a:hover { color: var(--accent); }
@@ -503,6 +529,8 @@ body[data-tag="locked"] .tag-overlay polygon { stroke-width: 3.5; fill: rgba(61,
 .stat { background: var(--bg); padding: 18px 20px; }
 .stat b { display: block; font-size: clamp(22px, 2.2vw, 30px); font-weight: 750; font-stretch: 115%; letter-spacing: -0.02em; line-height: 1.1; }
 .stat span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--muted); line-height: 1.35; }
+/* phones: two columns, and an odd last stat takes the full row so no empty cell shows */
+@media (max-width: 560px) { .stats { grid-template-columns: 1fr 1fr; } .stat:last-child:nth-child(odd) { grid-column: 1 / -1; } }
 .hero-media { margin-top: 28px; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-raise); }
 .hero-media video, .hero-media img { width: 100%; max-height: 78vh; object-fit: contain; background: var(--bg-sunk); }
 .p-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: clamp(28px, 5vw, 80px); padding: 56px 0 24px; }
@@ -576,7 +604,9 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
   .grid { gap: 20px 10px; }
   .card-body b { font-size: 14.5px; }
   .more-arrow { width: 30px; height: 30px; }
-  .filter-row { justify-content: flex-start; }
+  .sort-l { display: none; }
+  .sort-g button { padding: 5px 11px; font-size: 13px; }
+  .card-g { left: 7px; bottom: 7px; padding: 1px 7px; font-size: 11px; }
   .card-cta { display: none; }
   .archive { margin-top: 48px; padding-top: 32px; }
   .about-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "photo" "contact"; }
@@ -728,9 +758,14 @@ a.rx-m:hover > img { transform: scale(1.02); }
 /* one row, equal heights: each item grows in proportion to its aspect ratio (scaled up, since
    grow factors that sum below 1 would leave the row part empty); --sum, the row's total aspect
    ratio, caps the row so it is never taller than about three quarters of the screen */
-.rx-row { display: flex; gap: 12px; align-items: flex-start; max-width: calc(var(--sum, 20) * min(72vh, 680px)); }
+/* gaps between pictures (Jerry, Sept 28: the e-bike "More pictures" were too close together): a
+   row keeps 12 to 18 px between items, a grid 16 to 24 px across and 28 to 38 px down, room for
+   each caption before the next picture */
+.rx-row { display: flex; gap: clamp(12px, 1.25vw, 18px); align-items: flex-start; max-width: calc(var(--sum, 20) * min(72vh, 680px)); }
 .rx-row > .rx-fig { flex: calc(var(--ar) * 100) 1 0%; }
-.rx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; grid-auto-flow: dense; }
+/* a section heading with no lead text keeps the same room above its pictures as one with a lead */
+.rx-col + .rx-row, .rx-col + .rx-grid, .rx-col + .rx-wide, .rx-col + .rx-collage { margin-top: 24px; }
+.rx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(28px, 2.6vw, 38px) clamp(16px, 1.65vw, 24px); grid-auto-flow: dense; }
 .rx-grid.rx-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .rx-grid .rx-fig { display: flex; flex-direction: column; }
 .rx-grid .rx-m { aspect-ratio: 4 / 3; }
@@ -983,7 +1018,9 @@ html.rx-lb-open { overflow: hidden; }
   .rx-row.rx-stack-sm { flex-direction: column; gap: 18px; }
   .rx-row.rx-stack-sm > .rx-fig { flex: none; width: 100%; }
   .rx-grid.rx-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rx-grid { gap: 16px 10px; }
+  .rx-grid { gap: 22px 12px; }
+  /* two columns on a phone: an odd last picture takes the full width instead of leaving a hole */
+  .rx-grid:not(:has(.rx-tall)) > .rx-fig:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .rx-grid .rx-tall .rx-m { min-height: 220px; }
   .rx-collage { gap: 22px 14px; }
   .rx-collage .rx-fig { width: calc(50% - 10px); }
@@ -1002,3 +1039,32 @@ html.rx-lb-open { overflow: hidden; }
   .rx-collage .rx-fig:hover { transform: rotate(var(--tilt, 0deg)); }
   .rx-spin { animation-duration: 3s; }
 }
+/* r5 media start */
+/* Hero layout 'stack' (tools/rich.mjs heroStack): videos stacked on the left, one tall photo (a
+   poster) on the right, both columns exactly the same height. With the column gap g, the stack's
+   summed height per unit width S, n stacked items and the photo's aspect P, the build writes
+   --k1 = 1 + P(n - 1) and --k2 = 1 + P S: the stack column is (100% - g k1) / k2 wide and the photo
+   takes the rest. --ka = 1/S + P and --kb = 1 - (n - 1)/S cap the whole hero at --hs-h tall, so it
+   fits on one screen under the nav. The photo fills its cell (the maths makes the cell its aspect). */
+.rx-hero-stack { --g: 12px; --hs-h: min(calc(100svh - var(--nav-h, 58px) - 44px), 900px);
+  display: grid; grid-template-columns: calc((100% - var(--g) * var(--k1)) / var(--k2)) minmax(0, 1fr);
+  column-gap: var(--g); row-gap: 8px; align-items: start;
+  max-width: calc(var(--hs-h) * var(--ka) + var(--g) * var(--kb)); margin-inline: auto; }
+.rx-hs-stack { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: var(--g); min-width: 0; }
+.rx-hs-stack .rx-fig { position: relative; }
+.rx-hero-stack .rx-m { border-radius: var(--radius-lg); }
+.rx-hs-stack figcaption { position: absolute; inset: auto 0 0 0; margin: 0; padding: 28px 16px 11px; border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: linear-gradient(to top, rgba(8, 7, 6, 0.74), rgba(8, 7, 6, 0)); color: #f4efe7; font-size: 14px; pointer-events: none; }
+.rx-hs-side { display: contents; }
+.rx-hs-side > .rx-m { grid-column: 2; grid-row: 1; align-self: stretch; aspect-ratio: auto; background: #fff; }
+.rx-hs-side > .rx-m > img { position: absolute; inset: 0; object-fit: cover; }
+.rx-hs-side > figcaption { grid-column: 2; grid-row: 2; margin: 0; }
+@media (max-width: 640px) {
+  .rx-hero-stack { grid-template-columns: minmax(0, 1fr); max-width: none; row-gap: 0; }
+  .rx-hs-stack { gap: 18px; }
+  .rx-hs-stack figcaption { position: static; padding: 0; margin-top: 8px; border-radius: 0; background: none; color: var(--muted); font-size: 13.5px; }
+  .rx-hs-side > .rx-m { grid-column: 1; grid-row: 2; margin-top: 18px; aspect-ratio: var(--ar); }
+  .rx-hs-side > .rx-m > img { position: static; }
+  .rx-hs-side > figcaption { grid-column: 1; grid-row: 3; margin-top: 8px; }
+}
+/* r5 media end */

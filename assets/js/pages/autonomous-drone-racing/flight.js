@@ -10,16 +10,18 @@
 //    flight-path.js gives the pose at any moment as a pure function of the scroll
 //  - the inset redoes the script's vision on the frame of the latest control tick (the same noise,
 //    so the same result as the lap), shown as Raw, Mask or Fit depending on the step
-//  - drawn for the page: the course, the LED rope, the hoops, the reflection and the climb in step 0;
-//    the hoop reaction is an illustrative stand-in, labelled on the stage (our repo has no
-//    forward-camera code)
+//  - drawn for the page: the course, the LED rope, the hoops, the reflection and the climb in step 0.
+//    The hoops stand square across the drone's path (Jerry, Sept 28): each ring is centred on the
+//    path, at the height the drone's frame flies, with its normal along the path, and the drone flies
+//    straight through the middle. It does not react to them (our repo has no forward-camera code);
+//    their tags light up while the forward camera has them in view
 // Every picture is a pure function of (step, progress through it). Views of fixed regions of the
 // course are framed once and blended; the camera never follows the drone.
 import * as THREE from 'three';
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
-import { SCRIPT, SIM, buildCourse, makeCamera, makeWorkspace, renderDown, detect, toFloor, hoopSegment, DEFAULT_COURSE, DEFAULT_HOOPS, DEFAULT_GLARE } from './line-core.js';
-import { TICKS, F, LAP, timeAt, altAt, tickAt, poseAt, smooth, GEAR } from './flight-path.js';
+import { SCRIPT, SIM, buildCourse, makeCamera, makeWorkspace, renderDown, detect, toFloor, DEFAULT_COURSE, DEFAULT_GLARE } from './line-core.js';
+import { TICKS, F, LAP, HOOPS, HOOP_Y, timeAt, altAt, tickAt, poseAt, smooth, GEAR } from './flight-path.js';
 import { loadDrone, css } from './drone-common.js';
 
 const { W, H } = SCRIPT;
@@ -43,7 +45,7 @@ const STEPS = [
 const VIEWS = {
   start: { box: [-3.05, -2.3, 0, 1.12, -1.25, -0.55], azimuth: -60, elevation: 28, pad: 1.18, shift: [-0.07, 0.02] },
   leg: { box: [-3.05, -1.25, 0, 1.1, -1.85, -0.55], azimuth: 14, elevation: 34, pad: 1.08, shift: [-0.07, 0.02] },
-  hoop: { box: [-1.9, 1.6, 0, 1.45, -2.05, -0.75], azimuth: 4, elevation: 30, pad: 1.06, shift: [-0.07, 0.02] },
+  hoop: { box: [-1.9, 1.6, 0, 1.72, -2.05, -0.75], azimuth: 4, elevation: 30, pad: 1.06, shift: [-0.07, 0.02] },
   all: { box: [-3.2, 3.3, 0, 1.1, -1.9, 1.9], azimuth: 90, elevation: 58, pad: 1.13, shift: [-0.17, 0.05] },
   glare: { box: [-3.3, -1.6, 0, 1.1, -1.3, 1.85], azimuth: 55, elevation: 50, pad: 1.06, shift: [-0.08, 0.02] },
 };
@@ -59,7 +61,6 @@ const CSS = `
 .adr-fl .rx-hud { width: min(340px, calc(100% - 28px)); }
 .adr-fl .adr-state { color: var(--text); font-weight: 650; }
 .adr-fl .adr-state.warn { color: #ffb454; }
-.adr-fl .adr-state.illus::after { content: 'illustrative stand-in'; display: block; margin-top: 2px; font-size: var(--rx-ov-small); font-weight: 550; color: var(--muted); }
 .adr-fl tr.adr-off td { opacity: .45; }
 .adr-inset { position: absolute; right: 14px; bottom: 14px; width: max(var(--rx-inset-w), min(40%, 420px)); margin: 0; border-radius: 12px; overflow: hidden;
   background: #000; border: 1px solid rgba(255, 255, 255, .16); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
@@ -181,32 +182,32 @@ export async function mount(el, ctx) {
   glareMesh.position.set(glare.x, 0.006, glare.z); world.add(glareMesh);
 
   const stripes = stripeTex(); stripes.wrapS = THREE.RepeatWrapping;
-  const ringGeo = new THREE.TorusGeometry(SIM.HOOP_D / 2, 0.022, 10, 72);
+  const ringGeo = new THREE.TorusGeometry(SIM.HOOP_D / 2, SIM.HOOP_TUBE, 10, 72);
   const tagGeo = new THREE.PlaneGeometry(0.11, 0.11);
   const tagTexture = tagTex();
   const postGeo = new THREE.CylinderGeometry(0.012, 0.012, 1, 8);
-  const hoops = DEFAULT_HOOPS.map((hp) => {
+  // each hoop: the ring in its group's x-y plane, its normal (the group's +z) along the path
+  const hoops = HOOPS.map((hp) => {
     const g = new THREE.Group(); g.name = 'hoop';
-    const ringMat = new THREE.MeshStandardMaterial({ map: stripes, roughness: 0.5, metalness: 0, emissive: '#000000', emissiveIntensity: 0.5 });
-    const ring = new THREE.Mesh(ringGeo, ringMat); ring.castShadow = true; ring.position.y = SIM.ALT;
+    const ringMat = new THREE.MeshStandardMaterial({ map: stripes, roughness: 0.5, metalness: 0 });
+    const ring = new THREE.Mesh(ringGeo, ringMat); ring.castShadow = true; ring.position.y = HOOP_Y;
     g.add(ring);
     const tagMat = new THREE.MeshBasicMaterial({ map: tagTexture, toneMapped: false, color: '#dddddd', side: THREE.DoubleSide });
     for (let k = 0; k < 4; k++) { // tags at 12, 3, 6 and 9 o'clock, like the race hoops
       const a = (k * Math.PI) / 2, r = SIM.HOOP_D / 2 + 0.075;
-      const t = new THREE.Mesh(tagGeo, tagMat); t.position.set(Math.sin(a) * r, SIM.ALT + Math.cos(a) * r, 0);
+      const t = new THREE.Mesh(tagGeo, tagMat); t.position.set(Math.sin(a) * r, HOOP_Y + Math.cos(a) * r, 0);
       g.add(t);
     }
-    const r = SIM.HOOP_D / 2, a = r * 0.72, top = SIM.ALT - Math.sqrt(r * r - a * a);
+    const r = SIM.HOOP_D / 2, a = r * 0.72, top = HOOP_Y - Math.sqrt(r * r - a * a);
     for (const sx of [-1, 1]) { // two thin stands from the floor up to the ring
       const post = new THREE.Mesh(postGeo, ringMat);
       post.scale.y = top; post.position.set(sx * a, top / 2, 0); post.castShadow = true;
       g.add(post);
     }
-    const sg = hoopSegment(course, hp);
     g.position.set(hp.x, 0, hp.z);
-    g.rotation.y = Math.atan2(-sg.tz, sg.tx); // ring plane along the rope (as in the simulation)
+    g.rotation.y = Math.atan2(hp.tx, hp.tz); // the group's +z (the ring's normal) along the path
     world.add(g);
-    return { g, ringMat, tagMat, lit: -1, hot: -1 };
+    return { g, tagMat, lit: -1 };
   });
 
   // ---------------------------------------------------------------- annotations (not parts)
@@ -272,7 +273,7 @@ export async function mount(el, ctx) {
     fit: ov.label('Fitted line', [0, 0, 0], { color: '#3ddc84', side: 'l', minW: 520 }),
     tgt: ov.label('100 px ahead', [0, 0, 0], { color: '#ff6b35', minW: 520 }),
     fwd: ov.label('Forward camera', [0, 0, 0], { color: '#7cc4ff', minW: 520 }),
-    hoop: ov.label('Hoop with AprilTags', [DEFAULT_HOOPS[0].x, SIM.ALT + SIM.HOOP_D / 2 + 0.16, DEFAULT_HOOPS[0].z], { color: '#f2c21b', side: 'l', minW: 520 }),
+    hoop: ov.label('Hoop with AprilTags', [HOOPS[0].x, HOOP_Y + SIM.HOOP_D / 2 + 0.16, HOOPS[0].z], { color: '#f2c21b', side: 'l', minW: 520 }),
     glare: ov.label('Reflection', [glare.x, 0, glare.z], { color: '#ffffff', minW: 520 }),
   };
   // which steps show each label
@@ -288,7 +289,6 @@ export async function mount(el, ctx) {
       <tr><td>Yaw rate</td><td data-k="w"></td></tr>
       <tr class="rx-hud-x"><td>Pixel error <small>x, y from the image centre</small></td><td data-k="e"></td></tr>
       <tr class="rx-hud-x"><td>Angle error</td><td data-k="a"></td></tr>
-      <tr class="rx-hud-x" data-k="pushRow"><td>Hoop stand-in <small>illustrative, part of Right</small></td><td data-k="push"></td></tr>
       <tr class="rx-hud-x"><td>Frames with no line</td><td data-k="miss"></td></tr>
       <tr class="rx-hud-x"><td>Commands sent <small>one every 0.5 s</small></td><td data-k="n"></td></tr>
     </tbody></table>
@@ -428,21 +428,21 @@ export async function mount(el, ctx) {
   function readout(u, tk, t) {
     if (tk < 0) {
       put('state', u < 0.9 ? 'Taking off' : 'At 1.0 m, first frame next'); cls('state', 'adr-state');
-      for (const k of ['f', 'r', 'w', 'e', 'a', 'push']) put(k, 'none yet');
+      for (const k of ['f', 'r', 'w', 'e', 'a']) put(k, 'none yet');
       put('miss', `0 of ${SCRIPT.MAX_MISSES}`); put('n', '0');
       put('mini', 'Climbing to 1.0 m, no command yet');
-      cls('pushRow', 'rx-hud-x adr-off');
       return;
     }
     const T = TICKS[tk];
-    const avoid = T[F.avoid] >= 0, two = T[F.blobs] > 1, lapDone = t > LAP - 0.3;
-    put('state', lapDone ? 'One lap: back over the start' : !T[F.found] ? 'No line in this frame' : avoid ? 'Hoop ahead: stepping aside' : two ? 'Two blobs: keeping the longest' : 'Following the line');
-    cls('state', `adr-state${avoid && !lapDone ? ' warn illus' : two ? ' warn' : ''}`);
+    const two = T[F.blobs] > 1, lapDone = t > LAP - 0.3;
+    // through a hoop while the drone's frame centre is within 0.35 m of its ring's plane
+    const through = HOOPS.some((hp) => Math.abs((pose.x - hp.x) * hp.tx + (pose.z - hp.z) * hp.tz) < 0.35);
+    const ahead = !through && T[F.seen] > 0;
+    put('state', lapDone ? 'One lap: back over the start' : !T[F.found] ? 'No line in this frame' : through ? 'Following the line through a hoop' : ahead ? 'Hoop ahead, its tags in view' : two ? 'Two blobs: keeping the longest' : 'Following the line');
+    cls('state', `adr-state${two && !through && !ahead ? ' warn' : ''}`);
     put('f', fmt(T[F.cf], 3, 'm/s')); put('r', fmt(T[F.cr], 3, 'm/s')); put('w', fmt(T[F.cw], 1, '°/s'));
     put('e', T[F.found] ? `x ${T[F.ex].toFixed(0)}, y ${T[F.ey].toFixed(0)} px`.replace(/-/g, '−') : 'none');
     put('a', T[F.found] ? fmt(T[F.ang], 1, '°') : 'none');
-    put('push', avoid ? fmt(T[F.push], 3, 'm/s') : 'none');
-    cls('pushRow', `rx-hud-x${avoid ? '' : ' adr-off'}`);
     put('miss', `${T[F.misses]} of ${SCRIPT.MAX_MISSES}`);
     put('n', String(tk + 1));
     put('mini', `Forward ${T[F.cf].toFixed(2)}, right ${T[F.cr].toFixed(2)} m/s, yaw ${T[F.cw].toFixed(1)}°/s`.replace(/-/g, '−'));
@@ -452,7 +452,7 @@ export async function mount(el, ctx) {
   const pose = { x: 0, z: 0, h: 0, alt: SIM.ALT };
   const q = {}, q2 = {};
   const footPts = [[0, 0], [0, 0], [0, 0], [0, 0]], wedgePts = Array.from({ length: WEDGE_N }, () => [0, 0]);
-  const tintOn = new THREE.Color('#ff6b35'), tagLit = new THREE.Color('#9dffb8'), tagOff = new THREE.Color('#dddddd'), black = new THREE.Color(0);
+  const tagLit = new THREE.Color('#9dffb8'), tagOff = new THREE.Color('#dddddd');
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, STEPS.length - 1);
     const u = step + stepP;
@@ -492,7 +492,7 @@ export async function mount(el, ctx) {
       toFloor(tp, rec.tx, rec.ty, q); tgt.position.set(q.x, 0.013, q.z); L.tgt.p.set(q.x, 0, q.z);
       fitMat.opacity = tgtMat.opacity = fitA;
     }
-    // the forward camera's view: 66 degrees wide, drawn to 2.5 m (the stand-in's range), from step 4
+    // the forward camera's view: 66 degrees wide, drawn to 2.5 m (the range it counts tags in), from step 4
     const fwdA = step >= 4 ? (step === 4 ? k : 1) : 0;
     wedge.visible = wedgeEdge.visible = fwdA > 0.01;
     if (wedge.visible) {
@@ -504,13 +504,11 @@ export async function mount(el, ctx) {
       wedgeMat.opacity = 0.06 * fwdA; wedgeEdgeMat.opacity = 0.5 * fwdA;
       L.fwd.p.set(ox + c * 1.7, 0, oz + s * 1.7);
     }
-    // hoops: tags light up while the forward camera sees them; the ring glows while it is avoided
+    // hoops: tags light up while the forward camera has them in view
     hoops.forEach((hp, i) => {
       const T = tk >= 0 ? TICKS[tk] : null;
-      const lit = T && fwdA > 0 && ((T[F.seen] >> i) & 1 || T[F.avoid] === i) ? 1 : 0;
-      const hot = T && fwdA > 0 && T[F.avoid] === i ? 1 : 0;
+      const lit = T && fwdA > 0 && (T[F.seen] >> i) & 1 ? 1 : 0;
       if (lit !== hp.lit) { hp.tagMat.color.copy(lit ? tagLit : tagOff); hp.lit = lit; }
-      if (hot !== hp.hot) { hp.ringMat.emissive.copy(hot ? tintOn : black); hp.hot = hot; }
     });
 
     // labels hand over between steps: the old ones leave before the new ones arrive

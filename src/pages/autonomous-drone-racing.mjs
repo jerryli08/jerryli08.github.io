@@ -2,11 +2,12 @@
 // (the phase A writeup.md for this project), tightened, and checked against Jerry’s checklist,
 // facts.md and answers.md. Code facts come from the team's line-following flight script (the repo is
 // read-only here; it is never linked or named on the page), numbers marked "from the CAD" from his
-// CAD. The org line stays as src/projects.mjs has it.
+// CAD. The org line stays as src/projects.mjs has it. The hoops (Jerry, Sept 28): they stand square
+// to the path and the drone flies through them.
 // Every demo is scroll-driven (Jerry, Sept 26): the flight, the CAD tour, the software path and the
 // vision steps all move only with the scroll.
 // Held back until Jerry answers (see the phase A questions.md): which race clip is our winning run,
-// how the drone handled the hoops, what caused the late-July runs that climbed into the cage net
+// what caused the late-July runs that climbed into the cage net
 // (left out: the drone in those clips is not clearly ours either), whether the repo's script is the
 // version that raced, who wrote or designed which parts, and every "next time" item.
 // Worked calculations (Sept 27): inputs are the script's constants, the Camera Module 3 product brief
@@ -47,11 +48,11 @@ export default {
         { h: 'What the downward camera sees', p: ['Each time round the loop the script takes one 640 x 360 frame from the downward camera: the inset. The nose is at the bottom of the picture. Up close, the LED rope is a row of separate bright dots.'] },
         { h: 'Dots into one bar', p: ['Dilate 30 x 30, erode 20 x 20, then keep only pixels from 250 to 255 in all three channels. The dots merge into one solid bar: the mask in the inset.'] },
         { h: 'A line, and a point to chase', p: ['`cv2.fitLine` puts a straight line through the bar (green), and the script takes the point 100 px ahead along it (orange). That point’s offset from the image centre and the line’s angle become the forward, sideways and yaw-rate commands in the readout. One command, then the loop sleeps 0.5 s while the flight controller flies it.'] },
-        { h: 'A hoop ahead', p: ['The forward camera, its view in blue, is for obstacle avoidance: the hoops carry AprilTags. What the drone does here is an illustrative stand-in, not our obstacle code: once it has seen the tags it adds a sideways push until it is past the hoop, and then the line pulls it back.'] },
-        { h: 'Round the bends', p: ['Chasing a point ahead of the drone, not the nearest point, is what turns it into each bend before it gets there: the yaw rate follows the curves. The same law that centres it on the line also pushes it along, because on a straight the target is always ahead. The second hoop gets the same stand-in.'] },
+        { h: 'A hoop ahead', p: ['The forward camera, its view in blue, is for obstacle avoidance: the hoops carry AprilTags, lit here while they are in its view. Each hoop stands square across the path, and the drone flies straight through the middle of it.'] },
+        { h: 'Round the bends', p: ['Chasing a point ahead of the drone, not the nearest point, is what turns it into each bend before it gets there: the yaw rate follows the curves. The same law that centres it on the line also pushes it along, because on a straight the target is always ahead. On the way back it flies through the second hoop the same way.'] },
         { h: 'A reflection on the floor', p: ['A round reflection comes into view, bright enough to pass the threshold, so the mask has two blobs. The script keeps the one with the longest side, the rope, and ignores the other. Then the drone is back over the start: one lap, with the line found in every frame.'] },
       ],
-      caption: 'A simulation on our CAD, not a recording: a JavaScript port of our script flies the lap ahead of time, and the scroll picks the moment. From our script: the image processing, the gains and limits, the 0.5 s between commands and landing after 10 frames with no line. Assumed for the page: the drone holds 1.0 m (the script’s take-off height), the flight controller follows each command with a 0.3 s lag, and the camera has the 66° lens of a standard Camera Module 3. The course, the LED rope, the hoops, the reflection and the climb are drawn for the page, and the hoop reaction is an illustrative stand-in, not our obstacle code. Some steps cover more of the flight than others; that changes time only, and the readout is what the code sent at that moment.',
+      caption: 'A simulation on our CAD, not a recording: a JavaScript port of our script flies the lap ahead of time, and the scroll picks the moment. From our script: the image processing, the gains and limits, the 0.5 s between commands and landing after 10 frames with no line. Assumed for the page: the drone holds 1.0 m (the script’s take-off height), the flight controller follows each command with a 0.3 s lag, and the camera has the 66° lens of a standard Camera Module 3. The course, the LED rope, the hoops, the reflection and the climb are drawn for the page. Each hoop stands square across the drone’s path, centred on it, and the drone flies through without reacting to it: our repo has no forward-camera code. Some steps cover more of the flight than others; that changes time only, and the readout is what the code sent at that moment.',
     },
 
     // ------------------------------------------------------------------ the race
@@ -220,7 +221,7 @@ export default {
         p: [
           'The forward camera is for obstacle avoidance. The obstacles on the course are hoops with AprilTags on them: square markers whose four corners, seen by a calibrated camera, give the tag’s position and orientation.',
           'Calibration comes first, because a tag’s pixels only turn into metres once the camera’s focal length, optical centre and lens distortion are known. Our calibration script uses a printed chessboard with 7 x 7 inner corners and 25 mm squares, photographed 70 times at different angles. It finds the corners, refines each one to sub-pixel accuracy with `cv2.cornerSubPix`, and solves for the camera matrix and distortion coefficients with `cv2.calibrateCamera`.',
-          { note: 'The hoop reaction in the flight at the top of the page is a stand-in to show the idea, not our obstacle code.' },
+          { note: 'In the flight at the top of the page the hoops stand square across the path and the drone flies through them without reacting to them: our repo has no forward-camera code to port.' },
         ],
       }],
     },

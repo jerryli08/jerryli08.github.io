@@ -174,6 +174,21 @@ export function createRich(env) {
     const sizes = `(max-width: 640px) 100vw, ${Math.round(o.width || 1140 / Math.max(1, list.length))}px`;
     return `<div class="rx-row${sum > 2 ? ' rx-stack-sm' : ''}" style="--sum:${+sum.toFixed(4)}">${list.map((m) => fig(m, ctx, { sizes, eager: o.eager })).join('')}</div>`;
   }
+  // hero layout 'stack' (r5, media agent): `items` stacked on the left, `side` (one photo, such as a
+  // poster) on the right, both columns exactly the same height: the column widths follow from the
+  // aspect ratios (site.css, "r5 media"). `side.href` links the photo to a file (a PDF) instead of
+  // the lightbox. On a phone the stack comes first, then the side photo.
+  function heroStack(items, side, ctx) {
+    const S = items.reduce((a, m) => a + 1 / aspectOf(m, ctx.slug), 0), n1 = items.length - 1, P = aspectOf(side, ctx.slug);
+    const k = (x) => +x.toFixed(4), w = Math.round(1140 / (1 + P * S));
+    const stack = items.map((m) => fig(m, ctx, { eager: true, sizes: `(max-width: 640px) 100vw, ${w}px` })).join('');
+    let right = fig(side, ctx, { sizes: `(max-width: 640px) 100vw, ${1140 - w}px` }).replace('class="rx-fig', 'class="rx-fig rx-hs-side');
+    if (typeof side.href === 'string' && /^(https?:\/\/|\/)/.test(side.href)) {
+      const href = side.href.startsWith('/') && has(side.href) ? v(side.href) : side.href;
+      right = right.replace(/<a class="rx-m" href="[^"]*" data-lb[^>]*>/, `<a class="rx-m" href="${esc(href)}" target="_blank" rel="noopener">`);
+    }
+    return `<div class="rx-hero rx-hero-stack" style="--k1:${k(1 + P * n1)};--k2:${k(1 + P * S)};--ka:${k(1 / S + P)};--kb:${k(1 - n1 / S)}"><div class="rx-hs-stack">${stack}</div>${right}</div>`;
+  }
   function mediaLayout(layout, items, ctx, o = {}) {
     const list = arr(items);
     if (!list.length) { ctx.warn('media section has no items'); return ''; }
@@ -414,6 +429,7 @@ export function createRich(env) {
       const items = arr(hh.items);
       if (!items.length) ctx.warn('hero has no items');
       else if (hh.layout === 'row' && items.length > 1) hero = `<div class="rx-w"><div class="rx-hero rx-hero-row">${row(items, ctx, { eager: true })}</div></div>`;
+      else if (hh.layout === 'stack' && hh.side) hero = `<div class="rx-w">${heroStack(items, hh.side, ctx)}</div>`;
       else hero = `<div class="rx-w"><div class="rx-hero rx-hero-single">${fig(items[0], ctx, { eager: true, sizes: '(max-width: 1180px) 100vw, 1140px' })}</div></div>`;
     }
     const summary = page.summary?.text ? `<div class="rx-summary rx-text">${blocks(page.summary.text, ctx)}</div>` : '';

@@ -12,22 +12,28 @@ const HOLY = '[Holybro X500 V2 specs](https://docs.holybro.com/drone-development
 export default {
   summary: {
     stats: [
-      { v: '10 DOF', l: 'Latch linkage driven by one servo' },
+      { v: '10 axes', l: 'Of rotation in the latch linkage, 6 driven by one servo' },
       { v: '27.3 N', l: 'Held per latch in a vertical pull test' },
       { v: 'First author', l: 'Poster at IEEE MIT URTC 2025' },
       { v: '7', l: 'Person team' },
     ],
     text: [
       'A drone and a ground rover that lock together, so either one can carry the other. I came up with the project, recruited and led a team of seven, and designed and fabricated all of the hardware.',
-      'The core of it is a latch on the rover that catches the drone’s landing tubes with no power and lets go on command: a linkage geartrain with 10 degrees of freedom, driven by a single servo. On the course run the drone carried the rover, let go of it with the servo and flew on alone. I presented the work as first author at the IEEE MIT Undergraduate Research Technology Conference.',
+      'The core of it is a latch on the rover that catches the drone’s landing tubes with no power and lets go on command: a linkage geartrain with 10 axes of rotation, 6 of them driven by a single servo. On the course run the drone carried the rover, let go of it with the servo and flew on alone. I presented the work as first author at the IEEE MIT Undergraduate Research Technology Conference.',
     ],
   },
+  // Jerry (Sept 28, 19:59): three videos stacked on the left, the research poster on the right
+  // (hero layout 'stack' in tools/rich.mjs; the columns come out the same height).
   hero: {
-    layout: 'row',
+    layout: 'stack',
     items: [
       { v: 'hero-drone-carries-rover.mp4', c: 'The drone carrying the rover' },
       { v: 'hero-rover-carries-drone.mp4', c: 'The rover carrying the drone' },
+      { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover drives on its own' },
     ],
+    side: { i: 'urtc-poster.webp', href: '/assets/docs/drone-on-wheels-poster.pdf',
+      c: 'Our published poster, “Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation,” IEEE MIT URTC 2025 ([PDF](/assets/docs/drone-on-wheels-poster.pdf))',
+      alt: 'Our published poster, Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation, IEEE MIT URTC 2025' },
   },
   sections: [
     // Jerry (Sept 27, 21:12): the best CAD scroll animation sits right below the hero.
@@ -52,7 +58,6 @@ export default {
       'The drone is a Holybro X500 V2 quadcopter on a 5000 mAh battery. I designed new 3D-printed landing gear for it: two mounts that hold a pair of 16 mm tubes 110 mm apart, and those tubes are what the rover grabs. The rover is a 3D-printed truss chassis, 327 mm long and about 1.23 kg, with two latches on its deck, one per tube, and an AprilTag in front of them for the drone’s downward camera.',
     ],
       media: [
-        { v: 'hero-operating-separately.mp4', c: 'Working separately: the drone flies the course while the rover waits' },
         { i: 'airborne-docked.webp', c: 'Docked and airborne: the drone carrying the rover in a low hover (Figure 1 of our poster)' },
       ] },
 
@@ -63,10 +68,10 @@ export default {
       { v: '1.23 kg', l: 'Rover weight' },
     ] },
 
-    { type: 'prose', id: 'latch-design', h: 'The latch: one servo, ten degrees of freedom', p: [
+    { type: 'prose', id: 'latch-design', h: 'The latch: ten axes of rotation, one servo', p: [
       'The latch has two jobs: catch the drone by itself, and let go on command.',
       { problem: 'Every gram of latch is a gram the drone has to lift when it carries the rover, and a latch with a motor per arm or per door would be heavy.', title: 'Weight' },
-      { fix: 'I built both jobs into one linkage geartrain with 10 degrees of freedom, 6 active and 4 passive, all driven by a single servo.' },
+      { fix: 'I built both jobs into one linkage geartrain with 10 axes of rotation: 6 driven by a single servo, and 4 passive.' },
       { calc: 'How heavy is the rover for this drone?',
         given: [
           ['Rover weight', '1.23 kg', 'weighed on a scale'],
@@ -86,7 +91,7 @@ export default {
         'The idler turns the other way and drives the 7-tooth pinion on one arm of the second latch, so the two latches open as mirror images.',
         'On each latch the two arms mesh through their 7-tooth pinions **1:1**, so they swing apart like a V.',
       ] },
-      'Going from 25 teeth down to 7 multiplies the motion by 25/7, about 3.6, so 11.8 degrees at the servo swings every arm **42 degrees**, far enough to carry the doors clear of the tubes. The six active degrees of freedom are the servo gear, the idler and the four arms. The four doors are the passive ones.',
+      'Going from 25 teeth down to 7 multiplies the motion by 25/7, about 3.6, so 11.8 degrees at the servo swings every arm **42 degrees**, far enough to carry the doors clear of the tubes. The servo drives six of the ten axes: the servo gear, the idler and the four arm pinions. The other four are the pins the doors hang on at the arm tips. The doors ride along with the arms, but nothing drives them on their pins: only a tube or the elastic turns them.',
       { table: {
         head: ['Part', 'Teeth', 'At full open'],
         rows: [
@@ -112,7 +117,7 @@ export default {
         { h: 'One servo drives everything', p: ['The servo turns the 25-tooth gear. It meshes with the idler and with the 7-tooth pinion of one arm on the first latch. The idler drives one arm on the second latch, and each pair of arms is geared together 1:1.'] },
         { h: '11.8 degrees in, 42 out', p: ['The step from 25 teeth to 7 turns 11.8 degrees at the servo into 42 degrees at every arm. The arms swing apart like a V and carry the doors out past the tubes. The idler reverses the direction, so the two latches open as mirror images.'] },
         { h: 'Let go', p: ['With the arms open nothing holds the tubes, and the drone lifts straight out. Carrying the rover, it is the same motion the other way round: the servo opens the arms and the rover drops out of the latch.'] },
-        { h: 'Six active, four passive', p: ['The servo closes the arms again, ready for the next landing. The servo gear, the idler and the four arms are the six active degrees of freedom. The four doors on the arm tips are the passive ones, and they are what catches the drone.'] },
+        { h: 'Six driven axes, four passive', p: ['The servo closes the arms again, ready for the next landing. The servo gear, the idler and the four arms turn on the six axes the servo drives. The four doors turn on their own pins at the arm tips, with nothing driving them, and they are what catches the drone.'] },
       ] },
 
     { type: 'scrolly', id: 'passive', module: 'passive', poster: `${M}/poster-passive.webp`,
@@ -223,7 +228,7 @@ export default {
     ] },
 
     { type: 'prose', id: 'results', h: 'Testing and results', p: [
-      'In the flight cage the drone lifted the rover and flew it across the cage, and the rover drove and turned with the drone riding on top: the two videos at the top of this page.',
+      'In the flight cage the drone lifted the rover and flew it across the cage, and the rover drove and turned with the drone riding on top: the first two videos at the top of this page.',
       'On the course run, the docked pair lifted off together and the drone carried the rover onto the course. Then the servo opened the latch and let the rover go, and the drone flew the course on its own, through the gate, and came back down beside the rover.',
     ] },
     { type: 'media', layout: 'row', items: [

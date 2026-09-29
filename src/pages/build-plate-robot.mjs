@@ -16,7 +16,7 @@ export default {
       { v: '24 h', l: 'Printing a day, up from about 7' },
       { v: 'About 70 s', l: 'Per swap, timed from the video' },
       { v: 'Top 12', l: 'of 2,042 projects, Hack Club Arcade' },
-      { v: '$300', l: 'Polymaker sponsorship' },
+      { v: '$1000+', l: 'In prizes + sponsorships' },
     ],
     text: [
       'My FTC team’s 3D printer sat idle every night, because someone had to be there to pull each finished print. Replac3d reaches into the printer, pulls the build plate out with four electromagnets, parks it on a holder and loads a fresh plate from a second holder, so the next job can start with nobody there.',
@@ -45,7 +45,7 @@ export default {
         { h: 'Turn back', p: ['90° back to the printer.'] },
         { h: 'Load it', p: ['The arm reaches in, sets the fresh plate on the bed, lets go and pulls back. The printer is ready for the next job.'] },
       ],
-      caption: 'My CAD, without its screws and nuts. The printer’s bed is not modeled, so only the plate moves with it. The belts are not in the CAD either: they are drawn along the path its pulleys, idlers and clamps set, and glow while they drive the arm. The readout names the function of my final sketch that each move belongs to.' },
+      caption: 'My CAD, without its screws and nuts. The printer’s bed is not modeled, so only the plate moves with it. The belts are not in the CAD either: they are drawn along the path its pulleys, idlers and clamps set, and glow while they drive the arm. The readout names the function of my final sketch that each move belongs to. The finished print on the used plate is 3DBenchy by Creative Tools.' },
 
     { type: 'prose', id: 'problem', h: 'Why take the whole plate out', p: [
       'We could only run the printer from 3 to 10 PM, because someone had to take each finished plate off and start the next job. A print that finished in the evening left the printer idle until the next afternoon. I wanted a machine that does that one human step.',

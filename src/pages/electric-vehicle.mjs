@@ -22,9 +22,9 @@ export default {
   summary: {
     stats: [
       { v: '1st of 48', l: 'East Maryland Regional' },
-      { v: '2nd of 72', l: 'UPenn Invitational' },
+      { v: '2nd of 72', l: 'UPenn Invitational, behind the Nationals winner' },
       { v: '8.3 m in 2.97 s', l: 'Stopped 1.1 cm (0.13%) from the target' },
-      { v: '73%', l: 'Lighter chassis plates: 738 g to 198 g' },
+      { v: '73% lightened', l: 'Chassis plates: 738 g to 198 g' },
     ],
     text: [
       'I designed and built this car by myself for the 2024-25 Science Olympiad Electric Vehicle event, which scores a car on how quickly it covers a set distance and how close to the target it stops. One brushless motor drives all four wheels through a 6 : 1 printed gear pair and two GT2 belts, a geared magnetic encoder measures the distance, and an Arduino schedules the power on distance so the car slows as it closes on the target.',

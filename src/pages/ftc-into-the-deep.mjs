@@ -19,23 +19,24 @@
 // driven on the robot, what the January rework changed and which approach angle won, which parts
 // besides the extension he designed, what went wrong at the first event, whether he wrote any of the
 // code, and every "next time" item. No teammate faces; no other team of Jerry's is mentioned.
-// Version 5's pick-up clip (intake-v5-pick-close): its first second is a wide shot with a person in
-// the background, so the clip on the page is re-cut from 1.0 s on (field and robot only).
+// Version 5's pick-up clip (Jerry, Sept 28, 19:59: the old intake-v5-pick-close missed every sample):
+// intake-v5-auto-picks is IMG_9293 (the hero's run) 2.0 to 7.75 s, HLG tonemapped, the left 360 px
+// cropped so no person shows; both picks in it succeed (checked frame by frame at 6 fps).
 // Hero (Jerry, Sept 28): the old IMG_9301 clip showed the autonomous missing its samples; the hero
 // is now IMG_9293 (Mar 2, 2025, 10:11, venue practice field; the team counts specimens in the
-// audio), 2.3 to 11.5 s, left 23% cropped so the human player's face never shows.
+// audio), full length and uncropped since Jerry asked for that (Sept 28, 11:37).
 // Calculation: the stated 15 in and 3 in widths against the game manual's 18 in starting size
 // (R101). Nothing else about the slide or intake (motor, ratio, stroke) is stated.
 export default {
   summary: {
     stats: [
-      { v: '15 in to 3 in', l: 'Width of my horizontal extension, first design to final' },
+      { v: '80% narrower', l: 'My horizontal extension, 15 in wide in the first design to 3 in in the final' },
       { v: '5', l: 'Intake versions in one season' },
       { v: '1st place', l: 'Think Award, FIRST Chesapeake Championship' },
       { v: 'Semifinalist', l: 'Division playoffs' },
     ],
     text: [
-      'INTO THE DEEP was the 2024-25 FIRST Tech Challenge game, and I captained S.T.A.T.I.C., team 18996, through it. My part of the robot was the **horizontal extension**: the slide that carries the intake out across the floor and in under the submersible to pick up game pieces. From the first design to the one we kept, I cut its width from **15 in to 3 in**.',
+      'INTO THE DEEP was the 2024-25 FIRST Tech Challenge game, and I captained S.T.A.T.I.C., team 18996, through it. My part of the robot was the **horizontal extension**: the slide that carries the intake out across the floor and in under the submersible to pick up game pieces. From the first design to the one we kept, I cut its width from 15 in to 3 in, 80% narrower.',
       'The intake at the end of it went through **five versions** in one season, from two sideways spinners to the two top-down spinners we finished with. It was our most successful season: the 1st place Think Award at the FIRST Chesapeake Championship and the division semifinals.',
     ],
   },
@@ -188,9 +189,9 @@ export default {
         { v: 'intake-v4-angle-test.mp4', c: 'Feb 2025: holding a new prototype over a sample at different angles' },
       ] },
       { label: 'Version 5 · Feb 12 to Mar 2025', title: 'Two top-down spinners', p: [
-        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. On the robot, at the end of the extension, the head drops onto a sample, picks it and swings to release it. The rows below go through it up close.',
+        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. In our autonomous run there, the head came down on each blue sample and picked it up on the first try, and the extension swung it over to the observation zone for the human player. The rows below go through it up close.',
       ], media: [
-        { v: 'intake-v5-pick-close.mp4', c: 'Mar 2025, at the end of the extension: the head drops onto a sample, picks it up between the two star wheels, and swings to release it' },
+        { v: 'intake-v5-auto-picks.mp4', c: 'Mar 2, 2025, from the autonomous run at the top of the page: the head comes down on a blue sample and picks it up, the extension swings it over to the observation zone and lets it go, then it does the same with the next sample' },
       ] },
     ] },
     { type: 'split', id: 'v5', items: [

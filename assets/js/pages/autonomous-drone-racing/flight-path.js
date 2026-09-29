@@ -4,18 +4,19 @@
 // simulation uses (a first-order lag of SIM.TAU on the commanded body velocity and yaw rate).
 // No DOM here, so it can be checked headless.
 import { SIM } from './line-core.js';
-import { FIELDS, TICKS, LAP } from './flight-data.js';
+import { FIELDS, TICKS, LAP, HOOPS } from './flight-data.js';
 
-export { TICKS, LAP };
+export { TICKS, LAP, HOOPS };
 export const F = Object.fromEntries(FIELDS.map((k, i) => [k, i]));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
 // scroll (u = step + progress through it, 0..7) to flight time in seconds. Step 0 is the climb;
-// the keys put the first hoop, the bends and the reflection in their steps. The lap ends at 6.7:
+// the keys put the first hoop (through it at 22.9 s), the bends and the second hoop (116.8 s) and
+// the reflection (in the downward camera's view from 124.0 to 136.1 s) in their steps. The lap ends at 6.7:
 // the stage unpins when the last step is about 70 % through. Monotone cubic (Fritsch and
 // Carlson), so the drone speeds up and slows down smoothly between steps.
-export const KEYS = [[0, 0], [1, 0], [2, 4], [3, 8], [4, 13], [5, 32], [6, 125], [6.15, 129], [6.45, 137.5], [6.7, LAP]];
+export const KEYS = [[0, 0], [1, 0], [2, 4], [3, 8], [4, 13], [5, 32], [6, 120], [6.15, 123.6], [6.45, 136.5], [6.7, LAP]];
 const M = (() => {
   const n = KEYS.length, d = [], m = new Array(n).fill(0);
   for (let i = 0; i < n - 1; i++) d.push((KEYS[i + 1][1] - KEYS[i][1]) / (KEYS[i + 1][0] - KEYS[i][0]));
@@ -42,6 +43,9 @@ export function timeAt(u) {
 // below the top plate, so the camera starts 35.7 mm off the floor.
 export const GEAR = 0.0826, CAM_DROP = 0.0469;
 export const GROUND_ALT = GEAR - CAM_DROP;
+// the drone's frame centre (its top plate, the origin of the drone on the stage) flies at this
+// height through the lap; each hoop's ring is centred on it, so the path runs through the middle
+export const HOOP_Y = SIM.ALT + CAM_DROP;
 // it stays on the ground until the stage has pinned (step 0 starts about a third of the way in)
 export const altAt = (u) => GROUND_ALT + (SIM.ALT - GROUND_ALT) * smooth(0.42, 0.95, u);
 

@@ -80,7 +80,7 @@ export default {
         { h: 'Full throttle: 100 N·m', p: ['Full throttle asks for 100 N·m at the sprocket: about 3.1 N·m from each motor becomes 27.8 N·m on axle 1 and 100 N·m on axle 2. The second belt pulls about 1,745 N, 3.6 times the first.'] },
         { h: 'Out of voltage', p: [
           'As the motors near their nominal no-load speed, 150 KV x 48 V = 7,200 rpm, the pack runs out of voltage and the torque fades. That is about 444 rpm at the chain sprocket, and about 41 mph in the 18T cog with the wheel off the ground (an estimate).',
-          'On the road, drag and weight hold it well below the stand numbers: it tops out at about 35 mph.',
+          'On the road, drag and weight hold it slightly below the stand numbers: it tops out at about 35 mph.',
         ] },
       ],
       caption: 'Motor speed tops out at the nominal no-load speed, 150 KV x 48 V = 7,200 rpm. Torque is split through the ratios with no losses, and the spin-up is a simple model; the parts turn with your scroll, slowed down, while the numbers are the real speeds. Road speed is an estimate: my Schwalbe Super Moto-X 27.5 x 2.4 in tire, taken as 708 mm across, on the stock cassette of a 2019 Trek Dual Sport 2, a [Shimano HG31 11-32 eight-speed](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/dual-sport-bikes/dual-sport/dual-sport-2/p/23067/). At 7,200 rpm that is about 23 mph in the 32T cog and about 67 mph in the 11T, wheel off the ground. The chain and rear wheel are not in the CAD; the videos below show them.' },

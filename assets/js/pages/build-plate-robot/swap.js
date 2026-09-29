@@ -7,11 +7,18 @@
 // The camera views are framed once per stage shape, each with the rig parked in its step's end pose,
 // and blended; nothing is framed on a moving part. The two extension belts (belt.js, drawn along the
 // path the CAD's pulleys, idlers and clamps set) ride with the arm and glow while they drive it.
+// The finished print on plate A is a 3DBenchy (Jerry, Sept 28): the official single-part STL by
+// Creative Tools (public domain), unmodified and at true scale (60.0 x 31.0 x 48.0 mm), in blue
+// PLA, standing at the plate's centre and parented to it, so it leaves the printer with the plate
+// and stays on it in the holder; plate B goes in empty. The centre of the plate is clear of the
+// carriage, the arm's frame and the printer through the whole swap (checked on the CAD: nothing
+// above the plate within 85 mm of its centre across the arm, up to 50 mm high, over the whole stroke).
 import { createStage } from '/assets/js/lib/stage.js';
 import { labelLayer } from '/assets/js/lib/labels.js';
 import { loadRig, STROKE, clamp, smooth, lerp, readout, glow, blendView } from './rig.js';
 
 const BED_UP = 0.15; // m. The printer's bed is not in the CAD; the plate shows it dropping to the bottom.
+const BENCHY = '/assets/models/build-plate-robot/benchy.glb'; // converted by benchy2glb.mjs (r5 notes)
 
 // Mechanism timeline in t = step + stepP (10 steps, t from 0 to 10)
 function poseAt(t) {
@@ -45,6 +52,22 @@ export async function mount(el, ctx) {
   const B = rig.carrier(P.PLATE_L, 90, STROKE);    // on the -X holder in the CAD
   const aPrinter = A.at(0, STROKE), aHolder = A.at(-90, STROKE), bPrinter = B.at(0, STROKE), bHolder = B.at(90, STROKE);
   const up = (m, y) => m.clone().premultiply(new stage.THREE.Matrix4().makeTranslation(0, y, 0));
+
+  // the print on plate A, loaded after the rig so the swap goes live first; it rides on the plate
+  stage.load(BENCHY, { add: false, finish: 'printed' }).then((benchy) => {
+    const T = stage.THREE, plate = P.PLATE_C;
+    plate.updateWorldMatrix(true, false);
+    const box = new T.Box3();
+    plate.traverse((m) => { if (m.isMesh) { m.geometry.computeBoundingBox(); box.union(m.geometry.boundingBox.clone().applyMatrix4(m === plate ? new T.Matrix4() : m.matrix)); } });
+    // the plate's own frame carries its quantization scale: undo it so the boat stays true size
+    const k = new T.Vector3().setFromMatrixScale(rig.model.matrixWorld).x / new T.Vector3().setFromMatrixScale(plate.matrixWorld).x;
+    benchy.scale.setScalar(k);
+    benchy.position.set((box.min.x + box.max.x) / 2, box.max.y, (box.min.z + box.max.z) / 2); // on the plate's top face, centred
+    benchy.rotation.y = Math.PI; // bow toward -X, across the arm
+    benchy.name = 'benchy';
+    plate.add(benchy);
+    stage.invalidate();
+  }).catch(() => {});
 
   const ov = labelLayer(stage);
   const hud = readout(ov, `

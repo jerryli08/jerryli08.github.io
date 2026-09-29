@@ -92,6 +92,13 @@ const FONT_FACES = [
   ['mona-sans-latin.woff2', 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD'],
 ];
 const fontCss = () => FONT_FACES.map(([f, range]) => `@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(${v(`/assets/fonts/${f}`)}) format('woff2');unicode-range:${range}}`).join('');
+// the black and white "jl" icon (Sept 28). Every page, the redirects included, links the same files
+// with a content hash, so a browser that cached the old icon for any page fetches the new one:
+// /favicon.ico (16, 32, 48) for browsers that look there, the SVG where it is supported, and the
+// 180 px touch icon
+const iconLinks = () => `<link rel="icon" href="${v('/favicon.ico')}" sizes="16x16 32x32 48x48">
+<link rel="icon" href="${v('/assets/favicon.svg')}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="${v('/assets/apple-touch-icon.png')}">`;
 function head({ title, description, path, image = '/assets/img/og.jpg', extra = '' }) {
   const canonical = site.url + (path === '/' ? '/' : path);
   return `<!doctype html>
@@ -109,9 +116,7 @@ function head({ title, description, path, image = '/assets/img/og.jpg', extra = 
 <meta property="og:image" content="${site.url}${image}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0a09">
-<link rel="icon" href="${v('/assets/favicon-32.png')}" sizes="32x32" type="image/png">
-<link rel="icon" href="${v('/assets/favicon.svg')}" type="image/svg+xml">
-<link rel="apple-touch-icon" href="${v('/assets/apple-touch-icon.png')}">
+${iconLinks()}
 <link rel="preload" href="${v('/assets/fonts/mona-sans-latin.woff2')}" as="font" type="font/woff2" crossorigin>
 <style>${fontCss()}</style>
 <link rel="stylesheet" href="${v('/assets/css/site.css')}">
@@ -124,11 +129,13 @@ function nav({ home = false } = {}) {
   <div class="nav-links">
     <a href="${pre}#work">Work</a>
     <a href="${pre}#about">About</a>
-    <a class="nav-cta" href="mailto:${site.email}">Contact</a>
+    <a class="nav-cta" href="${pre}#contact">Contact</a>
   </div>
 </nav>`;
 }
-const footer = () => `<footer class="footer"><span>&copy; ${new Date().getFullYear()} Jerry Li</span><span><a href="mailto:${site.email}">${site.email}</a></span></footer>`;
+// both emails, labelled, school first (Jerry, Sept 28)
+const EMAILS = [['School', site.emailSchool], ['Personal', site.email]].filter(([, e]) => e);
+const footer = () => `<footer class="footer"><span>&copy; ${new Date().getFullYear()} Jerry Li</span><span class="footer-mail">${EMAILS.map(([l, e]) => `<a href="mailto:${e}">${l}: ${e}</a>`).join('')}</span></footer>`;
 const scripts = (extra = '') => `<script src="${v('/assets/js/site.js')}" defer></script>${extra}`;
 
 // ---------------------------------------------------------------- landing
@@ -165,15 +172,37 @@ function span(x) {
   return pts.length ? [Math.min(...pts), Math.max(...pts)] : [-Infinity, -Infinity];
 }
 const newestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return eb - ea || sb - sa; };
+const oldestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return sa - sb || ea - eb; };
+const pinnedFirst = (xs) => [...xs.filter((x) => x.pinned).sort(newestFirst), ...xs.filter((x) => !x.pinned).sort(newestFirst)];
+// The home page's order (Jerry, Sept 28). All work: Projects (a week or more), Short projects (under
+// a week, `length: 'short'`), then Concepts, each pinned first and then newest first; below it the
+// Archive (newest first) and the prints (their `order`, then newest first). The next-project links
+// follow the same order.
+function homeGroups() {
+  const built = ['main', 'hackathon'].flatMap((k) => list(k));
+  return {
+    projects: pinnedFirst(built.filter((x) => x.length !== 'short')),
+    short: pinnedFirst(built.filter((x) => x.length === 'short')),
+    concepts: pinnedFirst(list('concept')),
+    archive: list('archive').sort(newestFirst),
+    objects: list('object').sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || newestFirst(a, b)),
+  };
+}
+const homeOrder = (g = homeGroups()) => [...g.projects, ...g.short, ...g.concepts, ...g.archive, ...g.objects];
 const PIN_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg>';
 const PIN = `<span class="pin" title="Pinned">${PIN_ICON}<span class="sr-only">Pinned</span></span>`;
 // every project in the grid: same size, picture on top, words underneath
 const KIND_LABEL = { main: 'Project', hackathon: 'Hackathon', concept: 'Concept', object: '3D model', archive: 'Archive' };
-function card(x) {
+// a card in All work also carries its group (a quiet tag on short projects and concepts, shown only
+// when the list is sorted by date) and its place in each date order
+const GROUP_TAG = { short: 'Short project', concepts: 'Concept' };
+function card(x, w = null) {
   const t = thumb(x);
   const s0 = statLine(x) || '', sub = s0 === KIND_LABEL[x.kind] ? '' : s0; // no "Concept" under a card already labelled Concept
-  return `<a class="card" href="${url(x)}" data-kind="${x.kind}">
-  <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}<span class="card-cta"><span>Click to learn more</span></span></div>
+  const wa = w ? ` data-group="${w.group}" data-new="${w.rank.new.get(x)}" data-old="${w.rank.old.get(x)}"` : '';
+  const tag = w && GROUP_TAG[w.group] ? `<span class="card-g">${GROUP_TAG[w.group]}</span>` : '';
+  return `<a class="card" href="${url(x)}" data-kind="${x.kind}"${wa}>
+  <div class="card-img">${t ? `<img src="${v(t)}" alt="" loading="lazy" decoding="async">` : '<div class="placeholder">Media coming</div>'}${x.hours ? `<span class="badge">${esc(x.hours)}</span>` : ''}${x.draft ? '<span class="badge draft">Draft</span>' : ''}${x.pinned ? PIN : ''}${tag}<span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">${esc(KIND_LABEL[x.kind])}${when(x) ? `<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>${whenHtml(x)}</span>` : ''}</span><b>${titleHtml(x.title)}</b><span class="card-s">${esc(sub)}</span></div>
 </a>`;
 }
@@ -218,25 +247,25 @@ function heroCard(x) {
 function landing() {
   const featured = projects.filter((x) => x.featured && visible(x)).sort((a, b) => a.featured - b.featured);
   const heroProject = projects.find((x) => x.hero);
-  // All work is what was built; concepts (designed, never built out), the archive (before 2023)
-  // and small prints each get their own section below it
-  const order = ['main', 'hackathon'];
-  const all = order.flatMap((k) => list(k));
-  // pinned projects first, then everything else; each group newest first
-  const everything = [...all.filter((x) => x.pinned).sort(newestFirst), ...all.filter((x) => !x.pinned).sort(newestFirst)];
-  const concepts = list('concept').sort(newestFirst);
-  const archive = list('archive').sort(newestFirst);
-  // prints go in the order their entries give (`order: 1, 2, ...`), then newest first
-  const objects = list('object').sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || newestFirst(a, b));
-  const counts = Object.fromEntries(order.map((k) => [k, list(k).length]));
-  const filters = [['all', 'All', everything.length], ['main', 'Projects', counts.main], ['hackathon', 'Hackathons', counts.hackathon]].filter(([, , n]) => n);
+  // All work: Projects, Short projects, then Concepts as a quieter subsection (Jerry, Sept 28), with
+  // a sort that turns the three into one list by date; the Archive and the prints stay below it
+  const g = homeGroups();
+  const { archive, objects } = g;
+  const flat = [...g.projects, ...g.short, ...g.concepts];
+  const rank = { new: new Map([...flat].sort(newestFirst).map((x, i) => [x, i])), old: new Map([...flat].sort(oldestFirst).map((x, i) => [x, i])) };
+  const wcards = (group) => g[group].map((x) => card(x, { group, rank })).join('\n');
+  const wgroup = (group, id, title, sub, cls = '') => g[group].length ? `<section class="wgroup ${cls}" id="${id}" aria-labelledby="${id}-h">
+      <div class="wgroup-head"><h3 id="${id}-h">${title}</h3><p>${sub}</p></div>
+      <div class="grid${group === 'concepts' ? ' grid-concepts' : ''}">${wcards(group)}</div>
+    </section>` : '';
+  const SORTS = [['default', 'Default'], ['new', 'Newest first'], ['old', 'Oldest first']];
   // "20+ more projects": everything not already on the first screen, rounded down to a 5
-  const more = everything.length + concepts.length + archive.length + objects.length - featured.length - 1, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
+  const more = flat.length + archive.length + objects.length - featured.length - 1, moreLabel = more >= 10 ? `${Math.floor(more / 5) * 5}+` : String(more);
   // a fanned hand of little thumbnails from the projects below, so "more" reads at a glance
-  const fan = [...everything, ...concepts, ...archive].filter((x) => !x.featured && !x.hero && has(`/assets/thumbs/mini/${x.slug}.webp`)).slice(0, 5);
+  const fan = [...flat, ...archive].filter((x) => !x.featured && !x.hero && has(`/assets/thumbs/mini/${x.slug}.webp`)).slice(0, 5);
   const shelf = (id, title, sub, items, cls = '') => items.length ? `<section class="archive ${cls}" id="${id}" aria-labelledby="${id}-h">
     <div class="archive-head"><h2 id="${id}-h">${title}</h2><p>${sub}</p></div>
-    <div class="grid grid-archive">${items.map(card).join('\n')}</div>
+    <div class="grid grid-archive">${items.map((x) => card(x)).join('\n')}</div>
   </section>` : '';
   const stageStill = '/assets/img/hero-still.webp';
   const ld = { '@context': 'https://schema.org', '@type': 'Person', name: site.name, url: site.url, email: `mailto:${site.email}`, sameAs: [site.linkedin, site.github], alumniOf: 'University of Illinois Urbana-Champaign', jobTitle: 'Mechanical Engineering Student' };
@@ -268,7 +297,7 @@ ${nav({ home: true })}
         <ul class="chips">
           <li><a href="/projects/hybrid-vehicle"><b>First author</b>MIT Lincoln Laboratory research</a></li>
           <li><a href="/projects/ftc-decode"><b>1st place</b>FIRST World Championship award</a></li>
-          <li><a href="#work" data-chip-filter="hackathon"><b>5+</b>hackathons</a></li>
+          <li><a href="#work"><b>5+</b>hackathons</a></li>
         </ul>
       </header>
       <div class="featured">
@@ -278,14 +307,19 @@ ${nav({ home: true })}
     </div>
     ${heroProject ? heroCard(heroProject) : ''}
   </section>
-  <section class="work" id="work" aria-labelledby="work-h">
+  <section class="work" id="work" aria-labelledby="work-h" data-work>
     <div class="work-head">
       <h2 id="work-h">All work</h2>
-      <div class="filter-row"><span class="filter-label">Filter by project type here: <span aria-hidden="true">&rarr;</span></span><div class="filters" role="toolbar" aria-label="Filter projects">${filters.map(([k, label, n], i) => `<button type="button" data-filter="${k}" aria-pressed="${i === 0}">${label}<span class="num">${n}</span></button>`).join('')}</div></div>
+      <div class="sort" role="group" aria-labelledby="sort-l"><span class="sort-l" id="sort-l">Sort</span><span class="sort-g">${SORTS.map(([k, label], i) => `<button type="button" data-sort="${k}" aria-pressed="${i === 0}">${label}</button>`).join('')}</span></div>
+      <p class="sr-only" role="status" data-sort-status></p>
     </div>
-    <div class="grid">${everything.map(card).join('\n')}</div>
+    <div class="work-groups">
+    ${wgroup('projects', 'projects', 'Projects', 'A week or more')}
+    ${wgroup('short', 'short-projects', 'Short projects', 'Under a week')}
+    ${wgroup('concepts', 'concepts', 'Concepts', 'Designed in CAD, never finished.', 'wgroup-concepts')}
+    </div>
+    <div class="grid work-flat" hidden></div>
   </section>
-  ${shelf('concepts', 'Concepts', 'Designed in CAD, never finished.', concepts, 'shelf-concepts')}
   ${shelf('archive', 'Archive', '2023 and earlier: early robots and side builds.', archive)}
   ${objects.length ? `<section class="archive shelf-prints" id="prints" aria-labelledby="prints-h">
     <div class="archive-head"><h2 id="prints-h">Prints and small models</h2><p>Quick CAD and 3D printing experiments.</p></div>
@@ -296,9 +330,10 @@ ${nav({ home: true })}
     <div class="about-grid">
       <div class="about-text">${about.p.map((t) => `<p>${esc(t)}</p>`).join('')}</div>
       <div class="portrait"><img src="${v('/assets/media/jerry-portrait.webp')}" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
-      <div class="contact-card">
-        <h3>I am always interested in new projects and engineering problems. Feel free to reach out.</h3>
-        <p class="links-inline"><a href="mailto:${site.email}">${site.email} ${arrow}</a><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
+      <div class="contact-card" id="contact">
+        <h3 class="contact-line">Always interested in new projects and problems to solve; let's connect!</h3>
+        <ul class="contact-mail">${EMAILS.map(([l, e]) => `<li><span class="cm-l">${l}:</span> <a href="mailto:${e}">${e}</a></li>`).join('')}</ul>
+        <p class="links-inline"><a href="${site.linkedin}" rel="me">LinkedIn ${arrow}</a><a href="${site.github}" rel="me">GitHub ${arrow}</a></p>
       </div>
     </div>
   </section>
@@ -480,7 +515,7 @@ ${scripts(`\n<script type="module" src="${v('/assets/js/project.js')}"></script>
 }
 
 function redirectPage(to, title) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title><link rel="canonical" href="${site.url}${to}"><meta http-equiv="refresh" content="0; url=${to}"><meta name="robots" content="noindex"></head><body><p><a href="${to}">${esc(title)}</a></p></body></html>\n`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(title)}</title>${iconLinks().replace(/\n/g, '')}<link rel="canonical" href="${site.url}${to}"><meta http-equiv="refresh" content="0; url=${to}"><meta name="robots" content="noindex"></head><body><p><a href="${to}">${esc(title)}</a></p></body></html>\n`;
 }
 
 function notFound() {
@@ -503,7 +538,11 @@ function renderProject(x, next) {
   }
   return projectPage(x, next);
 }
-all.forEach((x, i) => writeFileSync(p('projects', `${x.slug}.html`), renderProject(x, all[(i + 1) % all.length])));
+// "Next project" follows the home page: Projects, Short projects, Concepts, the Archive, then the
+// prints, and wraps from the last back to the first (Jerry, Sept 28)
+const seq = homeOrder();
+for (const x of all) if (!seq.includes(x)) seq.push(x); // nothing is left without a next link
+seq.forEach((x, i) => writeFileSync(p('projects', `${x.slug}.html`), renderProject(x, seq[(i + 1) % seq.length])));
 for (const [slug, mod] of pages) {
   if (slug.startsWith('_')) continue;
   if (!projects.some((x) => x.slug === slug)) console.warn(`  ! ${mod.file}: no project with slug "${slug}" in src/projects.mjs`);
@@ -519,7 +558,7 @@ if (PREVIEW) {
   }
 }
 writeFileSync(p('about.html'), redirectPage('/#about', 'About Jerry Li'));
-writeFileSync(p('contact.html'), redirectPage('/#about', 'Contact Jerry Li'));
+writeFileSync(p('contact.html'), redirectPage('/#contact', 'Contact Jerry Li'));
 writeFileSync(p('404.html'), notFound());
 writeFileSync(p('drive.html'), drivePage());
 const urls = ['/', '/drive', ...all.filter((x) => !x.draft).map(url)];

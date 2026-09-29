@@ -13,6 +13,7 @@
 // every character that is not a letter or digit turned into "_"). Coordinates in comments are
 // STEP millimetres, Z up; cad.point / cad.dir convert them to the model's metres, Y up.
 import { cad } from '/assets/js/lib/stage.js';
+import { rigBelt } from './belt.js';
 
 export const MODEL = '/assets/models/mt-shirt/mechanism.glb';
 
@@ -73,6 +74,8 @@ export async function loadMechanism(stage) {
 // axis 24.0 mm off the rail line: an offset slider-crank. In the CAD pose the crank pin sits at
 // -115.36 degrees about the 12T axis (from STEP +X, counterclockwise seen from above).
 //
+// The belt (Jerry, Sept 28): its teeth travel around the loop with the pulleys, see belt.js.
+//
 // One push (Jerry, Sept 27: the rail block pushes the keycap to the end of the switch's travel and
 // back), measured on the STEP: the carriage plate's front face (X -40.73) is 33.02 mm behind the
 // keycap's top face (X -7.71), the two faces overlapping in Y and Z, so the plate meets the keycap
@@ -131,6 +134,7 @@ export function rigDrivetrain(stage, mech) {
     spur12: [...byName(/_Spur_Gear_12_teeth_/), ...P.crankScrew],
     carriage: [...byName(/_LS_MGN7_Block_/), ...P.plate, ...P.plateScrews],
     key: byName(/_Component38_1$|_Pulsador_/), // keycap and stem, pressed along +X together
+    belt: byName(/_monkeybelt_/),
   };
   const piv = (list, ax) => stage.pivot(list, cad.point(ax.p), cad.dir(ax.d));
   const servo = piv(L.servo, AX.servo);
@@ -143,6 +147,8 @@ export function rigDrivetrain(stage, mech) {
   const carBase = carriage.map((o) => o.position.clone());
   const key = L.key;
   const keyBase = key.map((o) => o.position.clone());
+  // the belt travels around its pulleys at their pitch-line speed (belt.js)
+  const belts = L.belt.map((o) => rigBelt(stage.THREE, o, mech.model));
   let last = null;
   function set(phi) {
     if (phi === last) return linkage(phi);
@@ -153,6 +159,7 @@ export function rigDrivetrain(stage, mech) {
     servo.setAngle(-k.u * DEG);
     bevel.setAngle(-k.u * DEG);
     spur36.setAngle(-k.u * DEG);
+    for (const b of belts) b.set(k.u * DEG);
     spur12.setAngle(3 * k.u * DEG);
     coupler.setAngle((k.psi - REST.psi) * DEG);
     coupler.position.set(couplerBase.x + dx, couplerBase.y, couplerBase.z);

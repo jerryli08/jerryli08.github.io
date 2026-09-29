@@ -1,4 +1,5 @@
-// Landing page: progressive 3D background, scroll dimming, filters, lazy media, CAD embeds.
+// Every page: lazy media, CAD embeds, smooth in-page links. Landing: progressive 3D background,
+// scroll dimming, the All work sort.
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -59,22 +60,50 @@
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
 
-  // ---------------------------------------------------------- filters
-  const tiles = [...document.querySelectorAll('.work .grid .card')];
-  document.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => {
-    document.querySelectorAll('[data-filter]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-    const k = b.dataset.filter;
-    tiles.forEach((t) => { t.hidden = k !== 'all' && t.dataset.kind !== k; });
-  }));
-  // landing chips that jump to All work with a filter on ("5+ hackathons")
-  document.querySelectorAll('[data-chip-filter]').forEach((a) => a.addEventListener('click', (e) => {
-    const b = document.querySelector(`[data-filter="${a.dataset.chipFilter}"]`);
-    const work = document.getElementById('work');
-    if (!b || !work) return;
+  // ---------------------------------------------------------- in-page links: smooth, and focus follows
+  // Work, About and Contact in the nav (and any other #link to this page) glide to their section,
+  // or jump with reduced motion; the section then takes keyboard focus without a second scroll.
+  const samePage = (a) => a.hash && a.origin === location.origin && a.pathname.replace(/\/index\.html$/, '/') === location.pathname.replace(/\/index\.html$/, '/');
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest?.('a[href*="#"]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !samePage(a)) return;
+    let el = null;
+    try { el = document.getElementById(decodeURIComponent(a.hash.slice(1))); } catch { /* not an id */ }
+    if (!el) return;
     e.preventDefault();
-    b.click();
-    work.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-    history.replaceState(null, '', '#work');
-  }));
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    if (location.hash !== a.hash) history.pushState(null, '', a.hash);
+    if (!el.hasAttribute('tabindex') && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+    el.focus({ preventScroll: true });
+  });
+
+  // ---------------------------------------------------------- All work: sort
+  // Default shows the three groups (Projects, Short projects, Concepts); Newest first and Oldest
+  // first move the same cards into one list by date (their ranks come from the build) and back.
+  // The choice lasts for the visit, so the back button returns to the same list.
+  const work = document.querySelector('[data-work]');
+  if (work) {
+    const groups = work.querySelector('.work-groups'), flat = work.querySelector('.work-flat');
+    const cards = [...groups.querySelectorAll('.card')], home = cards.map((c) => c.parentElement);
+    const btns = [...work.querySelectorAll('[data-sort]')], status = work.querySelector('[data-sort-status]');
+    const SAID = { default: 'Grouped: projects, short projects, concepts', new: 'Sorted newest first', old: 'Sorted oldest first' };
+    let mode = 'default';
+    const apply = (m, announce) => {
+      if (!SAID[m] || m === mode) return;
+      mode = m;
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sort === m)));
+      if (m === 'default') cards.forEach((c, i) => home[i].appendChild(c)); // cards are in document order
+      else [...cards].sort((a, b) => a.dataset[m] - b.dataset[m]).forEach((c) => flat.appendChild(c));
+      groups.hidden = m !== 'default'; flat.hidden = m === 'default';
+      work.dataset.sorted = m;
+      if (announce && status) status.textContent = SAID[m];
+      try { sessionStorage.setItem('work-sort', m); } catch { /* storage off */ }
+    };
+    btns.forEach((b) => b.addEventListener('click', () => apply(b.dataset.sort, true)));
+    let saved = null;
+    try { saved = sessionStorage.getItem('work-sort'); } catch { /* storage off */ }
+    if (saved) apply(saved, false);
+  }
 
 })();

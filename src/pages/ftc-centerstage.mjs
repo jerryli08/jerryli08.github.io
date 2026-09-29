@@ -26,9 +26,7 @@ const RESULTS = 'https://ftc-events.firstinspires.org/2023/team/18996';
 export default {
   summary: {
     stats: [
-      { v: '0-5 to 3-2', l: 'Qualification record, first event to last' },
-      { v: '208-151', l: 'Our alliance\'s best score, at the Chesapeake Championship' },
-      { v: '7th of 27', l: 'Rank in our Chesapeake Championship division' },
+      { v: '25th of 25 to 7th of 27', l: 'Rank at the Garrett County Qualifier, then in our division at the Chesapeake Championship (regionals)' },
       { v: '6 awards', l: 'Judged awards in 4 events, including Inspire 2nd Place' },
     ],
     text: [
@@ -245,10 +243,11 @@ export default {
       { problem: 'Two days before our first qualifier the lift had just been mounted, and the first intake was still being put together the day before. At the Mount St Joseph Qualifier on Dec 16 we lost all five qualification matches and ranked 21st of 21.', title: 'Not ready for the first event' },
       { fix: 'In the four weeks after, the deposit reached the top of the backdrop and the flap intake replaced the first one. The second qualifier on Jan 13 still went 0-5, with the transfer grabbing only one pixel of two. With both pixels transferring and a week of drive and autonomous tuning, we went 3-2 at the Laurel 2 Qualifier on Jan 28, ranked 9th of 25, and were picked by the first-seeded alliance.', title: 'Rebuild between events' },
       'At the Chesapeake FTC Championship on Feb 3 we went 3-2 again and ranked 7th of 27 in the Stage Right Division. In our first match our alliance scored 100 points in autonomous and won 208-151, our best score of the season. As part of the fourth-seeded alliance we reached the semifinal and lost it 1-2.',
+      // in the flow at its own aspect: pinned beside this short paragraph it was cropped to a strip that hid the score (Jerry, Sept 28)
+      { fig: { i: 'still-result-champ-q7-208-151.webp', c: 'Chesapeake Championship, Qualification 7: 208-151, with 100 points in autonomous' } },
     ], media: [
       [{ i: 'chassis-dec12.webp', c: 'Dec 12, 2023, four days before the first qualifier: the chassis wired on the floor' }, { i: 'pits-first-qualifier.webp', c: 'Dec 16, 2023: in the pits at the Mount St Joseph Qualifier' }],
       [{ i: 'still-result-q15-186-45.webp', c: 'Laurel 2 Qualifier, Qualification 15: our alliance wins 186-45' }, { i: 'award-inspire-2nd.webp', c: 'Laurel 2 Qualifier: Inspire Award, 2nd Place' }],
-      { i: 'still-result-champ-q7-208-151.webp', c: 'Chesapeake Championship, Qualification 7: 208-151, with 100 points in autonomous' },
     ] },
     { type: 'prose', id: 'results', h: 'Official results', p: [
       { ul: [

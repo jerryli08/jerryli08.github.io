@@ -2,6 +2,9 @@
 // Every fact here is one Jerry has stated himself. Do not add claims he has not made.
 //
 // kind:    main | hackathon | concept | object | archive
+// length:  'short' = a short project (under a week; Jerry, Sept 28). On the home page All work shows
+//          Projects (main and hackathon, a week or more), then Short projects, then Concepts.
+// pinned:  first in its group on the home page (and in the next-project order)
 // draft:   true = waiting on media from Jerry's project folder. Drafts only render in
 //          preview builds (PREVIEW=1) and never in production.
 // media:   { v: 'videos/x.mp4' } or { i: 'images/x.jpg' }, with a caption.
@@ -10,7 +13,8 @@
 export const site = {
   name: 'Jerry Li',
   url: 'https://www.jerryli.design',
-  email: 'jerry@jerryli.design',
+  email: 'jerry@jerryli.design', // personal, the primary address (JSON-LD)
+  emailSchool: 'jerryel2@illinois.edu',
   linkedin: 'https://www.linkedin.com/in/jerry-li-md/',
   github: 'https://github.com/jerryli08',
   description: 'Jerry Li is a mechanical engineering student at the University of Illinois Urbana-Champaign who designs and builds robots, drones and electric vehicles.',
@@ -32,7 +36,7 @@ export const projects = [
     tools: ['Fusion 360', '3D printing', 'Linkage design', 'Geartrains', 'Belt drive', 'Servo actuation'],
     stats: [
       { v: 'First author', l: 'Poster at IEEE MIT URTC 2025' },
-      { v: '10 DOF', l: 'Latch linkage driven by one servo' },
+      { v: '10 axes', l: 'Of rotation in the latch linkage, 6 driven by one servo' },
       { v: '7', l: 'Person team' },
     ],
     body: [
@@ -41,7 +45,7 @@ export const projects = [
         'Docked, each vehicle can carry the other. The UGV carries the UAV to save its battery, and the UAV lifts the UGV over terrain it cannot drive across or up to an aerial viewpoint. The target applications are search and rescue and data collection.',
       ]},
       { h: 'The latch', p: [
-        'The docking latch is a linkage geartrain with 10 degrees of freedom, 4 passive and 6 active, all driven by a single servo so the mechanism stays light enough to fly.',
+        'The docking latch is a linkage geartrain with 10 axes of rotation, 6 of them driven by a single servo and 4 passive so the mechanism stays light enough to fly.',
       ]},
       { h: 'Research', p: [
         'After the summer we ran more tests, collected more data and wrote the work up. I presented the poster, "Drone on Wheels: A Hybrid UAV-UGV System for Precision Course Navigation", as first author at the IEEE MIT Undergraduate Research Technology Conference on October 10 to 12, 2025. SLAM integration was the next step we identified.',
@@ -127,7 +131,7 @@ export const projects = [
     tools: ['Fusion 360 + FEA', 'CNC router', 'Arduino Uno', 'TMC2209 drivers', 'AccelStepper', 'Electromagnets'],
     stats: [
       { v: 'Top 12', l: 'of 2,042 projects, Hack Club Arcade' },
-      { v: '$300', l: 'Polymaker sponsorship' },
+      { v: '$1000+', l: 'In prizes + sponsorships' },
       { v: '24 h', l: 'Printing, up from 7 h a day' },
     ],
     body: [
@@ -168,8 +172,8 @@ export const projects = [
     tools: ['Fusion 360 FEA', 'G10 fiberglass', 'BLDC motor', 'MT6701 encoder', 'Arduino Nano', 'BLHeli_32', 'GT2 belts', '3D-printed gears'],
     stats: [
       { v: '1st of 48', l: 'East Maryland Regional' },
-      { v: '2nd of 72', l: 'UPenn Invitational' },
-      { v: '73%', l: 'Lighter chassis plates' },
+      { v: '2nd of 72', l: 'UPenn Invitational, behind the Nationals winner' },
+      { v: '73% lightened', l: 'Chassis plates' },
     ],
     body: [
       { h: 'Overview', p: [
@@ -199,12 +203,13 @@ export const projects = [
   },
   {
     slug: 'electric-vehicle-2026',
+    length: 'short',
     kind: 'main',
     title: 'Science Olympiad Electric Vehicle 2026',
     subtitle: '2025-26 Electric Vehicle event',
     short: 'A steered car for the 2025-26 Electric Vehicle event: two versions, from servo steering to a digital caliper and linkage that sets the steering angle in 0.01 mm steps.',
     org: 'Science Olympiad',
-    date: 'Sep 2025 to Mar 2026',
+    date: 'Mar 2026',
     year: '2026',
     role: 'Designed both versions and wrote the code',
     tools: ['Fusion 360', 'Arduino Nano Every', 'MT6701 encoder', 'Brushless motor', 'Digital caliper', '2020 aluminum extrusion', '3D printing'],
@@ -225,12 +230,13 @@ export const projects = [
   },
   {
     slug: 'scioly-machines',
+    length: 'short',
     kind: 'main',
     title: 'Science Olympiad Machines',
     subtitle: '2025-26 Machines event',
     short: 'A compound lever that measures mass ratios: a class 1 lever joined to a class 2 lever by a rigid link.',
     org: 'Science Olympiad',
-    date: 'Sep 2025 to Mar 2026',
+    date: 'Mar 2026',
     year: '2026',
     tools: ['2020 aluminum extrusion', '3D printing', 'Ball bearings', 'Compound levers'],
     body: [{ h: 'Overview', p: [
@@ -381,6 +387,7 @@ export const projects = [
   },
   {
     slug: 'battlebot',
+    length: 'short',
     kind: 'main',
     title: '1 lb Combat Robot',
     subtitle: 'Plastic antweight horizontal spinner',
@@ -434,6 +441,7 @@ export const projects = [
   // ------------------------------------------------------------------ HACKATHONS
   {
     slug: 'morph', size: 'wide',
+    length: 'short',
     kind: 'hackathon',
     title: 'Morph',
     subtitle: 'Self-folding robot',
@@ -462,6 +470,7 @@ export const projects = [
   },
   {
     slug: 'golden-retriever', size: 'wide',
+    length: 'short',
     kind: 'hackathon',
     title: 'Golden Retriever',
     subtitle: 'Assistive fetch robot',
@@ -491,6 +500,7 @@ export const projects = [
   },
   {
     slug: 'linqbot',
+    length: 'short',
     kind: 'hackathon',
     title: 'LinqBot',
     subtitle: 'Robot arm with three control modes',
@@ -709,8 +719,8 @@ export const projects = [
     cad: 'https://a360.co/4pWI35v',
   },
   {
-    slug: 'mt-shirt',
-    kind: 'main',
+    slug: 'mt-shirt', pinned: true, // pinned first in Concepts (Jerry, Sept 28)
+    kind: 'concept',
     title: 'Monkeytype Shirt',
     short: 'A shirt I designed for Monkeytype, sold on their official store: the print is an exploded view of a servo-driven mechanism I designed in CAD.',
     org: 'Monkeytype',
@@ -726,12 +736,13 @@ export const projects = [
   },
   {
     slug: 'bike-odometer',
+    length: 'short',
     kind: 'main',
     title: 'Exercise Bike Odometer',
     short: 'An odometer for my family\'s stationary bike, built in a 12-hour, one-day challenge.',
     org: 'Personal project',
-    date: 'Jun 2025',
-    year: '2025',
+    date: '2026',
+    year: '2026',
     tools: ['Fusion 360', '3D printing (FDM)', 'Arduino Nano (C++)', 'MT6701 magnetic angle sensor', '16x2 character LCD', 'Perfboard soldering'],
     body: [{ h: 'Overview', p: ['I made an odometer for my family\'s stationary bike. To challenge myself I gave myself one day, and finished in 12 hours.'] }],
     media: [{ v: 'videos/bike-odometer.mp4', c: 'Demo' }],
@@ -788,9 +799,13 @@ export const projects = [
 
 export const about = {
   lede: 'I design and build robots, drones and electric vehicles, from the first CAD sketch to the last wire.',
+  // Jerry, Sept 28 (19:59): opens with his exact line; the story is his (first functional part in
+  // Fusion, then making things to solve problems); physical AI; IEM is only the monocoque
+  // attachments in Ansys ACP; FTC and FRC are not the lead
   p: [
-    'I study mechanical engineering at the University of Illinois Urbana-Champaign, with a minor in electrical and computer engineering.',
-    'I have been building robots since 2020: four years as an FTC team captain, a season designing an FRC robot solo, and research at MIT Lincoln Laboratory on a drone that docks onto a ground rover. I am most interested in assistive technology, AI-driven robotics and electric vehicles, and I plan to pursue entrepreneurship.',
-    'At Illinois I am on Illini Electric Motorsports. On chassis I am leading the redesign of a lap-belt attachment from aluminum to composite, simulated in Ansys ACP.',
+    'Hi, I\'m Jerry! I\'m studying Mechanical Engineering at UIUC with a minor in ECE.',
+    'Ever since I CADded my first functional part in Fusion 360, I have loved making physical things. Before long I was making things to solve problems, and I realized that is the part I love most: finding a problem, designing something for it, and building it until it works.',
+    'The field I am most interested in right now is physical AI.',
+    'At Illinois I am on Illini Electric Motorsports, where I work on the monocoque attachments for the chassis, using Ansys ACP.',
   ],
 };

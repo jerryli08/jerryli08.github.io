@@ -18,8 +18,9 @@
 //   commanded body velocity and yaw rate with a first-order lag of 0.3 s; the camera looks straight
 //   down with a 66 degree wide lens (Camera Module 3 standard); after a frame with no line the
 //   script captures again at once, taken here as 0.05 s later; the LED rope is drawn as bulbs every
-//   2 cm; the hoop reaction is a stand-in (our repo has no forward-camera code), with the forward
-//   camera seeing hoops within 2.5 m in its 66 degree view.
+//   2 cm; the hoops stand square across the drone's path and it flies straight through them (Jerry,
+//   Sept 28); it does not react to them (our repo has no forward-camera code), and the forward
+//   camera counts as seeing a hoop's tags when the hoop is within 2.5 m in its 66 degree view.
 //
 // World frame: metres on the floor plane, x to the right and z toward the viewer (three.js, Y up).
 // Heading h: forward = (cos h, sin h); right = (-sin h, cos h); a positive yaw rate turns right,
@@ -35,8 +36,11 @@ export const SIM = {
   ALT: 1.0, HFOV: 66, TAU: 0.3, RETRY: 0.05,
   DOWN_AHEAD: 0.1358, FWD_AHEAD: 0.1407, // camera sensors ahead of the frame centre, from the CAD
   PITCH: 0.02, BULB_R: 0.006, GLARE_R: 0.05,
-  FWD_RANGE: 2.5, HOOP_D: 0.7, DRONE_R: 0.33,
-  PUSH: 0.35, CLEAR: 0.55, // stand-in hoop reaction
+  FWD_RANGE: 2.5, DRONE_R: 0.33,
+  // the hoops, drawn for the page: ring diameter (centre of the tube) and tube radius. The X500's
+  // prop tips reach 0.304 m to each side of its centre (motors 176.9 mm off each axis, 10 in props,
+  // from the CAD), so a 1.0 m ring leaves about 0.17 m on each side
+  HOOP_D: 1.0, HOOP_TUBE: 0.022,
 };
 export const FPX = SCRIPT.W / 2 / Math.tan((SIM.HFOV / 2) * Math.PI / 180); // focal length, px
 const { W, H } = SCRIPT;
@@ -293,17 +297,13 @@ export function control(line, prev) {
   return { fwd, right, yaw, ex, ey, ang, dx, dy, tx, ty };
 }
 
-// ------------------------------------------------------------------ hoops (stand-in)
-/** A hoop stands upright with its ring along the rope at the nearest point (illustrative). */
-export function hoopSegment(course, hoop) {
-  const nr = nearest(course, hoop.x, hoop.z);
-  const r = SIM.HOOP_D / 2;
-  return { ax: hoop.x - nr.tx * r, az: hoop.z - nr.tz * r, bx: hoop.x + nr.tx * r, bz: hoop.z + nr.tz * r, tx: nr.tx, tz: nr.tz };
-}
-function segDist(px, pz, s) {
-  const bx = s.bx - s.ax, bz = s.bz - s.az, l2 = bx * bx + bz * bz || 1e-9;
-  const f = clamp(((px - s.ax) * bx + (pz - s.az) * bz) / l2, 0, 1);
-  return Math.hypot(px - s.ax - bx * f, pz - s.az - bz * f);
+// ------------------------------------------------------------------ hoops
+// A hoop is { x, z, tx, tz }: its centre on the floor plan (on the drone's path) and the unit
+// normal of its ring, along the path there. flight-data.js holds the two hoops of the page lap.
+/** Plan distance from (px, pz) to the nearer side of a hoop's ring (where the ring passes the drone's height). */
+function sideDist(px, pz, hp) {
+  const r = SIM.HOOP_D / 2, nx = -hp.tz, nz = hp.tx;
+  return Math.min(Math.hypot(px - hp.x - nx * r, pz - hp.z - nz * r), Math.hypot(px - hp.x + nx * r, pz - hp.z + nz * r));
 }
 
 // ------------------------------------------------------------------ the simulation
@@ -311,10 +311,10 @@ export function createSim(o = {}) {
   const cam = makeCamera();
   const ws = makeWorkspace();
   const sim = {
-    course: o.course, hoops: o.hoops || [], glare: o.glare || null, standIn: o.standIn !== false,
+    course: o.course, hoops: o.hoops || [], glare: o.glare || null,
     t: 0, pose: { x: 0, z: 0, h: 0, alt: SIM.ALT }, vel: { f: 0, r: 0, w: 0 }, cmd: { f: 0, r: 0, w: 0 },
     prev: { ex: 0, ey: 0, ang: 0 }, next: 0, misses: 0, landed: false, landing: false, ticks: 0,
-    last: null, lastVision: null, avoid: null, hits: 0, hitNow: false, mem: new Map(), segs: [],
+    last: null, lastVision: null, hits: 0, hitNow: false, seen: new Set(),
     cam, ws, onTick: null,
   };
   sim.reset = (s0 = 0) => {
@@ -324,8 +324,7 @@ export function createSim(o = {}) {
     Object.assign(sim.pose, { x: c.xs[i], z: c.zs[i], h: Math.atan2(c.zs[j] - c.zs[i], c.xs[j] - c.xs[i]), alt: SIM.ALT });
     Object.assign(sim.vel, { f: 0, r: 0, w: 0 }); Object.assign(sim.cmd, { f: 0, r: 0, w: 0 });
     Object.assign(sim.prev, { ex: 0, ey: 0, ang: 0 });
-    sim.next = sim.t; sim.misses = 0; sim.landed = false; sim.landing = false; sim.avoid = null; sim.mem.clear(); sim.hitNow = false;
-    sim.refreshHoops();
+    sim.next = sim.t; sim.misses = 0; sim.landed = false; sim.landing = false; sim.seen.clear(); sim.hitNow = false;
   };
   /** Back over the nearest point of the line, facing along it (after a landing). */
   sim.relaunch = () => {
@@ -333,37 +332,20 @@ export function createSim(o = {}) {
     Object.assign(sim.pose, { x: nr.x, z: nr.z, h: Math.atan2(nr.tz, nr.tx), alt: SIM.ALT });
     Object.assign(sim.vel, { f: 0, r: 0, w: 0 }); Object.assign(sim.cmd, { f: 0, r: 0, w: 0 });
     Object.assign(sim.prev, { ex: 0, ey: 0, ang: 0 });
-    sim.next = sim.t; sim.misses = 0; sim.landed = false; sim.landing = false; sim.mem.clear();
+    sim.next = sim.t; sim.misses = 0; sim.landed = false; sim.landing = false;
   };
-  sim.refreshHoops = () => { sim.segs = sim.hoops.map((hp) => hoopSegment(sim.course, hp)); };
   sim.look = () => { renderDown(cam, sim.course, sim.pose, sim.glare); return cam.gray; };
 
-  const PAST = SIM.HOOP_D / 2 + SIM.DRONE_R + 0.1;
-  function standIn() {
-    // Stand-in for the obstacle logic: the forward camera "sees" a hoop's tags when the hoop is in
-    // its 66 degree view within 2.5 m; until the drone is past a seen hoop, while it is within 0.55 m
-    // of the drone's path, add up to 0.35 m/s sideways, away from it. Once past, the line pulls it back.
+  /** The hoops whose tags the forward camera has in view: within 2.5 m in its 66 degree view. */
+  function see() {
     const { pose } = sim, c = Math.cos(pose.h), s = Math.sin(pose.h);
     const fx = pose.x + SIM.FWD_AHEAD * c, fz = pose.z + SIM.FWD_AHEAD * s;
+    sim.seen.clear();
     for (const hp of sim.hoops) {
       const dx = hp.x - fx, dz = hp.z - fz, d = Math.hypot(dx, dz);
       const bearing = Math.atan2(dx * -s + dz * c, dx * c + dz * s);
-      if (d < SIM.FWD_RANGE && Math.abs(bearing) < (SIM.HFOV / 2) * Math.PI / 180) sim.mem.set(hp, sim.t);
+      if (d < SIM.FWD_RANGE && Math.abs(bearing) < (SIM.HFOV / 2) * Math.PI / 180) sim.seen.add(hp);
     }
-    let push = 0, who = null;
-    for (const [hp, seen] of sim.mem) {
-      const dx = hp.x - pose.x, dz = hp.z - pose.z;
-      const bx = dx * c + dz * s, by = -dx * s + dz * c; // ahead, right
-      // a tag gives the hoop's position, so it is remembered until the drone is past it
-      if (sim.t - seen > 20 || bx < -PAST || !sim.hoops.includes(hp)) { sim.mem.delete(hp); continue; }
-      if (bx > 2.2) continue;
-      const k = clamp((SIM.CLEAR - Math.abs(by)) / 0.1, 0, 1);
-      if (k <= 0) continue;
-      const p = -Math.sign(by || 1) * SIM.PUSH * k;
-      if (Math.abs(p) > Math.abs(push)) { push = p; who = hp; }
-    }
-    sim.avoid = who ? { hoop: who, push } : null;
-    return push;
   }
 
   function tick() {
@@ -371,6 +353,7 @@ export function createSim(o = {}) {
     renderDown(cam, sim.course, sim.pose, sim.glare);
     const v = detect(cam.gray, ws);
     sim.lastVision = v;
+    see();
     if (!v.found) {
       sim.misses++;
       sim.last = { found: false };
@@ -378,11 +361,8 @@ export function createSim(o = {}) {
       sim.next = sim.t + SIM.RETRY; // no sleep after a miss: capture again
     } else {
       const u = control(v, sim.prev);
-      let right = u.right;
-      if (sim.standIn && sim.hoops.length) right = clamp(right + standIn(), -SCRIPT.MAX_Y, SCRIPT.MAX_Y);
-      else sim.avoid = null;
-      sim.cmd.f = u.fwd; sim.cmd.r = right; sim.cmd.w = u.yaw;
-      sim.last = { found: true, ...u, rightScript: u.right, right };
+      sim.cmd.f = u.fwd; sim.cmd.r = u.right; sim.cmd.w = u.yaw;
+      sim.last = { found: true, ...u };
       sim.next = sim.t + SCRIPT.SLEEP;
     }
     sim.onTick?.(sim);
@@ -402,9 +382,9 @@ export function createSim(o = {}) {
       p.x += (v.f * c - v.r * s) * d; p.z += (v.f * s + v.r * c) * d;
       if (sim.landing) { p.alt = Math.max(0, p.alt - 0.35 * d); if (p.alt <= 0) { sim.landed = true; sim.landing = false; } }
       sim.t += d;
-      // did the props touch a hoop's ring?
+      // did the props touch a hoop's ring? (the ring's sides, at the drone's height)
       let hit = false;
-      sim.segs.forEach((sg, i) => { if (segDist(p.x, p.z, sg) < SIM.DRONE_R) { hit = true; sim.hitHoop = sim.hoops[i]; } });
+      sim.hoops.forEach((hp) => { if (sideDist(p.x, p.z, hp) < SIM.DRONE_R + SIM.HOOP_TUBE) { hit = true; sim.hitHoop = hp; } });
       if (hit && !sim.hitNow) sim.hits++;
       sim.hitNow = hit;
     }
@@ -417,5 +397,7 @@ export const DEFAULT_COURSE = [
   [-2.7, -0.9], [-1.4, -1.55], [0.1, -1.1], [1.3, -1.6], [2.6, -1.2], [3.0, 0.1],
   [2.3, 1.3], [0.9, 0.95], [-0.2, 1.55], [-1.6, 1.25], [-2.9, 0.55],
 ];
+// where the two hoops go: gen-flight.mjs stands each one on the flight path at the point nearest
+// here, square to the path, and writes them to flight-data.js (HOOPS)
 export const DEFAULT_HOOPS = [{ x: -0.5, z: -1.22 }, { x: -1.45, z: 1.36 }];
 export const DEFAULT_GLARE = { x: -2.35, z: 0.25 };

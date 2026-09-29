@@ -13,12 +13,12 @@
 <meta property="og:image" content="https://www.jerryli.design/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0a09">
-<link rel="icon" href="/assets/favicon-32.png?v=4ef64bf5" sizes="32x32" type="image/png">
+<link rel="icon" href="/favicon.ico?v=8b4f6f33" sizes="16x16 32x32 48x48">
 <link rel="icon" href="/assets/favicon.svg?v=fcb48200" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=25af516e">
 <link rel="preload" href="/assets/fonts/mona-sans-latin.woff2?v=ab721e50" as="font" type="font/woff2" crossorigin>
 <style>@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(/assets/fonts/mona-sans-latin-ext.woff2?v=248c8b5b) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}@font-face{font-family:'Mona Sans';font-style:normal;font-weight:200 900;font-stretch:75% 125%;font-display:swap;src:url(/assets/fonts/mona-sans-latin.woff2?v=ab721e50) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}</style>
-<link rel="stylesheet" href="/assets/css/site.css?v=9d5db529">
+<link rel="stylesheet" href="/assets/css/site.css?v=4cce3e23">
 <meta name="robots" content="noindex">
 <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js?v=512c8b83","/assets/vendor/addons/controls/OrbitControls.js":"/assets/vendor/addons/controls/OrbitControls.js?v=339028c2","/assets/vendor/addons/environments/RoomEnvironment.js":"/assets/vendor/addons/environments/RoomEnvironment.js?v=a41e9198","/assets/vendor/addons/libs/meshopt_decoder.module.js":"/assets/vendor/addons/libs/meshopt_decoder.module.js?v=56d88825","/assets/vendor/addons/loaders/GLTFLoader.js":"/assets/vendor/addons/loaders/GLTFLoader.js?v=72125f26","/assets/vendor/addons/math/SimplexNoise.js":"/assets/vendor/addons/math/SimplexNoise.js?v=0faaa378","/assets/vendor/addons/postprocessing/EffectComposer.js":"/assets/vendor/addons/postprocessing/EffectComposer.js?v=4fb2e598","/assets/vendor/addons/postprocessing/GTAOPass.js":"/assets/vendor/addons/postprocessing/GTAOPass.js?v=65f85cab","/assets/vendor/addons/postprocessing/MaskPass.js":"/assets/vendor/addons/postprocessing/MaskPass.js?v=073ba17b","/assets/vendor/addons/postprocessing/OutputPass.js":"/assets/vendor/addons/postprocessing/OutputPass.js?v=de15d70e","/assets/vendor/addons/postprocessing/Pass.js":"/assets/vendor/addons/postprocessing/Pass.js?v=7d7a080e","/assets/vendor/addons/postprocessing/RenderPass.js":"/assets/vendor/addons/postprocessing/RenderPass.js?v=3977ba93","/assets/vendor/addons/postprocessing/ShaderPass.js":"/assets/vendor/addons/postprocessing/ShaderPass.js?v=5e27d49c","/assets/vendor/addons/shaders/CopyShader.js":"/assets/vendor/addons/shaders/CopyShader.js?v=4a948e9a","/assets/vendor/addons/shaders/GTAOShader.js":"/assets/vendor/addons/shaders/GTAOShader.js?v=c69b9a44","/assets/vendor/addons/shaders/OutputShader.js":"/assets/vendor/addons/shaders/OutputShader.js?v=2ff40bb6","/assets/vendor/addons/shaders/PoissonDenoiseShader.js":"/assets/vendor/addons/shaders/PoissonDenoiseShader.js?v=c460ee80","/assets/vendor/addons/utils/BufferGeometryUtils.js":"/assets/vendor/addons/utils/BufferGeometryUtils.js?v=1fbbb621"}}</script>
 <link rel="preload" as="image" href="/assets/img/hero-still.webp?v=c9bd01a6" media="(min-width: 960px)" fetchpriority="high">
@@ -38,7 +38,7 @@
   <div class="nav-links">
     <a href="#work">Work</a>
     <a href="#about">About</a>
-    <a class="nav-cta" href="mailto:jerry@jerryli.design">Contact</a>
+    <a class="nav-cta" href="#contact">Contact</a>
   </div>
 </nav>
 <main class="content">
@@ -50,7 +50,7 @@
         <ul class="chips">
           <li><a href="/projects/hybrid-vehicle"><b>First author</b>MIT Lincoln Laboratory research</a></li>
           <li><a href="/projects/ftc-decode"><b>1st place</b>FIRST World Championship award</a></li>
-          <li><a href="#work" data-chip-filter="hackathon"><b>5+</b>hackathons</a></li>
+          <li><a href="#work"><b>5+</b>hackathons</a></li>
         </ul>
       </header>
       <div class="featured">
@@ -89,122 +89,132 @@
   </div>
 </div></aside>
   </section>
-  <section class="work" id="work" aria-labelledby="work-h">
+  <section class="work" id="work" aria-labelledby="work-h" data-work>
     <div class="work-head">
       <h2 id="work-h">All work</h2>
-      <div class="filter-row"><span class="filter-label">Filter by project type here: <span aria-hidden="true">&rarr;</span></span><div class="filters" role="toolbar" aria-label="Filter projects"><button type="button" data-filter="all" aria-pressed="true">All<span class="num">20</span></button><button type="button" data-filter="main" aria-pressed="false">Projects<span class="num">17</span></button><button type="button" data-filter="hackathon" aria-pressed="false">Hackathons<span class="num">3</span></button></div></div>
+      <div class="sort" role="group" aria-labelledby="sort-l"><span class="sort-l" id="sort-l">Sort</span><span class="sort-g"><button type="button" data-sort="default" aria-pressed="true">Default</button><button type="button" data-sort="new" aria-pressed="false">Newest first</button><button type="button" data-sort="old" aria-pressed="false">Oldest first</button></span></div>
+      <p class="sr-only" role="status" data-sort-status></p>
     </div>
-    <div class="grid"><a class="card" href="/projects/frc-rebuilt" data-kind="main">
+    <div class="work-groups">
+    <section class="wgroup " id="projects" aria-labelledby="projects-h">
+      <div class="wgroup-head"><h3 id="projects-h">Projects</h3><p>A week or more</p></div>
+      <div class="grid"><a class="card" href="/projects/frc-rebuilt" data-kind="main" data-group="projects" data-new="8" data-old="19">
   <div class="card-img"><img src="/assets/thumbs/frc-rebuilt.webp?v=2f103e23" alt="" loading="lazy" decoding="async"><span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jan to Mar 2026</span></span><b>FRC REBUILT Robot</b><span class="card-s">Solo Robot design</span></div>
 </a>
-<a class="card" href="/projects/hybrid-vehicle" data-kind="main">
+<a class="card" href="/projects/hybrid-vehicle" data-kind="main" data-group="projects" data-new="9" data-old="16">
   <div class="card-img"><img src="/assets/thumbs/hybrid-vehicle.webp?v=77828474" alt="" loading="lazy" decoding="async"><span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul to Aug 2025</span></span><b>Hybrid Detachable <span class="nw">UAV-UGV</span></b><span class="card-s">First author Poster at IEEE MIT URTC 2025</span></div>
 </a>
-<a class="card" href="/projects/electric-bike" data-kind="main">
+<a class="card" href="/projects/electric-bike" data-kind="main" data-group="projects" data-new="11" data-old="14">
   <div class="card-img"><img src="/assets/thumbs/electric-bike.webp?v=f8c0dd3b" alt="" loading="lazy" decoding="async"><span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jun to Aug 2025</span></span><b>Electric Bike</b><span class="card-s">5.3 kW Mid-drive</span></div>
 </a>
-<a class="card" href="/projects/build-plate-robot" data-kind="main">
+<a class="card" href="/projects/build-plate-robot" data-kind="main" data-group="projects" data-new="22" data-old="1">
   <div class="card-img"><img src="/assets/thumbs/build-plate-robot.webp?v=ed65815d" alt="" loading="lazy" decoding="async"><span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Feb to Aug 2024</span></span><b>Replac3d</b><span class="card-s">Top 12 of 2,042 projects, Hack Club Arcade</span></div>
 </a>
-<a class="card" href="/projects/morph" data-kind="hackathon">
-  <div class="card-img"><img src="/assets/thumbs/morph.webp?v=1ad0e596" alt="" loading="lazy" decoding="async"><span class="badge">36 h</span><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2026</span></span><b>Morph</b><span class="card-s">Top 30 of 1,000+</span></div>
-</a>
-<a class="card" href="/projects/golden-retriever" data-kind="hackathon">
-  <div class="card-img"><img src="/assets/thumbs/golden-retriever.webp?v=4a68ef5d" alt="" loading="lazy" decoding="async"><span class="badge">10.5 h</span><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2026</span></span><b>Golden Retriever</b><span class="card-s">2nd of 250+ teams</span></div>
-</a>
-<a class="card" href="/projects/linqbot" data-kind="hackathon">
-  <div class="card-img"><img src="/assets/thumbs/linqbot.webp?v=d9fd1acd" alt="" loading="lazy" decoding="async"><span class="badge">6.5 h</span><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2026</span></span><b>LinqBot</b><span class="card-s">YC Startup School Hackathon</span></div>
-</a>
-<a class="card" href="/projects/ftc-decode" data-kind="main">
+<a class="card" href="/projects/ftc-decode" data-kind="main" data-group="projects" data-new="4" data-old="18">
   <div class="card-img"><img src="/assets/thumbs/ftc-decode.webp?v=e299499c" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2025 <span class="nw">to May 2026</span></span></span><b>FTC DECODE Robot</b><span class="card-s">1st place Sustain Award, FIRST World Championship</span></div>
 </a>
-<a class="card" href="/projects/electric-vehicle-2026" data-kind="main">
-  <div class="card-img"><img src="/assets/thumbs/electric-vehicle-2026.webp?v=639858ef" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2025 <span class="nw">to Mar 2026</span></span></span><b>Science Olympiad Electric Vehicle 2026</b><span class="card-s">2 Versions: servo, then caliper steering</span></div>
-</a>
-<a class="card" href="/projects/scioly-machines" data-kind="main">
-  <div class="card-img"><img src="/assets/thumbs/scioly-machines.webp?v=a6567c83" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2025 <span class="nw">to Mar 2026</span></span></span><b>Science Olympiad Machines</b><span class="card-s">Science Olympiad</span></div>
-</a>
-<a class="card" href="/projects/autonomous-drone-racing" data-kind="main">
+<a class="card" href="/projects/autonomous-drone-racing" data-kind="main" data-group="projects" data-new="10" data-old="17">
   <div class="card-img"><img src="/assets/thumbs/autonomous-drone-racing.webp?v=8c4d2d85" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul to Aug 2025</span></span><b>Autonomous Drone Racing</b><span class="card-s">1st of 5 MIT BWSI capstone autonomous drone race</span></div>
 </a>
-<a class="card" href="/projects/bike-odometer" data-kind="main">
-  <div class="card-img"><img src="/assets/thumbs/bike-odometer.webp?v=96828c0c" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jun 2025</span></span><b>Exercise Bike Odometer</b><span class="card-s">Personal project</span></div>
-</a>
-<a class="card" href="/projects/pen-plotter" data-kind="main">
+<a class="card" href="/projects/pen-plotter" data-kind="main" data-group="projects" data-new="13" data-old="12">
   <div class="card-img"><img src="/assets/thumbs/pen-plotter.webp?v=362773e7" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>May to Jun 2025</span></span><b><span class="nw">5-Bar</span> Pen Plotter</b><span class="card-s">2 NEMA 17 steppers</span></div>
 </a>
-<a class="card" href="/projects/mt-shirt" data-kind="main">
-  <div class="card-img"><img src="/assets/thumbs/mt-shirt.webp?v=c1d454fa" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>May to Jun 2025</span></span><b>Monkeytype Shirt</b><span class="card-s">Monkeytype</span></div>
-</a>
-<a class="card" href="/projects/robot-tour" data-kind="main">
+<a class="card" href="/projects/robot-tour" data-kind="main" data-group="projects" data-new="15" data-old="11">
   <div class="card-img"><img src="/assets/thumbs/robot-tour.webp?v=780b3e22" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Dec 2024 <span class="nw">to Apr 2025</span></span></span><b>Science Olympiad Robot Tour</b><span class="card-s">Science Olympiad</span></div>
 </a>
-<a class="card" href="/projects/ftc-into-the-deep" data-kind="main">
+<a class="card" href="/projects/ftc-into-the-deep" data-kind="main" data-group="projects" data-new="16" data-old="9">
   <div class="card-img"><img src="/assets/thumbs/ftc-into-the-deep.webp?v=549b4bbb" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2024 <span class="nw">to Mar 2025</span></span></span><b>FTC INTO THE DEEP Robot</b><span class="card-s">1st place Think Award, FIRST Chesapeake Regionals</span></div>
 </a>
-<a class="card" href="/projects/electric-vehicle" data-kind="main">
+<a class="card" href="/projects/electric-vehicle" data-kind="main" data-group="projects" data-new="17" data-old="8">
   <div class="card-img"><img src="/assets/thumbs/electric-vehicle.webp?v=b389115e" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2024 <span class="nw">to Jan 2025</span></span></span><b>Science Olympiad Electric Vehicle 2025</b><span class="card-s">1st of 48 East Maryland Regional</span></div>
 </a>
-<a class="card" href="/projects/centerstage-offseason-robot" data-kind="main">
+<a class="card" href="/projects/centerstage-offseason-robot" data-kind="main" data-group="projects" data-new="21" data-old="5">
   <div class="card-img"><img src="/assets/thumbs/centerstage-offseason-robot.webp?v=290fd858" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul to Aug 2024</span></span><b>FTC CENTERSTAGE Offseason Robot</b><span class="card-s">Less than a week For everything</span></div>
 </a>
-<a class="card" href="/projects/battlebot" data-kind="main">
-  <div class="card-img"><img src="/assets/thumbs/battlebot.webp?v=f21d29bc" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
-  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2024</span></span><b>1 lb Combat Robot</b><span class="card-s">4 days Design to competition</span></div>
-</a>
-<a class="card" href="/projects/ftc-centerstage" data-kind="main">
+<a class="card" href="/projects/ftc-centerstage" data-kind="main" data-group="projects" data-new="26" data-old="0">
   <div class="card-img"><img src="/assets/thumbs/ftc-centerstage.webp?v=b27eb751" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2023 <span class="nw">to Feb 2024</span></span></span><b>FTC CENTERSTAGE Robot</b><span class="card-s">S.T.A.T.I.C., FTC 18996</span></div>
 </a></div>
-  </section>
-  <section class="archive shelf-concepts" id="concepts" aria-labelledby="concepts-h">
-    <div class="archive-head"><h2 id="concepts-h">Concepts</h2><p>Designed in CAD, never finished.</p></div>
-    <div class="grid grid-archive"><a class="card" href="/projects/ftc-decode-two-sided" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/ftc-decode-two-sided.webp?v=1a36f3bf" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+    </section>
+    <section class="wgroup " id="short-projects" aria-labelledby="short-projects-h">
+      <div class="wgroup-head"><h3 id="short-projects-h">Short projects</h3><p>Under a week</p></div>
+      <div class="grid"><a class="card" href="/projects/morph" data-kind="hackathon" data-group="short" data-new="0" data-old="26">
+  <div class="card-img"><img src="/assets/thumbs/morph.webp?v=1ad0e596" alt="" loading="lazy" decoding="async"><span class="badge">36 h</span><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2026</span></span><b>Morph</b><span class="card-s">Top 30 of 1,000+</span></div>
+</a>
+<a class="card" href="/projects/golden-retriever" data-kind="hackathon" data-group="short" data-new="1" data-old="24">
+  <div class="card-img"><img src="/assets/thumbs/golden-retriever.webp?v=4a68ef5d" alt="" loading="lazy" decoding="async"><span class="badge">10.5 h</span><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2026</span></span><b>Golden Retriever</b><span class="card-s">2nd of 250+ teams</span></div>
+</a>
+<a class="card" href="/projects/linqbot" data-kind="hackathon" data-group="short" data-new="2" data-old="25">
+  <div class="card-img"><img src="/assets/thumbs/linqbot.webp?v=d9fd1acd" alt="" loading="lazy" decoding="async"><span class="badge">6.5 h</span><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Hackathon<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2026</span></span><b>LinqBot</b><span class="card-s">YC Startup School Hackathon</span></div>
+</a>
+<a class="card" href="/projects/bike-odometer" data-kind="main" data-group="short" data-new="3" data-old="23">
+  <div class="card-img"><img src="/assets/thumbs/bike-odometer.webp?v=96828c0c" alt="" loading="lazy" decoding="async"><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>2026</span></span><b>Exercise Bike Odometer</b><span class="card-s">Personal project</span></div>
+</a>
+<a class="card" href="/projects/electric-vehicle-2026" data-kind="main" data-group="short" data-new="5" data-old="21">
+  <div class="card-img"><img src="/assets/thumbs/electric-vehicle-2026.webp?v=639858ef" alt="" loading="lazy" decoding="async"><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Mar 2026</span></span><b>Science Olympiad Electric Vehicle 2026</b><span class="card-s">2 Versions: servo, then caliper steering</span></div>
+</a>
+<a class="card" href="/projects/scioly-machines" data-kind="main" data-group="short" data-new="6" data-old="22">
+  <div class="card-img"><img src="/assets/thumbs/scioly-machines.webp?v=a6567c83" alt="" loading="lazy" decoding="async"><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Mar 2026</span></span><b>Science Olympiad Machines</b><span class="card-s">Science Olympiad</span></div>
+</a>
+<a class="card" href="/projects/battlebot" data-kind="main" data-group="short" data-new="23" data-old="3">
+  <div class="card-img"><img src="/assets/thumbs/battlebot.webp?v=f21d29bc" alt="" loading="lazy" decoding="async"><span class="card-g">Short project</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Project<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2024</span></span><b>1 lb Combat Robot</b><span class="card-s">4 days Design to competition</span></div>
+</a></div>
+    </section>
+    <section class="wgroup wgroup-concepts" id="concepts" aria-labelledby="concepts-h">
+      <div class="wgroup-head"><h3 id="concepts-h">Concepts</h3><p>Designed in CAD, never finished.</p></div>
+      <div class="grid grid-concepts"><a class="card" href="/projects/mt-shirt" data-kind="concept" data-group="concepts" data-new="14" data-old="13">
+  <div class="card-img"><img src="/assets/thumbs/mt-shirt.webp?v=c1d454fa" alt="" loading="lazy" decoding="async"><span class="pin" title="Pinned"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M15.2 2.6a1 1 0 0 1 1.4 0l4.8 4.8a1 1 0 0 1 0 1.4l-1.3 1.3a1 1 0 0 1-1 .25l-.9-.3-3.2 3.2.4 3.3a1 1 0 0 1-.3.8l-1 1a1 1 0 0 1-1.4 0L9.3 15l-5.1 5.1a.9.9 0 0 1-1.3-1.3L8 13.7 4.6 10.3a1 1 0 0 1 0-1.4l1-1a1 1 0 0 1 .8-.3l3.3.4 3.2-3.2-.3-.9a1 1 0 0 1 .25-1z"/></svg><span class="sr-only">Pinned</span></span><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
+  <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>May to Jun 2025</span></span><b>Monkeytype Shirt</b><span class="card-s">Monkeytype</span></div>
+</a>
+<a class="card" href="/projects/ftc-decode-two-sided" data-kind="concept" data-group="concepts" data-new="7" data-old="20">
+  <div class="card-img"><img src="/assets/thumbs/ftc-decode-two-sided.webp?v=1a36f3bf" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Feb to Mar 2026</span></span><b>FTC DECODE <span class="nw">Two-Sided</span> Intake</b><span class="card-s">FIRST Tech Challenge</span></div>
 </a>
-<a class="card" href="/projects/drone-arm" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/drone-arm.webp?v=e7824432" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/drone-arm" data-kind="concept" data-group="concepts" data-new="12" data-old="15">
+  <div class="card-img"><img src="/assets/thumbs/drone-arm.webp?v=e7824432" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2025</span></span><b>Drone Grabber Arm</b><span class="card-s">MIT Beaver Works Summer Institute</span></div>
 </a>
-<a class="card" href="/projects/ftc-field-cnc" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/ftc-field-cnc.webp?v=950ddeb5" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/ftc-field-cnc" data-kind="concept" data-group="concepts" data-new="18" data-old="10">
+  <div class="card-img"><img src="/assets/thumbs/ftc-field-cnc.webp?v=950ddeb5" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Nov 2024</span></span><b>Upcycled CNC Router</b><span class="card-s"></span></div>
 </a>
-<a class="card" href="/projects/braille-printer" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/braille-printer.webp?v=8dfb2618" alt="" loading="lazy" decoding="async"><span class="badge">36 h</span><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/braille-printer" data-kind="concept" data-group="concepts" data-new="19" data-old="7">
+  <div class="card-img"><img src="/assets/thumbs/braille-printer.webp?v=8dfb2618" alt="" loading="lazy" decoding="async"><span class="badge">36 h</span><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Sep 2024</span></span><b>Braille Printer</b><span class="card-s">36 h Build time</span></div>
 </a>
-<a class="card" href="/projects/vtol-tailsitter" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/vtol-tailsitter.webp?v=ccb52345" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/vtol-tailsitter" data-kind="concept" data-group="concepts" data-new="20" data-old="6">
+  <div class="card-img"><img src="/assets/thumbs/vtol-tailsitter.webp?v=ccb52345" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Aug 2024</span></span><b>VTOL Tailsitter</b><span class="card-s"></span></div>
 </a>
-<a class="card" href="/projects/manure-drone" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/manure-drone.webp?v=f2594353" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/manure-drone" data-kind="concept" data-group="concepts" data-new="24" data-old="4">
+  <div class="card-img"><img src="/assets/thumbs/manure-drone.webp?v=f2594353" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Jul 2024</span></span><b>Manure-Collecting Drone</b><span class="card-s">Constellation Youth Energy Summit</span></div>
 </a>
-<a class="card" href="/projects/cryptic-extendo" data-kind="concept">
-  <div class="card-img"><img src="/assets/thumbs/cryptic-extendo.webp?v=1ea76cee" alt="" loading="lazy" decoding="async"><span class="card-cta"><span>Click to learn more</span></span></div>
+<a class="card" href="/projects/cryptic-extendo" data-kind="concept" data-group="concepts" data-new="25" data-old="2">
+  <div class="card-img"><img src="/assets/thumbs/cryptic-extendo.webp?v=1ea76cee" alt="" loading="lazy" decoding="async"><span class="card-g">Concept</span><span class="card-cta"><span>Click to learn more</span></span></div>
   <div class="card-body"><span class="card-k">Concept<span class="card-d"><span class="card-dot" aria-hidden="true"> · </span>Mar 2024</span></span><b>Horizontal Extension Intake for Cryptic</b><span class="card-s">FIRST Tech Challenge</span></div>
 </a></div>
+    </section>
+    </div>
+    <div class="grid work-flat" hidden></div>
   </section>
   <section class="archive " id="archive" aria-labelledby="archive-h">
     <div class="archive-head"><h2 id="archive-h">Archive</h2><p>2023 and earlier: early robots and side builds.</p></div>
@@ -257,21 +267,22 @@
   <section class="section about" id="about" aria-labelledby="about-h">
     <h2 class="about-title" id="about-h">About</h2>
     <div class="about-grid">
-      <div class="about-text"><p>I study mechanical engineering at the University of Illinois Urbana-Champaign, with a minor in electrical and computer engineering.</p><p>I have been building robots since 2020: four years as an FTC team captain, a season designing an FRC robot solo, and research at MIT Lincoln Laboratory on a drone that docks onto a ground rover. I am most interested in assistive technology, AI-driven robotics and electric vehicles, and I plan to pursue entrepreneurship.</p><p>At Illinois I am on Illini Electric Motorsports. On chassis I am leading the redesign of a lap-belt attachment from aluminum to composite, simulated in Ansys ACP.</p></div>
+      <div class="about-text"><p>Hi, I'm Jerry! I'm studying Mechanical Engineering at UIUC with a minor in ECE.</p><p>Ever since I CADded my first functional part in Fusion 360, I have loved making physical things. Before long I was making things to solve problems, and I realized that is the part I love most: finding a problem, designing something for it, and building it until it works.</p><p>The field I am most interested in right now is physical AI.</p><p>At Illinois I am on Illini Electric Motorsports, where I work on the monocoque attachments for the chassis, using Ansys ACP.</p></div>
       <div class="portrait"><img src="/assets/media/jerry-portrait.webp?v=8e2af2cc" alt="Jerry Li" loading="lazy" width="960" height="1200"></div>
-      <div class="contact-card">
-        <h3>I am always interested in new projects and engineering problems. Feel free to reach out.</h3>
-        <p class="links-inline"><a href="mailto:jerry@jerryli.design">jerry@jerryli.design <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://www.linkedin.com/in/jerry-li-md/" rel="me">LinkedIn <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://github.com/jerryli08" rel="me">GitHub <span class="arrow" aria-hidden="true">&#8599;</span></a></p>
+      <div class="contact-card" id="contact">
+        <h3 class="contact-line">Always interested in new projects and problems to solve; let's connect!</h3>
+        <ul class="contact-mail"><li><span class="cm-l">School:</span> <a href="mailto:jerryel2@illinois.edu">jerryel2@illinois.edu</a></li><li><span class="cm-l">Personal:</span> <a href="mailto:jerry@jerryli.design">jerry@jerryli.design</a></li></ul>
+        <p class="links-inline"><a href="https://www.linkedin.com/in/jerry-li-md/" rel="me">LinkedIn <span class="arrow" aria-hidden="true">&#8599;</span></a><a href="https://github.com/jerryli08" rel="me">GitHub <span class="arrow" aria-hidden="true">&#8599;</span></a></p>
       </div>
     </div>
   </section>
-  <footer class="footer"><span>&copy; 2026 Jerry Li</span><span><a href="mailto:jerry@jerryli.design">jerry@jerryli.design</a></span></footer>
+  <footer class="footer"><span>&copy; 2026 Jerry Li</span><span class="footer-mail"><a href="mailto:jerryel2@illinois.edu">School: jerryel2@illinois.edu</a><a href="mailto:jerry@jerryli.design">Personal: jerry@jerryli.design</a></span></footer>
 </main>
 <a class="more" href="#work" data-more aria-label="Scroll to 30+ more projects">
-  <span class="more-fan" aria-hidden="true"><img src="/assets/thumbs/mini/morph.webp?v=40d8d10d" alt="" width="96" height="72"><img src="/assets/thumbs/mini/golden-retriever.webp?v=6488cad1" alt="" width="96" height="72"><img src="/assets/thumbs/mini/linqbot.webp?v=5654fed0" alt="" width="96" height="72"><img src="/assets/thumbs/mini/electric-vehicle-2026.webp?v=8c81799e" alt="" width="96" height="72"><img src="/assets/thumbs/mini/scioly-machines.webp?v=5b93e111" alt="" width="96" height="72"></span>
+  <span class="more-fan" aria-hidden="true"><img src="/assets/thumbs/mini/autonomous-drone-racing.webp?v=73b6edcf" alt="" width="96" height="72"><img src="/assets/thumbs/mini/pen-plotter.webp?v=2f93ece2" alt="" width="96" height="72"><img src="/assets/thumbs/mini/robot-tour.webp?v=c74ca7d0" alt="" width="96" height="72"><img src="/assets/thumbs/mini/ftc-into-the-deep.webp?v=60341f54" alt="" width="96" height="72"><img src="/assets/thumbs/mini/electric-vehicle.webp?v=9fe845cc" alt="" width="96" height="72"></span>
   <span class="more-txt"><b class="more-n">30+</b><span class="more-l">more projects<br>below</span></span>
   <span class="more-arrow" aria-hidden="true">&darr;</span>
 </a>
-<script src="/assets/js/site.js?v=c7b6bffd" defer></script>
+<script src="/assets/js/site.js?v=cc84ebdc" defer></script>
 </body>
 </html>

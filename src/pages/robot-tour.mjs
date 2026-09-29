@@ -8,6 +8,13 @@
 // OTOS scale factors in the code (Q5), whether the hero runs are the example-track route (Q6), where
 // the last move ends relative to the target (Q7: no distance-to-target readout), and why the first
 // move is 33 cm (Q8a: the page states the move and the rules, not the reason).
+// Sept 28, 19:59 (Jerry): the top stats are the geared version's top speed, "Optical Odometry" and the
+// outer size. Speed: no load, the Axon MINI's 0.080 s per 60 degrees at 7.4 V (Axon's MINI MK2 and the
+// older MINI+ list the same speeds), the rating nearest the pack in his photos (six 1.2 V NiMH AA
+// cells, 7.2 V in series), times 40 / 16 and the 34.9 mm wheel from the CAD: 0.571 m/s. Size: the raw
+// final CAD's bounding box (cad_glb/scioly_robot_tour_full_robot_geared_(final_ver).glb), 162.7 long
+// (back plate to the dowel holder's nose) x 146.4 wide (across the side plates' screw heads; 142.4
+// without them) x 109.2 mm tall (floor to the top of the dowel; 96.0 without it).
 const M = '/assets/models/robot-tour';
 // the two drive modules of either version, for the exploded view (the right one is the mirrored copy)
 const MOD = 'DDJ|1910|3217|3421|3422|T61H|2101|1601|22mm|Wheel|1mm|Spur_Gear|Hub_disc|Belt|Pulley';
@@ -15,10 +22,9 @@ const MOD = 'DDJ|1910|3217|3421|3422|T61H|2101|1601|22mm|Wheel|1mm|Spur_Gear|Hub
 export default {
   summary: {
     stats: [
-      { v: '3 : 1 → 2.5 : 1', l: 'GT2 belts, then spur gears, on the same 33 mm centres (from my CAD)' },
-      { v: '45 moves', l: 'My final coded route: 23 turns and 13.8 m of straight driving' },
-      { v: '1.5 mm, 0.5°', l: 'When a straight move and a turn count as done' },
-      { v: '30.3 mm', l: 'The OTOS offset from the wheel axis, set in the code' },
+      { v: '0.57 m/s', l: 'Top speed of the geared version, no load: the Axon MINI datasheet and my CAD ([worked out below](#code))' },
+      { v: 'Optical Odometry', l: 'A SparkFun OTOS under the robot tracks its position and heading' },
+      { v: '163 × 146 × 109 mm', l: 'Length × width × height of the final version (my CAD), with the wheels, casters, screw heads and dowel' },
     ],
     text: [
       'I built this robot by myself for the 2024-25 Science Olympiad Robot Tour event, where a robot finds its own way around a 2 by 2.5 m track, through gate zones and around wooden 2x4s, to a target point. Two Axon MINI servos drive it through a 2.5 : 1 spur gear stage, a SparkFun optical tracking odometry sensor (OTOS) underneath tells it where it is, and an Arduino Mega runs the route as a list of moves, each closed with distance and heading control that carries the last move\'s leftover error into the next.',
@@ -165,6 +171,20 @@ export default {
       'The track layout is only announced at the event, and the program can be changed during setup. So my route is a list of simple moves, `FORWARD_50`, `TURN_LEFT`, `FORWARD_100` and so on, with comments for the gate zones. A state machine runs them one at a time and moves on when a move reports that it is done.',
       { h: 'Distance and heading control' },
       'In the final version each forward move runs two controllers off the OTOS: one on the distance left to go, one on the heading error. The wheel commands are the distance output plus and minus seven times the heading output, so the robot steers while it drives; in the last centimetre it stops steering. Turns use the heading controller alone, with the wheels turning opposite ways. A straight move is done within 1.5 mm and a turn within 0.5°, and the wheel commands are capped at 20% of full speed. Both controllers are PID controllers with only the proportional gain set; earlier versions also used a small derivative gain.',
+      { calc: 'How fast can the geared version drive?',
+        given: [
+          ['Servo speed, no load', '0.080 s per 60° at 7.4 V', '[Axon MINI datasheet](https://docs.axon-robotics.com/servos/mini)'],
+          ['Battery', 'six 1.2 V NiMH AA cells, 7.2 V in series; 7.4 V is the nearest rating', 'my photos'],
+          ['Gears', '40 teeth on the servo, 16 on the axle', 'my CAD'],
+          ['Wheel', '34.9 mm across (a 1-3/8 in BaneBots wheel)', 'my CAD'],
+        ],
+        work: [
+          'Servo: 60° in 0.080 s is 750° per second, 125 rpm',
+          'Wheel: 125 rpm × 40 / 16 = 312.5 rpm, turning the other way from the servo',
+          'Speed: 312.5 rpm / 60 × π × 34.9 mm = 0.57 m/s',
+        ],
+        result: 'About 0.57 m/s flat out. My code caps the wheel commands at 20% of full, so every move ran well below that.',
+        note: 'A no-load maximum from the datasheet and the CAD, not a measured speed: under load, and at 7.2 V, it is lower.' },
       { h: 'Servo deadband' },
       'A continuous-rotation servo does not move until its command is a little way past stop, and each of mine needed a different amount in each direction. The code adds an offset per wheel and per direction to every non-zero command: in the final version 2.1% and 4.3% of full command for the left servo forward and backward, 0% and 6.5% for the right.',
       { problem: 'Every move ends a little off, up to the code\'s tolerances of 1.5 mm and 0.5°. If each move just started from wherever the last one stopped, those errors would add up over 45 moves.', title: 'Small errors add up' },

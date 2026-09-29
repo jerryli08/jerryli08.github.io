@@ -292,8 +292,8 @@ export default {
       { v: 'v1-moorefield-playoff-caster.mp4', c: 'Moorefield, WV Qualifier II, playoff match 4, from the event livestream. We are 26115 on the red alliance with 9073' },
       { i: 'team-practice-field.webp', c: 'The team with the robot on our practice field, April 2026' },
     ] },
-    { type: 'callout', h: 'The Sustain Award', p: [
-      'The Sustain Award is a team award, not a robot award: it recognizes building a program that outlasts its founders. We won it, 1st place, at the FIRST World Championship in May 2026. FTC has more than 8,000 teams worldwide.',
+    { type: 'callout', h: '1st place Sustain Award, Jackson Division', p: [
+      'The Sustain Award is a team award: it recognizes building a program that outlasts its founders. We won it, 1st place, at the FIRST World Championship in May 2026. FTC has more than 8,000 teams worldwide.',
       'We are a team of 11 that went from not qualifying for regionals to a 1st place award at Worlds. Our build content reached more than 50,000 views across Instagram, YouTube and TikTok, and we raised more than $100,000 through a Legislative Bond Initiative for the team and its organization.',
     ] },
 

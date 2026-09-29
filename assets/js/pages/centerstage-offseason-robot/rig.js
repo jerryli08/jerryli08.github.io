@@ -38,6 +38,7 @@ export const TICKS_PER_DEG = 3895.9 / 360;
 export const phiFromTicks = (t) => (1190.4 - t) / TICKS_PER_DEG; // degrees
 export const PHI_UP = phiFromTicks(50); // 105.3
 export const CLAW_C = [-0.039, 0.0077, 1.4159]; // claw body centre in the CAD pose (for the lever arm)
+export const CLAW_CUT = 0.0525; // where extendClaw stretches the claw body's stem (y, CAD pose; 17.8 mm under the wrist axis)
 
 const DEG = Math.PI / 180;
 // a group's nodes as optimize-cad.mjs names them (anim_hc_<n>_G_X__<k>), anchored so the rig's own
@@ -65,6 +66,61 @@ export async function rigRobot(stage, { belts = true } = {}) {
   const base = new Map([...stages, ...cars, claw].map((g) => [g, g.position.z]));
   if (!belts) for (const b of [...beltExt, ...beltRet]) b.visible = false;
 
+  // Jerry (Sept 28): the claw on the robot he built was longer than in this CAD (the CAD is likely an
+  // older version), long enough to touch the backdrop with the slides parallel to it. extendClaw(L) draws
+  // it that way, changing no shape but the claw body's stem: in the CAD pose the stem runs straight down
+  // from the wrist hub to the plate that carries both finger servos (the claw's length axis), and the
+  // plane y = CLAW_CUT crosses only its straight side walls (49 triangles, all vertical; no other part
+  // of the claw). Everything below that plane (the finger plate, both finger servos and both fingers)
+  // moves L further from the wrist axis along the stem, and the stem's walls stretch by L to meet it.
+  // Only the cycle animation calls it; the other animations show the CAD claw.
+  let extra = 0;
+  function extendClaw(L) {
+    if (!(L > 0) || extra) return;
+    extra = L;
+    pose({ phi: 0, e: 1, wrist: 0, grip: [0, 0] });
+    model.updateMatrixWorld(true);
+    const toModel = new THREE.Matrix4().copy(model.matrixWorld).invert();
+    const M = new THREE.Matrix4(), Mi = new THREE.Matrix4(), p = new THREE.Vector3();
+    for (const top of part('G_WRIST')) top.traverse((m) => {
+      if (!m.isMesh) return;
+      M.copy(toModel).multiply(m.matrixWorld); Mi.copy(M).invert();
+      const geo = m.geometry = m.geometry.clone(), src = geo.attributes.position, n = src.count;
+      const out = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        p.fromBufferAttribute(src, i).applyMatrix4(M);
+        if (p.y < CLAW_CUT) p.y -= L;
+        p.applyMatrix4(Mi).toArray(out, i * 3);
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(out, 3));
+      reprojectUVs(m);
+      geo.computeBoundingBox(); geo.computeBoundingSphere();
+    });
+    // the fingers turn about vertical axes, so moving them down their own axes keeps the axes
+    const d = new THREE.Vector3(0, -1, 0).transformDirection(model.matrixWorld).transformDirection(new THREE.Matrix4().copy(wrist.matrixWorld).invert()).multiplyScalar(L);
+    for (const f of [fR, fL]) f.position.add(d);
+    stage.invalidate();
+  }
+  // the stage's box and layer-line texture coordinates are projected from each vertex's position when
+  // the model loads (stage.js projectUVs); the same projection again keeps the stretched stem's layer
+  // lines at their real spacing
+  function reprojectUVs(m) {
+    const want = [].concat(m.material).map((x) => x.userData?.rxUv).find(Boolean), geo = m.geometry;
+    if (!want || !geo.attributes.uv || !geo.attributes.normal) return;
+    const [mode, tile] = want, e = m.matrixWorld.elements;
+    const sx = Math.hypot(e[0], e[1], e[2]) / tile, sy = Math.hypot(e[4], e[5], e[6]) / tile, sz = Math.hypot(e[8], e[9], e[10]) / tile;
+    const pos = geo.attributes.position, nor = geo.attributes.normal, n = pos.count, uv = new Float32Array(n * 2);
+    for (let i = 0; i < n; i++) {
+      const x = pos.getX(i) * sx, y = pos.getY(i) * sy, z = pos.getZ(i) * sz;
+      const ax = Math.abs(nor.getX(i)), ay = Math.abs(nor.getY(i)), az = Math.abs(nor.getZ(i));
+      if (mode === 'layers') { uv[i * 2] = ax > az ? z : x; uv[i * 2 + 1] = y; }
+      else if (ax >= ay && ax >= az) { uv[i * 2] = z; uv[i * 2 + 1] = y; }
+      else if (ay >= az) { uv[i * 2] = x; uv[i * 2 + 1] = z; }
+      else { uv[i * 2] = x; uv[i * 2 + 1] = y; }
+    }
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  }
+
   let last = '';
   /** pose({ phi (deg), e (0 in .. 1 out), wrist (deg, + turns the claw the way the arm pitches up), grip: [r, l] (deg, + opens) }) */
   function pose({ phi = 0, e = 1, wrist: w = 0, grip = [0, 0] } = {}) {
@@ -87,7 +143,7 @@ export async function rigRobot(stage, { belts = true } = {}) {
     stage.invalidate();
     return true;
   }
-  return { model, part, arm, wrist, claw, stages, cars, fR, fL, pose };
+  return { model, part, arm, wrist, claw, stages, cars, fR, fL, pose, extendClaw, get extra() { return extra; } };
 }
 
 // ---------------------------------------------------------------- props (not in the CAD)
@@ -117,12 +173,13 @@ export function pixelGeometry(THREE) {
 //   above the origin; the field tiles' top (the robot's floor) is 17.5 mm above the origin (the tiles
 //   are 15 mm thick in the same STEP, and the easel's lowest edge sits on them)
 //   the frame's bottom edge is notched for the first row: six notches, centres x = +-38, +-114,
-//   +-190 mm; a pixel (pointy end down) settles with its centre 58.2 mm up the face from its
-//   bottom edge, whichever notch
+//   +-190 mm; a pixel (pointy end down) settles with its centre 59.7 mm up the face from its
+//   bottom edge, whichever notch (Sept 28: rechecked with a signed distance between the pixel and
+//   the notch meshes; the first estimate, 58.2 mm, left the tip about 1.3 mm into the notch)
 //   the frame's lowest front edge stands 95.2 mm in front of the face's bottom edge
 export const BD_MODEL = '/assets/models/centerstage-offseason-robot/backdrop.glb';
 export const BD_TILT = 60; // degrees from the floor
-const BD_EDGE = 0.1478, BD_TILE = 0.0175, BD_REST = 0.0582;
+const BD_EDGE = 0.1478, BD_TILE = 0.0175, BD_REST = 0.0597;
 export const BD_LIP = 0.0952;
 
 // Loads it into `into` (the robot model, so it shares the robot's frame) with the face's bottom edge
