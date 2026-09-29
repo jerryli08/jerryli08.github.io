@@ -16,13 +16,13 @@ export default {
   summary: {
     stats: [
       { v: '2nd', l: 'of 250+ teams, 1,500+ hackers' },
-      { v: '10.5 h', l: 'Build time, team of four' },
+      { v: '10 h', l: 'Build time, team of four' },
       { v: '40', l: 'Demonstrations to train the grasp' },
       { v: '3', l: 'Webcams, one laptop running everything' },
     ],
     text: [
       'Golden Retriever is a fetch robot for people with limited leg mobility. You text it what you need; it drives to the shelf on depth estimated from a single webcam, finds the item with a second one, picks it up with an SO-101 arm running a policy we trained on 40 of our own demonstrations, and brings it back.',
-      'Four of us built it overnight in 10.5 hours at the Corgi hackathon in San Francisco. At judging the whole loop ran end to end, and we took 2nd of 250+ teams. Below: one errand on our CAD as you scroll, the drive, the lift and the arm moving about their real axes, how each stage works, and what did not work well.',
+      'Four of us built it overnight in 10 hours at the Corgi hackathon in San Francisco. At judging the whole loop ran end to end, and we took 2nd of 250+ teams. Below: one errand on our CAD as you scroll, the drive, the lift and the arm moving about their real axes, how each stage works, and what did not work well.',
     ],
   },
   hero: {
@@ -285,7 +285,7 @@ export default {
     {
       type: 'callout', id: 'result', h: 'Result',
       p: [
-        '2nd place of 250+ teams (1,500+ hackers) at the Corgi hackathon in San Francisco, after 10.5 hours of building. At judging the whole loop worked end to end: text it, it drives to the shelf, finds the item, grasps it and brings it back. The lift worked, slowly, and the grasp was the weak link in the demo lighting.',
+        '2nd place of 250+ teams (1,500+ hackers) at the Corgi hackathon in San Francisco, after 10 hours of building. At judging the whole loop worked end to end: text it, it drives to the shelf, finds the item, grasps it and brings it back. The lift worked, slowly, and the grasp was the weak link in the demo lighting.',
         'Team: Tarun Malarvasan, Ryker Kollmyer, Andrew Wang and me.',
       ],
     },

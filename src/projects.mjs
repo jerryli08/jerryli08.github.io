@@ -90,7 +90,7 @@ export const projects = [
     ],
   },
   {
-    slug: 'frc-rebuilt', pinned: true, featured: 1,
+    slug: 'frc-rebuilt', featured: 1,
     kind: 'main',
     title: 'FRC REBUILT Robot',
     subtitle: 'Team 2856 Planetary Drive',
@@ -246,7 +246,7 @@ export const projects = [
     media: [{ i: 'images/scioly-machines/still-device-full.webp', c: 'The whole device: two beams on two posts, with the link at the right end' }],
   },
   {
-    slug: 'electric-bike', pinned: true, featured: 3,
+    slug: 'electric-bike', featured: 3, tiebreak: 1, // listed before Autonomous Racing Drone, which ends the same month (Jerry, Sept 29)
     kind: 'main',
     title: 'Electric Bike',
     subtitle: '5.3 kW mid-drive conversion',
@@ -309,7 +309,7 @@ export const projects = [
   {
     slug: 'autonomous-drone-racing',
     kind: 'main',
-    title: 'Autonomous Drone Racing',
+    title: 'Autonomous Racing Drone',
     subtitle: 'Capstone race winner',
     short: 'Led a team of five writing vision-guided autonomy for a race drone. We won the capstone race in 52 s, under half the second-best team’s time.',
     org: 'MIT Beaver Works Summer Institute (BWSI)',
@@ -476,7 +476,7 @@ export const projects = [
     subtitle: 'Assistive fetch robot',
     short: 'Text it what you need and it drives over, grabs it with a learned grasp, and brings it back.',
     event: 'Corgi Hackathon, San Francisco',
-    hours: '10.5 h',
+    hours: '10 h',
     place: '2nd of 250+ teams',
     date: 'Jul 2026',
     year: '2026',
@@ -485,11 +485,11 @@ export const projects = [
     links: [{ label: 'Code on GitHub', href: 'https://github.com/jerryli08/corgi-hackathon' }],
     stats: [
       { v: '2nd', l: 'of 250+ teams, 1,500+ hackers' },
-      { v: '10.5 h', l: 'Build time' },
+      { v: '10 h', l: 'Build time' },
     ],
     body: [
       { h: 'Overview', p: [
-        'An assistive fetch robot for people with limited leg mobility, built by four of us in 10.5 hours. You text it over iMessage and Claude works out which item you want; the robot drives to the shelf using monocular depth estimation and path planning, finds the item with a low side webcam, and grasps it with an SO-101 arm running an ACT policy we trained on about 40 demonstrations. The whole loop worked end to end at judging.',
+        'An assistive fetch robot for people with limited leg mobility, built by four of us in 10 hours. You text it over iMessage and Claude works out which item you want; the robot drives to the shelf using monocular depth estimation and path planning, finds the item with a low side webcam, and grasps it with an SO-101 arm running an ACT policy we trained on about 40 demonstrations. The whole loop worked end to end at judging.',
         'I did all of the soldering, including the Arduino Mega 2560 Pro that drives the two Axon MAX wheel servos.',
       ]},
     ],
@@ -741,8 +741,9 @@ export const projects = [
     title: 'Exercise Bike Odometer',
     short: 'An odometer for my family\'s stationary bike, built in a 12-hour, one-day challenge.',
     org: 'Personal project',
-    date: '2026',
+    date: 'Jun 21, 2026',
     year: '2026',
+    hours: '12 h',
     tools: ['Fusion 360', '3D printing (FDM)', 'Arduino Nano (C++)', 'MT6701 magnetic angle sensor', '16x2 character LCD', 'Perfboard soldering'],
     body: [{ h: 'Overview', p: ['I made an odometer for my family\'s stationary bike. To challenge myself I gave myself one day, and finished in 12 hours.'] }],
     media: [{ v: 'videos/bike-odometer.mp4', c: 'Demo' }],

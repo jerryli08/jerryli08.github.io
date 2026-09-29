@@ -1,4 +1,4 @@
-// Autonomous Drone Racing: rich page. Base text from the phase A write-up
+// Autonomous Racing Drone: rich page. Base text from the phase A write-up
 // (the phase A writeup.md for this project), tightened, and checked against Jerry’s checklist,
 // facts.md and answers.md. Code facts come from the team's line-following flight script (the repo is
 // read-only here; it is never linked or named on the page), numbers marked "from the CAD" from his

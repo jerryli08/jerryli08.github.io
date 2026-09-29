@@ -26,7 +26,7 @@ const RESULTS = 'https://ftc-events.firstinspires.org/2023/team/18996';
 export default {
   summary: {
     stats: [
-      { v: '25th of 25 to 7th of 27', l: 'Rank at the Garrett County Qualifier, then in our division at the Chesapeake Championship (regionals)' },
+      { v: '373% OPR increase', l: 'From the Garrett County Qualifier (Jan 13) to the Chesapeake Championship (Feb 3, 2024)' },
       { v: '6 awards', l: 'Judged awards in 4 events, including Inspire 2nd Place' },
     ],
     text: [

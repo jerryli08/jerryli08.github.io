@@ -15,7 +15,8 @@
   --accent-soft: rgba(255, 107, 53, 0.14);
   --radius: 14px;
   --radius-lg: 20px;
-  --gutter: clamp(20px, 3.2vw, 56px);
+  --gutter: clamp(24px, 5vw, 96px); /* more room at the screen edges (Jerry, Sept 29) */
+  --rx-edge: max(14px, calc(var(--gutter) * 0.66)); /* readouts and notes inside full-width stages */
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --font: 'Mona Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -623,7 +624,7 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
    Pages built from src/pages/<slug>.mjs (tools/rich.mjs) with the runtime in assets/js/project.js.
    Everything here is scoped to .rich / .rx-*, so the simple project pages are untouched. */
 .rich { --nav-h: 58px; }
-@media (max-width: 640px) { .rich { --gutter: 16px; } }
+@media (max-width: 640px) { .rich { --gutter: 22px; } }
 .rx { overflow-x: clip; }
 .rx-w { max-width: 1180px; margin: 0 auto; padding: 0 var(--gutter); }
 .rx-sec { padding-top: clamp(56px, 8vw, 104px); scroll-margin-top: var(--nav-h); }
@@ -803,11 +804,11 @@ a.rx-m:hover > img { transform: scale(1.02); }
 [data-state="loading"] .rx-status { opacity: 1; transition: opacity 0.3s 0.25s; }
 .rx-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); border-top-color: var(--accent); animation: rx-spin 0.9s linear infinite; }
 @keyframes rx-spin { to { transform: rotate(360deg); } }
-.rx-note { left: 12px; bottom: 12px; max-width: calc(100% - 24px); }
+.rx-note { left: var(--rx-edge); bottom: 12px; max-width: calc(100% - 2 * var(--rx-edge)); }
 .rx-note[hidden] { display: none; }
 .rx-load { position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; }
 [data-state="ask"] .rx-load { display: inline-flex; }
-.rx-hint { left: 12px; bottom: 12px; pointer-events: none; transition: opacity 0.6s; }
+.rx-hint { left: var(--rx-edge); bottom: 12px; pointer-events: none; transition: opacity 0.6s; }
 .rx-hint.gone { opacity: 0; }
 .rx-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 14px; }
 .rx-panel:empty { display: none; }
@@ -859,7 +860,7 @@ a.rx-m:hover > img { transform: scale(1.02); }
 /* a 2D scrolly draws in the part of the stage the cards leave free (project.js) */
 .rx-free { position: absolute; top: 0; right: 0; bottom: 0; left: var(--rx-cover, 0px); }
 /* the stage's own notes (WebGL off, could not load) sit clear of the cards */
-@media (min-width: 901px) { .rx-scrolly:not(.rx-stepless) .rx-note { left: auto; right: 12px; } }
+@media (min-width: 901px) { .rx-scrolly:not(.rx-stepless) .rx-note { left: auto; right: var(--rx-edge); } }
 /* a scrolly without steps: the stage stays pinned for --len of scrolling */
 .rx-stepless .rx-scrolly-body { min-height: var(--len, 180vh); }
 
@@ -881,7 +882,7 @@ a.rx-m:hover > img { transform: scale(1.02); }
 
 /* a small instrument panel over a scroll-driven stage (numbers that follow the scroll) */
 .rx-hud {
-  position: absolute; top: 14px; right: 14px; width: min(var(--rx-hud-w), calc(100% - 28px)); padding: 13px 16px 14px;
+  position: absolute; top: 14px; right: var(--rx-edge); width: min(var(--rx-hud-w), calc(100% - 2 * var(--rx-edge))); padding: 13px 16px 14px;
   border-radius: 14px; background: rgba(10, 8, 7, 0.8); border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: var(--rx-ov-text); line-height: 1.35; color: var(--text-2);
 }
@@ -902,7 +903,7 @@ a.rx-m:hover > img { transform: scale(1.02); }
 /* an inset: a diagram, a photo or a second view of the scene, at least --rx-inset-w wide, in the
    bottom-right corner (clear of the step cards, which sit over the left of the stage) */
 .rx-inset {
-  position: absolute; right: 14px; bottom: 14px; z-index: 2; width: var(--rx-inset-w); margin: 0; padding: 12px 14px;
+  position: absolute; right: var(--rx-edge); bottom: 14px; z-index: 2; width: var(--rx-inset-w); margin: 0; padding: 12px 14px;
   border-radius: 14px; background: rgba(10, 8, 7, 0.82); border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: var(--rx-ov-text); line-height: 1.35; color: var(--text-2); pointer-events: none;
 }

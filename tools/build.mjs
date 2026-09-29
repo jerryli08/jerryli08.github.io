@@ -171,7 +171,8 @@ function span(x) {
   if (!pts.length && x.year) pts.push(+x.year * 12 + 6);
   return pts.length ? [Math.min(...pts), Math.max(...pts)] : [-Infinity, -Infinity];
 }
-const newestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return eb - ea || sb - sa; };
+// ties on the end month: a higher `tiebreak` goes first (Jerry's own order), then the later start
+const newestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return eb - ea || (b.tiebreak || 0) - (a.tiebreak || 0) || sb - sa; };
 const oldestFirst = (a, b) => { const [sa, ea] = span(a), [sb, eb] = span(b); return sa - sb || ea - eb; };
 const pinnedFirst = (xs) => [...xs.filter((x) => x.pinned).sort(newestFirst), ...xs.filter((x) => !x.pinned).sort(newestFirst)];
 // The home page's order (Jerry, Sept 28). All work: Projects (a week or more), Short projects (under

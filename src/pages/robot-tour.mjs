@@ -14,7 +14,7 @@
 // cells, 7.2 V in series), times 40 / 16 and the 34.9 mm wheel from the CAD: 0.571 m/s. Size: the raw
 // final CAD's bounding box (cad_glb/scioly_robot_tour_full_robot_geared_(final_ver).glb), 162.7 long
 // (back plate to the dowel holder's nose) x 146.4 wide (across the side plates' screw heads; 142.4
-// without them) x 109.2 mm tall (floor to the top of the dowel; 96.0 without it).
+// without them) x 96.0 mm tall (floor to the top, without the dowel; Jerry, Sept 29).
 const M = '/assets/models/robot-tour';
 // the two drive modules of either version, for the exploded view (the right one is the mirrored copy)
 const MOD = 'DDJ|1910|3217|3421|3422|T61H|2101|1601|22mm|Wheel|1mm|Spur_Gear|Hub_disc|Belt|Pulley';
@@ -24,7 +24,7 @@ export default {
     stats: [
       { v: '0.57 m/s', l: 'Top speed of the geared version, no load: the Axon MINI datasheet and my CAD ([worked out below](#code))' },
       { v: 'Optical Odometry', l: 'A SparkFun OTOS under the robot tracks its position and heading' },
-      { v: '163 × 146 × 109 mm', l: 'Length × width × height of the final version (my CAD), with the wheels, casters, screw heads and dowel' },
+      { v: '163 × 146 × 96 mm', l: 'Length × width × height of the final version (my CAD)' },
     ],
     text: [
       'I built this robot by myself for the 2024-25 Science Olympiad Robot Tour event, where a robot finds its own way around a 2 by 2.5 m track, through gate zones and around wooden 2x4s, to a target point. Two Axon MINI servos drive it through a 2.5 : 1 spur gear stage, a SparkFun optical tracking odometry sensor (OTOS) underneath tells it where it is, and an Arduino Mega runs the route as a list of moves, each closed with distance and heading control that carries the last move\'s leftover error into the next.',

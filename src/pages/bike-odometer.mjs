@@ -1,4 +1,4 @@
-// Exercise Bike Odometer (Jun 2025). Rich page.
+// Exercise Bike Odometer (Jun 21, 2026, one day). Rich page.
 // Sources: projects.mjs (my family's stationary bike; a one-day challenge, finished in 12 hours),
 // the public repo github.com/jerryli08/bikeOdometer (four sketches and the commit message "fixed
 // going backwards bug / made LCD only update once per sec instead of per loop, decreasing loop
