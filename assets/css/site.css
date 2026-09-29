@@ -194,6 +194,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .sc-hint { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.45; color: var(--muted); }
 .sc-live { display: inline-flex; align-items: center; gap: 7px; margin-right: 2px; color: var(--text-2); }
 .h-touch { display: none; }
+.hero-live { display: none; }
 @media (hover: none) { .h-fine { display: none; } .h-touch { display: inline; } }
 /* a mid-width card (laptops): slightly tighter text, so the photo beside it stays wider than tall
    and shows the whole drone */
@@ -586,9 +587,17 @@ figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); line-heigh
 @media (max-width: 960px) {
   .hero { min-height: auto; padding-top: max(46vh, 412px); padding-bottom: 120px; } /* the name starts below the featured card */
   .hero-left { width: 100%; }
-  .veil { background: linear-gradient(180deg, rgba(10, 8, 7, 0.35) 0%, rgba(10, 8, 7, 0.1) 18%, rgba(10, 8, 7, 0.72) 36%, rgba(10, 8, 7, 0.9) 60%); }
-  .bg-still { object-position: 52% 36%; }
-  .scene-card { top: 62px; left: var(--gutter); right: var(--gutter); width: auto; }
+  /* phones and small tablets: the top of the first screen, under the nav and above the name, is a
+     clear window onto the live scene (world.js frames the vehicle at its centre); the featured card
+     follows the chips instead of covering the scene (Jerry, Sept 29) */
+  .veil { background: linear-gradient(180deg, rgba(10, 8, 7, 0.35) 0, rgba(10, 8, 7, 0.04) 90px, rgba(10, 8, 7, 0.04) calc(max(46vh, 412px) - 80px), rgba(10, 8, 7, 0.8) calc(max(46vh, 412px) + 24px), rgba(10, 8, 7, 0.9) 78%); }
+  .bg-still { object-position: 52% 36%; transform: translateY(calc((62px + max(46vh, 412px)) / 2 - 35.4vh)); }
+  .hero-left { display: contents; }
+  .hello { order: 1; }
+  .scene-card { order: 2; position: relative; top: auto; right: auto; width: auto; margin: 4px 0 28px; }
+  .featured { order: 3; }
+  .hero-live { display: block; position: absolute; z-index: 3; left: var(--gutter); right: var(--gutter); top: calc(max(46vh, 412px) - 44px); margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--text-2); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7); pointer-events: none; }
+  .scene-card .sc-hint { display: none; }
   .scene-card h2 { font-size: clamp(18px, 5.3vw, 22px); }
   .sc-hint { margin-top: 0; padding-top: 9px; }
   .more { right: auto; left: 50%; transform: translateX(-50%); bottom: 14px; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 16px; }

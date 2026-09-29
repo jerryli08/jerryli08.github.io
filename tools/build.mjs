@@ -305,6 +305,7 @@ function landing() {
 ${nav({ home: true })}
 <main class="content">
   <section class="hero" aria-label="Introduction">
+    <p class="hero-live" aria-hidden="true"><span class="sc-live"><span class="dot"></span>Live 3D from my Fusion 360 CAD.</span> <span class="h-fine">Point at the ground: the rover drives there.</span><span class="h-touch">Tap the ground: the rover drives there.</span></p>
     <div class="hero-left">
       <header class="hello">
         <h1 class="name">Jerry Li</h1>

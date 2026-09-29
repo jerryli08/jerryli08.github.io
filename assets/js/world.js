@@ -1024,7 +1024,9 @@ export async function initWorld(canvas, opts = {}) {
     if (mode === 'landing') {
       const wide = w >= 960;
       frame.wide = wide;
-      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.65 : 0.36;
+      // narrow screens: the centre of the clear window between the nav (62 px) and the name, which
+      // starts at max(46vh, 412px) (site.css, max-width 960px)
+      frame.fx = wide ? 0.73 : 0.52; frame.fy = wide ? 0.65 : Math.min(0.45, Math.max(0.2, (62 + Math.max(0.46 * innerHeight, 412)) / (2 * h)));
       const F = wide ? 30 : 44; // visible vertical field of view
       const W2 = frame.fx >= 0.5 ? 2 * frame.fx * w : 2 * (1 - frame.fx) * w;
       const H2 = frame.fy >= 0.5 ? 2 * frame.fy * h : 2 * (1 - frame.fy) * h;
