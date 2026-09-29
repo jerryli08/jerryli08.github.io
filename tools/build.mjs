@@ -58,6 +58,20 @@ const list = (kind) => projects.filter((x) => x.kind === kind && visible(x));
 const url = (x) => `/projects/${x.slug}`;
 const thumb = (x) => (has(`/assets/thumbs/${x.slug}.webp`) ? `/assets/thumbs/${x.slug}.webp` : null);
 const poster = (x) => (has(`/assets/posters/${x.slug}.jpg`) ? `/assets/posters/${x.slug}.jpg` : null);
+// share images: LinkedIn and some other link previews do not show WebP, so a project whose share
+// image would be its WebP card thumbnail gets a 1200 x 630 JPG copy in /assets/og/ (made once, and
+// again whenever the thumbnail changes)
+const og = (x) => (has(`/assets/og/${x.slug}.jpg`) ? `/assets/og/${x.slug}.jpg` : null);
+{
+  const { default: sharp } = await import('sharp');
+  mkdirSync(p('assets/og'), { recursive: true });
+  for (const x of projects) {
+    const t = thumb(x); if (poster(x) || !t) continue;
+    const src = p(t.slice(1)), out = p(`assets/og/${x.slug}.jpg`);
+    if (existsSync(out) && statSync(out).mtimeMs >= statSync(src).mtimeMs) continue;
+    await sharp(src).resize(1200, 630, { fit: 'cover' }).flatten({ background: '#0b0a09' }).jpeg({ quality: 80, mozjpeg: true }).toFile(out);
+  }
+}
 const arrow = '<span class="arrow" aria-hidden="true">&#8599;</span>';
 
 function mediaSrc(m) {
@@ -383,8 +397,10 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
 <script type="module">
   const $ = (s) => document.querySelector(s), body = document.body, c = $('.drive-canvas');
   const quad = $('[data-tag-quad]'), ticks = $('[data-tag-ticks]'), txt = $('[data-tag-text]'), cap = $('[data-caption]');
-  const LABEL = { docked: 'Press X to detach the drone', detaching: 'Undocking\u2026', split: 'Press X to reattach', attaching: 'Docking\u2026', lifting: '', carried: '', landing: '' };
-  const FLY = { docked: 'Press F to fly', lifting: 'Taking off\u2026', carried: 'Press F to land', landing: 'Landing\u2026' };
+  // touch screens have no X or F key: the same buttons say Tap
+  const TOUCH = matchMedia('(pointer: coarse)').matches;
+  const LABEL = { docked: TOUCH ? 'Tap to detach the drone' : 'Press X to detach the drone', detaching: 'Undocking\u2026', split: TOUCH ? 'Tap to reattach' : 'Press X to reattach', attaching: 'Docking\u2026', lifting: '', carried: '', landing: '' };
+  const FLY = { docked: TOUCH ? 'Tap to fly' : 'Press F to fly', lifting: 'Taking off\u2026', carried: TOUCH ? 'Tap to land' : 'Press F to land', landing: 'Landing\u2026' };
   // the keys bar: the same pieces in every mode, key boxes then a speed; split mode gets one group per vehicle
   const K = (...k) => k.map((x) => '<kbd>' + x + '</kbd>').join(''), WASD = K('W', 'A', 'S', 'D'), ARROWS = ${JSON.stringify(ARROW_KEYS)};
   const sp = (w) => '<span class="speed num" data-v="' + w + '">0.00 m/s</span>', help = (t) => '<span class="dk-help">' + t + '</span>';
@@ -400,6 +416,7 @@ ${pad('pad-drone', ['w', 'a', 's', 'd'], 'Drone')}
   };
   let vRover = [...document.querySelectorAll('[data-v="rover"], [data-speed2]')], vDrone = [];
   const onMode = ({ mode }) => { body.dataset.dock = mode; $('[data-dock-label]').textContent = LABEL[mode]; if (FLY[mode]) $('[data-fly-label]').textContent = FLY[mode]; $('[data-keys]').innerHTML = HELP[mode]; vRover = [...document.querySelectorAll('[data-v="rover"], [data-speed2]')]; vDrone = [...document.querySelectorAll('[data-v="drone"]')]; };
+  if (TOUCH) { $('[data-dock-label]').textContent = LABEL.docked; $('[data-fly-label]').textContent = FLY.docked; }
   const onView = (f, portrait) => { document.documentElement.style.setProperty('--split', (f * 100).toFixed(3) + '%'); body.classList.toggle('is-split', f > 0.001); body.classList.toggle('split-wide', f > 0.4); body.classList.toggle('split-v', !!portrait); };
   const onCaption = (t) => { if (t) cap.textContent = t; cap.classList.toggle('on', !!t); };
   const onTag = (d) => {
@@ -463,14 +480,14 @@ const nextLink = (next) => (next ? `<a class="next" href="${url(next)}"><span><s
 function projectPage(x, next) {
   const media = (x.media || []);
   const [first, ...rest] = media;
-  const heroImg = poster(x) || thumb(x);
+  const heroImg = poster(x) || og(x) || thumb(x);
   const desc = `${x.title}: ${x.short}`;
   return `${head({ title: `${x.title} · Jerry Li`, description: desc, path: url(x), image: heroImg ? heroImg : undefined })}
 <body class="project">
 ${nav()}
 <main class="page">
   ${pageHeader(x)}
-  ${first ? `<figure class="hero-media" style="margin:28px 0 0">${mediaEl(first, { eager: true })}</figure>${first.c ? `<figcaption>${esc(first.c)}</figcaption>` : ''}` : (x.draft ? '<div class="pending">Photos and video for this project are on the way.</div>' : '')}
+  ${first ? `<figure class="hero-media" style="margin:28px 0 0">${mediaEl(first, { eager: true })}${first.c ? `<figcaption>${esc(first.c)}</figcaption>` : ''}</figure>` : (x.draft ? '<div class="pending">Photos and video for this project are on the way.</div>' : '')}
   <div class="p-grid">
     <div class="prose">${(x.body || []).map((b) => `<section><h2>${esc(b.h)}</h2>${b.p.map((t) => `<p>${esc(t)}</p>`).join('')}</section>`).join('')}</div>
     ${pageFacts(x)}
@@ -492,7 +509,7 @@ const rich = createRich({ ROOT, PREVIEW, esc, v, has, dims, mediaSrc });
 function richPage(x, next, page) {
   const r = rich.render(x, page);
   for (const w of r.warnings) console.log(`  ! ${x.slug}: ${w}`);
-  const heroImg = poster(x) || thumb(x);
+  const heroImg = poster(x) || og(x) || thumb(x);
   const facts = pageFacts(x);
   const intro = r.summary || facts ? `<div class="rx-w"><div class="p-grid rx-intro${r.summary ? '' : ' rx-intro-facts'}">${r.summary || ''}${facts}</div></div>` : '';
   return `${head({ title: `${x.title} · Jerry Li`, description: `${x.title}: ${x.short}`, path: url(x), image: heroImg || undefined, extra: r.head })}
@@ -520,7 +537,7 @@ function redirectPage(to, title) {
 }
 
 function notFound() {
-  return `${head({ title: 'Not found · Jerry Li', description: site.description, path: '/404' })}
+  return `${head({ title: 'Not found · Jerry Li', description: site.description, path: '/404', extra: PREVIEW ? '' : '<meta name="robots" content="noindex">\n' })}
 <body class="project">${nav()}<main class="page"><header class="p-head"><p class="p-kicker"><span>404</span></p><h1 class="p-title">This page wandered off.</h1><p class="p-lede">The project you are looking for may have moved. Everything is on the <a href="/" style="color:var(--accent)">home page</a>.</p></header>${footer()}</main></body></html>
 `;
 }

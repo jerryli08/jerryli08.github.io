@@ -294,12 +294,12 @@ export const projects = [
     team: 'S.T.A.T.I.C., FTC 18996',
     tools: ['Fusion 360', '3D printing', 'goBILDA', 'Linear slides', 'Cable carrier'],
     stats: [
-      { v: '1st place', l: 'Think Award, FIRST Chesapeake Regionals' },
+      { v: '1st place', l: 'Think Award, FIRST Chesapeake Championship' },
       { v: 'Semifinalist', l: 'Division playoffs' },
     ],
     body: [
       { h: 'Overview', p: [
-        'The 2024-25 season was S.T.A.T.I.C.\'s most successful. We won the 1st place Think Award, which recognizes the engineering design process, at the FIRST Chesapeake Regionals, and made the division semifinals.',
+        'The 2024-25 season was S.T.A.T.I.C.\'s most successful. We won the 1st place Think Award, which recognizes the engineering design process, at the FIRST Chesapeake Championship, and made the division semifinals.',
       ]},
     ],
     media: [
@@ -669,7 +669,7 @@ export const projects = [
   { slug: 'iphone-voronoi-case', kind: 'object', title: 'iPhone 11 Pro Voronoi Case', short: 'A TPU phone case with a Voronoi pattern across the back.', date: 'Oct 2023', year: '2023', media: [{ i: '/assets/media/iphone-voronoi-case/cad-case.webp', c: 'The case, rendered from my CAD' }] },
   { slug: 'hex-napkin-holder', kind: 'object', title: 'Hexagonal Napkin Holder', short: 'A napkin holder with hexagon lattice walls.', date: 'Jun 2024', year: '2024', media: [{ i: '/assets/media/prints/napkin-holder-supports.webp', c: 'The holder and the support material that came out of it' }, { v: '/assets/media/prints/napkin-holder-turn.mp4', c: 'Turning it over: the lattice walls and floor' }] },
   { slug: 'voronoi-pencil-holder', kind: 'object', title: 'Voronoi Pencil Holder', short: 'A Voronoi-pattern case for two mechanical pencils.', date: 'Oct 2023', year: '2023', media: [{ i: '/assets/media/voronoi-pencil-holder/cad-pencil-holder.webp', c: 'The holder and its two inserts, rendered from my CAD' }] },
-  { slug: 'triple-t', kind: 'object', title: 'Triple T', short: 'Triple T, printed in gold.', date: 'May 2025', year: '2025', media: [{ i: '/assets/media/prints/triple-t.webp', c: 'Triple T' }] },
+  { slug: 'triple-t', kind: 'object', title: 'Triple T', short: 'Triple T, printed in gold.', date: 'May 2025', year: '2025', media: [{ i: '/assets/media/prints/triple-t.webp', c: 'Triple T, printed in gold' }] },
 
   // ------------------------------------------------------------------ ARCHIVE
   {

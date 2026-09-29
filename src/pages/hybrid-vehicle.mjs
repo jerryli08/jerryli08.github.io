@@ -130,7 +130,7 @@ export default {
         { h: 'Pulling up only holds it tighter', p: ['Pulling up only presses the tubes into the undersides of the doors. In my CAD the drone can rise about 7 mm before the tubes meet them, and from there it is held.'] },
         { h: 'Let go', p: ['To let go, the servo swings the arms out and the doors go with them, so nothing is left over the tube and the drone lifts straight out. Then the arms close again, ready for the next landing.'] },
       ],
-      caption: 'Door angles come from my CAD: a section of the real door turned on its pin against the 16 mm tube. The elastic is drawn in; it is not in the CAD. The doors are shown as modelled, before I cut them to overlap (see the iterations below).' },
+      caption: 'Door angles come from my CAD: a section of the real door turned on its pin against the 16 mm tube. As in the animation above, the elastic is drawn in and the doors are shown before the overlap cut.' },
 
     { type: 'scrolly', id: 'drive', module: 'drive', poster: `${M}/poster-drive.webp`,
       h: 'The belt drivetrain',

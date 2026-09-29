@@ -152,7 +152,7 @@ export default {
       h: 'Seeing the line, one step at a time',
       p: ['One downward-camera frame through every step of our script, computed live on this page with the same code as the flight at the top. The frame is drawn for the page: a bend in the rope and a wide round reflection.'],
       steps: [
-        { h: 'The raw frame', p: ['The downward camera sees a 640 x 360 patch of floor under the nose. The nose is at the bottom of the picture. Up close, the LED rope is a row of separate bright dots.'] },
+        { h: 'The raw frame', p: ['One 640 x 360 frame, nose at the bottom. The rope reaches the camera as separate dots, not a line.'] },
         { h: 'Dilate, 30 x 30', p: ['`cv2.dilate` gives every pixel the brightest value in the 30 x 30 square around it. Each bulb grows by 15 px each way, and neighbouring bulbs merge into one bar. The reflection grows too.'] },
         { h: 'Erode, 20 x 20', p: ['`cv2.erode` does the opposite with a 20 x 20 square and takes most of that growth back. The gaps between bulbs stay closed, and the rope is left as one solid bar about 10 px wider than a bulb.'] },
         { h: 'Threshold, 250 to 255', p: ['`cv2.inRange` keeps only pixels that are almost fully saturated in all three channels. The dim glow around the bulbs drops out; the rope and the reflection stay.'] },

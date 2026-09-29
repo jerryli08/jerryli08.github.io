@@ -189,7 +189,7 @@ export default {
         { v: 'intake-v4-angle-test.mp4', c: 'Feb 2025: holding a new prototype over a sample at different angles' },
       ] },
       { label: 'Version 5 · Feb 12 to Mar 2025', title: 'Two top-down spinners', p: [
-        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. In our autonomous run there, the head came down on each blue sample and picked it up on the first try, and the extension swung it over to the observation zone for the human player. The rows below go through it up close.',
+        'The last version uses two star wheels side by side that come down on the sample from above and pull it up between them. It went from a hand-held prototype on Feb 12 to the championship on Mar 2. In our autonomous run there, the head came down on each blue sample and picked it up, and the extension swung it over to the observation zone for the human player. The rows below go through it up close.',
       ], media: [
         { v: 'intake-v5-auto-picks.mp4', c: 'Mar 2, 2025, from the autonomous run at the top of the page: the head comes down on a blue sample and picks it up, the extension swings it over to the observation zone and lets it go, then it does the same with the next sample' },
       ] },

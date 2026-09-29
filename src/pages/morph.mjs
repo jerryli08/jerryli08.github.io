@@ -250,7 +250,6 @@ export default {
         note: 'Estimate: a static worst case for a straight level arm, from the planner\'s constants. The planner checks every real pose itself, and the printed gears skip well below the stall cap.' },
       { problem: 'Some planned paths thrashed: they spent far more moves than their goal needed, bending a joint only to bring it back to 0.', title: 'Paths that thrash' },
       { fix: 'I wrote an audit that rejects any path longer than 1.5 times the minimum number of steps its goal needs, or that bends a joint only to return it. Square, plus and C failed and came out of the booth library; C came back with a clean two-move path.' },
-      { next: 'A better way to generate paths and shapes than drawing thousands of candidates and searching each one.' },
     ] },
 
     { type: 'scrolly', id: 'booth', module: 'flow', webgl: false, width: 'wide', side: 'right', stepHeight: '80vh', data: booth,
@@ -258,7 +257,7 @@ export default {
       p: ['At the booth anyone could text a phone number. The message went through Linq\'s iMessage API to a webhook on our laptop behind a Cloudflare tunnel. The bridge worked out which shape was meant, looked up its planned path, drove the servos and a MuJoCo mirror at the same time, and texted back.'],
       steps: [
         { h: 'A text arrives', p: ['Through Linq\'s iMessage API and a Cloudflare tunnel to the bridge on our laptop, which checks the signature and drops repeats.'], view: { to: 3 } },
-        { h: 'Rules first', p: ['Help words get the shape list; "straight line" or "home" sends every joint back to zero. Nothing else runs for those.'], view: { to: 4 } },
+        { h: 'Rules first', p: ['Help words and "home" are answered by fixed rules, before any model runs.'], view: { to: 4 } },
         { h: 'MiniLM, then maybe GPT-4o-mini', p: ['MiniLM picks a label on the laptop in a few milliseconds. Only when it is unsure does GPT-4o-mini get a turn, and it can only pick from the same list or answer "none".'], view: { to: 5 } },
         { h: 'Only the library reaches the motors', p: ['A label looks up one planned path in the shape library: its moves, sides, silhouette and torque. Nothing else can reach the motors.'], view: { to: 7 } },
         { h: 'Fold and reply', p: ['The same plan drives the servo bus and a MuJoCo mirror, and the bridge texts back what it is doing, or what went wrong.'], view: { to: 9 } },

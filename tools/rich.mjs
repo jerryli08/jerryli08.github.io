@@ -101,7 +101,8 @@ export function createRich(env) {
         // engineering story markers: a problem (red), its fix (green), what I'd do next time (blue)
         for (const [key, label] of [['problem', 'Problem'], ['fix', 'Fix'], ['next', 'Next time']]) {
           if (b[key] == null) continue;
-          const body = arr(b[key]).map((x) => `<p>${md(x)}</p>`).join('');
+          // items are text, or a { pre } block (a formula) set as code
+          const body = arr(b[key]).map((x) => (x && typeof x === 'object' && x.pre != null ? `<pre><code>${esc(x.pre)}</code></pre>` : `<p>${md(x)}</p>`)).join('');
           return `<div class="rx-flag rx-flag-${key}"><p class="rx-flag-label"><span>${esc(b.label || label)}</span>${b.title ? ` <strong>${md(b.title)}</strong>` : ''}</p>${body}</div>`;
         }
       }

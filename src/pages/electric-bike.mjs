@@ -48,7 +48,7 @@ export default {
       p: ['Five section views of my CAD, from the motors to the chain. The drive turns as you scroll, every part at the speed its tooth count gives it.'],
       steps: [
         { h: '1. Two low-KV motors', p: [
-          'Two [SKP 6465](https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW each and 5.3 kW together. At 150 KV on a 48 V pack their nominal no-load speed is about **7,200 rpm** (150 x 48), and the two belt stages bring that down to about 444 rpm at the chain sprocket.',
+          'Two [SKP 6465](https://web.archive.org/web/20250918021909/https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW each and 5.3 kW together. At 150 KV on a 48 V pack their nominal no-load speed is about **7,200 rpm** (150 x 48), and the two belt stages bring that down to about 444 rpm at the chain sprocket.',
           'The cut goes straight across both motors through the middle of the stator. The 12-tooth stator stays still, and the rotor, a ring of 14 magnets, spins around it and turns the shaft. Each shaft carries a 16-tooth HTD 5M belt pulley on the other side of the motor mount.',
         ] },
         { h: '2. The first belt: a serpentine', p: [
@@ -106,7 +106,7 @@ export default {
     ] },
 
     { type: 'prose', id: 'motors', h: 'Motors and controller', p: [
-      'The motors are two [SKP 6465](https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW and 150 KV each, 5.3 kW together. They run on a 48 V, 16 Ah pack through a dual VESC. At 150 KV and 48 V their nominal no-load speed is 150 x 48 = 7,200 rpm, and the 16.2 : 1 reduction brings that down to about 444 rpm at the chain sprocket.',
+      'The motors are two [SKP 6465](https://web.archive.org/web/20250918021909/https://skyartpower.com/products/skp-6465-motor) brushless outrunners, 2.6 kW and 150 KV each, 5.3 kW together. They run on a 48 V, 16 Ah pack through a dual VESC. At 150 KV and 48 V their nominal no-load speed is 150 x 48 = 7,200 rpm, and the 16.2 : 1 reduction brings that down to about 444 rpm at the chain sprocket.',
       'I brought them up on the bench first, on their carbon fiber mount. I ran motor detection in VESC Tool for both controllers, and it measured the two motors almost the same: about 32 mΩ of resistance and a flux linkage of 4.73 and 4.82 mWb. Then I mapped the thumb throttle in the setup wizard.',
       { calc: 'How long would the pack last flat out?',
         given: [
@@ -142,7 +142,7 @@ export default {
       } },
       { calc: 'From 7,200 rpm at the motors to the road',
         given: [
-          ['Motor speed, no load', '7,200 rpm', '150 KV × 48 V, nominal ([SKP 6465](https://skyartpower.com/products/skp-6465-motor))'],
+          ['Motor speed, no load', '7,200 rpm', '150 KV × 48 V, nominal ([SKP 6465](https://web.archive.org/web/20250918021909/https://skyartpower.com/products/skp-6465-motor))'],
           ['Belt stages', '16T to 72T, 20T to 72T', 'counted in my CAD'],
           ['Chain sprocket', '20T', 'counted in my CAD'],
           ['Peak torque at the sprocket', '100 N·m', 'my build'],

@@ -131,7 +131,7 @@ export default {
         { h: 'Two motors', p: ['Between the plates: one D2830 geared to each axle, and the encoder on the rear motor\'s shaft, 6 turns per wheel turn. The controls were an STM32 Nucleo board, a 16x2 LCD and three buttons.'] },
         { h: 'Version two: one motor and belts', p: ['One D2830 drives all four wheels, the rear axle through the gears and the front axle through two GT2 belts. The encoder rides on a 40T gear, 1.2 turns per wheel turn, and an Arduino Nano with two buttons replaced the STM32 board and the LCD.'] },
         { h: 'The same car, 100 mm shorter', p: ['Version one as a ghost over version two: the same car with 50 mm more at each end. The plate outline went from 287 x 690 mm to 287 x 590 mm and the wheelbase from 623 mm to 523 mm.'] },
-        { h: 'The G10 lattice', p: ['From above, with the top plate back on. The wide ends of each plate are open, irregular cells; the narrow spine between them is a row of hexagons between two rails, tied across.'] },
+        { h: 'The G10 lattice', p: ['From above, top plate back on: open cells at the wide ends, hexagons between two rails along the spine.'] },
       ] },
     { type: 'prose', id: 'changes', p: [
       { table: {

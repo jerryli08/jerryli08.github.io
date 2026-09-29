@@ -152,9 +152,9 @@ export default {
       h: 'The turret, in the Worlds CAD',
       p: ['The V2 CAD with its moving parts rigged about their real axes: the turret on its bearing, the two 90-tooth gears, the hood on its toothed arc and its 40-tooth pinion, the flywheel and the four TPU spinners.'],
       steps: [
-        { h: 'On a turntable bearing', p: ['The turret rides on an AndyMark turntable bearing with a 145 mm bore and a 203 mm outside diameter. A 150-tooth ring gear on the turret meshes with two 90-tooth gears on the chassis.'] },
+        { h: 'On a turntable bearing', p: ['A 145 mm bore, 203 mm outside. A 150-tooth ring gear on the turret meshes with two 90-tooth gears on the chassis.'] },
         { h: 'Turning the turret', p: ['Each 90-tooth gear turns 150/90, 1.67 times as far as the turret, the other way. Turned 60° here, the turret turns each gear 100°.'] },
-        { h: 'Rolling the hood', p: ['A servo with a 40-tooth pinion rolls the hood along its toothed arc, centred on the flywheel axle. The arc\'s pitch radius is 180.5 mm and the pinion\'s 23.6 mm, so the pinion turns 7.65 times as far as the hood, the other way: rolled 20° here, the hood turns it 153°.', 'Rolling the hood moves the point where the ball leaves the wheel, which sets the launch angle.'] },
+        { h: 'Rolling the hood', p: ['A servo with a 40-tooth pinion rolls the hood along its toothed arc, centred on the flywheel axle. The arc\'s pitch radius is 180.5 mm and the pinion\'s 23.6 mm, so the pinion turns 7.65 times as far as the hood, the other way: rolled 20° here, the hood turns it 153°.'] },
         { h: 'Feeding a ball', p: ['The four TPU spinners along the sides of the ramp push the balls up. The top ball waits in the bearing\'s bore, with 9 mm to spare on each side, and feeds straight up onto the 72 mm flywheel, under the hood and out. Nothing has to reach around the part that turns.'] },
       ],
       caption: 'Tooth counts and pitch radii from the CAD. How far the turret turns here is illustrative, not the robot\'s real travel limit; the hood rolls only where the pinion stays on the arc in the CAD. Launch angles are geometry only.' },
