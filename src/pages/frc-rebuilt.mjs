@@ -54,7 +54,7 @@ export default {
       'Planetary Drive had never used CAD. I had a friend on the team, so I designed the whole robot for them in Fusion 360, in my first FRC season. WestCoast Products’ open 2026 robot was my initial inspiration, and what the two have in common is three separate shooters.',
       { problem: 'I was in Maryland for the whole season and the team was in Kentucky. I could never stand next to the robot, and the team had never used CAD.', title: 'Remote, with a team new to CAD' },
       { fix: 'I shared the model through Fusion 360 links, so anyone on the team could open it, and sent DXF files for the flat parts. Bill, a machinist in the shop, waterjet cut all of the aluminum plates from them. Some of the build happened over video calls, like the one pictured here.' },
-      { problem: 'The team was not very competitive, and syncing a timeline for design iterations was hard.', title: 'No shared schedule' },
+      { problem: 'Syncing a timeline for design iterations with the team was hard.', title: 'No shared schedule' },
       { fix: 'I asked how much time the team had and planned small test iterations that fit it. The design settled through those iterations: nothing changed between the Feb 18 model and the final CAD.' },
     ],
       media: [
