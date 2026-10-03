@@ -96,8 +96,8 @@ export default {
         { h: 'Back in', p: ['The motors turn back and pull the carriage home, and the slides fold back into the frame.'] },
       ],
       caption: 'From my CAD. In a real slide the middle member floats between its stops; here it is drawn at half travel. Each belt runs from one clamp forward to a GoBILDA idler at the front of the frame, back along the outside of the slides, across the back, round the motor pulley and the two idlers beside it, and forward to the other clamp. The belts are not in the CAD: they are drawn along the path its pulleys, idlers and clamps set, with GT2 teeth at a 2 mm pitch.' },
-    { type: 'prose', id: 'belt-numbers', h: 'Speed, and which pulley', p: [
-      `My final sketch drives the arm 14,000 steps for the full stroke, at up to 3,000 steps/s and 1,000 steps/s². Those numbers say how fast the arm moves, and which pulley they fit.`,
+    { type: 'prose', id: 'belt-numbers', h: 'Speed', p: [
+      `My final sketch drives the arm 14,000 steps for the full stroke, at up to 3,000 steps/s and 1,000 steps/s². Those numbers say how fast the arm moves.`,
       { calc: 'How fast does the arm reach out?',
         given: [
           ['Full stroke', '355 mm', 'measured from the CAD'],
@@ -113,22 +113,6 @@ export default {
         ],
         result: 'About 7.7 s for each 355 mm stroke, and about two thirds of the steps are spent speeding up or slowing down. That gentle profile is on purpose: nothing re-homes the arm, so I kept speeds and accelerations low enough that the steppers would never skip and lose count.',
         note: 'Estimate for an ideal move at the sketch’s limits (a trapezoidal speed profile).' },
-      { calc: 'Which pulley do the step counts fit?',
-        given: [
-          ['Turntable to a holder', '1,440 steps for 90°', 'my final sketch'],
-          ['Turntable reduction', '288 : 80 = 3.6', 'tooth counts from the CAD'],
-          ['Full steps per motor turn', '200 (1.8° a step)', '[23HS30-2804S, the NEMA 23 in my CAD](https://www.omc-stepperonline.com/nema-23-bipolar-1-8deg-1-9nm-269oz-in-2-8a-3-2v-57x57x76mm-4-wires-23hs30-2804s)'],
-          ['TMC2209 microsteps', '8 with MS1 and MS2 low; 16, 32 or 64 otherwise', '[TMC2209 datasheet, 3.4](https://www.analog.com/media/en/technical-documentation/data-sheets/tmc2209_datasheet_rev1.09.pdf)'],
-          ['Belt per pulley turn', '80 teeth: 160 mm; 20 teeth: 40 mm', 'teeth × 2 mm GT2 pitch'],
-        ],
-        work: [
-          'Turntable: 90° of the arm is 0.25 × 3.6 = 0.9 motor turns, so 1,440 / 0.9 = 1,600 steps a turn: 200 full steps × 8 microsteps',
-          'Extension at the same 1,600 steps a turn: 14,000 / 1,600 = 8.75 motor turns',
-          'With the CAD’s 80-tooth pulley: 8.75 × 160 mm = 1,400 mm, four times the stroke',
-          'With a 20-tooth pulley: 8.75 × 40 mm = 350 mm, within 5 mm of the 355 mm stroke',
-        ],
-        result: `At the turntable’s setting, 14,000 steps only fits a 20-tooth pulley: the change I planned for torque, since the speed was already sufficient ([build log](${GH}/tree/main/Code)), and the photo beside this shows a small pulley on the motor. For the same motor torque a 20-tooth pulley pulls four times as hard on the belt (pitch radius 6.4 mm instead of 25.5 mm). The 80-tooth pulley would only fit if its drivers were set to 32 microsteps.`,
-        note: 'Assumes 1.8° extension motors and the same microstep setting on every TMC2209 on my perfboard. The CAD and the animations keep the 80-tooth pulleys.' },
     ],
       media: [
         { v: 'extension-belt-by-hand.mp4', c: 'Turning the motor pulley by hand drags the belt and the carriage along (March 2024)' },
