@@ -99,7 +99,12 @@ export async function mount(el, ctx) {
 
   // the readout
   const hud = document.createElement('div');
-  hud.className = 'rx-hud';
+  // compact on every screen (the one-line belts summary instead of the table), so on desktop the
+  // readout ends above the step cards that run down the same left edge
+  hud.className = 'rx-hud frc-stow-hud';
+  const hudCss = document.createElement('style');
+  hudCss.textContent = '.frc-stow-hud table { display: none; } .frc-stow-hud .rx-hud-mini { display: block; margin-top: 4px; color: var(--text); font-weight: 600; } .frc-stow-hud .rx-hud-big { margin-top: 6px; padding-top: 6px; }';
+  ov.layer.append(hudCss);
   ov.layer.append(hud);
   hud.innerHTML = `
     <div class="rx-hud-row"><span>Arm swing</span><b class="num" data-k="a"></b><i><em data-k="aBar"></em></i></div>
@@ -116,13 +121,32 @@ export async function mount(el, ctx) {
   const bar = (k, f) => { const w = `${(f * 100).toFixed(1)}%`; if (shown[k] !== w) { K[k].style.width = w; shown[k] = w; } };
   const swingText = (deg) => (deg >= MAX - 0.05 ? `${MAX}°, stowed` : deg <= 0.05 ? '0°, deployed' : `${Math.round(deg)}° up`);
 
+  // desktop: the readout shares the left edge with the step cards, so it goes above the active
+  // card when there is room, below it otherwise, and top right only when neither fits
+  const sec = el.closest('.rx-scrolly') || el.closest('section');
+  let hudAt = '';
+  function placeHud(step, phone) {
+    let at = 'phone';
+    if (!phone) {
+      const card = sec?.querySelectorAll('.rx-step-card')[step];
+      const L = ov.layer.getBoundingClientRect(), h = hud.offsetHeight, gap = 12;
+      const r = card ? card.getBoundingClientRect() : null;
+      if (!r || r.top >= L.top + 14 + h + gap || r.bottom <= L.top + 14) at = 'tl';
+      else if (r.bottom + gap + h <= L.bottom - 14) at = 'bl';
+      else at = 'tr';
+    }
+    if (at === hudAt) return;
+    hudAt = at;
+    const S = { phone: ['', '', '', ''], tl: ['14px', 'auto', '14px', 'auto'], bl: ['auto', '14px', '14px', 'auto'], tr: ['14px', 'auto', 'auto', '14px'] }[at];
+    Object.assign(hud.style, { top: S[0], bottom: S[1], left: S[2], right: S[3] });
+  }
+
   function setProgress(p, step, stepP) {
     step = clamp(step | 0, 0, AT.length - 1);
     const q = reduced ? 1 : clamp(stepP, 0, 1);
     const phone = el.clientWidth < 640;
     stage.setShift(phone ? 0 : 0.03, phone ? -0.07 : -0.04);
-    hud.style.left = phone ? '' : '14px';
-    hud.style.right = phone ? '' : 'auto';
+    placeHud(step, phone);
     const v = viewsNow(), prev = Math.max(0, step - 1);
     place(v[prev], v[step], step === 0 || reduced ? 1 : smooth(0, 0.45, stepP));
 
